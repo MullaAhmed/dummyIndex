@@ -2,7 +2,7 @@
   "schema_version": 1,
   "slug": "evolution-probation-lifecycle",
   "title": "Evolution probation lifecycle: eight reversible states, local overlay, asymmetric promote/demote rules, followed-check, enforcement route, expiry/suspension/caps, yield report, blast-radius tiers",
-  "status": "planned",
+  "status": "done",
   "related_features": [
     "equip",
     "build-loop",
@@ -61,5 +61,6 @@
   ],
   "depends_on": [
     "evolution-evidence-plane"
-  ]
+  ],
+  "implementation_state": "implemented"
 }

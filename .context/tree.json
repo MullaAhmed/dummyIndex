@@ -27654,10 +27654,10 @@
                             "title": "durable_evidence",
                             "path": "dummyindex/context/domains/proposals/retirement.py",
                             "range": [
-                              146,
-                              146
+                              147,
+                              147
                             ],
-                            "abstract": "Function durable_evidence at dummyindex/context/domains/proposals/retirement.py:146.",
+                            "abstract": "Function durable_evidence at dummyindex/context/domains/proposals/retirement.py:147.",
                             "overview_ref": null,
                             "detail_ref": null,
                             "confidence": "EXTRACTED",
@@ -27688,10 +27688,10 @@
                             "title": "_has_material",
                             "path": "dummyindex/context/domains/proposals/retirement.py",
                             "range": [
-                              208,
-                              208
+                              209,
+                              209
                             ],
-                            "abstract": "Function _has_material at dummyindex/context/domains/proposals/retirement.py:208.",
+                            "abstract": "Function _has_material at dummyindex/context/domains/proposals/retirement.py:209.",
                             "overview_ref": null,
                             "detail_ref": null,
                             "confidence": "EXTRACTED",
@@ -27722,10 +27722,10 @@
                             "title": "retirement_block",
                             "path": "dummyindex/context/domains/proposals/retirement.py",
                             "range": [
-                              169,
-                              169
+                              170,
+                              170
                             ],
-                            "abstract": "Function retirement_block at dummyindex/context/domains/proposals/retirement.py:169.",
+                            "abstract": "Function retirement_block at dummyindex/context/domains/proposals/retirement.py:170.",
                             "overview_ref": null,
                             "detail_ref": null,
                             "confidence": "EXTRACTED",
@@ -27739,10 +27739,10 @@
                             "title": "text_unit",
                             "path": "dummyindex/context/domains/proposals/retirement.py",
                             "range": [
-                              124,
-                              124
+                              125,
+                              125
                             ],
-                            "abstract": "Function text_unit at dummyindex/context/domains/proposals/retirement.py:124.",
+                            "abstract": "Function text_unit at dummyindex/context/domains/proposals/retirement.py:125.",
                             "overview_ref": null,
                             "detail_ref": null,
                             "confidence": "EXTRACTED",
@@ -27756,10 +27756,10 @@
                             "title": "unit_present",
                             "path": "dummyindex/context/domains/proposals/retirement.py",
                             "range": [
-                              128,
-                              128
+                              129,
+                              129
                             ],
-                            "abstract": "Function unit_present at dummyindex/context/domains/proposals/retirement.py:128.",
+                            "abstract": "Function unit_present at dummyindex/context/domains/proposals/retirement.py:129.",
                             "overview_ref": null,
                             "detail_ref": null,
                             "confidence": "EXTRACTED",
@@ -85592,10 +85592,10 @@
                         "title": "test_generated_context_index_is_not_a_durable_reference",
                         "path": "tests/context/domains/test_closeout.py",
                         "range": [
-                          832,
-                          832
+                          838,
+                          838
                         ],
-                        "abstract": "Function test_generated_context_index_is_not_a_durable_reference at tests/context/domains/test_closeout.py:832.",
+                        "abstract": "Function test_generated_context_index_is_not_a_durable_reference at tests/context/domains/test_closeout.py:838.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",

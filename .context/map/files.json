@@ -2443,11 +2443,11 @@
     {
       "path": "dummyindex/context/domains/proposals/retirement.py",
       "language": "python",
-      "size_bytes": 8586,
-      "loc": 245,
+      "size_bytes": 8612,
+      "loc": 246,
       "role": null,
       "summary": null,
-      "sha256": "51df3b2b22b1f61b9a4a62630f9e8ccd0d8a6ce8ec0090af95d99011171c5afd"
+      "sha256": "286470657bb1be4169a827359ca477f153a32343bc79cb8c4c5699bf1126fe68"
     },
     {
       "path": "dummyindex/context/domains/proposals/scan.py",
@@ -4675,11 +4675,11 @@
     {
       "path": "tests/context/domains/test_closeout.py",
       "language": "python",
-      "size_bytes": 33689,
-      "loc": 841,
+      "size_bytes": 33869,
+      "loc": 847,
       "role": null,
       "summary": null,
-      "sha256": "61b7001487d2b8f573e1025355ac88258a8fc65f878372997ce7bebea354cce1"
+      "sha256": "481454c1f801c9d560a52c53ebf66bd55176a7d83fc9fc392cd5205ca3d28ebc"
     },
     {
       "path": "tests/context/domains/test_closeout_draft.py",

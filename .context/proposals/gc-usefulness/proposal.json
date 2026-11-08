@@ -2,7 +2,7 @@
   "schema_version": 1,
   "slug": "gc-usefulness",
   "title": "Make context-hygiene GC useful: unblock retirement, recommend actions, draft closeouts, batch confirm",
-  "status": "planned",
+  "status": "done",
   "related_features": [
     "gc",
     "proposals"
@@ -54,5 +54,6 @@
     "tests/test_skills_doc_hygiene.py",
     ".context/playbooks/gc-context.md",
     ".context/features/gc/spec.md"
-  ]
+  ],
+  "implementation_state": "implemented"
 }

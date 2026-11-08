@@ -6428,6 +6428,10 @@
       "reason": "hidden or generated directory; subtree excluded"
     },
     {
+      "path": "tests/context/domains/gc/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
       "path": "tests/context/output/__pycache__",
       "reason": "hidden or generated directory; subtree excluded"
     },

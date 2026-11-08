@@ -2,7 +2,7 @@
   "schema_version": 1,
   "slug": "agent-language-policy",
   "title": "Three-way language policy: ADHD-minimal human replies, English caveman persistent docs, concise-Chinese agent-to-agent prompts",
-  "status": "planned",
+  "status": "done",
   "related_features": [
     "bootstrap",
     "behavior-gate",
@@ -80,5 +80,6 @@
     ".context/features/install-surface/spec.md",
     ".context/features/cli-dispatch/spec.md",
     ".context/proposals/agent-language-policy/experiment.json"
-  ]
+  ],
+  "implementation_state": "implemented"
 }

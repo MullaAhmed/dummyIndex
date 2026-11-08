@@ -2,7 +2,7 @@
   "schema_version": 1,
   "slug": "ponytail-internal",
   "title": "dummyindex internally uses ponytail: reviewed default plugin plus default-on subagent mandate",
-  "status": "planned",
+  "status": "done",
   "related_features": [
     "equip",
     "install-surface",
@@ -40,5 +40,6 @@
     "tests/cli/test_cli_doc_sync.py",
     ".context/config.json",
     ".context/features/equip/spec.md"
-  ]
+  ],
+  "implementation_state": "implemented"
 }

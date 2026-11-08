@@ -21,7 +21,7 @@ _81 doc(s) — 20 high · 24 medium · 37 low._
 | [`dummyindex/skills/council/19-resume.md`](../../dummyindex/skills/council/19-resume.md) — Resumption — pick up where we left off | markdown | **high** | 0 / 1 | recent |
 | [`dummyindex/skills/council/22-parallel-dispatch.md`](../../dummyindex/skills/council/22-parallel-dispatch.md) — Parallel dispatch — the council batch loop | markdown | **high** | 0 / 1 | recent |
 | [`dummyindex/skills/equip/sourcing.md`](../../dummyindex/skills/equip/sourcing.md) — Sourcing specialists from catalogs | markdown | **high** | — | recent |
-| [`tests/data/skill-budget.txt`](../../tests/data/skill-budget.txt) — dummyindex/skills/audit/SKILL.md	914 | text | **high** | — | fresh |
+| [`tests/data/skill-budget.txt`](../../tests/data/skill-budget.txt) — dummyindex/skills/audit/SKILL.md	914 | text | **high** | — | recent |
 | [`tests/fixtures/evolve/audit-report.md`](../../tests/fixtures/evolve/audit-report.md) — Audit report — fixture snippet | markdown | **high** | — | recent |
 | [`tests/fixtures/evolve/session-now.md`](../../tests/fixtures/evolve/session-now.md) — Now | markdown | **high** | — | recent |
 | [`tests/fixtures/evolve/session-recent.md`](../../tests/fixtures/evolve/session-recent.md) — Recent | markdown | **high** | — | recent |

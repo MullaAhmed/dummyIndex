@@ -1,0 +1,30 @@
+{
+  "discarded": {
+    "plan.md": "Execution plan completed (checklist fully checked); durable implementation map lives in .context/features/install-surface/ and the packaged build/plan/equip SKILL.md mandates.",
+    "spec.md": "Implemented intent and contracts now live in source, tests and the reconciled feature docs (.context/features/install-surface/ and the packaged build/plan/equip SKILL.md mandates); reconciled in fleet run-0001 commit 17436b4."
+  },
+  "disposition": "completed",
+  "evidence": [],
+  "items": {},
+  "kind": "proposal",
+  "ownership": {
+    "changed_paths": [],
+    "reconciled_paths": [],
+    "session_id": null,
+    "task_id": "proposals:ponytail-internal"
+  },
+  "pending_verification": [],
+  "resolved_verification": {},
+  "schema_version": 1,
+  "slug": "ponytail-internal",
+  "source_commit": "ec126b438891d9ec5133ed27939330d1be0ec0ac",
+  "state": "implemented",
+  "superseded": {},
+  "transfers": [],
+  "workspace_files": {
+    "checklist.md": "cb5d2dc1d5fe3ce00b63d10311dd157cbeba4c908029b098c77191553c91870a",
+    "plan.md": "f9ebb643aa092fc8925ac785c6ad23bc6c88660e8b5efb118dcc4fc05137c57e",
+    "proposal.json": "cb123b7ccb414a907b151b0455d36f46b2dff8bbbd3bdf97f5f52e130d5f71bf",
+    "spec.md": "45f974e1dea7410716ad916d7c1c6f38bd78379db3daf697259b268486892ad9"
+  }
+}

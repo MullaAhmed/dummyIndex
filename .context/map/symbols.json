@@ -22822,8 +22822,8 @@
       "name": "text_unit",
       "path": "dummyindex/context/domains/proposals/retirement.py",
       "range": [
-        124,
-        124
+        125,
+        125
       ],
       "parent": "dummyindex_context_domains_proposals_retirement_py",
       "docstring": null,
@@ -22835,8 +22835,8 @@
       "name": "unit_present",
       "path": "dummyindex/context/domains/proposals/retirement.py",
       "range": [
-        128,
-        128
+        129,
+        129
       ],
       "parent": "dummyindex_context_domains_proposals_retirement_py",
       "docstring": null,
@@ -22848,8 +22848,8 @@
       "name": "durable_evidence",
       "path": "dummyindex/context/domains/proposals/retirement.py",
       "range": [
-        146,
-        146
+        147,
+        147
       ],
       "parent": "dummyindex_context_domains_proposals_retirement_py",
       "docstring": null,
@@ -22861,8 +22861,8 @@
       "name": "retirement_block",
       "path": "dummyindex/context/domains/proposals/retirement.py",
       "range": [
-        169,
-        169
+        170,
+        170
       ],
       "parent": "dummyindex_context_domains_proposals_retirement_py",
       "docstring": null,
@@ -22874,8 +22874,8 @@
       "name": "_has_material",
       "path": "dummyindex/context/domains/proposals/retirement.py",
       "range": [
-        208,
-        208
+        209,
+        209
       ],
       "parent": "dummyindex_context_domains_proposals_retirement_py",
       "docstring": null,
@@ -58832,8 +58832,8 @@
       "name": "test_generated_context_index_is_not_a_durable_reference",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        832,
-        832
+        838,
+        838
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,

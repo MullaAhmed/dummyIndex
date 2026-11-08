@@ -1,0 +1,30 @@
+{
+  "discarded": {
+    "plan.md": "Execution plan completed (checklist fully checked); durable implementation map lives in .context/features/observe/ and .context/features/evolution/.",
+    "spec.md": "Implemented intent and contracts now live in source, tests and the reconciled feature docs (.context/features/observe/ and .context/features/evolution/); reconciled in fleet run-0001 commit 17436b4."
+  },
+  "disposition": "completed",
+  "evidence": [],
+  "items": {},
+  "kind": "proposal",
+  "ownership": {
+    "changed_paths": [],
+    "reconciled_paths": [],
+    "session_id": null,
+    "task_id": "proposals:evolution-evidence-plane"
+  },
+  "pending_verification": [],
+  "resolved_verification": {},
+  "schema_version": 1,
+  "slug": "evolution-evidence-plane",
+  "source_commit": "ec126b438891d9ec5133ed27939330d1be0ec0ac",
+  "state": "implemented",
+  "superseded": {},
+  "transfers": [],
+  "workspace_files": {
+    "checklist.md": "793c117e1da47b7d491022b9a6a84ed78c2ee5e1f1022b9b41eba10d82c8582e",
+    "plan.md": "aa2c63a8086e53206b0956a3d1959d5dbd1f4cabb82d594cebf87898e82cbb4c",
+    "proposal.json": "75f54773530752ce14337142ad9a316c304b6e435a17d85001c8adf9ff386c05",
+    "spec.md": "25844f138292d897483e7a7eaff61567c71887e07b5040fa57243bcae7282c4a"
+  }
+}

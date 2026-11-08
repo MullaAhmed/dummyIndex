@@ -2,7 +2,7 @@
   "schema_version": 1,
   "slug": "specialist-sourcing",
   "title": "Source specialists from catalogs (seed marketplaces incl. ECC, skills.sh, GitHub) before falling back to templates",
-  "status": "planned",
+  "status": "done",
   "related_features": [
     "equip"
   ],
@@ -55,5 +55,6 @@
     ".context/features/equip/spec.md",
     ".context/features/equip/plan.md",
     ".context/features/equip/concerns.md"
-  ]
+  ],
+  "implementation_state": "implemented"
 }
