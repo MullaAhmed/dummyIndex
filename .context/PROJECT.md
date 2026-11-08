@@ -7,11 +7,11 @@ Claude Code and Codex skills that index any codebase into a navigable .context/ 
 ## At a glance
 
 - **Languages:** powershell, python, typescript
-- **Files:** 553
-- **Symbols:** 5814
-- **Documents:** 84
+- **Files:** 572
+- **Symbols:** 5915
+- **Documents:** 79
 - **Root:** `.`
-- **Last indexed:** 2026-11-07T21:54:17+00:00
+- **Last indexed:** 2026-11-07T21:13:52+00:00
 - **dummyIndex version:** 0.37.0
 
 ## Entry points
@@ -20,13 +20,13 @@ Claude Code and Codex skills that index any codebase into a navigable .context/ 
 
 ## Existing documentation
 
-_84 doc(s) catalogued from this repo (plus 0 external root(s)). See `source-docs/INDEX.md` for the full table — including per-doc confidence and broken-reference detail._
+_79 doc(s) catalogued from this repo (plus 0 external root(s)). See `source-docs/INDEX.md` for the full table — including per-doc confidence and broken-reference detail._
 
 **Advisory:** docs drift faster than code. The catalog grades each doc against the current AST extraction:
 
 - **High confidence:** 19 — safe to quote, but still cross-check.
-- **Medium confidence:** 23 — verify references before trusting.
-- **Low confidence:** 42 — historical context only; do not quote.
+- **Medium confidence:** 22 — verify references before trusting.
+- **Low confidence:** 38 — historical context only; do not quote.
 
 **Where to look first:**
 

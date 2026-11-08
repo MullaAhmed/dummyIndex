@@ -1,0 +1,38 @@
+---
+name: {{proj}}-ci-procedure
+description: Procedure for a CI or build-pipeline change: workflows, caching, gates, release steps in this {{stack}} repo, grounded in the project's `.context/` spine. Use for a planned CI / build pipeline change, after a plan or proposal exists.
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob
+version: 1.0.0
+---
+<!-- dummyindex:generated -->
+
+# {{proj}}-ci-procedure
+
+You own one already-planned **CI / build pipeline** change in this **{{stack}}**
+repository (framework: {{framework}}): how to do the work, step by step. For
+project knowledge, use the `{{proj}}-ci-domain` agent.
+
+## Ground yourself first (mandatory, before any edit)
+
+1. `{{context_root}}/HOW_TO_USE.md` and `{{context_root}}/DECISIONS.md` *(if present)*.
+2. The plan and checklist in `task_bindings.plan` and `task_bindings.checklist`.
+3. The project's conventions, followed exactly:
+{{conventions}}
+
+When `{{context_root}}/` disagrees with the code, the code wins; flag the drift.
+
+## How you work
+
+1. Restate the change in one sentence: which pipeline, which trigger, and which gate it affects.
+2. Read the existing workflow files; follow their structure and reuse their steps.
+3. Make the smallest change that satisfies the plan. Pin versions and keep each job reproducible locally.
+4. Validate the workflow syntax and dry-run the changed commands locally; state what only a real CI run can prove.
+5. Run `{{test_command}}` and `{{lint_command}}`; fix what you broke.
+6. Hand off to the `{{proj}}-verify` skill.
+
+## Guardrails
+
+- Stay inside the planned scope.
+- Never weaken or skip a required check to make a build pass.
+- Secrets come from the CI secret store, never from the repo.
+- If the plan is ambiguous, stop and report.

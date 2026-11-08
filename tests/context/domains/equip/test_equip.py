@@ -373,7 +373,11 @@ def test_three_way_identity_for_standard_generated_set() -> None:
         "python-tester": "python",
         "backend-reviewer": "backend",
         "backend-verify": "backend",
-    } | {f"backend-{t.name_suffix}": "backend" for t in SPECIALIST_TEMPLATES.values()}
+    } | {
+        f"backend-{t.name_suffix}": "backend"
+        for t in SPECIALIST_TEMPLATES.values()
+        if t.dimension is None  # dimensioned ones are signal-gated (none here)
+    }
     seen: set[str] = set()
     for item, rel_path, content in rendered:
         seen.add(item.name)
@@ -867,9 +871,12 @@ def test_for_proposal_generates_db_specialist_file(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
-def test_for_proposal_adopts_frontend_when_no_template(tmp_path: Path) -> None:
-    # frontend has NO template → the registry's Frontend Developer is adopted
-    # manifest-only, no file. The stack must show frontend evidence.
+def test_for_proposal_generates_frontend_pair_on_frontend_stack(
+    tmp_path: Path,
+) -> None:
+    # frontend IS template-backed: a frontend-evidenced stack GENERATES the
+    # procedure + domain pair (files); the registry Frontend Developer is not
+    # adopted. (audit C7: backend repos get neither.)
     root = _project(tmp_path, ["javascript", "javascript"])
     prop = root / ".context" / "proposals" / "add-ui"
     prop.mkdir(parents=True)
@@ -882,10 +889,14 @@ def test_for_proposal_adopts_frontend_when_no_template(tmp_path: Path) -> None:
     data = json.loads(
         (root / ".context" / "equipment.json").read_text(encoding="utf-8")
     )
-    installed = [i for i in data["items"] if i["source"] == "installed"]
-    assert any("frontend" in (i.get("capabilities") or []) for i in installed)
-    # adopted, never written as a file
-    assert not list((root / ".context" / "equipment").glob("*frontend*"))
+    assert not [i for i in data["items"] if i["source"] == "installed"]
+    generated = [
+        i
+        for i in data["items"]
+        if i["source"] == "generated" and "frontend" in (i.get("capabilities") or [])
+    ]
+    assert sorted(i["dimension"] for i in generated) == ["domain", "procedure"]
+    assert len(list((root / ".context" / "equipment").glob("*frontend*"))) == 2
 
 
 @pytest.mark.integration

@@ -92,7 +92,12 @@ def _evolve_learning(args: list[str]) -> int:
     from dummyindex.context.domains.evolve_gate import EvolveError
     from dummyindex.context.domains.evolve_learning import (
         finish_learning,
+        learning_status,
         pending_learning,
+    )
+    from dummyindex.context.domains.proposals.closeout import (
+        learning_exit_code,
+        learning_line,
     )
 
     values, flags, err = _parse_flags(
@@ -132,6 +137,10 @@ def _evolve_learning(args: list[str]) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 1
     print(json.dumps(result, sort_keys=True, indent=2))
+    if isinstance(result, dict):
+        learning = {**result, "status": learning_status(result)}
+        print(learning_line(learning), file=sys.stderr)
+        return learning_exit_code(learning)
     return 0
 
 

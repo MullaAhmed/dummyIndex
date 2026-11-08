@@ -7,9 +7,7 @@ description: "Persistent context engine for a repository. Builds and reconciles 
 
 > **Installed from dummyindex `__VERSION__`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, diagnose with `dummyindex context check --versions` (it reports which layer is stale), then run `/dummyindex-update` on Claude Code or `$dummyindex-update` on Codex to bring the CLI, skills, and this repo's wiring back into sync — the update skill is non-destructive on a curated `.context/`. Don't reach for a blunt `dummyindex install` to "fix" a version skew.
 
-Claude Code spells installed skills as `/dummyindex...`; Codex spells them as
-`$dummyindex...` (or selects them through `/skills`). Slash-form examples below
-are the Claude spelling of the same skill. For CLI writes, preserve the active
+Claude spells installed skills `/dummyindex...`; Codex spells them `$dummyindex...` (or via `/skills`). Slash examples below are Claude's spelling. For CLI writes, preserve the active
 host with `--platform claude` or `--platform codex`; use `both` only when the
 user explicitly wants both integrations.
 
@@ -36,16 +34,7 @@ three reviewed native defaults in project settings:
    carry the behavior across profiles and stand alone with the plugin absent.
 <!-- test-anchor:policy-selfapply:end -->
 
-Third-party sources track latest because Claude Code materializes
-marketplaces with `git clone --branch <ref>` — branch/tag names only, never a
-commit SHA, so a commit pin can never install. The two third-party records
-are a narrow reviewed built-in exception,
-not a relaxation of equip's approval boundary. Adding or swapping a source
-requires a new
-source review and release; arbitrary third-party sources still follow the
-normal `dummyindex context equip` approval flow. The install/init boundary
-prints each reviewed source, surface, and `runs_code` value before any
-default settings or runner action.
+Third-party sources track latest: Claude Code clones with `git clone --branch <ref>`, which takes branch/tag names, never a commit SHA. These two records are a narrow reviewed built-in exception, not a relaxation of equip's approval boundary. Adding or swapping a source needs review and release; other third-party sources follow `dummyindex context equip` approval. Install/init prints each reviewed source, surface, and `runs_code` value before any settings or runner action.
 
 <!-- test-anchor:policy-restatement:begin -->
 A Codex-only run writes no `.claude/**` state and invokes no Claude runner.
@@ -98,7 +87,7 @@ to the built-in set.
 12. **Phase 5.5 — Doc reorg (DESTRUCTIVE):** reorganise the repo's real `README`/`docs/**` in place to one house style. Part of the normal pipeline — no flag enables it. Still fully gated: clean tree required, backup first, every edit made in-session with per-file confirm; a dirty tree **skips** the phase (report it, never fail the run). See `council/60-doc-reorg.md`.
 13. **Phase 6 — Report:** counts, mode, where to start reading, cost — including whether Phase 5.5 ran, was skipped, and where its backup lives.
 
-Detailed instructions for each phase live in companion markdowns. **Read them as you reach each phase.** Do not duplicate their content here.
+Read companion markdowns as you reach each phase; never duplicate them here.
 
 ## Companion markdowns (read on-demand)
 
@@ -490,6 +479,10 @@ Beyond understanding + documenting, dummyindex can drive a **grounded build loop
 - **`/dummyindex-plan` / `$dummyindex-plan "<feature>"`** — scaffolds a consistency-checked `.context/proposals/<slug>/` (`spec.md`/`plan.md`/`checklist.md`) via `dummyindex context propose`; reuses `query` to avoid duplicating an existing feature and to cite conventions + reusable symbols. Claude then auto-equips with `equip apply --for-proposal <slug>`. Codex performs no equip discovery, install, or apply and leaves native execution untagged.
 - **`/dummyindex-equip` / `$dummyindex-equip`** — on Claude, builds and lifecycle-manages an evolving `.claude/` toolkit with an origin-hash baseline. On Codex, performs a **read-only** capability-routing report over already available native skills/custom agents and the built-in `explorer` / `worker` / `default`; it writes neither `.claude/**` nor `.context/equipment.json`.
 - **`/dummyindex-build` / `$dummyindex-build`** — drives the proposal's `checklist.md` one dependency wave at a time with verify-before-tick, then reconciles new code into `.context/`. Claude uses its manifest and stops if it is absent. Codex treats a missing manifest as normal and proceeds directly with built-in native subagents. The post-build `equip patch` learning step is Claude-only.
+
+## Placement rule
+
+Prefer a skill, script, or subagent over always-on prose. Adding always-on text requires cutting some.
 
 ## Final word
 

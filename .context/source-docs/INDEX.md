@@ -2,7 +2,7 @@
 
 > **Advisory — verify before quoting.** This catalog is generated from prose checked into the repo. Docs drift faster than code. Every entry carries a `confidence` (high / medium / low) derived from how many of its backticked code references still match the current AST. Treat high-confidence docs as hypotheses worth quoting; cross-check medium-confidence docs against `../map/symbols.json` and `../tree.json`; treat low-confidence docs as historical context only.
 
-_84 doc(s) — 19 high · 23 medium · 42 low._
+_79 doc(s) — 19 high · 22 medium · 38 low._
 
 | Doc | Type | Confidence | Broken refs | Age |
 |---|---|---|---|---|
@@ -20,7 +20,7 @@ _84 doc(s) — 19 high · 23 medium · 42 low._
 | [`dummyindex/skills/audit/agents/security.md`](../../dummyindex/skills/audit/agents/security.md) — Security auditor — dummyindex audit panel | markdown | **high** | — | recent |
 | [`dummyindex/skills/council/19-resume.md`](../../dummyindex/skills/council/19-resume.md) — Resumption — pick up where we left off | markdown | **high** | 0 / 1 | recent |
 | [`dummyindex/skills/council/22-parallel-dispatch.md`](../../dummyindex/skills/council/22-parallel-dispatch.md) — Parallel dispatch — the council batch loop | markdown | **high** | 0 / 1 | recent |
-| [`research_notes/Self evolving harness design review/harness_optimizers.md`](../../research_notes/Self evolving harness design review/harness_optimizers.md) — Self-Improving Agent Harness Optimizers (Harness², Meta-Harness, Self-Harness, GEPA, DGM, SICA, and related 2025-2026 systems) | markdown | **high** | — | recent |
+| [`tests/data/skill-budget.txt`](../../tests/data/skill-budget.txt) — dummyindex/skills/audit/SKILL.md	914 | text | **high** | — | recent |
 | [`tests/fixtures/evolve/audit-report.md`](../../tests/fixtures/evolve/audit-report.md) — Audit report — fixture snippet | markdown | **high** | — | recent |
 | [`tests/fixtures/evolve/session-now.md`](../../tests/fixtures/evolve/session-now.md) — Now | markdown | **high** | — | recent |
 | [`tests/fixtures/evolve/session-recent.md`](../../tests/fixtures/evolve/session-recent.md) — Recent | markdown | **high** | — | recent |
@@ -58,7 +58,7 @@ _84 doc(s) — 19 high · 23 medium · 42 low._
 | [`docs/guide/09-lifecycle.md`](../../docs/guide/09-lifecycle.md) — 09 — Lifecycle | markdown | **low** | 13 / 29 | recent |
 | [`docs/guide/11-roadmap.md`](../../docs/guide/11-roadmap.md) — 11 — Roadmap | markdown | **low** | 32 / 55 | recent |
 | [`docs/guide/README.md`](../../docs/guide/README.md) — dummyindex — Conceptual Guide | markdown | **low** | 4 / 7 | recent |
-| [`docs/guide/closeout.md`](../../docs/guide/closeout.md) — Close completed work without losing its lessons | markdown | **low** | 10 / 10 | recent |
+| [`docs/guide/closeout.md`](../../docs/guide/closeout.md) — Close completed work without losing its lessons | markdown | **low** | 11 / 11 | recent |
 | [`docs/reference/01-conventions.md`](../../docs/reference/01-conventions.md) — 01 — Conventions | markdown | **low** | 38 / 94 | recent |
 | [`docs/sources/installable-sources.md`](../../docs/sources/installable-sources.md) — Installable sources catalog | markdown | **low** | 5 / 7 | recent |
 | [`dummyindex/skills/agents/critic-security.md`](../../dummyindex/skills/agents/critic-security.md) — Security critic — dummyindex concerns-only persona | markdown | **low** | 5 / 10 | recent |
@@ -74,7 +74,7 @@ _84 doc(s) — 19 high · 23 medium · 42 low._
 | [`dummyindex/skills/council/56-github.md`](../../dummyindex/skills/council/56-github.md) — GitHub release-check protocol (MCP companion) | markdown | **low** | 12 / 12 | recent |
 | [`dummyindex/skills/council/58-codebase-scan.md`](../../dummyindex/skills/council/58-codebase-scan.md) — Codebase scan — author `features/graph.json` | markdown | **low** | 16 / 26 | recent |
 | [`dummyindex/skills/council/65-reconcile.md`](../../dummyindex/skills/council/65-reconcile.md) — Reconcile — fold a commit delta into the curated index | markdown | **low** | 8 / 11 | recent |
-| [`dummyindex/skills/equip/SKILL.md`](../../dummyindex/skills/equip/SKILL.md) — /dummyindex-equip / $dummyindex-equip — equip the project with a tuned, evolving toolkit | markdown | **low** | 8 / 11 | recent |
+| [`dummyindex/skills/equip/SKILL.md`](../../dummyindex/skills/equip/SKILL.md) — /dummyindex-equip / $dummyindex-equip — equip the project with a tuned, evolving toolkit | markdown | **low** | 11 / 14 | recent |
 | [`dummyindex/skills/evolve/SKILL.md`](../../dummyindex/skills/evolve/SKILL.md) — /dummyindex-evolve / $dummyindex-evolve — evidence → diagnosis → gated edit → decision history | markdown | **low** | 11 / 13 | recent |
 | [`dummyindex/skills/evolve/replay-protocol.md`](../../dummyindex/skills/evolve/replay-protocol.md) — Optional runtime replay and learning | markdown | **low** | 5 / 5 | recent |
 | [`dummyindex/skills/fleet/SKILL.md`](../../dummyindex/skills/fleet/SKILL.md) — /dummyindex-fleet / $dummyindex-fleet — fleet-run babysitter | markdown | **low** | 4 / 4 | recent |
@@ -241,6 +241,7 @@ These have broken references or are significantly older than the newest code cha
 - `item_sha256`
 - `learning_reflection`
 - `report.md`
+- _… +1 more_
 
 ### `docs/reference/01-conventions.md`
 
@@ -450,8 +451,11 @@ These have broken references or are significantly older than the newest code cha
 - `settings.json`
 - `checklist.md`
 - `patch.json`
+- `EXPERIENCE.md`
+- `library.json`
+- `equipment.json`
 - `.claude/settings.json`
-- `SKILL.md`
+- _… +1 more_
 
 ### `dummyindex/skills/evolve/SKILL.md`
 

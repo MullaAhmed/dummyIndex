@@ -365,7 +365,7 @@ Subcommands:
                                     current|opus|sonnet|haiku|fable) records the
                                     optional model-routing block in proposal.json.
                                     --force overwrites an existing proposal.
-  equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--platform agents|claude|both] [--json]
+  equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--platform agents|claude|both] [--lesson-file F] [--json]
                                     Build loop — render this repo's project-tuned
                                     toolkit. `apply` is EXPLICIT — a bare `equip`
                                     (no verb, no flags) prints this usage and exits
@@ -431,11 +431,17 @@ Subcommands:
                                     Remove PRISTINE generated files + the
                                     DUMMYINDEX_EQUIP hook + the manifest;
                                     USER_MODIFIED files are kept and reported.
-  equip patch --item NAME --from-file F [--root DIR]
+  equip patch --item NAME --from-file F [--lesson-file F] [--root DIR]
                                     Sanctioned evolution: apply an exact-once
                                     old→new patch (F is JSON {"old","new"}) to a
                                     generated item, re-baseline + patch-bump so it
                                     stays PRISTINE.
+  equip reuse CAPABILITY_ID [--force] [--root DIR]
+                                    Copy a stored library specialist into the
+                                    project (its manifest path); prints
+                                    status=ok|needs-reverify. Refuses a locally
+                                    edited target without --force. apply/patch
+                                    take --lesson-file F to store into the library.
   equip remove NAME [--root DIR] [--delete-file] [--keep-wiring]
                                     Drop one item from the manifest (and its
                                     settings.json wiring); --delete-file also removes

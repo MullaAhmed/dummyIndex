@@ -214,7 +214,9 @@ def _checklist_template(title: str) -> str:
     return (
         f"# Checklist — {title}\n\n"
         "> Flat, top-to-bottom list derived from the plan tasks + the spec's\n"
-        "> Acceptance items. Tick `- [x]` only after verifying each item.\n\n"
+        "> Acceptance items. Tick `- [x]` only after verifying each item.\n"
+        "> No live-testing/production steps; use `<!-- live-ok: reason -->` only\n"
+        "> for false positives.\n\n"
         "- [ ] _First derived checklist item._\n"
     )
 

@@ -85,9 +85,13 @@ def render_generated_set(
             source=EquipmentSource.GENERATED,
             capabilities=spec.capabilities,
             grounded_in=_merge_grounding(grounding, spec.grounding_docs),
-            # Like grounded_in: on the item, never in `content`, so origin_hash
-            # is unchanged. Empty for the core four, so the canary stays dormant.
-            invariants=invariants_for(spec.capabilities),
+            # Canary metadata (D4) — assembled exactly like grounded_in above:
+            # stamped on the item, never part of `content`, so origin_hash (the
+            # sha256 of the rendered bytes alone) is unchanged. Empty for the
+            # core four (no templated capability), so their entries stay v3-byte-
+            # identical and the canary stays dormant for them.
+            invariants=invariants_for(spec.capabilities, spec.dimension),
+            dimension=spec.dimension,
             subagent_type=spec.name if is_agent else None,
             version=_INITIAL_VERSION,
             origin_hash=content_hash(content),

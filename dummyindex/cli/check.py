@@ -31,6 +31,9 @@ def run(args: list[str]) -> int:
     auto_refresh = False
     quiet = False
     versions = False
+    budget = False
+    update_ratchet = False
+    refs = False
     leftover: list[str] = []
     for a in rest:
         if a == "--auto-refresh":
@@ -39,6 +42,12 @@ def run(args: list[str]) -> int:
             quiet = True
         elif a == "--versions":
             versions = True
+        elif a == "--budget":
+            budget = True
+        elif a == "--update-ratchet":
+            update_ratchet = True
+        elif a == "--refs":
+            refs = True
         else:
             leftover.append(a)
     if leftover:
@@ -47,8 +56,18 @@ def run(args: list[str]) -> int:
 
     out_root = resolve_context_root(scope, explicit_root=explicit_root)
 
+    if update_ratchet and not budget:
+        print("error: --update-ratchet requires --budget", file=sys.stderr)
+        return 2
     if versions:
         return _run_version_check(out_root, quiet=quiet)
+    if budget or refs:
+        rc = 0
+        if budget:
+            rc = _run_budget_check(out_root, update=update_ratchet)
+        if refs:
+            rc = max(rc, _run_refs_check(out_root))
+        return rc
 
     context_dir = out_root / ".context"
     if not context_dir.is_dir():
@@ -124,10 +143,78 @@ def run(args: list[str]) -> int:
     return rc
 
 
-# --- version skew detection (--versions)
-# Tiny, import-light seams so tests can monkeypatch them. Every probe is best-effort
-# and never raises (a missing layer reads "unknown"). This MUST always exit 0 so a
-# SessionStart hook never blocks a session; ``dummyindex-update`` owns remediation.
+# ----- doc budget (--budget) and disposable citations (--refs) ---------------
+
+
+def _run_budget_check(root: Path, *, update: bool) -> int:
+    """Delegate to docbudget for both groups. rc 1 on growth or refusal."""
+    from dummyindex.context.domains.docbudget import (
+        BudgetGroup,
+        read_ratchet,
+        update_ratchet,
+        write_ratchet,
+    )
+    from dummyindex.context.domains.docbudget import (
+        check as budget_check,
+    )
+    from dummyindex.context.domains.docbudget.constants import (
+        CONTEXT_RATCHET_REL,
+        SKILLS_RATCHET_REL,
+    )
+
+    rc = 0
+    for group, rel in (
+        (BudgetGroup.CONTEXT, CONTEXT_RATCHET_REL),
+        (BudgetGroup.SKILLS, SKILLS_RATCHET_REL),
+    ):
+        ratchet_path = root / rel
+        try:
+            ratchet = read_ratchet(ratchet_path)
+        except ValueError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        if update:
+            result = update_ratchet(root, ratchet, group)
+            write_ratchet(ratchet_path, result.ratchet)
+            print(
+                f"{rel}: {len(result.ratchet)} entries, {len(result.lowered)} lowered"
+            )
+            for v in result.refused:
+                print(f"  refused: {v.path} grew {v.recorded} -> {v.words} words")
+                rc = 1
+            continue
+        for v in budget_check(root, ratchet, group):
+            if v.recorded is None:
+                print(f"over budget: {v.path} {v.words} words (ceiling {v.limit})")
+            else:
+                print(f"grew: {v.path} {v.words} words (recorded {v.recorded})")
+            rc = 1
+    if rc == 0 and not update:
+        print("context check --budget: ok")
+    return rc
+
+
+def _run_refs_check(root: Path) -> int:
+    """List durable docs citing proposals/audits. rc 1 if any."""
+    from dummyindex.context.domains.docguard.citations import scan_durable
+
+    hits = scan_durable(root)
+    for path, cites in hits:
+        print(f"{path}: {', '.join(cites)}")
+    if not hits:
+        print("context check --refs: clean")
+        return 0
+    return 1
+
+
+# ----- version skew detection (--versions) ----------------------------------
+#
+# The seams below are tiny so they can be monkeypatched in tests and kept
+# import-light. All probes are best-effort and never raise — a missing layer is
+# reported as "unknown", never an error. Detection only: remediation is the
+# installed ``dummyindex-update`` skill (which owns the latest-vs-installed
+# network check). This command MUST always exit 0 so a SessionStart hook can
+# run it without ever blocking a session.
 
 
 def _running_version() -> str | None:

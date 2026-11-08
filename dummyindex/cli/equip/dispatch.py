@@ -1,10 +1,33 @@
 """`dummyindex context equip <verb>`: the codified, evolving toolkit engine (wire-only).
 
-Verbs are the :class:`EquipVerb` members; all policy lives in ``context/domains/equip/``.
-``apply`` is explicit: a bare ``equip`` prints usage and exits 2 so a probe never mutates
-the repo; only the read-only ``equip --dry-run`` runs verbless. Exit codes: 0 ok, 2 usage,
-1 runtime. The manifest write merges: prior records this run does not re-derive carry
-forward verbatim, never silently dropped.
+Verb surface (spec §9). ``apply`` is an EXPLICIT verb — a bare ``equip`` (a
+help/discovery probe) no longer applies; it prints usage and exits 2 so a probe
+never mutates the repo. The sole verbless carve-out is the read-only
+``equip --dry-run`` preview (writes nothing). The schema version equip records
+is :data:`dummyindex.context.domains.equip.SCHEMA_VERSION` (currently v4):
+
+    equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--json]
+    equip add-specialist CAPABILITY [--root DIR] [--dry-run] [--json]
+    equip discover ["query"] [--repo OWNER/NAME] [--root DIR] [--json]
+    equip install <plugin>@<marketplace> [--yes] [--scope project|local|user] [--root DIR]
+    equip status   [--root DIR] [--json]
+    equip refresh  [--root DIR] [--dry-run]
+    equip reset NAME [--root DIR]
+    equip remove NAME [--root DIR] [--delete-file] [--keep-wiring]
+    equip uninstall [--root DIR] [--dry-run]
+    equip patch --item NAME --from-file F [--root DIR]
+    equip verify <plugin>@<marketplace>
+    equip reuse CAPABILITY_ID [--force] [--root DIR]
+    (apply / patch accept --lesson-file F to store specialists in the library)
+
+Wire-only: every handler parses its flags locally, calls the equip domain
+(detect → catalog → render | adopt → apply files + settings hooks → manifest,
+plus the hash-baselined lifecycle and the patch seam), prints, and returns an
+exit code (0 / 2 usage / 1 runtime). All policy lives in
+``dummyindex/context/domains/equip/``; this module never decides what to build.
+The manifest write MERGES with the prior manifest — records this run does not
+re-derive (marketplace/vendored/adopted/stale-generated) carry forward
+verbatim, never silently dropped.
 """
 
 from __future__ import annotations
@@ -61,6 +84,7 @@ from .common import (
 )
 from .discover import run_discover
 from .install import run_install
+from .library_verbs import read_lesson_file, run_reuse, store_items
 from .plugin_state import run_verify
 from .verbs import (
     run_patch,
@@ -109,6 +133,8 @@ def run(args: list[str]) -> int:
         return run_install(rest)
     if verb is EquipVerb.VERIFY:
         return run_verify(rest)
+    if verb is EquipVerb.REUSE:
+        return run_reuse(rest)
     # Unreachable: _split_verb only returns a member or raises via the caller.
     print(f"error: unknown equip verb {verb!r}", file=sys.stderr)  # pragma: no cover
     return 2  # pragma: no cover
@@ -117,7 +143,7 @@ def run(args: list[str]) -> int:
 _VERB_REQUIRED_MESSAGE = (
     "error: `equip` requires an explicit verb; did you mean `equip apply`?\n"
     "  verbs: apply | add-specialist | status | refresh | reset | remove | "
-    "uninstall | patch | discover | install | verify\n"
+    "uninstall | patch | discover | install | verify | reuse\n"
     "  (verbless `equip --dry-run` still previews; run "
     "`dummyindex context equip --help` for usage)"
 )
@@ -146,11 +172,18 @@ def run_apply(rest: list[str]) -> int:
     proposal, rest = pull_flag_value(rest, "for-proposal")
     specialist, rest = pull_flag_value(rest, "specialist")
     platform, rest = pull_flag_value(rest, "platform")
+    lesson_file, rest = pull_flag_value(rest, "lesson-file")
     try:
         platform = normalize_platform_arg(platform or "agents")
     except ValueError:
         print("error: --platform must be claude|agents|both", file=sys.stderr)
         return 2
+    lesson = None
+    if lesson_file is not None:
+        lesson, lesson_err = read_lesson_file(lesson_file)
+        if lesson_err:
+            print(f"error: {lesson_err}", file=sys.stderr)
+            return 2
     project_root, leftover = resolve_root(rest)
     if leftover:
         print(f"error: unknown argument(s) for `equip`: {leftover}", file=sys.stderr)
@@ -163,14 +196,19 @@ def run_apply(rest: list[str]) -> int:
             return 2
         explicit_specialists = (specialist,)
 
-    return _run_apply(
+    applied: set[str] = set()
+    code = _run_apply(
         project_root,
         dry_run=dry_run,
         as_json=as_json,
         proposal=proposal,
         explicit_specialists=explicit_specialists,
         platform=platform,
+        applied=applied,
     )
+    if code == 0 and not dry_run:
+        code = store_items(project_root, lesson, applied)
+    return code
 
 
 def run_add_specialist(rest: list[str]) -> int:
@@ -236,6 +274,7 @@ def _run_apply(
     proposal: str | None,
     explicit_specialists: tuple[str, ...],
     platform: str = "codex",
+    applied: set[str] | None = None,
 ) -> int:
     """Shared apply pipeline for ``apply`` and ``add-specialist``."""
     context_dir = project_root / ".context"
@@ -353,6 +392,7 @@ def _run_apply(
         context_dir=context_dir,
         as_json=as_json,
         native_claude=platform in ("claude", "both"),
+        applied=applied,
     )
 
 
@@ -416,6 +456,7 @@ def _apply_write(
     context_dir: Path,
     as_json: bool,
     native_claude: bool = False,
+    applied: set[str] | None = None,
 ) -> int:
     """Write generated files (USER_MODIFIED-safe), wire hooks, MERGE the manifest.
 
@@ -653,6 +694,10 @@ def _apply_write(
             if warning:
                 adapter_warnings.append(warning)
                 print(f"warning: {warning}", file=sys.stderr)
+
+    if applied is not None:
+        applied.update(files_written)
+        applied.update(adopted)
 
     if as_json:
         payload = {

@@ -1,10 +1,22 @@
-"""`dummyindex context guard-doc-write`: PreToolUse Write-guard (wire-only, fail-open).
+"""`dummyindex context guard-doc-write` — PreToolUse Write/Edit/MultiEdit guard.
 
-Reads the hook JSON from stdin and prints a one-line JSON ``deny`` when a ``Write`` would
-create a stray planning doc under ``docs/``; otherwise silent. It ALWAYS returns 0, since
-a PreToolUse exit 2 blocks the tool. Bad stdin, non-``Write`` tools, a missing or
-non-repo-relative path, a disabled guard, an allow-listed path, arg-parse errors and any
-exception all allow. No git, network or subprocess: pure read → classify → decide.
+Two checks. (1) Citation guard (all three tools): deny new text that adds a
+``.context/(proposals|audits)/<slug>/`` citation, absent from the existing file,
+to authored durable markdown. (2) Stray-doc guard (``Write`` only). Wire-only: read the PreToolUse hook JSON from stdin, decide whether the target
+``Write`` would create a stray internal planning doc under ``docs/``, and either
+print a single-line JSON ``deny`` payload or stay silent. It ALWAYS returns 0 —
+a PreToolUse hook that exits 2 *blocks* the tool, so this guard never does that:
+it speaks only through the JSON ``permissionDecision`` and otherwise allows.
+
+Fail-open is the whole contract. Malformed/empty stdin, a non-``Write`` tool
+(``Edit``/``MultiEdit`` can only maintain an existing file, never create a new
+leak), a missing ``file_path``, a path the classifier cannot make repo-relative,
+a disabled guard, an allow-listed path, or any internal exception all resolve to
+"allow": exit 0 with empty stdout. No git, no network, no subprocess on this
+path — the guard is a pure read -> classify -> decide.
+
+It deliberately does NOT inherit ``reconcile_gate.run``'s ``return 2`` arg-error
+branch: an arg-parse problem falls through to the process cwd and allows.
 """
 
 from __future__ import annotations
@@ -17,6 +29,8 @@ from .common import parse_path_and_root, resolve_context_root
 from .memory import read_hook_stdin
 
 WRITE_TOOL = "Write"
+CITATION_TOOLS = frozenset({"Write", "Edit", "MultiEdit"})
+MAX_SCAN_CHARS = 1_000_000  # 1 MB cap; larger input is allowed unscanned
 
 
 def run(args: list[str]) -> int:
@@ -36,9 +50,8 @@ def _decide(args: list[str]) -> int:
     repo_root = _resolve_repo_root(args)
 
     hook = read_hook_stdin()
-    if hook.get("tool_name") != WRITE_TOOL:
-        # Matcher is Write-only; Edit/MultiEdit require a pre-existing file and
-        # so can only maintain an existing doc, never create a new leak.
+    tool_name = hook.get("tool_name")
+    if tool_name not in CITATION_TOOLS:
         return 0
 
     tool_input = hook.get("tool_input")
@@ -59,6 +72,19 @@ def _decide(args: list[str]) -> int:
 
     # classify_doc_path raises DocPathError for a path outside repo_root; the
     # outer catch-all turns that into a fail-open allow.
+    try:
+        citation_deny = _citation_deny(repo_root, file_path, tool_input)
+    except Exception:
+        citation_deny = {}  # fail open for the citation check only
+    if citation_deny:
+        print(json.dumps(citation_deny, separators=(",", ":")))
+        return 0
+
+    if tool_name != WRITE_TOOL:
+        # Edit/MultiEdit can only maintain an existing file, never create a
+        # stray planning doc; only the citation check above applies to them.
+        return 0
+
     classification = classify_doc_path(repo_root, file_path)
 
     rel_path = classification.rel_path or ""
@@ -70,6 +96,80 @@ def _decide(args: list[str]) -> int:
     if payload:
         print(json.dumps(payload, separators=(",", ":")))
     return 0
+
+
+def _new_texts(tool_input: dict) -> list[str]:
+    """Collect new-text strings from content / new_string / edits[].new_string."""
+    texts: list[str] = []
+    for key in ("content", "new_string"):
+        value = tool_input.get(key)
+        if isinstance(value, str):
+            texts.append(value)
+    edits = tool_input.get("edits")
+    if isinstance(edits, list):
+        for edit in edits:
+            value = edit.get("new_string") if isinstance(edit, dict) else None
+            if isinstance(value, str):
+                texts.append(value)
+    return texts
+
+
+def _repo_rel(repo_root: Path, file_path: str) -> str | None:
+    """Repo-relative posix path, tolerant of backslash separators; None if outside."""
+    p = file_path.replace("\\", "/")
+    root = repo_root.resolve().as_posix().rstrip("/")
+    if p.lower().startswith(root.lower() + "/"):
+        rel = p[len(root) + 1 :]
+    elif p.startswith("/") or (len(p) > 1 and p[1] == ":"):
+        return None
+    else:
+        rel = p
+    while rel.startswith("./"):
+        rel = rel[2:]
+    return rel
+
+
+def _post_edit_text(existing: str, tool_input: dict, texts: list[str]) -> str:
+    """Best-effort post-edit text so citations split across old/new are caught."""
+    old = tool_input.get("old_string")
+    new = tool_input.get("new_string")
+    if existing and isinstance(old, str) and old and isinstance(new, str):
+        return existing.replace(old, new, 1)
+    return "\n".join(texts)
+
+
+def _citation_deny(repo_root: Path, file_path: str, tool_input: dict) -> dict:
+    """Deny payload when new text adds a disposable citation to an authored doc."""
+    from dummyindex.context.domains.docguard.citations import (
+        added_citations,
+        is_durable_doc,
+    )
+
+    rel = _repo_rel(repo_root, file_path)
+    if rel is None or not is_durable_doc(rel):
+        return {}
+    texts = _new_texts(tool_input)
+    if sum(len(t) for t in texts) > MAX_SCAN_CHARS:
+        return {}
+    try:
+        existing = (repo_root / rel).read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        existing = ""
+    added = added_citations(existing, _post_edit_text(existing, tool_input, texts))
+    if not added:
+        return {}
+    cited = ", ".join(f".context/{c}" for c in added)
+    return {
+        "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "deny",
+            "permissionDecisionReason": (
+                f"{rel} is durable authored documentation but the new text cites "
+                f"disposable workspace {cited}. Proposals and audits are deleted "
+                "after closeout; state the fact itself instead of linking to them."
+            ),
+        }
+    }
 
 
 def _resolve_repo_root(args: list[str]) -> Path:

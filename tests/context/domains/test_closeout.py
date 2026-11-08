@@ -12,8 +12,15 @@ import pytest
 
 from dummyindex.cli import dispatch
 from dummyindex.context.domains.buildloop import parse_checklist
+from dummyindex.context.domains.evolve_learning import (
+    enqueue_learning,
+    prepare_learning,
+    read_event,
+    run_learning,
+)
 from dummyindex.context.domains.gc import CandidateKind, GcTargetError, delete_workspace
 from dummyindex.context.domains.proposals import CloseoutError, closeout_workspace
+from dummyindex.context.domains.proposals.closeout import learning_exit_code
 from dummyindex.context.domains.proposals.retirement import (
     ADMIN_FILES,
     digest,
@@ -584,3 +591,213 @@ def test_closeout_cli_uses_the_same_reviewed_receipt(tmp_path: Path, kind: str) 
     )
     assert dispatch([*args[1:], "--root", str(tmp_path), "--json"]) == 0
     assert (context / f"gc/closeouts/{kind}-work.json").is_file()
+
+
+def _learning_audit(tmp_path: Path, *, tests: list[str]) -> tuple[Path, Path, dict]:
+    """Audit workspace plus a pre-change (legacy-shape) reflection on a fresh rules doc."""
+    context, workspace = _workspace(tmp_path, kind="audit")
+    rules = context / "conventions/rules.md"
+    rules.write_text("# Rules\n\nOwner text.\n", encoding="utf-8")
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src/parser.py").write_text("VALUE = 1\n", encoding="utf-8")
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests/test_ok.py").write_text(
+        "from pathlib import Path\n\n"
+        "def test_rule():\n"
+        "    assert 'parser-rule' in Path('.context/conventions/rules.md').read_text()\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "tests/test_bad.py").write_text(
+        "def test_bad():\n    assert False\n", encoding="utf-8"
+    )
+    reflection = {
+        "verified": True,
+        "target": ".context/conventions/rules.md",
+        "rule_id": "parser-rule",
+        "body": "Use the shared parser.",
+        "expected_sha256": digest(rules.read_bytes()),
+        "sources": ["src/parser.py"],
+        "tests": tests,
+    }
+    manifest = _manifest(workspace)
+    manifest["learning_reflection"] = reflection
+    return context, workspace, manifest
+
+
+def _learner_for(status: str, state: dict):
+    """Build the injected learner that yields ``status``; no monkeypatching."""
+
+    def learner(context_dir, **kwargs):
+        state["calls"] = state.get("calls", 0) + 1
+        if status == "failed":
+            raise RuntimeError("learner unavailable")
+        if status == "ignored":
+            return enqueue_learning(
+                context_dir,
+                event_id=kwargs["event_id"],
+                origin="evolve",
+                evidence=kwargs["evidence"],
+            )
+        if status == "no_entry":
+            enqueue_learning(
+                context_dir,
+                event_id=kwargs["event_id"],
+                origin="closeout",
+                evidence=kwargs["evidence"],
+            )
+            return prepare_learning(context_dir, kwargs["event_id"], None)
+        return run_learning(context_dir, **kwargs)
+
+    return learner
+
+
+_CASES = {
+    "applied": ["tests/test_ok.py"],
+    "evaluated": ["tests/test_bad.py"],
+    "blocked": [],
+    "no_entry": None,
+    "pending": None,
+    "ignored": None,
+    "failed": None,
+}
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("status", list(_CASES))
+def test_every_learning_status_is_persisted_and_only_failed_exits_nonzero(
+    tmp_path: Path, status: str
+) -> None:
+    tests = _CASES[status]
+    context, _, manifest = _learning_audit(tmp_path, tests=tests or [])
+    if tests is None:
+        manifest.pop("learning_reflection")
+    state: dict = {}
+    learner = _learner_for(status, state)
+
+    receipt = closeout_workspace(context, "audit", "work", manifest, learner=learner)
+
+    assert receipt["learning"]["status"] == status
+    assert learning_exit_code(receipt["learning"]) == (1 if status == "failed" else 0)
+    event_id = next(
+        f"closeout:audit:work:{digest((json.dumps(r, indent=2, sort_keys=True) + chr(10)).encode())}"
+        for r in [{k: v for k, v in receipt.items() if k != "learning"}]
+    )
+    stored = read_event(context, event_id)
+    failed = context / "gc/learning/audit-work.failed.json"
+    if status == "failed":
+        assert stored is None
+        record = json.loads(failed.read_text(encoding="utf-8"))
+        assert record["status"] == "failed"
+        assert "learner unavailable" in record["error"]
+        assert b"\r" not in failed.read_bytes()
+    elif status == "ignored":
+        assert stored is None
+        assert not failed.exists()
+    else:
+        assert stored is not None and stored["status"] == status
+        assert not failed.exists()
+
+    if status in {"applied", "evaluated", "blocked", "no_entry"}:
+        # Settled statuses are reported from storage; the learner is not re-run.
+        again = closeout_workspace(context, "audit", "work", manifest, learner=learner)
+        assert again["learning"]["status"] == status
+        assert state["calls"] == 1
+
+
+@pytest.mark.integration
+def test_failed_learning_keeps_receipt_bytes_and_rerun_retries(tmp_path: Path) -> None:
+    context, workspace, manifest = _learning_audit(tmp_path, tests=[])
+    manifest.pop("learning_reflection")
+    receipt_file = context / "gc/closeouts/audit-work.json"
+
+    first = closeout_workspace(
+        context, "audit", "work", manifest, learner=_learner_for("failed", {})
+    )
+    assert first["learning"]["status"] == "failed"
+    failed = context / "gc/learning/audit-work.failed.json"
+    assert failed.is_file()
+    receipt_bytes = receipt_file.read_bytes()
+    assert b'"learning"' not in receipt_bytes
+
+    second = closeout_workspace(context, "audit", "work", manifest)
+    assert second["learning"]["status"] == "pending"
+    assert receipt_file.read_bytes() == receipt_bytes
+    assert not failed.exists()
+
+
+@pytest.mark.integration
+def test_settled_status_clears_stale_failed_record(tmp_path: Path) -> None:
+    context, _, manifest = _learning_audit(tmp_path, tests=[])
+    manifest.pop("learning_reflection")
+    closeout_workspace(
+        context, "audit", "work", manifest, learner=_learner_for("failed", {})
+    )
+    failed = context / "gc/learning/audit-work.failed.json"
+    assert failed.is_file()
+    closeout_workspace(
+        context, "audit", "work", manifest, learner=_learner_for("no_entry", {})
+    )
+    closeout_workspace(context, "audit", "work", manifest)
+    assert not failed.exists()
+
+
+@pytest.mark.integration
+def test_failed_event_after_creation_is_marked_and_retried(tmp_path: Path) -> None:
+    context, _, manifest = _learning_audit(tmp_path, tests=["tests/test_ok.py"])
+    rules = context / "conventions/rules.md"
+    owner = rules.read_bytes()
+
+    def late_failure(context_dir, **kwargs):
+        enqueue_learning(
+            context_dir,
+            event_id=kwargs["event_id"],
+            origin="closeout",
+            evidence=kwargs["evidence"],
+            cue=kwargs["cue"],
+        )
+        raise RuntimeError("died after event creation")
+
+    first = closeout_workspace(context, "audit", "work", manifest, learner=late_failure)
+    assert first["learning"]["status"] == "failed"
+    assert first["learning"]["state"] == "pending"
+    assert not (context / "gc/learning/audit-work.failed.json").exists()
+    assert rules.read_bytes() == owner
+
+    second = closeout_workspace(context, "audit", "work", manifest)
+    assert second["learning"]["status"] == "applied"
+    assert "parser-rule" in rules.read_text(encoding="utf-8")
+
+
+@pytest.mark.integration
+def test_legacy_reflection_closes_flagged_legacy_shape_not_failed(
+    tmp_path: Path,
+) -> None:
+    context, _, manifest = _learning_audit(tmp_path, tests=["tests/test_ok.py"])
+    with pytest.warns(UserWarning, match="legacy_shape"):
+        receipt = closeout_workspace(context, "audit", "work", manifest)
+    assert receipt["learning"]["status"] == "applied"
+    assert receipt["learning"]["legacy_shape"] is True
+    assert learning_exit_code(receipt["learning"]) == 0
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("bad", [[{"cue": "x"}], {"cue": "only a cue"}])
+def test_malformed_lesson_reflection_is_rejected_before_closeout(
+    tmp_path: Path, bad
+) -> None:
+    context, workspace, manifest = _learning_audit(tmp_path, tests=[])
+    manifest["learning_reflection"] = bad
+    with pytest.raises(CloseoutError, match="learning_reflection"):
+        closeout_workspace(context, "audit", "work", manifest)
+    assert not (context / "gc/closeouts/audit-work.json").exists()
+
+
+@pytest.mark.unit
+def test_disposable_ref_has_a_single_home() -> None:
+    from dummyindex.context.domains.docguard import citations
+    from dummyindex.context.domains.proposals import closeout, retirement
+
+    assert not hasattr(retirement, "DISPOSABLE_REF")
+    assert not hasattr(closeout, "DISPOSABLE_REF")
+    assert citations.cites_disposable(".context/proposals/x/spec.md")
+    assert not citations.cites_disposable(".context/features/x/spec.md")

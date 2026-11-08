@@ -1,10 +1,38 @@
 """Managed Claude Code hooks for `.context/` repos. Invariant: never rebuild the backbone.
 
-- UserPromptSubmit: behavior contract + correction feedback beside every prompt.
-- SessionStart: drift report, session memory, GC nudge, silent feedback mining.
-- Stop: handoff nudge + reconcile gate. PreCompact: ``now.md`` breadcrumb.
-- PreToolUse(``Write``): denies new planning docs in unmanaged locations.
-Legacy auto-rebuild hooks overwrote council-enriched features; ``install`` scrubs them.
+Installs five Claude Code hook events so every session in a repo with `.context/`
+benefits from automated context management:
+
+1. **UserPromptSubmit** — injects a compact project behavior contract plus
+   bounded correction feedback beside every prompt. This keeps the always-on
+   ADHD output shape and automatic skill routing live in long sessions and
+   works across alternate Claude profiles without relying on per-profile
+   plugin materialisation.
+2. **SessionStart** — refreshes local skill feedback, then emits a drift report
+   and the last session-memory block as ``additionalContext`` before the
+   session's first turn.
+3. **Stop** — nudges the user to checkpoint a handoff when the session is
+   substantial (long output or subagents ran) and no handoff was saved yet.
+4. **PreCompact** — writes a deterministic breadcrumb entry to ``now.md``
+   before context is discarded by compaction, so the session is never blank.
+5. **PreToolUse** (matcher ``Write|Edit|MultiEdit``) — classifies a ``Write`` target and
+   denies (with guidance) one that would create an internal planning doc in an
+   unmanaged location, so the leak can't recur. Unlike the retired PostToolUse
+   hook below, it mutates **nothing** (pure read→classify→deny), so it upholds
+   the "hooks never rebuild the backbone" invariant.
+
+History note: pre-0.13.5, this module also installed a ``git post-commit``
+hook and a Claude ``PostToolUse`` hook, both of which ran
+``dummyindex context rebuild --changed`` automatically. That mechanism
+re-ran deterministic feature scaffolding on every edit and overwrote
+council-enriched feature folders with raw ``community-N`` placeholders.
+The fix flipped the model: hooks no longer rebuild the backbone at all —
+instead, the SessionStart hook surfaces drift and the running Claude session
+updates ``.context/`` itself, in-session, where it has the full picture of
+*what* changed and *why*. ``install`` actively scrubs the legacy post-commit
++ PostToolUse entries on upgrade so a single
+``dummyindex context hooks install`` removes the broken behaviour and
+replaces it with the current managed hook set.
 """
 
 from __future__ import annotations
@@ -198,9 +226,9 @@ _PRE_COMPACT_HOOK = {
 }
 
 _PRE_TOOL_USE_HOOK = {
-    # Matcher is ``Write`` only: Edit/MultiEdit require the target to pre-exist,
-    # so they can only maintain an existing doc, never create a fresh leak.
-    "matcher": "Write",
+    # Write|Edit|MultiEdit: Write also gets the stray-doc check; all three get
+    # the citation guard. Re-install rewrites an older ``Write`` matcher.
+    "matcher": "Write|Edit|MultiEdit",
     "hooks": [
         {
             # Doc-write guard: deny a ``Write`` that would create an internal

@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from dummyindex.context.domains import docbudget
 from dummyindex.context.output.bootstrap import generate_managed_block
 from dummyindex.context.output.instructions import (
     PLAYBOOK_IDS,
@@ -661,3 +662,59 @@ def test_fleet_skill_has_no_hardcoded_project_identifiers() -> None:
         "dummyindex/fleet-runner",  # a specific proposal slug
     ):
         assert banned not in text, f"fleet SKILL.md hardcodes {banned!r}"
+
+
+# --- knowledge-lifecycle: word-budget ratchets + placement / no-live-test rules
+
+_SKILL_RATCHET = REPO_ROOT / "tests" / "data" / "skill-budget.txt"
+_CONTEXT_RATCHET = REPO_ROOT / ".context" / "doc-budget.txt"
+
+
+@pytest.mark.unit
+def test_packaged_skill_word_counts_within_ratchet() -> None:
+    ratchet = docbudget.read_ratchet(_SKILL_RATCHET)
+    violations = docbudget.check(REPO_ROOT, ratchet, docbudget.BudgetGroup.SKILLS)
+    assert not violations, (
+        "packaged skill(s) over word budget: "
+        f"{[(v.path, v.words, v.limit) for v in violations]}"
+    )
+
+
+@pytest.mark.unit
+def test_skill_ratchet_covers_every_packaged_skill_without_stale_entries() -> None:
+    ratchet = docbudget.read_ratchet(_SKILL_RATCHET)
+    packaged = {
+        path.relative_to(REPO_ROOT).as_posix()
+        for path in _SKILLS_DIR.glob("*/SKILL.md")
+    }
+    entries = {name for name in ratchet if name.endswith("/SKILL.md")}
+    assert not packaged - entries, (
+        f"skill(s) missing from skill-budget.txt: {sorted(packaged - entries)}"
+    )
+    assert not entries - packaged, (
+        f"stale skill-budget.txt entries: {sorted(entries - packaged)}"
+    )
+
+
+@pytest.mark.unit
+def test_primary_skill_documents_placement_rule() -> None:
+    text = (_SKILLS_DIR / "skill.md").read_text(encoding="utf-8")
+    assert "## Placement rule" in text
+
+
+@pytest.mark.unit
+def test_plan_skill_carries_no_live_testing_rule() -> None:
+    text = _plan_skill()
+    assert "No live-testing items" in text
+    assert "live-ok" in text
+
+
+@pytest.mark.unit
+def test_context_doc_budget_ratchet_exists_and_passes() -> None:
+    assert _CONTEXT_RATCHET.is_file(), ".context/doc-budget.txt is missing"
+    ratchet = docbudget.read_ratchet(_CONTEXT_RATCHET)
+    violations = docbudget.check(REPO_ROOT, ratchet, docbudget.BudgetGroup.CONTEXT)
+    assert not violations, (
+        "context doc(s) over word budget: "
+        f"{[(v.path, v.words, v.limit) for v in violations]}"
+    )

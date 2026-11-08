@@ -96,7 +96,7 @@
     {
       "path": "dummyindex/cli/build_loop/waves.py",
       "language": "python",
-      "symbols": 16,
+      "symbols": 17,
       "owners": [
         "build-loop"
       ],
@@ -106,7 +106,7 @@
     {
       "path": "dummyindex/cli/check.py",
       "language": "python",
-      "symbols": 9,
+      "symbols": 11,
       "owners": [
         "cli-dispatch"
       ],
@@ -266,6 +266,16 @@
       "reason": ""
     },
     {
+      "path": "dummyindex/cli/equip/library_verbs.py",
+      "language": "python",
+      "symbols": 3,
+      "owners": [
+        "equip"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
       "path": "dummyindex/cli/equip/plugin_state.py",
       "language": "python",
       "symbols": 4,
@@ -338,7 +348,7 @@
     {
       "path": "dummyindex/cli/guard_doc_write.py",
       "language": "python",
-      "symbols": 3,
+      "symbols": 7,
       "owners": [
         "managed-doc-homes"
       ],
@@ -914,6 +924,16 @@
       "reason": ""
     },
     {
+      "path": "dummyindex/context/domains/buildloop/checklist_lint.py",
+      "language": "python",
+      "symbols": 1,
+      "owners": [
+        "build-loop"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
       "path": "dummyindex/context/domains/buildloop/envelopes.py",
       "language": "python",
       "symbols": 2,
@@ -1108,6 +1128,56 @@
       "reason": ""
     },
     {
+      "path": "dummyindex/context/domains/docbudget/__init__.py",
+      "language": "python",
+      "symbols": 0,
+      "owners": [
+        "doc-budget"
+      ],
+      "state": "file-only",
+      "reason": "No AST symbols extracted; file navigation is available."
+    },
+    {
+      "path": "dummyindex/context/domains/docbudget/constants.py",
+      "language": "python",
+      "symbols": 0,
+      "owners": [
+        "doc-budget"
+      ],
+      "state": "file-only",
+      "reason": "No AST symbols extracted; file navigation is available."
+    },
+    {
+      "path": "dummyindex/context/domains/docbudget/enums.py",
+      "language": "python",
+      "symbols": 1,
+      "owners": [
+        "doc-budget"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "dummyindex/context/domains/docbudget/models.py",
+      "language": "python",
+      "symbols": 3,
+      "owners": [
+        "doc-budget"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "dummyindex/context/domains/docbudget/ratchet.py",
+      "language": "python",
+      "symbols": 9,
+      "owners": [
+        "doc-budget"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
       "path": "dummyindex/context/domains/docguard/__init__.py",
       "language": "python",
       "symbols": 0,
@@ -1116,6 +1186,16 @@
       ],
       "state": "file-only",
       "reason": "No AST symbols extracted; file navigation is available."
+    },
+    {
+      "path": "dummyindex/context/domains/docguard/citations.py",
+      "language": "python",
+      "symbols": 6,
+      "owners": [
+        "managed-doc-homes"
+      ],
+      "state": "indexed",
+      "reason": ""
     },
     {
       "path": "dummyindex/context/domains/docguard/classify.py",
@@ -1230,7 +1310,7 @@
     {
       "path": "dummyindex/context/domains/equip/enums.py",
       "language": "python",
-      "symbols": 8,
+      "symbols": 9,
       "owners": [
         "cli-dispatch",
         "equip"
@@ -1282,7 +1362,7 @@
     {
       "path": "dummyindex/context/domains/equip/generate/catalog.py",
       "language": "python",
-      "symbols": 6,
+      "symbols": 8,
       "owners": [
         "equip"
       ],
@@ -1342,7 +1422,7 @@
     {
       "path": "dummyindex/context/domains/equip/generate/specialists.py",
       "language": "python",
-      "symbols": 4,
+      "symbols": 6,
       "owners": [
         "equip"
       ],
@@ -1352,7 +1432,7 @@
     {
       "path": "dummyindex/context/domains/equip/identity.py",
       "language": "python",
-      "symbols": 2,
+      "symbols": 3,
       "owners": [
         "equip"
       ],
@@ -1383,6 +1463,16 @@
       "path": "dummyindex/context/domains/equip/lifecycle/hashing.py",
       "language": "python",
       "symbols": 1,
+      "owners": [
+        "equip"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "dummyindex/context/domains/equip/lifecycle/library.py",
+      "language": "python",
+      "symbols": 16,
       "owners": [
         "equip"
       ],
@@ -1574,7 +1664,7 @@
     {
       "path": "dummyindex/context/domains/evolve_learning.py",
       "language": "python",
-      "symbols": 7,
+      "symbols": 13,
       "owners": [
         "evolution"
       ],
@@ -2023,6 +2113,36 @@
       "reason": ""
     },
     {
+      "path": "dummyindex/context/domains/lesson/__init__.py",
+      "language": "python",
+      "symbols": 0,
+      "owners": [
+        "lesson"
+      ],
+      "state": "file-only",
+      "reason": "No AST symbols extracted; file navigation is available."
+    },
+    {
+      "path": "dummyindex/context/domains/lesson/enums.py",
+      "language": "python",
+      "symbols": 4,
+      "owners": [
+        "lesson"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "dummyindex/context/domains/lesson/models.py",
+      "language": "python",
+      "symbols": 9,
+      "owners": [
+        "lesson"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
       "path": "dummyindex/context/domains/living_rules.py",
       "language": "python",
       "symbols": 5,
@@ -2327,7 +2447,7 @@
     {
       "path": "dummyindex/context/domains/proposals/closeout.py",
       "language": "python",
-      "symbols": 12,
+      "symbols": 16,
       "owners": [
         "proposals"
       ],
@@ -3485,6 +3605,16 @@
       "reason": "No AST symbols extracted; file navigation is available."
     },
     {
+      "path": "tests/cli/equip/test_equip_reuse.py",
+      "language": "python",
+      "symbols": 21,
+      "owners": [
+        "equip"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
       "path": "tests/cli/equip/test_shared_preparation.py",
       "language": "python",
       "symbols": 21,
@@ -3510,6 +3640,26 @@
       "symbols": 10,
       "owners": [
         "bootstrap"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "tests/cli/test_check_budget.py",
+      "language": "python",
+      "symbols": 9,
+      "owners": [
+        "doc-budget"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "tests/cli/test_check_refs.py",
+      "language": "python",
+      "symbols": 4,
+      "owners": [
+        "managed-doc-homes"
       ],
       "state": "indexed",
       "reason": ""
@@ -3560,6 +3710,16 @@
       "symbols": 1,
       "owners": [
         "cli-dispatch"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "tests/cli/test_closeout_exit_codes.py",
+      "language": "python",
+      "symbols": 6,
+      "owners": [
+        "proposals"
       ],
       "state": "indexed",
       "reason": ""
@@ -3632,6 +3792,16 @@
       "symbols": 15,
       "owners": [
         "graph-query"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "tests/cli/test_guard_doc_write.py",
+      "language": "python",
+      "symbols": 19,
+      "owners": [
+        "managed-doc-homes"
       ],
       "state": "indexed",
       "reason": ""
@@ -4123,6 +4293,26 @@
       "reason": ""
     },
     {
+      "path": "tests/context/domains/docbudget/__init__.py",
+      "language": "python",
+      "symbols": 0,
+      "owners": [
+        "doc-budget"
+      ],
+      "state": "file-only",
+      "reason": "No AST symbols extracted; file navigation is available."
+    },
+    {
+      "path": "tests/context/domains/docbudget/test_ratchet.py",
+      "language": "python",
+      "symbols": 12,
+      "owners": [
+        "doc-budget"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
       "path": "tests/context/domains/docguard/__init__.py",
       "language": "python",
       "symbols": 0,
@@ -4131,6 +4321,16 @@
       ],
       "state": "file-only",
       "reason": "No AST symbols extracted; file navigation is available."
+    },
+    {
+      "path": "tests/context/domains/docguard/test_citations.py",
+      "language": "python",
+      "symbols": 6,
+      "owners": [
+        "managed-doc-homes"
+      ],
+      "state": "indexed",
+      "reason": ""
     },
     {
       "path": "tests/context/domains/docguard/test_classify.py",
@@ -4207,7 +4407,7 @@
     {
       "path": "tests/context/domains/equip/test_equip_apply_merge.py",
       "language": "python",
-      "symbols": 16,
+      "symbols": 17,
       "owners": [
         "equip",
         "tree-enrich"
@@ -4238,7 +4438,7 @@
     {
       "path": "tests/context/domains/equip/test_equip_catalog.py",
       "language": "python",
-      "symbols": 15,
+      "symbols": 18,
       "owners": [
         "equip"
       ],
@@ -4299,6 +4499,16 @@
       "path": "tests/context/domains/equip/test_equip_install_plan.py",
       "language": "python",
       "symbols": 7,
+      "owners": [
+        "equip"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "tests/context/domains/equip/test_equip_library.py",
+      "language": "python",
+      "symbols": 19,
       "owners": [
         "equip"
       ],
@@ -4380,7 +4590,7 @@
     {
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "language": "python",
-      "symbols": 32,
+      "symbols": 36,
       "owners": [
         "equip"
       ],
@@ -4701,7 +4911,7 @@
     {
       "path": "tests/context/domains/test_build_loop.py",
       "language": "python",
-      "symbols": 65,
+      "symbols": 71,
       "owners": [
         "build-loop"
       ],
@@ -4729,9 +4939,19 @@
       "reason": ""
     },
     {
+      "path": "tests/context/domains/test_checklist_lint.py",
+      "language": "python",
+      "symbols": 5,
+      "owners": [
+        "build-loop"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
       "path": "tests/context/domains/test_closeout.py",
       "language": "python",
-      "symbols": 18,
+      "symbols": 27,
       "owners": [
         "proposals"
       ],
@@ -4862,7 +5082,7 @@
     {
       "path": "tests/context/domains/test_evolve_learning.py",
       "language": "python",
-      "symbols": 11,
+      "symbols": 15,
       "owners": [
         "evolution"
       ],
@@ -4925,6 +5145,16 @@
       "symbols": 2,
       "owners": [
         "build-loop"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "tests/context/domains/test_lesson.py",
+      "language": "python",
+      "symbols": 13,
+      "owners": [
+        "lesson"
       ],
       "state": "indexed",
       "reason": ""
@@ -5144,7 +5374,7 @@
     {
       "path": "tests/context/test_hooks.py",
       "language": "python",
-      "symbols": 73,
+      "symbols": 74,
       "owners": [
         "install-surface",
         "tree-enrich"
@@ -5506,7 +5736,7 @@
     {
       "path": "tests/test_skills_doc_hygiene.py",
       "language": "python",
-      "symbols": 49,
+      "symbols": 54,
       "owners": [
         "agent-instructions",
         "bootstrap"
@@ -5595,8 +5825,8 @@
       "reason": ""
     }
   ],
-  "source_count": 553,
-  "symbol_count": 5814,
+  "source_count": 572,
+  "symbol_count": 5915,
   "unassigned": [],
   "excluded": [
     {
@@ -5642,18 +5872,6 @@
     {
       "path": "AGENTS.md",
       "reason": "tool instruction or generated file"
-    },
-    {
-      "path": "benchmarks/__pycache__",
-      "reason": "hidden or generated directory; subtree excluded"
-    },
-    {
-      "path": "benchmarks/scoring",
-      "reason": ".dummyindexignore; subtree excluded"
-    },
-    {
-      "path": "benchmarks/suites",
-      "reason": ".dummyindexignore; subtree excluded"
     },
     {
       "path": "dummyindex.egg-info",
@@ -5708,6 +5926,10 @@
       "reason": "hidden or generated directory; subtree excluded"
     },
     {
+      "path": "dummyindex/context/domains/docbudget/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
       "path": "dummyindex/context/domains/docguard/__pycache__",
       "reason": "hidden or generated directory; subtree excluded"
     },
@@ -5749,6 +5971,10 @@
     },
     {
       "path": "dummyindex/context/domains/graph_query/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
+      "path": "dummyindex/context/domains/lesson/__pycache__",
       "reason": "hidden or generated directory; subtree excluded"
     },
     {
@@ -5844,10 +6070,6 @@
       "reason": "hidden or generated directory; subtree excluded"
     },
     {
-      "path": "tests/benchmarks/__pycache__",
-      "reason": "hidden or generated directory; subtree excluded"
-    },
-    {
       "path": "tests/cli/__pycache__",
       "reason": "hidden or generated directory; subtree excluded"
     },
@@ -5873,6 +6095,10 @@
     },
     {
       "path": "tests/context/domains/debt/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
+      "path": "tests/context/domains/docbudget/__pycache__",
       "reason": "hidden or generated directory; subtree excluded"
     },
     {
@@ -5934,6 +6160,10 @@
     {
       "path": "tests/usage/__pycache__",
       "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
+      "path": "uv.lock",
+      "reason": ".dummyindexignore"
     }
   ],
   "pending": [],
@@ -5971,6 +6201,22 @@
           "id": "catalog_rationale_1__df7b78140e4d4a04",
           "path": "dummyindex/context/domains/source_docs/catalog.py",
           "source_location": "L1"
+        }
+      ],
+      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
+    },
+    {
+      "original_id": "catalog_rationale_198",
+      "candidates": [
+        {
+          "id": "catalog_rationale_198__7527d5a4e1eb16b7",
+          "path": "dummyindex/context/domains/equip/generate/catalog.py",
+          "source_location": "L198"
+        },
+        {
+          "id": "catalog_rationale_198__c705b34a270e616a",
+          "path": "dummyindex/context/domains/audit/catalog.py",
+          "source_location": "L198"
         }
       ],
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
@@ -6178,6 +6424,11 @@
           "source_location": "L1"
         },
         {
+          "id": "constants_rationale_1__c94be41cdb668cf9",
+          "path": "dummyindex/context/domains/docbudget/constants.py",
+          "source_location": "L1"
+        },
+        {
           "id": "constants_rationale_1__f45df07bcc14a21f",
           "path": "dummyindex/context/domains/equip/constants.py",
           "source_location": "L1"
@@ -6324,7 +6575,7 @@
         {
           "id": "dispatch_run__d34efca69e0b4d32",
           "path": "dummyindex/cli/equip/dispatch.py",
-          "source_location": "L77"
+          "source_location": "L101"
         },
         {
           "id": "dispatch_run__da46f3295a18c04c",
@@ -6408,6 +6659,16 @@
         {
           "id": "enums_rationale_1__4e93a2df9a21ddb5",
           "path": "dummyindex/context/domains/graph_query/enums.py",
+          "source_location": "L1"
+        },
+        {
+          "id": "enums_rationale_1__54ebeb33d7c99ef4",
+          "path": "dummyindex/context/domains/docbudget/enums.py",
+          "source_location": "L1"
+        },
+        {
+          "id": "enums_rationale_1__6f7fd0bef31f79b1",
+          "path": "dummyindex/context/domains/lesson/enums.py",
           "source_location": "L1"
         },
         {
@@ -6497,6 +6758,11 @@
           "id": "enums_rationale_34__4e93a2df9a21ddb5",
           "path": "dummyindex/context/domains/graph_query/enums.py",
           "source_location": "L34"
+        },
+        {
+          "id": "enums_rationale_34__6f7fd0bef31f79b1",
+          "path": "dummyindex/context/domains/lesson/enums.py",
+          "source_location": "L34"
         }
       ],
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
@@ -6527,6 +6793,11 @@
         {
           "id": "enums_rationale_9__4e93a2df9a21ddb5",
           "path": "dummyindex/context/domains/graph_query/enums.py",
+          "source_location": "L9"
+        },
+        {
+          "id": "enums_rationale_9__6f7fd0bef31f79b1",
+          "path": "dummyindex/context/domains/lesson/enums.py",
           "source_location": "L9"
         },
         {
@@ -6942,6 +7213,11 @@
           "source_location": "L1"
         },
         {
+          "id": "init_rationale_1__790d22a88452f423",
+          "path": "dummyindex/context/domains/lesson/__init__.py",
+          "source_location": "L1"
+        },
+        {
           "id": "init_rationale_1__7f81cb43d8c31a40",
           "path": "dummyindex/cli/__init__.py",
           "source_location": "L1"
@@ -6979,6 +7255,11 @@
         {
           "id": "init_rationale_1__91c3318d24937be6",
           "path": "dummyindex/pipeline/__init__.py",
+          "source_location": "L1"
+        },
+        {
+          "id": "init_rationale_1__9b7c3b0c4ec0d93f",
+          "path": "dummyindex/context/domains/docbudget/__init__.py",
           "source_location": "L1"
         },
         {
@@ -7045,6 +7326,38 @@
           "id": "init_rationale_1__ff0a1e62eded110e",
           "path": "dummyindex/context/domains/source_docs/__init__.py",
           "source_location": "L1"
+        }
+      ],
+      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
+    },
+    {
+      "original_id": "init_rationale_118",
+      "candidates": [
+        {
+          "id": "init_rationale_118__0363ec6e683b505e",
+          "path": "dummyindex/context/output/viewer/__init__.py",
+          "source_location": "L118"
+        },
+        {
+          "id": "init_rationale_118__4896d6efcd3c9055",
+          "path": "dummyindex/pipeline/build/__init__.py",
+          "source_location": "L118"
+        }
+      ],
+      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
+    },
+    {
+      "original_id": "init_rationale_69",
+      "candidates": [
+        {
+          "id": "init_rationale_69__4896d6efcd3c9055",
+          "path": "dummyindex/pipeline/build/__init__.py",
+          "source_location": "L69"
+        },
+        {
+          "id": "init_rationale_69__7f81cb43d8c31a40",
+          "path": "dummyindex/cli/__init__.py",
+          "source_location": "L69"
         }
       ],
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
@@ -7124,7 +7437,7 @@
         {
           "id": "models_from_dict__89f54e67883c2417",
           "path": "dummyindex/context/domains/equip/models.py",
-          "source_location": "L145"
+          "source_location": "L161"
         },
         {
           "id": "models_from_dict__9b37460c748d2af6",
@@ -7239,6 +7552,11 @@
           "source_location": "L1"
         },
         {
+          "id": "models_rationale_1__d1e5a479b5385b60",
+          "path": "dummyindex/context/domains/lesson/models.py",
+          "source_location": "L1"
+        },
+        {
           "id": "models_rationale_1__f62145193e0a3f4d",
           "path": "dummyindex/context/domains/preflight/models.py",
           "source_location": "L1"
@@ -7246,6 +7564,11 @@
         {
           "id": "models_rationale_1__f6a24b0f393bf9c2",
           "path": "dummyindex/context/domains/buildloop/models.py",
+          "source_location": "L1"
+        },
+        {
+          "id": "models_rationale_1__f8b427277b6f6917",
+          "path": "dummyindex/context/domains/docbudget/models.py",
           "source_location": "L1"
         }
       ],
@@ -7337,6 +7660,22 @@
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
     },
     {
+      "original_id": "models_rationale_23",
+      "candidates": [
+        {
+          "id": "models_rationale_23__6991b6d7a286c909",
+          "path": "dummyindex/context/domains/docguard/models.py",
+          "source_location": "L23"
+        },
+        {
+          "id": "models_rationale_23__d1e5a479b5385b60",
+          "path": "dummyindex/context/domains/lesson/models.py",
+          "source_location": "L23"
+        }
+      ],
+      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
+    },
+    {
       "original_id": "models_rationale_27",
       "candidates": [
         {
@@ -7404,14 +7743,88 @@
       "original_id": "models_rationale_54",
       "candidates": [
         {
-          "id": "models_rationale_54__981754b9edcc172c",
+          "id": "models_rationale_51__2a8d9f7371b51e6e",
+          "path": "dummyindex/context/domains/debt/models.py",
+          "source_location": "L51"
+        },
+        {
+          "id": "models_rationale_51__a01c8614eaec1176",
+          "path": "dummyindex/installer/link/models.py",
+          "source_location": "L51"
+        }
+      ],
+      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
+    },
+    {
+      "original_id": "models_rationale_59",
+      "candidates": [
+        {
+          "id": "models_rationale_59__981754b9edcc172c",
+          "path": "dummyindex/context/domains/memory/miner/models.py",
+          "source_location": "L59"
+        },
+        {
+          "id": "models_rationale_59__d1e5a479b5385b60",
+          "path": "dummyindex/context/domains/lesson/models.py",
+          "source_location": "L59"
+        }
+      ],
+      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
+    },
+    {
+      "original_id": "models_rationale_67",
+      "candidates": [
+        {
+          "id": "models_rationale_67__981754b9edcc172c",
           "path": "dummyindex/context/domains/memory/miner/models.py",
           "source_location": "L54"
         },
         {
           "id": "models_rationale_54__a74353b36e22f48a",
           "path": "dummyindex/usage/models.py",
-          "source_location": "L54"
+          "source_location": "L67"
+        },
+        {
+          "id": "models_rationale_67__d1e5a479b5385b60",
+          "path": "dummyindex/context/domains/lesson/models.py",
+          "source_location": "L67"
+        }
+      ],
+      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
+    },
+    {
+      "original_id": "models_rationale_83",
+      "candidates": [
+        {
+          "id": "models_rationale_83__89f54e67883c2417",
+          "path": "dummyindex/context/domains/equip/models.py",
+          "source_location": "L83"
+        },
+        {
+          "id": "models_rationale_83__981754b9edcc172c",
+          "path": "dummyindex/context/domains/memory/miner/models.py",
+          "source_location": "L83"
+        },
+        {
+          "id": "models_rationale_83__c6a51524ca66705c",
+          "path": "dummyindex/context/domains/graph_query/models.py",
+          "source_location": "L83"
+        }
+      ],
+      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
+    },
+    {
+      "original_id": "models_rationale_92",
+      "candidates": [
+        {
+          "id": "models_rationale_92__6991b6d7a286c909",
+          "path": "dummyindex/context/domains/docguard/models.py",
+          "source_location": "L92"
+        },
+        {
+          "id": "models_rationale_92__d1e5a479b5385b60",
+          "path": "dummyindex/context/domains/lesson/models.py",
+          "source_location": "L92"
         }
       ],
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
@@ -7570,38 +7983,6 @@
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
     },
     {
-      "original_id": "render_rationale_69",
-      "candidates": [
-        {
-          "id": "render_rationale_69__3ed8abac6bdf52ac",
-          "path": "dummyindex/context/domains/equip/generate/render.py",
-          "source_location": "L69"
-        },
-        {
-          "id": "render_rationale_69__725c531fb7419616",
-          "path": "dummyindex/context/domains/memory/miner/render.py",
-          "source_location": "L69"
-        }
-      ],
-      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
-    },
-    {
-      "original_id": "render_write_report",
-      "candidates": [
-        {
-          "id": "render_write_report__725c531fb7419616",
-          "path": "dummyindex/context/domains/memory/miner/render.py",
-          "source_location": "L68"
-        },
-        {
-          "id": "render_write_report__8ca189b16f0450e0",
-          "path": "dummyindex/context/domains/reality_check/render.py",
-          "source_location": "L12"
-        }
-      ],
-      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
-    },
-    {
       "original_id": "resolve_rationale_1",
       "candidates": [
         {
@@ -7618,6 +7999,27 @@
           "id": "resolve_rationale_1__c40e1a4015ff96ac",
           "path": "dummyindex/pipeline/extract/resolve.py",
           "source_location": "L1"
+        }
+      ],
+      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
+    },
+    {
+      "original_id": "resolve_rationale_26",
+      "candidates": [
+        {
+          "id": "resolve_rationale_26__810e4b57d3e4e40d",
+          "path": "dummyindex/context/domains/graph_query/resolve.py",
+          "source_location": "L26"
+        },
+        {
+          "id": "resolve_rationale_26__9c76622ced87641b",
+          "path": "dummyindex/context/domains/memory/miner/resolve.py",
+          "source_location": "L26"
+        },
+        {
+          "id": "resolve_rationale_26__c40e1a4015ff96ac",
+          "path": "dummyindex/pipeline/extract/resolve.py",
+          "source_location": "L26"
         }
       ],
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."

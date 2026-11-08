@@ -106,6 +106,8 @@ class EquipmentItem:
     triggers: tuple[str, ...] = ()
     qualification_refs: tuple[str, ...] = ()
     project_binding: dict[str, Any] = field(default_factory=dict)
+    # Specialist dimension ("procedure" | "domain"); None for legacy entries.
+    dimension: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         data: dict[str, Any] = {
@@ -139,6 +141,8 @@ class EquipmentItem:
                 data[name] = list(getattr(self, name))
         if self.project_binding:
             data["project_binding"] = self.project_binding
+        if self.dimension is not None:
+            data["dimension"] = self.dimension
         return data
 
     @classmethod
@@ -181,6 +185,9 @@ class EquipmentItem:
             project_binding=dict(data["project_binding"])
             if isinstance(data.get("project_binding"), dict)
             else {},
+            dimension=str(data["dimension"])
+            if data.get("dimension") is not None
+            else None,
         )
 
 
@@ -218,6 +225,7 @@ class GenerateSpec:
     capabilities: tuple[str, ...]
     rel_path: str
     grounding_docs: tuple[str, ...] = ()
+    dimension: str | None = None
 
 
 @dataclass(frozen=True)

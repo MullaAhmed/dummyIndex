@@ -306,8 +306,8 @@
       "name": "_do_check",
       "path": "dummyindex/cli/build_loop/dispatch.py",
       "range": [
-        219,
-        219
+        260,
+        260
       ],
       "parent": "dummyindex_cli_build_loop_dispatch_py",
       "docstring": null,
@@ -319,8 +319,8 @@
       "name": "_do_skip",
       "path": "dummyindex/cli/build_loop/dispatch.py",
       "range": [
-        236,
-        236
+        277,
+        277
       ],
       "parent": "dummyindex_cli_build_loop_dispatch_py",
       "docstring": null,
@@ -332,8 +332,8 @@
       "name": "_do_status",
       "path": "dummyindex/cli/build_loop/dispatch.py",
       "range": [
-        248,
-        248
+        289,
+        289
       ],
       "parent": "dummyindex_cli_build_loop_dispatch_py",
       "docstring": null,
@@ -345,8 +345,8 @@
       "name": "resolved_auto_recouncil",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        58,
-        58
+        86,
+        86
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -358,8 +358,8 @@
       "name": "_via_instruction",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        76,
-        76
+        104,
+        104
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -371,8 +371,8 @@
       "name": "_pool_agent_names",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        95,
-        95
+        123,
+        123
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -384,8 +384,8 @@
       "name": "_find_pool_entry",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        100,
-        100
+        128,
+        128
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -397,8 +397,8 @@
       "name": "_load_manifest",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        108,
-        108
+        136,
+        136
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -410,8 +410,8 @@
       "name": "_dispatchable",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        130,
-        130
+        159,
+        159
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -423,8 +423,8 @@
       "name": "_grounding_paths",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        151,
-        151
+        191,
+        191
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -436,8 +436,8 @@
       "name": "_main_session_entry",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        166,
-        166
+        206,
+        206
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -449,8 +449,8 @@
       "name": "_pinned_subagent_entry",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        182,
-        182
+        222,
+        222
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -462,8 +462,8 @@
       "name": "_entry_for",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        204,
-        204
+        244,
+        244
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -475,8 +475,8 @@
       "name": "_print_entry",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        306,
-        306
+        356,
+        356
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -488,8 +488,8 @@
       "name": "_print_grounding",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        319,
-        319
+        369,
+        369
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -501,8 +501,8 @@
       "name": "_print_all_done",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        328,
-        328
+        378,
+        378
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -514,8 +514,21 @@
       "name": "_resolve_routing_or_report",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        351,
-        351
+        401,
+        401
+      ],
+      "parent": "dummyindex_cli_build_loop_waves_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "waves_refuse_live_items",
+      "kind": "function",
+      "name": "_refuse_live_items",
+      "path": "dummyindex/cli/build_loop/waves.py",
+      "range": [
+        416,
+        416
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -527,8 +540,8 @@
       "name": "do_next",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        366,
-        366
+        432,
+        432
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -540,8 +553,8 @@
       "name": "do_next_wave",
       "path": "dummyindex/cli/build_loop/waves.py",
       "range": [
-        437,
-        437
+        508,
+        508
       ],
       "parent": "dummyindex_cli_build_loop_waves_py",
       "docstring": null,
@@ -561,13 +574,39 @@
       "exported": true
     },
     {
+      "symbol_id": "check_run_budget_check",
+      "kind": "function",
+      "name": "_run_budget_check",
+      "path": "dummyindex/cli/check.py",
+      "range": [
+        151,
+        151
+      ],
+      "parent": "dummyindex_cli_check_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "check_run_refs_check",
+      "kind": "function",
+      "name": "_run_refs_check",
+      "path": "dummyindex/cli/check.py",
+      "range": [
+        199,
+        199
+      ],
+      "parent": "dummyindex_cli_check_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
       "symbol_id": "check_running_version",
       "kind": "function",
       "name": "_running_version",
       "path": "dummyindex/cli/check.py",
       "range": [
-        133,
-        133
+        222,
+        222
       ],
       "parent": "dummyindex_cli_check_py",
       "docstring": null,
@@ -579,8 +618,8 @@
       "name": "_running_binary",
       "path": "dummyindex/cli/check.py",
       "range": [
-        143,
-        143
+        232,
+        232
       ],
       "parent": "dummyindex_cli_check_py",
       "docstring": null,
@@ -592,8 +631,8 @@
       "name": "_global_binary",
       "path": "dummyindex/cli/check.py",
       "range": [
-        151,
-        151
+        240,
+        240
       ],
       "parent": "dummyindex_cli_check_py",
       "docstring": null,
@@ -605,8 +644,8 @@
       "name": "_user_home",
       "path": "dummyindex/cli/check.py",
       "range": [
-        163,
-        163
+        252,
+        252
       ],
       "parent": "dummyindex_cli_check_py",
       "docstring": null,
@@ -618,8 +657,8 @@
       "name": "_read_skill_stamps",
       "path": "dummyindex/cli/check.py",
       "range": [
-        172,
-        172
+        261,
+        261
       ],
       "parent": "dummyindex_cli_check_py",
       "docstring": null,
@@ -631,8 +670,8 @@
       "name": "_read_meta_version",
       "path": "dummyindex/cli/check.py",
       "range": [
-        220,
-        220
+        321,
+        321
       ],
       "parent": "dummyindex_cli_check_py",
       "docstring": null,
@@ -644,8 +683,8 @@
       "name": "_skill_source_warnings",
       "path": "dummyindex/cli/check.py",
       "range": [
-        231,
-        231
+        332,
+        332
       ],
       "parent": "dummyindex_cli_check_py",
       "docstring": null,
@@ -657,8 +696,8 @@
       "name": "_run_version_check",
       "path": "dummyindex/cli/check.py",
       "range": [
-        271,
-        271
+        372,
+        372
       ],
       "parent": "dummyindex_cli_check_py",
       "docstring": null,
@@ -1268,8 +1307,8 @@
       "name": "run",
       "path": "dummyindex/cli/equip/dispatch.py",
       "range": [
-        77,
-        77
+        101,
+        101
       ],
       "parent": "dummyindex_cli_equip_dispatch_py",
       "docstring": null,
@@ -1281,8 +1320,8 @@
       "name": "_split_verb",
       "path": "dummyindex/cli/equip/dispatch.py",
       "range": [
-        126,
-        126
+        153,
+        153
       ],
       "parent": "dummyindex_cli_equip_dispatch_py",
       "docstring": null,
@@ -1294,8 +1333,8 @@
       "name": "run_apply",
       "path": "dummyindex/cli/equip/dispatch.py",
       "range": [
-        143,
-        143
+        174,
+        174
       ],
       "parent": "dummyindex_cli_equip_dispatch_py",
       "docstring": null,
@@ -1307,8 +1346,8 @@
       "name": "run_add_specialist",
       "path": "dummyindex/cli/equip/dispatch.py",
       "range": [
-        176,
-        176
+        219,
+        219
       ],
       "parent": "dummyindex_cli_equip_dispatch_py",
       "docstring": null,
@@ -1320,8 +1359,8 @@
       "name": "_specialist_list",
       "path": "dummyindex/cli/equip/dispatch.py",
       "range": [
-        218,
-        218
+        261,
+        261
       ],
       "parent": "dummyindex_cli_equip_dispatch_py",
       "docstring": null,
@@ -1333,8 +1372,8 @@
       "name": "_unknown_specialist_message",
       "path": "dummyindex/cli/equip/dispatch.py",
       "range": [
-        222,
-        222
+        265,
+        265
       ],
       "parent": "dummyindex_cli_equip_dispatch_py",
       "docstring": null,
@@ -1346,8 +1385,8 @@
       "name": "_apply_dry_run",
       "path": "dummyindex/cli/equip/dispatch.py",
       "range": [
-        359,
-        359
+        404,
+        404
       ],
       "parent": "dummyindex_cli_equip_dispatch_py",
       "docstring": null,
@@ -1359,8 +1398,8 @@
       "name": "_apply_write",
       "path": "dummyindex/cli/equip/dispatch.py",
       "range": [
-        410,
-        410
+        455,
+        455
       ],
       "parent": "dummyindex_cli_equip_dispatch_py",
       "docstring": null,
@@ -1372,8 +1411,8 @@
       "name": "_has_symlink_parent",
       "path": "dummyindex/cli/equip/dispatch.py",
       "range": [
-        682,
-        682
+        738,
+        738
       ],
       "parent": "dummyindex_cli_equip_dispatch_py",
       "docstring": null,
@@ -1385,8 +1424,8 @@
       "name": "_matches_content",
       "path": "dummyindex/cli/equip/dispatch.py",
       "range": [
-        691,
-        691
+        747,
+        747
       ],
       "parent": "dummyindex_cli_equip_dispatch_py",
       "docstring": null,
@@ -1398,8 +1437,8 @@
       "name": "_preview_native_adapters",
       "path": "dummyindex/cli/equip/dispatch.py",
       "range": [
-        698,
-        698
+        754,
+        754
       ],
       "parent": "dummyindex_cli_equip_dispatch_py",
       "docstring": null,
@@ -1411,8 +1450,8 @@
       "name": "_hook_grounding",
       "path": "dummyindex/cli/equip/dispatch.py",
       "range": [
-        750,
-        750
+        806,
+        806
       ],
       "parent": "dummyindex_cli_equip_dispatch_py",
       "docstring": null,
@@ -1424,8 +1463,8 @@
       "name": "_hook_items",
       "path": "dummyindex/cli/equip/dispatch.py",
       "range": [
-        758,
-        758
+        814,
+        814
       ],
       "parent": "dummyindex_cli_equip_dispatch_py",
       "docstring": null,
@@ -1437,8 +1476,8 @@
       "name": "_write_file",
       "path": "dummyindex/cli/equip/dispatch.py",
       "range": [
-        775,
-        775
+        831,
+        831
       ],
       "parent": "dummyindex_cli_equip_dispatch_py",
       "docstring": null,
@@ -1575,6 +1614,45 @@
       "exported": false
     },
     {
+      "symbol_id": "library_verbs_read_lesson_file",
+      "kind": "function",
+      "name": "read_lesson_file",
+      "path": "dummyindex/cli/equip/library_verbs.py",
+      "range": [
+        20,
+        20
+      ],
+      "parent": "dummyindex_cli_equip_library_verbs_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "library_verbs_store_items",
+      "kind": "function",
+      "name": "store_items",
+      "path": "dummyindex/cli/equip/library_verbs.py",
+      "range": [
+        35,
+        35
+      ],
+      "parent": "dummyindex_cli_equip_library_verbs_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "library_verbs_run_reuse",
+      "kind": "function",
+      "name": "run_reuse",
+      "path": "dummyindex/cli/equip/library_verbs.py",
+      "range": [
+        58,
+        58
+      ],
+      "parent": "dummyindex_cli_equip_library_verbs_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "plugin_state_declared_marketplaces",
       "kind": "function",
       "name": "declared_marketplaces",
@@ -1632,8 +1710,8 @@
       "name": "_print_refresh_report",
       "path": "dummyindex/cli/equip/verbs.py",
       "range": [
-        37,
-        37
+        38,
+        38
       ],
       "parent": "dummyindex_cli_equip_verbs_py",
       "docstring": null,
@@ -1645,8 +1723,8 @@
       "name": "run_status",
       "path": "dummyindex/cli/equip/verbs.py",
       "range": [
-        72,
-        72
+        73,
+        73
       ],
       "parent": "dummyindex_cli_equip_verbs_py",
       "docstring": null,
@@ -1658,8 +1736,8 @@
       "name": "run_refresh",
       "path": "dummyindex/cli/equip/verbs.py",
       "range": [
-        114,
-        114
+        115,
+        115
       ],
       "parent": "dummyindex_cli_equip_verbs_py",
       "docstring": null,
@@ -1671,8 +1749,8 @@
       "name": "run_reset",
       "path": "dummyindex/cli/equip/verbs.py",
       "range": [
-        142,
-        142
+        143,
+        143
       ],
       "parent": "dummyindex_cli_equip_verbs_py",
       "docstring": null,
@@ -1684,8 +1762,8 @@
       "name": "run_remove",
       "path": "dummyindex/cli/equip/verbs.py",
       "range": [
-        186,
-        186
+        187,
+        187
       ],
       "parent": "dummyindex_cli_equip_verbs_py",
       "docstring": null,
@@ -1697,8 +1775,8 @@
       "name": "run_uninstall",
       "path": "dummyindex/cli/equip/verbs.py",
       "range": [
-        236,
-        236
+        237,
+        237
       ],
       "parent": "dummyindex_cli_equip_verbs_py",
       "docstring": null,
@@ -1710,8 +1788,8 @@
       "name": "run_patch",
       "path": "dummyindex/cli/equip/verbs.py",
       "range": [
-        266,
-        266
+        267,
+        267
       ],
       "parent": "dummyindex_cli_equip_verbs_py",
       "docstring": null,
@@ -1723,8 +1801,8 @@
       "name": "_read_patch_file",
       "path": "dummyindex/cli/equip/verbs.py",
       "range": [
-        303,
-        303
+        312,
+        312
       ],
       "parent": "dummyindex_cli_equip_verbs_py",
       "docstring": null,
@@ -1775,8 +1853,8 @@
       "name": "_evolve_rules",
       "path": "dummyindex/cli/evolve.py",
       "range": [
-        138,
-        138
+        169,
+        169
       ],
       "parent": "dummyindex_cli_evolve_py",
       "docstring": null,
@@ -1788,8 +1866,8 @@
       "name": "_evolve_utility",
       "path": "dummyindex/cli/evolve.py",
       "range": [
-        156,
-        156
+        187,
+        187
       ],
       "parent": "dummyindex_cli_evolve_py",
       "docstring": null,
@@ -1801,8 +1879,8 @@
       "name": "_evolve_experiment",
       "path": "dummyindex/cli/evolve.py",
       "range": [
-        174,
-        174
+        205,
+        205
       ],
       "parent": "dummyindex_cli_evolve_py",
       "docstring": null,
@@ -1814,8 +1892,8 @@
       "name": "_parse_flags",
       "path": "dummyindex/cli/evolve.py",
       "range": [
-        248,
-        248
+        279,
+        279
       ],
       "parent": "dummyindex_cli_evolve_py",
       "docstring": null,
@@ -1827,8 +1905,8 @@
       "name": "_context_dir",
       "path": "dummyindex/cli/evolve.py",
       "range": [
-        288,
-        288
+        319,
+        319
       ],
       "parent": "dummyindex_cli_evolve_py",
       "docstring": null,
@@ -1840,8 +1918,8 @@
       "name": "_missing_context",
       "path": "dummyindex/cli/evolve.py",
       "range": [
-        295,
-        295
+        326,
+        326
       ],
       "parent": "dummyindex_cli_evolve_py",
       "docstring": null,
@@ -1853,8 +1931,8 @@
       "name": "_candidate_index",
       "path": "dummyindex/cli/evolve.py",
       "range": [
-        303,
-        303
+        334,
+        334
       ],
       "parent": "dummyindex_cli_evolve_py",
       "docstring": null,
@@ -1866,8 +1944,8 @@
       "name": "_load_candidate_lines",
       "path": "dummyindex/cli/evolve.py",
       "range": [
-        311,
-        311
+        342,
+        342
       ],
       "parent": "dummyindex_cli_evolve_py",
       "docstring": null,
@@ -1879,8 +1957,8 @@
       "name": "_evolve_harvest",
       "path": "dummyindex/cli/evolve.py",
       "range": [
-        333,
-        333
+        364,
+        364
       ],
       "parent": "dummyindex_cli_evolve_py",
       "docstring": null,
@@ -1892,8 +1970,8 @@
       "name": "_evolve_diagnose",
       "path": "dummyindex/cli/evolve.py",
       "range": [
-        421,
-        421
+        452,
+        452
       ],
       "parent": "dummyindex_cli_evolve_py",
       "docstring": null,
@@ -1905,8 +1983,8 @@
       "name": "_evolve_apply",
       "path": "dummyindex/cli/evolve.py",
       "range": [
-        536,
-        536
+        567,
+        567
       ],
       "parent": "dummyindex_cli_evolve_py",
       "docstring": null,
@@ -1918,8 +1996,8 @@
       "name": "_evolve_promote",
       "path": "dummyindex/cli/evolve.py",
       "range": [
-        643,
-        643
+        674,
+        674
       ],
       "parent": "dummyindex_cli_evolve_py",
       "docstring": null,
@@ -1931,8 +2009,8 @@
       "name": "_evolve_rollback",
       "path": "dummyindex/cli/evolve.py",
       "range": [
-        743,
-        743
+        774,
+        774
       ],
       "parent": "dummyindex_cli_evolve_py",
       "docstring": null,
@@ -1944,8 +2022,8 @@
       "name": "_evolve_discard",
       "path": "dummyindex/cli/evolve.py",
       "range": [
-        807,
-        807
+        838,
+        838
       ],
       "parent": "dummyindex_cli_evolve_py",
       "docstring": null,
@@ -2295,8 +2373,8 @@
       "name": "_gc_status",
       "path": "dummyindex/cli/gc.py",
       "range": [
-        86,
-        86
+        106,
+        106
       ],
       "parent": "dummyindex_cli_gc_py",
       "docstring": null,
@@ -2308,8 +2386,8 @@
       "name": "_gc_delete",
       "path": "dummyindex/cli/gc.py",
       "range": [
-        108,
-        108
+        128,
+        128
       ],
       "parent": "dummyindex_cli_gc_py",
       "docstring": null,
@@ -2321,8 +2399,8 @@
       "name": "_gc_stamp",
       "path": "dummyindex/cli/gc.py",
       "range": [
-        183,
-        183
+        203,
+        203
       ],
       "parent": "dummyindex_cli_gc_py",
       "docstring": null,
@@ -2334,8 +2412,8 @@
       "name": "_gc_signal",
       "path": "dummyindex/cli/gc.py",
       "range": [
-        203,
-        203
+        223,
+        223
       ],
       "parent": "dummyindex_cli_gc_py",
       "docstring": null,
@@ -2347,8 +2425,8 @@
       "name": "_status_payload",
       "path": "dummyindex/cli/gc.py",
       "range": [
-        241,
-        241
+        261,
+        261
       ],
       "parent": "dummyindex_cli_gc_py",
       "docstring": null,
@@ -2360,8 +2438,8 @@
       "name": "_print_status",
       "path": "dummyindex/cli/gc.py",
       "range": [
-        264,
-        264
+        284,
+        284
       ],
       "parent": "dummyindex_cli_gc_py",
       "docstring": null,
@@ -2373,8 +2451,8 @@
       "name": "_resolve_kind",
       "path": "dummyindex/cli/gc.py",
       "range": [
-        290,
-        290
+        310,
+        310
       ],
       "parent": "dummyindex_cli_gc_py",
       "docstring": null,
@@ -2386,8 +2464,8 @@
       "name": "_context_dir",
       "path": "dummyindex/cli/gc.py",
       "range": [
-        305,
-        305
+        325,
+        325
       ],
       "parent": "dummyindex_cli_gc_py",
       "docstring": null,
@@ -2399,8 +2477,8 @@
       "name": "_missing_context",
       "path": "dummyindex/cli/gc.py",
       "range": [
-        319,
-        319
+        339,
+        339
       ],
       "parent": "dummyindex_cli_gc_py",
       "docstring": null,
@@ -2412,8 +2490,8 @@
       "name": "_parse_flags",
       "path": "dummyindex/cli/gc.py",
       "range": [
-        328,
-        328
+        348,
+        348
       ],
       "parent": "dummyindex_cli_gc_py",
       "docstring": null,
@@ -2438,8 +2516,8 @@
       "name": "run",
       "path": "dummyindex/cli/guard_doc_write.py",
       "range": [
-        22,
-        22
+        36,
+        36
       ],
       "parent": "dummyindex_cli_guard_doc_write_py",
       "docstring": null,
@@ -2451,8 +2529,60 @@
       "name": "_decide",
       "path": "dummyindex/cli/guard_doc_write.py",
       "range": [
-        35,
-        35
+        49,
+        49
+      ],
+      "parent": "dummyindex_cli_guard_doc_write_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "guard_doc_write_new_texts",
+      "kind": "function",
+      "name": "_new_texts",
+      "path": "dummyindex/cli/guard_doc_write.py",
+      "range": [
+        101,
+        101
+      ],
+      "parent": "dummyindex_cli_guard_doc_write_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "guard_doc_write_repo_rel",
+      "kind": "function",
+      "name": "_repo_rel",
+      "path": "dummyindex/cli/guard_doc_write.py",
+      "range": [
+        117,
+        117
+      ],
+      "parent": "dummyindex_cli_guard_doc_write_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "guard_doc_write_post_edit_text",
+      "kind": "function",
+      "name": "_post_edit_text",
+      "path": "dummyindex/cli/guard_doc_write.py",
+      "range": [
+        132,
+        132
+      ],
+      "parent": "dummyindex_cli_guard_doc_write_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "guard_doc_write_citation_deny",
+      "kind": "function",
+      "name": "_citation_deny",
+      "path": "dummyindex/cli/guard_doc_write.py",
+      "range": [
+        141,
+        141
       ],
       "parent": "dummyindex_cli_guard_doc_write_py",
       "docstring": null,
@@ -2464,8 +2594,8 @@
       "name": "_resolve_repo_root",
       "path": "dummyindex/cli/guard_doc_write.py",
       "range": [
-        75,
-        75
+        175,
+        175
       ],
       "parent": "dummyindex_cli_guard_doc_write_py",
       "docstring": null,
@@ -2477,8 +2607,8 @@
       "name": "_is_subcommand_line",
       "path": "dummyindex/cli/help.py",
       "range": [
-        720,
-        720
+        729,
+        729
       ],
       "parent": "dummyindex_cli_help_py",
       "docstring": null,
@@ -2490,8 +2620,8 @@
       "name": "_line_starts_subcommand",
       "path": "dummyindex/cli/help.py",
       "range": [
-        729,
-        729
+        738,
+        738
       ],
       "parent": "dummyindex_cli_help_py",
       "docstring": null,
@@ -2503,8 +2633,8 @@
       "name": "usage_for",
       "path": "dummyindex/cli/help.py",
       "range": [
-        742,
-        742
+        751,
+        751
       ],
       "parent": "dummyindex_cli_help_py",
       "docstring": null,
@@ -7672,6 +7802,19 @@
       "exported": false
     },
     {
+      "symbol_id": "checklist_lint_live_items",
+      "kind": "function",
+      "name": "live_items",
+      "path": "dummyindex/context/domains/buildloop/checklist_lint.py",
+      "range": [
+        27,
+        27
+      ],
+      "parent": "dummyindex_context_domains_buildloop_checklist_lint_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "envelopes_envelope",
       "kind": "function",
       "name": "envelope",
@@ -7716,8 +7859,8 @@
       "name": "_tokens",
       "path": "dummyindex/context/domains/buildloop/mapping.py",
       "range": [
-        220,
-        220
+        280,
+        280
       ],
       "parent": "dummyindex_context_domains_buildloop_mapping_py",
       "docstring": null,
@@ -7729,8 +7872,8 @@
       "name": "_leading_token",
       "path": "dummyindex/context/domains/buildloop/mapping.py",
       "range": [
-        225,
-        225
+        285,
+        285
       ],
       "parent": "dummyindex_context_domains_buildloop_mapping_py",
       "docstring": null,
@@ -7742,8 +7885,8 @@
       "name": "_is_implement_capable",
       "path": "dummyindex/context/domains/buildloop/mapping.py",
       "range": [
-        233,
-        233
+        293,
+        293
       ],
       "parent": "dummyindex_context_domains_buildloop_mapping_py",
       "docstring": null,
@@ -7755,8 +7898,8 @@
       "name": "_capability_keywords",
       "path": "dummyindex/context/domains/buildloop/mapping.py",
       "range": [
-        241,
-        241
+        301,
+        301
       ],
       "parent": "dummyindex_context_domains_buildloop_mapping_py",
       "docstring": null,
@@ -7768,8 +7911,8 @@
       "name": "_score",
       "path": "dummyindex/context/domains/buildloop/mapping.py",
       "range": [
-        252,
-        252
+        312,
+        312
       ],
       "parent": "dummyindex_context_domains_buildloop_mapping_py",
       "docstring": null,
@@ -7781,8 +7924,8 @@
       "name": "_choice_for",
       "path": "dummyindex/context/domains/buildloop/mapping.py",
       "range": [
-        276,
-        276
+        338,
+        338
       ],
       "parent": "dummyindex_context_domains_buildloop_mapping_py",
       "docstring": null,
@@ -7794,8 +7937,8 @@
       "name": "_fallback_choice",
       "path": "dummyindex/context/domains/buildloop/mapping.py",
       "range": [
-        289,
-        289
+        351,
+        351
       ],
       "parent": "dummyindex_context_domains_buildloop_mapping_py",
       "docstring": null,
@@ -7807,8 +7950,8 @@
       "name": "map_task_to_equipment",
       "path": "dummyindex/context/domains/buildloop/mapping.py",
       "range": [
-        300,
-        300
+        362,
+        362
       ],
       "parent": "dummyindex_context_domains_buildloop_mapping_py",
       "docstring": null,
@@ -9362,6 +9505,253 @@
       "exported": false
     },
     {
+      "symbol_id": "enums_budgetgroup",
+      "kind": "function",
+      "name": "BudgetGroup",
+      "path": "dummyindex/context/domains/docbudget/enums.py",
+      "range": [
+        10,
+        10
+      ],
+      "parent": "dummyindex_context_domains_docbudget_enums_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_budgetviolation",
+      "kind": "class",
+      "name": "BudgetViolation",
+      "path": "dummyindex/context/domains/docbudget/models.py",
+      "range": [
+        11,
+        11
+      ],
+      "parent": "dummyindex_context_domains_docbudget_models_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_budgetviolation_to_dict",
+      "kind": "method",
+      "name": "to_dict",
+      "path": "dummyindex/context/domains/docbudget/models.py",
+      "range": [
+        19,
+        19
+      ],
+      "parent": "models_budgetviolation",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_updateresult",
+      "kind": "function",
+      "name": "UpdateResult",
+      "path": "dummyindex/context/domains/docbudget/models.py",
+      "range": [
+        29,
+        29
+      ],
+      "parent": "dummyindex_context_domains_docbudget_models_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "ratchet_measure",
+      "kind": "function",
+      "name": "measure",
+      "path": "dummyindex/context/domains/docbudget/ratchet.py",
+      "range": [
+        34,
+        34
+      ],
+      "parent": "dummyindex_context_domains_docbudget_ratchet_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "ratchet_is_skill_file",
+      "kind": "function",
+      "name": "is_skill_file",
+      "path": "dummyindex/context/domains/docbudget/ratchet.py",
+      "range": [
+        39,
+        39
+      ],
+      "parent": "dummyindex_context_domains_docbudget_ratchet_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "ratchet_ceiling",
+      "kind": "function",
+      "name": "_ceiling",
+      "path": "dummyindex/context/domains/docbudget/ratchet.py",
+      "range": [
+        44,
+        44
+      ],
+      "parent": "dummyindex_context_domains_docbudget_ratchet_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "ratchet_scan",
+      "kind": "function",
+      "name": "scan",
+      "path": "dummyindex/context/domains/docbudget/ratchet.py",
+      "range": [
+        48,
+        48
+      ],
+      "parent": "dummyindex_context_domains_docbudget_ratchet_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "ratchet_read_ratchet",
+      "kind": "function",
+      "name": "read_ratchet",
+      "path": "dummyindex/context/domains/docbudget/ratchet.py",
+      "range": [
+        62,
+        62
+      ],
+      "parent": "dummyindex_context_domains_docbudget_ratchet_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "ratchet_format_ratchet",
+      "kind": "function",
+      "name": "format_ratchet",
+      "path": "dummyindex/context/domains/docbudget/ratchet.py",
+      "range": [
+        82,
+        82
+      ],
+      "parent": "dummyindex_context_domains_docbudget_ratchet_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "ratchet_write_ratchet",
+      "kind": "function",
+      "name": "write_ratchet",
+      "path": "dummyindex/context/domains/docbudget/ratchet.py",
+      "range": [
+        88,
+        88
+      ],
+      "parent": "dummyindex_context_domains_docbudget_ratchet_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "ratchet_check",
+      "kind": "function",
+      "name": "check",
+      "path": "dummyindex/context/domains/docbudget/ratchet.py",
+      "range": [
+        93,
+        93
+      ],
+      "parent": "dummyindex_context_domains_docbudget_ratchet_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "ratchet_update_ratchet",
+      "kind": "function",
+      "name": "update_ratchet",
+      "path": "dummyindex/context/domains/docbudget/ratchet.py",
+      "range": [
+        111,
+        111
+      ],
+      "parent": "dummyindex_context_domains_docbudget_ratchet_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "citations_normalize",
+      "kind": "function",
+      "name": "_normalize",
+      "path": "dummyindex/context/domains/docguard/citations.py",
+      "range": [
+        18,
+        18
+      ],
+      "parent": "dummyindex_context_domains_docguard_citations_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "citations_cites_disposable",
+      "kind": "function",
+      "name": "cites_disposable",
+      "path": "dummyindex/context/domains/docguard/citations.py",
+      "range": [
+        22,
+        22
+      ],
+      "parent": "dummyindex_context_domains_docguard_citations_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "citations_citations",
+      "kind": "function",
+      "name": "_citations",
+      "path": "dummyindex/context/domains/docguard/citations.py",
+      "range": [
+        26,
+        26
+      ],
+      "parent": "dummyindex_context_domains_docguard_citations_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "citations_added_citations",
+      "kind": "function",
+      "name": "added_citations",
+      "path": "dummyindex/context/domains/docguard/citations.py",
+      "range": [
+        30,
+        30
+      ],
+      "parent": "dummyindex_context_domains_docguard_citations_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "citations_is_durable_doc",
+      "kind": "function",
+      "name": "is_durable_doc",
+      "path": "dummyindex/context/domains/docguard/citations.py",
+      "range": [
+        35,
+        35
+      ],
+      "parent": "dummyindex_context_domains_docguard_citations_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "citations_scan_durable",
+      "kind": "function",
+      "name": "scan_durable",
+      "path": "dummyindex/context/domains/docguard/citations.py",
+      "range": [
+        60,
+        60
+      ],
+      "parent": "dummyindex_context_domains_docguard_citations_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "classify_classify_doc_path",
       "kind": "function",
       "name": "classify_doc_path",
@@ -10103,13 +10493,26 @@
       "exported": true
     },
     {
+      "symbol_id": "enums_dimension",
+      "kind": "function",
+      "name": "Dimension",
+      "path": "dummyindex/context/domains/equip/enums.py",
+      "range": [
+        55,
+        55
+      ],
+      "parent": "dummyindex_context_domains_equip_enums_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "enums_capability",
       "kind": "function",
       "name": "Capability",
       "path": "dummyindex/context/domains/equip/enums.py",
       "range": [
-        54,
-        54
+        62,
+        62
       ],
       "parent": "dummyindex_context_domains_equip_enums_py",
       "docstring": null,
@@ -10121,8 +10524,8 @@
       "name": "ItemState",
       "path": "dummyindex/context/domains/equip/enums.py",
       "range": [
-        77,
-        77
+        88,
+        88
       ],
       "parent": "dummyindex_context_domains_equip_enums_py",
       "docstring": null,
@@ -10134,8 +10537,8 @@
       "name": "TrustTier",
       "path": "dummyindex/context/domains/equip/enums.py",
       "range": [
-        96,
-        96
+        107,
+        107
       ],
       "parent": "dummyindex_context_domains_equip_enums_py",
       "docstring": null,
@@ -10147,8 +10550,8 @@
       "name": "InstallMechanism",
       "path": "dummyindex/context/domains/equip/enums.py",
       "range": [
-        103,
-        103
+        114,
+        114
       ],
       "parent": "dummyindex_context_domains_equip_enums_py",
       "docstring": null,
@@ -10160,8 +10563,8 @@
       "name": "PluginSurface",
       "path": "dummyindex/context/domains/equip/enums.py",
       "range": [
-        110,
-        110
+        121,
+        121
       ],
       "parent": "dummyindex_context_domains_equip_enums_py",
       "docstring": null,
@@ -10368,8 +10771,8 @@
       "name": "adopt_existing",
       "path": "dummyindex/context/domains/equip/generate/adopt.py",
       "range": [
-        116,
-        116
+        152,
+        152
       ],
       "parent": "dummyindex_context_domains_equip_generate_adopt_py",
       "docstring": null,
@@ -10381,8 +10784,8 @@
       "name": "_project_specs",
       "path": "dummyindex/context/domains/equip/generate/adopt.py",
       "range": [
-        127,
-        127
+        165,
+        165
       ],
       "parent": "dummyindex_context_domains_equip_generate_adopt_py",
       "docstring": null,
@@ -10394,8 +10797,8 @@
       "name": "_match_project",
       "path": "dummyindex/context/domains/equip/generate/adopt.py",
       "range": [
-        145,
-        145
+        183,
+        183
       ],
       "parent": "dummyindex_context_domains_equip_generate_adopt_py",
       "docstring": null,
@@ -10407,8 +10810,8 @@
       "name": "_match_registry",
       "path": "dummyindex/context/domains/equip/generate/adopt.py",
       "range": [
-        152,
-        152
+        190,
+        190
       ],
       "parent": "dummyindex_context_domains_equip_generate_adopt_py",
       "docstring": null,
@@ -10420,8 +10823,8 @@
       "name": "adopt_spec_to_item",
       "path": "dummyindex/context/domains/equip/generate/adopt.py",
       "range": [
-        163,
-        163
+        201,
+        201
       ],
       "parent": "dummyindex_context_domains_equip_generate_adopt_py",
       "docstring": null,
@@ -10433,8 +10836,8 @@
       "name": "registry_capabilities",
       "path": "dummyindex/context/domains/equip/generate/adopt.py",
       "range": [
-        175,
-        175
+        217,
+        217
       ],
       "parent": "dummyindex_context_domains_equip_generate_adopt_py",
       "docstring": null,
@@ -10446,12 +10849,38 @@
       "name": "profile_has_frontend",
       "path": "dummyindex/context/domains/equip/generate/catalog.py",
       "range": [
-        36,
-        36
+        51,
+        51
       ],
       "parent": "dummyindex_context_domains_equip_generate_catalog_py",
       "docstring": null,
       "exported": true
+    },
+    {
+      "symbol_id": "catalog_profile_has_api",
+      "kind": "function",
+      "name": "profile_has_api",
+      "path": "dummyindex/context/domains/equip/generate/catalog.py",
+      "range": [
+        62,
+        62
+      ],
+      "parent": "dummyindex_context_domains_equip_generate_catalog_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "catalog_stack_signalled_capabilities",
+      "kind": "function",
+      "name": "_stack_signalled_capabilities",
+      "path": "dummyindex/context/domains/equip/generate/catalog.py",
+      "range": [
+        67,
+        67
+      ],
+      "parent": "dummyindex_context_domains_equip_generate_catalog_py",
+      "docstring": null,
+      "exported": false
     },
     {
       "symbol_id": "catalog_all_templated_capabilities",
@@ -10459,8 +10888,8 @@
       "name": "_all_templated_capabilities",
       "path": "dummyindex/context/domains/equip/generate/catalog.py",
       "range": [
-        47,
-        47
+        81,
+        81
       ],
       "parent": "dummyindex_context_domains_equip_generate_catalog_py",
       "docstring": null,
@@ -10472,8 +10901,8 @@
       "name": "build_catalog",
       "path": "dummyindex/context/domains/equip/generate/catalog.py",
       "range": [
-        58,
-        58
+        100,
+        100
       ],
       "parent": "dummyindex_context_domains_equip_generate_catalog_py",
       "docstring": null,
@@ -10485,8 +10914,8 @@
       "name": "_standard_generated_set",
       "path": "dummyindex/context/domains/equip/generate/catalog.py",
       "range": [
-        91,
-        91
+        147,
+        147
       ],
       "parent": "dummyindex_context_domains_equip_generate_catalog_py",
       "docstring": null,
@@ -10498,8 +10927,8 @@
       "name": "_format_hooks",
       "path": "dummyindex/context/domains/equip/generate/catalog.py",
       "range": [
-        124,
-        124
+        180,
+        180
       ],
       "parent": "dummyindex_context_domains_equip_generate_catalog_py",
       "docstring": null,
@@ -10511,8 +10940,8 @@
       "name": "_format_hook_command",
       "path": "dummyindex/context/domains/equip/generate/catalog.py",
       "range": [
-        141,
-        141
+        197,
+        197
       ],
       "parent": "dummyindex_context_domains_equip_generate_catalog_py",
       "docstring": null,
@@ -10667,8 +11096,8 @@
       "name": "_merge_grounding",
       "path": "dummyindex/context/domains/equip/generate/plan.py",
       "range": [
-        123,
-        123
+        150,
+        150
       ],
       "parent": "dummyindex_context_domains_equip_generate_plan_py",
       "docstring": null,
@@ -10818,13 +11247,26 @@
       "exported": true
     },
     {
+      "symbol_id": "specialists_pair",
+      "kind": "function",
+      "name": "_pair",
+      "path": "dummyindex/context/domains/equip/generate/specialists.py",
+      "range": [
+        123,
+        123
+      ],
+      "parent": "dummyindex_context_domains_equip_generate_specialists_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
       "symbol_id": "specialists_templated_capabilities",
       "kind": "function",
       "name": "templated_capabilities",
       "path": "dummyindex/context/domains/equip/generate/specialists.py",
       "range": [
-        161,
-        161
+        287,
+        287
       ],
       "parent": "dummyindex_context_domains_equip_generate_specialists_py",
       "docstring": null,
@@ -10836,8 +11278,21 @@
       "name": "invariants_for",
       "path": "dummyindex/context/domains/equip/generate/specialists.py",
       "range": [
-        170,
-        170
+        296,
+        296
+      ],
+      "parent": "dummyindex_context_domains_equip_generate_specialists_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "specialists_specialist_specs",
+      "kind": "function",
+      "name": "specialist_specs",
+      "path": "dummyindex/context/domains/equip/generate/specialists.py",
+      "range": [
+        315,
+        315
       ],
       "parent": "dummyindex_context_domains_equip_generate_specialists_py",
       "docstring": null,
@@ -10849,10 +11304,23 @@
       "name": "specialist_spec",
       "path": "dummyindex/context/domains/equip/generate/specialists.py",
       "range": [
-        184,
-        184
+        326,
+        326
       ],
       "parent": "dummyindex_context_domains_equip_generate_specialists_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "identity_capability_id",
+      "kind": "function",
+      "name": "capability_id",
+      "path": "dummyindex/context/domains/equip/identity.py",
+      "range": [
+        22,
+        22
+      ],
+      "parent": "dummyindex_context_domains_equip_identity_py",
       "docstring": null,
       "exported": true
     },
@@ -10862,8 +11330,8 @@
       "name": "capability_metadata",
       "path": "dummyindex/context/domains/equip/identity.py",
       "range": [
-        22,
-        22
+        27,
+        27
       ],
       "parent": "dummyindex_context_domains_equip_identity_py",
       "docstring": null,
@@ -10875,8 +11343,8 @@
       "name": "capability_identity",
       "path": "dummyindex/context/domains/equip/identity.py",
       "range": [
-        26,
-        26
+        31,
+        31
       ],
       "parent": "dummyindex_context_domains_equip_identity_py",
       "docstring": null,
@@ -10905,6 +11373,214 @@
         17
       ],
       "parent": "dummyindex_context_domains_equip_lifecycle_hashing_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "library_validate_lesson",
+      "kind": "function",
+      "name": "validate_lesson",
+      "path": "dummyindex/context/domains/equip/lifecycle/library.py",
+      "range": [
+        37,
+        37
+      ],
+      "parent": "dummyindex_context_domains_equip_lifecycle_library_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "library_library_dir",
+      "kind": "function",
+      "name": "_library_dir",
+      "path": "dummyindex/context/domains/equip/lifecycle/library.py",
+      "range": [
+        49,
+        49
+      ],
+      "parent": "dummyindex_context_domains_equip_lifecycle_library_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "library_index_path",
+      "kind": "function",
+      "name": "_index_path",
+      "path": "dummyindex/context/domains/equip/lifecycle/library.py",
+      "range": [
+        53,
+        53
+      ],
+      "parent": "dummyindex_context_domains_equip_lifecycle_library_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "library_read_index",
+      "kind": "function",
+      "name": "_read_index",
+      "path": "dummyindex/context/domains/equip/lifecycle/library.py",
+      "range": [
+        57,
+        57
+      ],
+      "parent": "dummyindex_context_domains_equip_lifecycle_library_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "library_norm",
+      "kind": "function",
+      "name": "_norm",
+      "path": "dummyindex/context/domains/equip/lifecycle/library.py",
+      "range": [
+        68,
+        68
+      ],
+      "parent": "dummyindex_context_domains_equip_lifecycle_library_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "library_inside",
+      "kind": "function",
+      "name": "_inside",
+      "path": "dummyindex/context/domains/equip/lifecycle/library.py",
+      "range": [
+        72,
+        72
+      ],
+      "parent": "dummyindex_context_domains_equip_lifecycle_library_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "library_safe_id",
+      "kind": "function",
+      "name": "_safe_id",
+      "path": "dummyindex/context/domains/equip/lifecycle/library.py",
+      "range": [
+        79,
+        79
+      ],
+      "parent": "dummyindex_context_domains_equip_lifecycle_library_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "library_entry_dir",
+      "kind": "function",
+      "name": "_entry_dir",
+      "path": "dummyindex/context/domains/equip/lifecycle/library.py",
+      "range": [
+        88,
+        88
+      ],
+      "parent": "dummyindex_context_domains_equip_lifecycle_library_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "library_file_hash",
+      "kind": "function",
+      "name": "_file_hash",
+      "path": "dummyindex/context/domains/equip/lifecycle/library.py",
+      "range": [
+        98,
+        98
+      ],
+      "parent": "dummyindex_context_domains_equip_lifecycle_library_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "library_experience",
+      "kind": "function",
+      "name": "_experience",
+      "path": "dummyindex/context/domains/equip/lifecycle/library.py",
+      "range": [
+        104,
+        104
+      ],
+      "parent": "dummyindex_context_domains_equip_lifecycle_library_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "library_store",
+      "kind": "function",
+      "name": "store",
+      "path": "dummyindex/context/domains/equip/lifecycle/library.py",
+      "range": [
+        111,
+        111
+      ],
+      "parent": "dummyindex_context_domains_equip_lifecycle_library_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "library_reuse",
+      "kind": "function",
+      "name": "reuse",
+      "path": "dummyindex/context/domains/equip/lifecycle/library.py",
+      "range": [
+        137,
+        137
+      ],
+      "parent": "dummyindex_context_domains_equip_lifecycle_library_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "library_find_item",
+      "kind": "function",
+      "name": "find_item",
+      "path": "dummyindex/context/domains/equip/lifecycle/library.py",
+      "range": [
+        168,
+        168
+      ],
+      "parent": "dummyindex_context_domains_equip_lifecycle_library_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "library_agent_items",
+      "kind": "function",
+      "name": "agent_items",
+      "path": "dummyindex/context/domains/equip/lifecycle/library.py",
+      "range": [
+        178,
+        178
+      ],
+      "parent": "dummyindex_context_domains_equip_lifecycle_library_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "library_reuse_capability",
+      "kind": "function",
+      "name": "reuse_capability",
+      "path": "dummyindex/context/domains/equip/lifecycle/library.py",
+      "range": [
+        191,
+        191
+      ],
+      "parent": "dummyindex_context_domains_equip_lifecycle_library_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "library_reverify",
+      "kind": "function",
+      "name": "reverify",
+      "path": "dummyindex/context/domains/equip/lifecycle/library.py",
+      "range": [
+        219,
+        219
+      ],
+      "parent": "dummyindex_context_domains_equip_lifecycle_library_py",
       "docstring": null,
       "exported": true
     },
@@ -11226,8 +11902,8 @@
       "name": "to_dict",
       "path": "dummyindex/context/domains/equip/models.py",
       "range": [
-        110,
-        110
+        124,
+        124
       ],
       "parent": "models_equipmentitem",
       "docstring": null,
@@ -11239,8 +11915,8 @@
       "name": "from_dict",
       "path": "dummyindex/context/domains/equip/models.py",
       "range": [
-        145,
-        145
+        161,
+        161
       ],
       "parent": "dummyindex_context_domains_equip_models_py",
       "docstring": null,
@@ -11252,8 +11928,8 @@
       "name": "AdoptSpec",
       "path": "dummyindex/context/domains/equip/models.py",
       "range": [
-        188,
-        188
+        207,
+        207
       ],
       "parent": "dummyindex_context_domains_equip_models_py",
       "docstring": null,
@@ -11265,8 +11941,8 @@
       "name": "GenerateSpec",
       "path": "dummyindex/context/domains/equip/models.py",
       "range": [
-        205,
-        205
+        226,
+        226
       ],
       "parent": "dummyindex_context_domains_equip_models_py",
       "docstring": null,
@@ -11278,8 +11954,8 @@
       "name": "HookSpec",
       "path": "dummyindex/context/domains/equip/models.py",
       "range": [
-        224,
-        224
+        250,
+        250
       ],
       "parent": "dummyindex_context_domains_equip_models_py",
       "docstring": null,
@@ -11291,8 +11967,8 @@
       "name": "CatalogDecision",
       "path": "dummyindex/context/domains/equip/models.py",
       "range": [
-        234,
-        234
+        260,
+        260
       ],
       "parent": "dummyindex_context_domains_equip_models_py",
       "docstring": null,
@@ -11304,8 +11980,8 @@
       "name": "EquipmentManifest",
       "path": "dummyindex/context/domains/equip/models.py",
       "range": [
-        243,
-        243
+        269,
+        269
       ],
       "parent": "dummyindex_context_domains_equip_models_py",
       "docstring": null,
@@ -11317,8 +11993,8 @@
       "name": "to_dict",
       "path": "dummyindex/context/domains/equip/models.py",
       "range": [
-        249,
-        249
+        275,
+        275
       ],
       "parent": "models_equipmentmanifest",
       "docstring": null,
@@ -12903,12 +13579,51 @@
       "name": "_path",
       "path": "dummyindex/context/domains/evolve_learning.py",
       "range": [
-        18,
-        18
+        22,
+        22
       ],
       "parent": "dummyindex_context_domains_evolve_learning_py",
       "docstring": null,
       "exported": false
+    },
+    {
+      "symbol_id": "evolve_learning_learning_status",
+      "kind": "function",
+      "name": "learning_status",
+      "path": "dummyindex/context/domains/evolve_learning.py",
+      "range": [
+        28,
+        28
+      ],
+      "parent": "dummyindex_context_domains_evolve_learning_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "evolve_learning_read_event",
+      "kind": "function",
+      "name": "read_event",
+      "path": "dummyindex/context/domains/evolve_learning.py",
+      "range": [
+        42,
+        42
+      ],
+      "parent": "dummyindex_context_domains_evolve_learning_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "evolve_learning_mark_failed",
+      "kind": "function",
+      "name": "mark_failed",
+      "path": "dummyindex/context/domains/evolve_learning.py",
+      "range": [
+        50,
+        50
+      ],
+      "parent": "dummyindex_context_domains_evolve_learning_py",
+      "docstring": null,
+      "exported": true
     },
     {
       "symbol_id": "evolve_learning_write",
@@ -12916,8 +13631,21 @@
       "name": "_write",
       "path": "dummyindex/context/domains/evolve_learning.py",
       "range": [
-        24,
-        24
+        64,
+        64
+      ],
+      "parent": "dummyindex_context_domains_evolve_learning_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "evolve_learning_write_event",
+      "kind": "function",
+      "name": "_write_event",
+      "path": "dummyindex/context/domains/evolve_learning.py",
+      "range": [
+        68,
+        68
       ],
       "parent": "dummyindex_context_domains_evolve_learning_py",
       "docstring": null,
@@ -12929,8 +13657,8 @@
       "name": "enqueue_learning",
       "path": "dummyindex/context/domains/evolve_learning.py",
       "range": [
-        28,
-        28
+        75,
+        75
       ],
       "parent": "dummyindex_context_domains_evolve_learning_py",
       "docstring": null,
@@ -12942,8 +13670,8 @@
       "name": "pending_learning",
       "path": "dummyindex/context/domains/evolve_learning.py",
       "range": [
-        88,
-        88
+        140,
+        140
       ],
       "parent": "dummyindex_context_domains_evolve_learning_py",
       "docstring": null,
@@ -12955,8 +13683,21 @@
       "name": "_verify_evidence",
       "path": "dummyindex/context/domains/evolve_learning.py",
       "range": [
-        100,
-        100
+        152,
+        152
+      ],
+      "parent": "dummyindex_context_domains_evolve_learning_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "evolve_learning_target_text",
+      "kind": "function",
+      "name": "_target_text",
+      "path": "dummyindex/context/domains/evolve_learning.py",
+      "range": [
+        162,
+        162
       ],
       "parent": "dummyindex_context_domains_evolve_learning_py",
       "docstring": null,
@@ -12968,8 +13709,8 @@
       "name": "prepare_learning",
       "path": "dummyindex/context/domains/evolve_learning.py",
       "range": [
-        110,
-        110
+        166,
+        166
       ],
       "parent": "dummyindex_context_domains_evolve_learning_py",
       "docstring": null,
@@ -12981,8 +13722,21 @@
       "name": "finish_learning",
       "path": "dummyindex/context/domains/evolve_learning.py",
       "range": [
-        193,
-        193
+        275,
+        275
+      ],
+      "parent": "dummyindex_context_domains_evolve_learning_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "evolve_learning_run_learning",
+      "kind": "function",
+      "name": "run_learning",
+      "path": "dummyindex/context/domains/evolve_learning.py",
+      "range": [
+        361,
+        361
       ],
       "parent": "dummyindex_context_domains_evolve_learning_py",
       "docstring": null,
@@ -17240,6 +17994,175 @@
       "exported": false
     },
     {
+      "symbol_id": "enums_confidence",
+      "kind": "function",
+      "name": "Confidence",
+      "path": "dummyindex/context/domains/lesson/enums.py",
+      "range": [
+        8,
+        8
+      ],
+      "parent": "dummyindex_context_domains_lesson_enums_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "enums_verdict",
+      "kind": "function",
+      "name": "Verdict",
+      "path": "dummyindex/context/domains/lesson/enums.py",
+      "range": [
+        16,
+        16
+      ],
+      "parent": "dummyindex_context_domains_lesson_enums_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "enums_deltaop",
+      "kind": "function",
+      "name": "DeltaOp",
+      "path": "dummyindex/context/domains/lesson/enums.py",
+      "range": [
+        25,
+        25
+      ],
+      "parent": "dummyindex_context_domains_lesson_enums_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "enums_learningstatus",
+      "kind": "function",
+      "name": "LearningStatus",
+      "path": "dummyindex/context/domains/lesson/enums.py",
+      "range": [
+        33,
+        33
+      ],
+      "parent": "dummyindex_context_domains_lesson_enums_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_edit",
+      "kind": "class",
+      "name": "Edit",
+      "path": "dummyindex/context/domains/lesson/models.py",
+      "range": [
+        22,
+        22
+      ],
+      "parent": "dummyindex_context_domains_lesson_models_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_edit_to_dict",
+      "kind": "method",
+      "name": "to_dict",
+      "path": "dummyindex/context/domains/lesson/models.py",
+      "range": [
+        29,
+        29
+      ],
+      "parent": "models_edit",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_lesson",
+      "kind": "class",
+      "name": "Lesson",
+      "path": "dummyindex/context/domains/lesson/models.py",
+      "range": [
+        38,
+        38
+      ],
+      "parent": "dummyindex_context_domains_lesson_models_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_lesson_to_dict",
+      "kind": "method",
+      "name": "to_dict",
+      "path": "dummyindex/context/domains/lesson/models.py",
+      "range": [
+        47,
+        47
+      ],
+      "parent": "models_lesson",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_lessoncheck",
+      "kind": "function",
+      "name": "LessonCheck",
+      "path": "dummyindex/context/domains/lesson/models.py",
+      "range": [
+        58,
+        58
+      ],
+      "parent": "dummyindex_context_domains_lesson_models_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_lessondelta",
+      "kind": "function",
+      "name": "LessonDelta",
+      "path": "dummyindex/context/domains/lesson/models.py",
+      "range": [
+        66,
+        66
+      ],
+      "parent": "dummyindex_context_domains_lesson_models_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_text",
+      "kind": "function",
+      "name": "_text",
+      "path": "dummyindex/context/domains/lesson/models.py",
+      "range": [
+        73,
+        73
+      ],
+      "parent": "dummyindex_context_domains_lesson_models_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "models_validate_lesson",
+      "kind": "function",
+      "name": "validate_lesson",
+      "path": "dummyindex/context/domains/lesson/models.py",
+      "range": [
+        91,
+        91
+      ],
+      "parent": "dummyindex_context_domains_lesson_models_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "models_lesson_to_delta",
+      "kind": "function",
+      "name": "lesson_to_delta",
+      "path": "dummyindex/context/domains/lesson/models.py",
+      "range": [
+        111,
+        111
+      ],
+      "parent": "dummyindex_context_domains_lesson_models_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "living_rules_sha256",
       "kind": "function",
       "name": "sha256",
@@ -18826,13 +19749,52 @@
       "exported": false
     },
     {
+      "symbol_id": "closeout_learning_exit_code",
+      "kind": "function",
+      "name": "learning_exit_code",
+      "path": "dummyindex/context/domains/proposals/closeout.py",
+      "range": [
+        35,
+        35
+      ],
+      "parent": "dummyindex_context_domains_proposals_closeout_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "closeout_learning_line",
+      "kind": "function",
+      "name": "learning_line",
+      "path": "dummyindex/context/domains/proposals/closeout.py",
+      "range": [
+        40,
+        40
+      ],
+      "parent": "dummyindex_context_domains_proposals_closeout_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "closeout_failed_record_path",
+      "kind": "function",
+      "name": "failed_record_path",
+      "path": "dummyindex/context/domains/proposals/closeout.py",
+      "range": [
+        54,
+        54
+      ],
+      "parent": "dummyindex_context_domains_proposals_closeout_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "closeout_closeout_workspace",
       "kind": "function",
       "name": "closeout_workspace",
       "path": "dummyindex/context/domains/proposals/closeout.py",
       "range": [
-        31,
-        31
+        59,
+        59
       ],
       "parent": "dummyindex_context_domains_proposals_closeout_py",
       "docstring": null,
@@ -18844,8 +19806,8 @@
       "name": "closeout_from_file",
       "path": "dummyindex/context/domains/proposals/closeout.py",
       "range": [
-        54,
-        54
+        92,
+        92
       ],
       "parent": "dummyindex_context_domains_proposals_closeout_py",
       "docstring": null,
@@ -18857,8 +19819,21 @@
       "name": "_close",
       "path": "dummyindex/context/domains/proposals/closeout.py",
       "range": [
-        64,
-        64
+        109,
+        109
+      ],
+      "parent": "dummyindex_context_domains_proposals_closeout_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "closeout_no_mark",
+      "kind": "function",
+      "name": "_no_mark",
+      "path": "dummyindex/context/domains/proposals/closeout.py",
+      "range": [
+        255,
+        255
       ],
       "parent": "dummyindex_context_domains_proposals_closeout_py",
       "docstring": null,
@@ -18870,8 +19845,8 @@
       "name": "_learn_after_closeout",
       "path": "dummyindex/context/domains/proposals/closeout.py",
       "range": [
-        195,
-        195
+        260,
+        260
       ],
       "parent": "dummyindex_context_domains_proposals_closeout_py",
       "docstring": null,
@@ -18883,8 +19858,8 @@
       "name": "_ownership",
       "path": "dummyindex/context/domains/proposals/closeout.py",
       "range": [
-        229,
-        229
+        333,
+        333
       ],
       "parent": "dummyindex_context_domains_proposals_closeout_py",
       "docstring": null,
@@ -18896,8 +19871,8 @@
       "name": "_transfers",
       "path": "dummyindex/context/domains/proposals/closeout.py",
       "range": [
-        259,
-        259
+        363,
+        363
       ],
       "parent": "dummyindex_context_domains_proposals_closeout_py",
       "docstring": null,
@@ -18909,8 +19884,8 @@
       "name": "_pending",
       "path": "dummyindex/context/domains/proposals/closeout.py",
       "range": [
-        347,
-        347
+        451,
+        451
       ],
       "parent": "dummyindex_context_domains_proposals_closeout_py",
       "docstring": null,
@@ -18922,8 +19897,8 @@
       "name": "_verification",
       "path": "dummyindex/context/domains/proposals/closeout.py",
       "range": [
-        382,
-        382
+        486,
+        486
       ],
       "parent": "dummyindex_context_domains_proposals_closeout_py",
       "docstring": null,
@@ -18935,8 +19910,8 @@
       "name": "_proposal_state",
       "path": "dummyindex/context/domains/proposals/closeout.py",
       "range": [
-        432,
-        432
+        536,
+        536
       ],
       "parent": "dummyindex_context_domains_proposals_closeout_py",
       "docstring": null,
@@ -18948,8 +19923,8 @@
       "name": "_evidence",
       "path": "dummyindex/context/domains/proposals/closeout.py",
       "range": [
-        474,
-        474
+        578,
+        578
       ],
       "parent": "dummyindex_context_domains_proposals_closeout_py",
       "docstring": null,
@@ -18961,8 +19936,8 @@
       "name": "_locked",
       "path": "dummyindex/context/domains/proposals/closeout.py",
       "range": [
-        479,
-        479
+        583,
+        583
       ],
       "parent": "dummyindex_context_domains_proposals_closeout_py",
       "docstring": null,
@@ -18974,8 +19949,8 @@
       "name": "_apply",
       "path": "dummyindex/context/domains/proposals/closeout.py",
       "range": [
-        490,
-        490
+        594,
+        594
       ],
       "parent": "dummyindex_context_domains_proposals_closeout_py",
       "docstring": null,
@@ -19442,8 +20417,8 @@
       "name": "_consistency_block",
       "path": "dummyindex/context/domains/proposals/store.py",
       "range": [
-        225,
-        225
+        243,
+        243
       ],
       "parent": "dummyindex_context_domains_proposals_store_py",
       "docstring": null,
@@ -19455,8 +20430,8 @@
       "name": "_inject_consistency",
       "path": "dummyindex/context/domains/proposals/store.py",
       "range": [
-        249,
-        249
+        267,
+        267
       ],
       "parent": "dummyindex_context_domains_proposals_store_py",
       "docstring": null,
@@ -27042,6 +28017,279 @@
       "exported": true
     },
     {
+      "symbol_id": "test_equip_reuse_item",
+      "kind": "function",
+      "name": "_item",
+      "path": "tests/cli/equip/test_equip_reuse.py",
+      "range": [
+        32,
+        32
+      ],
+      "parent": "tests_cli_equip_test_equip_reuse_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_equip_reuse_proj",
+      "kind": "function",
+      "name": "proj",
+      "path": "tests/cli/equip/test_equip_reuse.py",
+      "range": [
+        44,
+        44
+      ],
+      "parent": "tests_cli_equip_test_equip_reuse_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_reuse_reuse",
+      "kind": "function",
+      "name": "_reuse",
+      "path": "tests/cli/equip/test_equip_reuse.py",
+      "range": [
+        54,
+        54
+      ],
+      "parent": "tests_cli_equip_test_equip_reuse_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_equip_reuse_test_reuse_copies_body_ok",
+      "kind": "function",
+      "name": "test_reuse_copies_body_ok",
+      "path": "tests/cli/equip/test_equip_reuse.py",
+      "range": [
+        58,
+        58
+      ],
+      "parent": "tests_cli_equip_test_equip_reuse_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_reuse_test_needs_reverify_after_grounding_change",
+      "kind": "function",
+      "name": "test_needs_reverify_after_grounding_change",
+      "path": "tests/cli/equip/test_equip_reuse.py",
+      "range": [
+        64,
+        64
+      ],
+      "parent": "tests_cli_equip_test_equip_reuse_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_reuse_test_refuses_locally_edited_target_without_force",
+      "kind": "function",
+      "name": "test_refuses_locally_edited_target_without_force",
+      "path": "tests/cli/equip/test_equip_reuse.py",
+      "range": [
+        70,
+        70
+      ],
+      "parent": "tests_cli_equip_test_equip_reuse_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_reuse_test_missing_id_errors",
+      "kind": "function",
+      "name": "test_missing_id_errors",
+      "path": "tests/cli/equip/test_equip_reuse.py",
+      "range": [
+        81,
+        81
+      ],
+      "parent": "tests_cli_equip_test_equip_reuse_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_reuse_test_apply_without_lesson_stores_nothing",
+      "kind": "function",
+      "name": "test_apply_without_lesson_stores_nothing",
+      "path": "tests/cli/equip/test_equip_reuse.py",
+      "range": [
+        86,
+        86
+      ],
+      "parent": "tests_cli_equip_test_equip_reuse_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_reuse_test_apply_with_lesson_stores_agents",
+      "kind": "function",
+      "name": "test_apply_with_lesson_stores_agents",
+      "path": "tests/cli/equip/test_equip_reuse.py",
+      "range": [
+        92,
+        92
+      ],
+      "parent": "tests_cli_equip_test_equip_reuse_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_reuse_lesson_file",
+      "kind": "function",
+      "name": "_lesson_file",
+      "path": "tests/cli/equip/test_equip_reuse.py",
+      "range": [
+        101,
+        101
+      ],
+      "parent": "tests_cli_equip_test_equip_reuse_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_equip_reuse_with_item",
+      "kind": "function",
+      "name": "_with_item",
+      "path": "tests/cli/equip/test_equip_reuse.py",
+      "range": [
+        107,
+        107
+      ],
+      "parent": "tests_cli_equip_test_equip_reuse_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_equip_reuse_test_apply_stores_only_this_runs_specialists",
+      "kind": "function",
+      "name": "test_apply_stores_only_this_runs_specialists",
+      "path": "tests/cli/equip/test_equip_reuse.py",
+      "range": [
+        120,
+        120
+      ],
+      "parent": "tests_cli_equip_test_equip_reuse_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_reuse_test_apply_invalid_lesson_exits_2_writes_nothing",
+      "kind": "function",
+      "name": "test_apply_invalid_lesson_exits_2_writes_nothing",
+      "path": "tests/cli/equip/test_equip_reuse.py",
+      "range": [
+        145,
+        145
+      ],
+      "parent": "tests_cli_equip_test_equip_reuse_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_reuse_generated",
+      "kind": "function",
+      "name": "_generated",
+      "path": "tests/cli/equip/test_equip_reuse.py",
+      "range": [
+        155,
+        155
+      ],
+      "parent": "tests_cli_equip_test_equip_reuse_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_equip_reuse_patch_file",
+      "kind": "function",
+      "name": "_patch_file",
+      "path": "tests/cli/equip/test_equip_reuse.py",
+      "range": [
+        176,
+        176
+      ],
+      "parent": "tests_cli_equip_test_equip_reuse_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_equip_reuse_test_patch_invalid_lesson_exits_2_touches_nothing",
+      "kind": "function",
+      "name": "test_patch_invalid_lesson_exits_2_touches_nothing",
+      "path": "tests/cli/equip/test_equip_reuse.py",
+      "range": [
+        182,
+        182
+      ],
+      "parent": "tests_cli_equip_test_equip_reuse_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_reuse_test_patch_lesson_file_stores_patched_item",
+      "kind": "function",
+      "name": "test_patch_lesson_file_stores_patched_item",
+      "path": "tests/cli/equip/test_equip_reuse.py",
+      "range": [
+        193,
+        193
+      ],
+      "parent": "tests_cli_equip_test_equip_reuse_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_reuse_test_reuse_pristine_generated_target_rebaselines",
+      "kind": "function",
+      "name": "test_reuse_pristine_generated_target_rebaselines",
+      "path": "tests/cli/equip/test_equip_reuse.py",
+      "range": [
+        203,
+        203
+      ],
+      "parent": "tests_cli_equip_test_equip_reuse_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_reuse_test_reuse_force_rebaselines_edited_target",
+      "kind": "function",
+      "name": "test_reuse_force_rebaselines_edited_target",
+      "path": "tests/cli/equip/test_equip_reuse.py",
+      "range": [
+        216,
+        216
+      ],
+      "parent": "tests_cli_equip_test_equip_reuse_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_reuse_test_reuse_id_not_in_manifest_errors",
+      "kind": "function",
+      "name": "test_reuse_id_not_in_manifest_errors",
+      "path": "tests/cli/equip/test_equip_reuse.py",
+      "range": [
+        228,
+        228
+      ],
+      "parent": "tests_cli_equip_test_equip_reuse_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_reuse_test_reuse_adopted_without_path_errors",
+      "kind": "function",
+      "name": "test_reuse_adopted_without_path_errors",
+      "path": "tests/cli/equip/test_equip_reuse.py",
+      "range": [
+        236,
+        236
+      ],
+      "parent": "tests_cli_equip_test_equip_reuse_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "test_shared_preparation_prepare",
       "kind": "function",
       "name": "_prepare",
@@ -27454,6 +28702,175 @@
         126
       ],
       "parent": "tests_cli_test_bootstrap_migration_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_check_budget_write",
+      "kind": "function",
+      "name": "_write",
+      "path": "tests/cli/test_check_budget.py",
+      "range": [
+        13,
+        13
+      ],
+      "parent": "tests_cli_test_check_budget_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_check_budget_ratchet",
+      "kind": "function",
+      "name": "_ratchet",
+      "path": "tests/cli/test_check_budget.py",
+      "range": [
+        19,
+        19
+      ],
+      "parent": "tests_cli_test_check_budget_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_check_budget_run",
+      "kind": "function",
+      "name": "_run",
+      "path": "tests/cli/test_check_budget.py",
+      "range": [
+        25,
+        25
+      ],
+      "parent": "tests_cli_test_check_budget_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_check_budget_test_grown_doc_fails_with_path",
+      "kind": "function",
+      "name": "test_grown_doc_fails_with_path",
+      "path": "tests/cli/test_check_budget.py",
+      "range": [
+        29,
+        29
+      ],
+      "parent": "tests_cli_test_check_budget_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_check_budget_test_unchanged_and_shrunk_pass",
+      "kind": "function",
+      "name": "test_unchanged_and_shrunk_pass",
+      "path": "tests/cli/test_check_budget.py",
+      "range": [
+        36,
+        36
+      ],
+      "parent": "tests_cli_test_check_budget_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_check_budget_test_skills_group_grown_fails",
+      "kind": "function",
+      "name": "test_skills_group_grown_fails",
+      "path": "tests/cli/test_check_budget.py",
+      "range": [
+        44,
+        44
+      ],
+      "parent": "tests_cli_test_check_budget_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_check_budget_test_update_lowers_but_refuses_raise",
+      "kind": "function",
+      "name": "test_update_lowers_but_refuses_raise",
+      "path": "tests/cli/test_check_budget.py",
+      "range": [
+        51,
+        51
+      ],
+      "parent": "tests_cli_test_check_budget_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_check_budget_test_update_clean_seeds_rc0",
+      "kind": "function",
+      "name": "test_update_clean_seeds_rc0",
+      "path": "tests/cli/test_check_budget.py",
+      "range": [
+        67,
+        67
+      ],
+      "parent": "tests_cli_test_check_budget_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_check_budget_test_update_ratchet_requires_budget",
+      "kind": "function",
+      "name": "test_update_ratchet_requires_budget",
+      "path": "tests/cli/test_check_budget.py",
+      "range": [
+        75,
+        75
+      ],
+      "parent": "tests_cli_test_check_budget_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_check_refs_doc",
+      "kind": "function",
+      "name": "_doc",
+      "path": "tests/cli/test_check_refs.py",
+      "range": [
+        10,
+        10
+      ],
+      "parent": "tests_cli_test_check_refs_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_check_refs_test_refs_lists_citing_docs_rc1",
+      "kind": "function",
+      "name": "test_refs_lists_citing_docs_rc1",
+      "path": "tests/cli/test_check_refs.py",
+      "range": [
+        16,
+        16
+      ],
+      "parent": "tests_cli_test_check_refs_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_check_refs_test_budget_and_refs_both_run",
+      "kind": "function",
+      "name": "test_budget_and_refs_both_run",
+      "path": "tests/cli/test_check_refs.py",
+      "range": [
+        26,
+        26
+      ],
+      "parent": "tests_cli_test_check_refs_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_check_refs_test_refs_clean_rc0",
+      "kind": "function",
+      "name": "test_refs_clean_rc0",
+      "path": "tests/cli/test_check_refs.py",
+      "range": [
+        35,
+        35
+      ],
+      "parent": "tests_cli_test_check_refs_py",
       "docstring": null,
       "exported": true
     },
@@ -28273,6 +29690,84 @@
         16
       ],
       "parent": "tests_cli_test_cli_output_encoding_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_closeout_exit_codes_workspace",
+      "kind": "function",
+      "name": "_workspace",
+      "path": "tests/cli/test_closeout_exit_codes.py",
+      "range": [
+        26,
+        26
+      ],
+      "parent": "tests_cli_test_closeout_exit_codes_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_closeout_exit_codes_write_manifest",
+      "kind": "function",
+      "name": "_write_manifest",
+      "path": "tests/cli/test_closeout_exit_codes.py",
+      "range": [
+        41,
+        41
+      ],
+      "parent": "tests_cli_test_closeout_exit_codes_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_closeout_exit_codes_argv",
+      "kind": "function",
+      "name": "_argv",
+      "path": "tests/cli/test_closeout_exit_codes.py",
+      "range": [
+        64,
+        64
+      ],
+      "parent": "tests_cli_test_closeout_exit_codes_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_closeout_exit_codes_event_files",
+      "kind": "function",
+      "name": "_event_files",
+      "path": "tests/cli/test_closeout_exit_codes.py",
+      "range": [
+        73,
+        73
+      ],
+      "parent": "tests_cli_test_closeout_exit_codes_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_closeout_exit_codes_test_closeout_exit_code_follows_learning_status",
+      "kind": "function",
+      "name": "test_closeout_exit_code_follows_learning_status",
+      "path": "tests/cli/test_closeout_exit_codes.py",
+      "range": [
+        86,
+        86
+      ],
+      "parent": "tests_cli_test_closeout_exit_codes_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_closeout_exit_codes_test_evolve_learning_exit_code_follows_status",
+      "kind": "function",
+      "name": "test_evolve_learning_exit_code_follows_status",
+      "path": "tests/cli/test_closeout_exit_codes.py",
+      "range": [
+        114,
+        114
+      ],
+      "parent": "tests_cli_test_closeout_exit_codes_py",
       "docstring": null,
       "exported": true
     },
@@ -29716,6 +31211,253 @@
         185
       ],
       "parent": "tests_cli_test_graph_command_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_guard_doc_write_payload",
+      "kind": "function",
+      "name": "_payload",
+      "path": "tests/cli/test_guard_doc_write.py",
+      "range": [
+        19,
+        19
+      ],
+      "parent": "tests_cli_test_guard_doc_write_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_guard_doc_write_run",
+      "kind": "function",
+      "name": "_run",
+      "path": "tests/cli/test_guard_doc_write.py",
+      "range": [
+        29,
+        29
+      ],
+      "parent": "tests_cli_test_guard_doc_write_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_guard_doc_write_seed",
+      "kind": "function",
+      "name": "_seed",
+      "path": "tests/cli/test_guard_doc_write.py",
+      "range": [
+        36,
+        36
+      ],
+      "parent": "tests_cli_test_guard_doc_write_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_guard_doc_write_denied",
+      "kind": "function",
+      "name": "_denied",
+      "path": "tests/cli/test_guard_doc_write.py",
+      "range": [
+        42,
+        42
+      ],
+      "parent": "tests_cli_test_guard_doc_write_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_guard_doc_write_test_denies_added_citation",
+      "kind": "function",
+      "name": "test_denies_added_citation",
+      "path": "tests/cli/test_guard_doc_write.py",
+      "range": [
+        50,
+        50
+      ],
+      "parent": "tests_cli_test_guard_doc_write_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_guard_doc_write_test_denies_other_authored_docs",
+      "kind": "function",
+      "name": "test_denies_other_authored_docs",
+      "path": "tests/cli/test_guard_doc_write.py",
+      "range": [
+        68,
+        68
+      ],
+      "parent": "tests_cli_test_guard_doc_write_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_guard_doc_write_test_denies_windows_separators",
+      "kind": "function",
+      "name": "test_denies_windows_separators",
+      "path": "tests/cli/test_guard_doc_write.py",
+      "range": [
+        76,
+        76
+      ],
+      "parent": "tests_cli_test_guard_doc_write_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_guard_doc_write_test_denies_relative_path",
+      "kind": "function",
+      "name": "test_denies_relative_path",
+      "path": "tests/cli/test_guard_doc_write.py",
+      "range": [
+        85,
+        85
+      ],
+      "parent": "tests_cli_test_guard_doc_write_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_guard_doc_write_test_allows_excluded_paths",
+      "kind": "function",
+      "name": "test_allows_excluded_paths",
+      "path": "tests/cli/test_guard_doc_write.py",
+      "range": [
+        102,
+        102
+      ],
+      "parent": "tests_cli_test_guard_doc_write_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_guard_doc_write_test_allows_existing_citation",
+      "kind": "function",
+      "name": "test_allows_existing_citation",
+      "path": "tests/cli/test_guard_doc_write.py",
+      "range": [
+        109,
+        109
+      ],
+      "parent": "tests_cli_test_guard_doc_write_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_guard_doc_write_test_edit_only_new_citation_counts",
+      "kind": "function",
+      "name": "test_edit_only_new_citation_counts",
+      "path": "tests/cli/test_guard_doc_write.py",
+      "range": [
+        117,
+        117
+      ],
+      "parent": "tests_cli_test_guard_doc_write_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_guard_doc_write_test_non_string_content_allows",
+      "kind": "function",
+      "name": "test_non_string_content_allows",
+      "path": "tests/cli/test_guard_doc_write.py",
+      "range": [
+        128,
+        128
+      ],
+      "parent": "tests_cli_test_guard_doc_write_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_guard_doc_write_test_oversized_allows",
+      "kind": "function",
+      "name": "test_oversized_allows",
+      "path": "tests/cli/test_guard_doc_write.py",
+      "range": [
+        135,
+        135
+      ],
+      "parent": "tests_cli_test_guard_doc_write_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_guard_doc_write_test_multiedit_bad_edits_ignored",
+      "kind": "function",
+      "name": "test_multiedit_bad_edits_ignored",
+      "path": "tests/cli/test_guard_doc_write.py",
+      "range": [
+        142,
+        142
+      ],
+      "parent": "tests_cli_test_guard_doc_write_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_guard_doc_write_test_multiedit_second_edit_denied",
+      "kind": "function",
+      "name": "test_multiedit_second_edit_denied",
+      "path": "tests/cli/test_guard_doc_write.py",
+      "range": [
+        155,
+        155
+      ],
+      "parent": "tests_cli_test_guard_doc_write_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_guard_doc_write_test_malformed_allows",
+      "kind": "function",
+      "name": "test_malformed_allows",
+      "path": "tests/cli/test_guard_doc_write.py",
+      "range": [
+        169,
+        169
+      ],
+      "parent": "tests_cli_test_guard_doc_write_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_guard_doc_write_test_exception_allows",
+      "kind": "function",
+      "name": "test_exception_allows",
+      "path": "tests/cli/test_guard_doc_write.py",
+      "range": [
+        174,
+        174
+      ],
+      "parent": "tests_cli_test_guard_doc_write_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_guard_doc_write_test_citation_exception_still_runs_stray_doc_check",
+      "kind": "function",
+      "name": "test_citation_exception_still_runs_stray_doc_check",
+      "path": "tests/cli/test_guard_doc_write.py",
+      "range": [
+        188,
+        188
+      ],
+      "parent": "tests_cli_test_guard_doc_write_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_guard_doc_write_test_edit_split_citation_denied",
+      "kind": "function",
+      "name": "test_edit_split_citation_denied",
+      "path": "tests/cli/test_guard_doc_write.py",
+      "range": [
+        201,
+        201
+      ],
+      "parent": "tests_cli_test_guard_doc_write_py",
       "docstring": null,
       "exported": true
     },
@@ -38391,6 +40133,240 @@
       "exported": true
     },
     {
+      "symbol_id": "test_ratchet_write",
+      "kind": "function",
+      "name": "_write",
+      "path": "tests/context/domains/docbudget/test_ratchet.py",
+      "range": [
+        23,
+        23
+      ],
+      "parent": "tests_context_domains_docbudget_test_ratchet_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_ratchet_test_grown_doc_flagged",
+      "kind": "function",
+      "name": "test_grown_doc_flagged",
+      "path": "tests/context/domains/docbudget/test_ratchet.py",
+      "range": [
+        29,
+        29
+      ],
+      "parent": "tests_context_domains_docbudget_test_ratchet_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_ratchet_test_unchanged_and_shrunk_pass",
+      "kind": "function",
+      "name": "test_unchanged_and_shrunk_pass",
+      "path": "tests/context/domains/docbudget/test_ratchet.py",
+      "range": [
+        35,
+        35
+      ],
+      "parent": "tests_context_domains_docbudget_test_ratchet_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_ratchet_test_unrecorded_over_ceiling_flagged",
+      "kind": "function",
+      "name": "test_unrecorded_over_ceiling_flagged",
+      "path": "tests/context/domains/docbudget/test_ratchet.py",
+      "range": [
+        41,
+        41
+      ],
+      "parent": "tests_context_domains_docbudget_test_ratchet_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_ratchet_test_skills_scope",
+      "kind": "function",
+      "name": "test_skills_scope",
+      "path": "tests/context/domains/docbudget/test_ratchet.py",
+      "range": [
+        47,
+        47
+      ],
+      "parent": "tests_context_domains_docbudget_test_ratchet_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_ratchet_test_update_lowers_but_refuses_raise",
+      "kind": "function",
+      "name": "test_update_lowers_but_refuses_raise",
+      "path": "tests/context/domains/docbudget/test_ratchet.py",
+      "range": [
+        55,
+        55
+      ],
+      "parent": "tests_context_domains_docbudget_test_ratchet_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_ratchet_test_deterministic_sort_and_lf",
+      "kind": "function",
+      "name": "test_deterministic_sort_and_lf",
+      "path": "tests/context/domains/docbudget/test_ratchet.py",
+      "range": [
+        65,
+        65
+      ],
+      "parent": "tests_context_domains_docbudget_test_ratchet_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_ratchet_test_oversized_unrecorded_seeded_then_passes",
+      "kind": "function",
+      "name": "test_oversized_unrecorded_seeded_then_passes",
+      "path": "tests/context/domains/docbudget/test_ratchet.py",
+      "range": [
+        79,
+        79
+      ],
+      "parent": "tests_context_domains_docbudget_test_ratchet_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_ratchet_test_malformed_ratchet_line_raises",
+      "kind": "function",
+      "name": "test_malformed_ratchet_line_raises",
+      "path": "tests/context/domains/docbudget/test_ratchet.py",
+      "range": [
+        87,
+        87
+      ],
+      "parent": "tests_context_domains_docbudget_test_ratchet_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_ratchet_test_write_ratchet_atomic_lf",
+      "kind": "function",
+      "name": "test_write_ratchet_atomic_lf",
+      "path": "tests/context/domains/docbudget/test_ratchet.py",
+      "range": [
+        96,
+        96
+      ],
+      "parent": "tests_context_domains_docbudget_test_ratchet_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_ratchet_test_is_skill_file_exact_case",
+      "kind": "function",
+      "name": "test_is_skill_file_exact_case",
+      "path": "tests/context/domains/docbudget/test_ratchet.py",
+      "range": [
+        104,
+        104
+      ],
+      "parent": "tests_context_domains_docbudget_test_ratchet_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_ratchet_test_scan_skills_ignores_lowercase_skill_md",
+      "kind": "function",
+      "name": "test_scan_skills_ignores_lowercase_skill_md",
+      "path": "tests/context/domains/docbudget/test_ratchet.py",
+      "range": [
+        110,
+        110
+      ],
+      "parent": "tests_context_domains_docbudget_test_ratchet_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_citations_test_cites_disposable_forms",
+      "kind": "function",
+      "name": "test_cites_disposable_forms",
+      "path": "tests/context/domains/docguard/test_citations.py",
+      "range": [
+        18,
+        18
+      ],
+      "parent": "tests_context_domains_docguard_test_citations_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_citations_test_added_citations_only_new",
+      "kind": "function",
+      "name": "test_added_citations_only_new",
+      "path": "tests/context/domains/docguard/test_citations.py",
+      "range": [
+        29,
+        29
+      ],
+      "parent": "tests_context_domains_docguard_test_citations_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_citations_test_scan_durable",
+      "kind": "function",
+      "name": "test_scan_durable",
+      "path": "tests/context/domains/docguard/test_citations.py",
+      "range": [
+        39,
+        39
+      ],
+      "parent": "tests_context_domains_docguard_test_citations_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_citations_test_scan_durable_skips_generated",
+      "kind": "function",
+      "name": "test_scan_durable_skips_generated",
+      "path": "tests/context/domains/docguard/test_citations.py",
+      "range": [
+        61,
+        61
+      ],
+      "parent": "tests_context_domains_docguard_test_citations_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_citations_test_is_durable_doc",
+      "kind": "function",
+      "name": "test_is_durable_doc",
+      "path": "tests/context/domains/docguard/test_citations.py",
+      "range": [
+        91,
+        91
+      ],
+      "parent": "tests_context_domains_docguard_test_citations_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_citations_test_scan_durable_no_context",
+      "kind": "function",
+      "name": "test_scan_durable_no_context",
+      "path": "tests/context/domains/docguard/test_citations.py",
+      "range": [
+        97,
+        97
+      ],
+      "parent": "tests_context_domains_docguard_test_citations_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "test_classify_classify",
       "kind": "function",
       "name": "_classify",
@@ -39319,8 +41295,8 @@
       "name": "test_shared_formatter_uses_named_changed_paths_while_hook_stays_native",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        407,
-        407
+        411,
+        411
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39332,8 +41308,8 @@
       "name": "test_manifest_roundtrip_matches_schema",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        437,
-        437
+        441,
+        441
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39345,8 +41321,8 @@
       "name": "test_schema_version_is_4",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        461,
-        461
+        465,
+        465
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39358,8 +41334,8 @@
       "name": "test_item_roundtrips_v2_fields",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        467,
-        467
+        471,
+        471
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39371,8 +41347,8 @@
       "name": "test_v1_item_loads_with_none_defaults",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        487,
-        487
+        491,
+        491
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39384,8 +41360,8 @@
       "name": "test_v1_manifest_loads_tolerantly",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        504,
-        504
+        508,
+        508
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39397,8 +41373,8 @@
       "name": "test_content_hash_stable_and_prefixed",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        527,
-        527
+        531,
+        531
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39410,8 +41386,8 @@
       "name": "test_is_safe_to_write_absent",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        539,
-        539
+        543,
+        543
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39423,8 +41399,8 @@
       "name": "test_is_safe_to_write_ours",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        544,
-        544
+        548,
+        548
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39436,8 +41412,8 @@
       "name": "test_is_safe_to_write_user_file",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        551,
-        551
+        555,
+        555
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39449,8 +41425,8 @@
       "name": "_project",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        560,
-        560
+        564,
+        564
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39462,8 +41438,8 @@
       "name": "test_equip_writes_agent_and_skill",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        571,
-        571
+        575,
+        575
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39475,8 +41451,8 @@
       "name": "test_equip_writes_manifest_with_schema",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        590,
-        590
+        594,
+        594
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39488,8 +41464,8 @@
       "name": "test_equip_wires_format_hook_when_formatter_present",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        607,
-        607
+        611,
+        611
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39501,8 +41477,8 @@
       "name": "test_equip_never_clobbers_user_file",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        629,
-        629
+        634,
+        634
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39514,8 +41490,8 @@
       "name": "test_equip_dry_run_writes_nothing",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        649,
-        649
+        654,
+        654
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39527,8 +41503,8 @@
       "name": "test_equip_rejects_unknown_args",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        658,
-        658
+        663,
+        663
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39540,8 +41516,8 @@
       "name": "_equipped",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        667,
-        667
+        672,
+        672
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39553,8 +41529,8 @@
       "name": "test_apply_writes_full_catalog_set",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        680,
-        680
+        685,
+        685
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39566,8 +41542,8 @@
       "name": "test_apply_writes_equip_hook_into_settings",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        699,
-        699
+        704,
+        704
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39579,8 +41555,8 @@
       "name": "test_apply_preserves_user_posttooluse_and_autorefresh",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        711,
-        711
+        716,
+        716
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39592,8 +41568,8 @@
       "name": "test_apply_malformed_settings_skips_hook_but_writes_files",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        753,
-        753
+        758,
+        758
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39605,8 +41581,8 @@
       "name": "test_apply_dry_run_writes_no_files_no_settings",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        773,
-        773
+        778,
+        778
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39618,8 +41594,8 @@
       "name": "test_apply_json_stdout_is_pure_json",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        783,
-        783
+        788,
+        788
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39631,8 +41607,8 @@
       "name": "test_apply_dry_run_json_stdout_is_pure_json",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        797,
-        797
+        802,
+        802
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39644,8 +41620,8 @@
       "name": "test_reapply_preserves_user_modified_generated_file",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        811,
-        811
+        816,
+        816
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39657,8 +41633,8 @@
       "name": "test_for_proposal_missing_slug_exits_2",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        837,
-        837
+        842,
+        842
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39670,21 +41646,21 @@
       "name": "test_for_proposal_generates_db_specialist_file",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        844,
-        844
+        849,
+        849
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "test_equip_test_for_proposal_adopts_frontend_when_no_template",
+      "symbol_id": "test_equip_test_for_proposal_generates_frontend_pair_on_frontend_stack",
       "kind": "function",
-      "name": "test_for_proposal_adopts_frontend_when_no_template",
+      "name": "test_for_proposal_generates_frontend_pair_on_frontend_stack",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        870,
-        870
+        876,
+        876
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39696,8 +41672,8 @@
       "name": "test_for_proposal_backend_stack_skips_frontend_adoption",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        892,
-        892
+        905,
+        905
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39709,8 +41685,8 @@
       "name": "test_bare_equip_is_apply",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        919,
-        919
+        933,
+        933
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39722,8 +41698,8 @@
       "name": "test_unknown_verb_then_path_is_apply_on_path",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        926,
-        926
+        940,
+        940
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39735,8 +41711,8 @@
       "name": "test_verb_status_json",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        934,
-        934
+        948,
+        948
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39748,8 +41724,8 @@
       "name": "test_verb_status_reports_pristine",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        941,
-        941
+        955,
+        955
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39761,8 +41737,8 @@
       "name": "test_verb_refresh_dry_run",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        952,
-        952
+        966,
+        966
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39774,8 +41750,8 @@
       "name": "test_verb_reset_restores",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        959,
-        959
+        973,
+        973
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39787,8 +41763,8 @@
       "name": "test_verb_uninstall_leaves_user_modified",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        970,
-        970
+        984,
+        984
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39800,8 +41776,8 @@
       "name": "test_verb_patch_applies_and_bumps_version",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        985,
-        985
+        999,
+        999
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39813,8 +41789,8 @@
       "name": "test_verb_patch_bad_file_exits_2",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        1016,
-        1016
+        1030,
+        1030
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39826,8 +41802,8 @@
       "name": "test_verb_patch_requires_item_and_file",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        1034,
-        1034
+        1048,
+        1048
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39839,8 +41815,8 @@
       "name": "test_set_frontmatter_version_replaces_only_frontmatter_line",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        1042,
-        1042
+        1056,
+        1056
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39852,8 +41828,8 @@
       "name": "test_set_frontmatter_version_updates_agent_skill_metadata",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        1051,
-        1051
+        1065,
+        1065
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -39865,8 +41841,8 @@
       "name": "test_set_frontmatter_version_without_frontmatter_is_noop",
       "path": "tests/context/domains/equip/test_equip.py",
       "range": [
-        1063,
-        1063
+        1077,
+        1077
       ],
       "parent": "tests_context_domains_equip_test_equip_py",
       "docstring": null,
@@ -40094,13 +42070,26 @@
       "exported": false
     },
     {
+      "symbol_id": "test_equip_apply_merge_user_ui_agent",
+      "kind": "function",
+      "name": "_user_ui_agent",
+      "path": "tests/context/domains/equip/test_equip_apply_merge.py",
+      "range": [
+        41,
+        41
+      ],
+      "parent": "tests_context_domains_equip_test_equip_apply_merge_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
       "symbol_id": "test_equip_apply_merge_manifest",
       "kind": "function",
       "name": "_manifest",
       "path": "tests/context/domains/equip/test_equip_apply_merge.py",
       "range": [
-        38,
-        38
+        47,
+        47
       ],
       "parent": "tests_context_domains_equip_test_equip_apply_merge_py",
       "docstring": null,
@@ -40112,8 +42101,8 @@
       "name": "_write_manifest",
       "path": "tests/context/domains/equip/test_equip_apply_merge.py",
       "range": [
-        44,
-        44
+        53,
+        53
       ],
       "parent": "tests_context_domains_equip_test_equip_apply_merge_py",
       "docstring": null,
@@ -40125,8 +42114,8 @@
       "name": "_seed_foreign_records",
       "path": "tests/context/domains/equip/test_equip_apply_merge.py",
       "range": [
-        99,
-        99
+        108,
+        108
       ],
       "parent": "tests_context_domains_equip_test_equip_apply_merge_py",
       "docstring": null,
@@ -40138,8 +42127,8 @@
       "name": "test_reapply_keeps_marketplace_vendored_and_installed_records",
       "path": "tests/context/domains/equip/test_equip_apply_merge.py",
       "range": [
-        106,
-        106
+        115,
+        115
       ],
       "parent": "tests_context_domains_equip_test_equip_apply_merge_py",
       "docstring": null,
@@ -40151,8 +42140,8 @@
       "name": "test_foreign_records_carried_verbatim",
       "path": "tests/context/domains/equip/test_equip_apply_merge.py",
       "range": [
-        123,
-        123
+        132,
+        132
       ],
       "parent": "tests_context_domains_equip_test_equip_apply_merge_py",
       "docstring": null,
@@ -40164,8 +42153,8 @@
       "name": "test_add_specialist_keeps_foreign_records",
       "path": "tests/context/domains/equip/test_equip_apply_merge.py",
       "range": [
-        135,
-        135
+        144,
+        144
       ],
       "parent": "tests_context_domains_equip_test_equip_apply_merge_py",
       "docstring": null,
@@ -40177,8 +42166,8 @@
       "name": "test_stale_generated_record_carried_forward_not_dropped",
       "path": "tests/context/domains/equip/test_equip_apply_merge.py",
       "range": [
-        146,
-        146
+        155,
+        155
       ],
       "parent": "tests_context_domains_equip_test_equip_apply_merge_py",
       "docstring": null,
@@ -40190,8 +42179,8 @@
       "name": "test_rederived_adoption_never_duplicates",
       "path": "tests/context/domains/equip/test_equip_apply_merge.py",
       "range": [
-        164,
-        164
+        173,
+        173
       ],
       "parent": "tests_context_domains_equip_test_equip_apply_merge_py",
       "docstring": null,
@@ -40203,8 +42192,8 @@
       "name": "test_hook_records_do_not_duplicate_across_reapplies",
       "path": "tests/context/domains/equip/test_equip_apply_merge.py",
       "range": [
-        185,
-        185
+        195,
+        195
       ],
       "parent": "tests_context_domains_equip_test_equip_apply_merge_py",
       "docstring": null,
@@ -40216,8 +42205,8 @@
       "name": "test_adoption_printed_in_non_dry_run_output",
       "path": "tests/context/domains/equip/test_equip_apply_merge.py",
       "range": [
-        195,
-        195
+        205,
+        205
       ],
       "parent": "tests_context_domains_equip_test_equip_apply_merge_py",
       "docstring": null,
@@ -40229,8 +42218,8 @@
       "name": "test_summary_counts_file_writes_not_records",
       "path": "tests/context/domains/equip/test_equip_apply_merge.py",
       "range": [
-        210,
-        210
+        221,
+        221
       ],
       "parent": "tests_context_domains_equip_test_equip_apply_merge_py",
       "docstring": null,
@@ -40242,8 +42231,8 @@
       "name": "test_apply_json_reports_carried_forward",
       "path": "tests/context/domains/equip/test_equip_apply_merge.py",
       "range": [
-        225,
-        225
+        236,
+        236
       ],
       "parent": "tests_context_domains_equip_test_equip_apply_merge_py",
       "docstring": null,
@@ -40255,8 +42244,8 @@
       "name": "test_generated_reviewer_not_readopted_as_project_agent",
       "path": "tests/context/domains/equip/test_equip_apply_merge.py",
       "range": [
-        241,
-        241
+        252,
+        252
       ],
       "parent": "tests_context_domains_equip_test_equip_apply_merge_py",
       "docstring": null,
@@ -40268,8 +42257,8 @@
       "name": "test_user_authored_project_agent_still_adopted",
       "path": "tests/context/domains/equip/test_equip_apply_merge.py",
       "range": [
-        263,
-        263
+        275,
+        275
       ],
       "parent": "tests_context_domains_equip_test_equip_apply_merge_py",
       "docstring": null,
@@ -40281,8 +42270,8 @@
       "name": "test_drop_generated_stems_filters_sentinel_and_manifest_names",
       "path": "tests/context/domains/equip/test_equip_apply_merge.py",
       "range": [
-        283,
-        283
+        298,
+        298
       ],
       "parent": "tests_context_domains_equip_test_equip_apply_merge_py",
       "docstring": null,
@@ -40632,8 +42621,8 @@
       "name": "_report",
       "path": "tests/context/domains/equip/test_equip_catalog.py",
       "range": [
-        25,
-        25
+        33,
+        33
       ],
       "parent": "tests_context_domains_equip_test_equip_catalog_py",
       "docstring": null,
@@ -40645,8 +42634,8 @@
       "name": "_python_profile",
       "path": "tests/context/domains/equip/test_equip_catalog.py",
       "range": [
-        43,
-        43
+        51,
+        51
       ],
       "parent": "tests_context_domains_equip_test_equip_catalog_py",
       "docstring": null,
@@ -40658,8 +42647,8 @@
       "name": "test_standard_generated_set",
       "path": "tests/context/domains/equip/test_equip_catalog.py",
       "range": [
-        59,
-        59
+        67,
+        67
       ],
       "parent": "tests_context_domains_equip_test_equip_catalog_py",
       "docstring": null,
@@ -40671,8 +42660,8 @@
       "name": "test_every_templated_specialist_is_generated_without_being_asked",
       "path": "tests/context/domains/equip/test_equip_catalog.py",
       "range": [
-        78,
-        78
+        86,
+        86
       ],
       "parent": "tests_context_domains_equip_test_equip_catalog_py",
       "docstring": null,
@@ -40684,8 +42673,8 @@
       "name": "test_format_hook_present_when_formatter",
       "path": "tests/context/domains/equip/test_equip_catalog.py",
       "range": [
-        93,
-        93
+        104,
+        104
       ],
       "parent": "tests_context_domains_equip_test_equip_catalog_py",
       "docstring": null,
@@ -40697,8 +42686,8 @@
       "name": "test_no_hook_without_formatter",
       "path": "tests/context/domains/equip/test_equip_catalog.py",
       "range": [
-        109,
-        109
+        120,
+        120
       ],
       "parent": "tests_context_domains_equip_test_equip_catalog_py",
       "docstring": null,
@@ -40710,21 +42699,73 @@
       "name": "test_proposal_capability_generates_specialist_when_template_exists",
       "path": "tests/context/domains/equip/test_equip_catalog.py",
       "range": [
-        120,
-        120
+        131,
+        131
       ],
       "parent": "tests_context_domains_equip_test_equip_catalog_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "test_equip_catalog_test_proposal_capability_adopts_when_no_template",
+      "symbol_id": "test_equip_catalog_test_frontend_proposal_on_frontend_stack_generates_pair",
       "kind": "function",
-      "name": "test_proposal_capability_adopts_when_no_template",
+      "name": "test_frontend_proposal_on_frontend_stack_generates_pair",
       "path": "tests/context/domains/equip/test_equip_catalog.py",
       "range": [
-        136,
-        136
+        149,
+        149
+      ],
+      "parent": "tests_context_domains_equip_test_equip_catalog_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_catalog_test_frontend_specialists_not_generated_on_backend_stack",
+      "kind": "function",
+      "name": "test_frontend_specialists_not_generated_on_backend_stack",
+      "path": "tests/context/domains/equip/test_equip_catalog.py",
+      "range": [
+        166,
+        166
+      ],
+      "parent": "tests_context_domains_equip_test_equip_catalog_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_catalog_test_frontend_stack_signal_generates_without_proposal",
+      "kind": "function",
+      "name": "test_frontend_stack_signal_generates_without_proposal",
+      "path": "tests/context/domains/equip/test_equip_catalog.py",
+      "range": [
+        181,
+        181
+      ],
+      "parent": "tests_context_domains_equip_test_equip_catalog_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_catalog_test_migration_and_ci_generated_only_on_proposal_signal",
+      "kind": "function",
+      "name": "test_migration_and_ci_generated_only_on_proposal_signal",
+      "path": "tests/context/domains/equip/test_equip_catalog.py",
+      "range": [
+        193,
+        193
+      ],
+      "parent": "tests_context_domains_equip_test_equip_catalog_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_catalog_test_user_project_agent_wins_over_stack_signalled_specialist",
+      "kind": "function",
+      "name": "test_user_project_agent_wins_over_stack_signalled_specialist",
+      "path": "tests/context/domains/equip/test_equip_catalog.py",
+      "range": [
+        217,
+        217
       ],
       "parent": "tests_context_domains_equip_test_equip_catalog_py",
       "docstring": null,
@@ -40736,8 +42777,8 @@
       "name": "test_unknown_capability_no_crash_no_extra_generation",
       "path": "tests/context/domains/equip/test_equip_catalog.py",
       "range": [
-        154,
-        154
+        231,
+        231
       ],
       "parent": "tests_context_domains_equip_test_equip_catalog_py",
       "docstring": null,
@@ -40749,8 +42790,8 @@
       "name": "test_generic_profile_still_generates_standard_set",
       "path": "tests/context/domains/equip/test_equip_catalog.py",
       "range": [
-        168,
-        168
+        245,
+        245
       ],
       "parent": "tests_context_domains_equip_test_equip_catalog_py",
       "docstring": null,
@@ -40762,21 +42803,8 @@
       "name": "test_backend_stack_skips_frontend_registry_adoption",
       "path": "tests/context/domains/equip/test_equip_catalog.py",
       "range": [
-        186,
-        186
-      ],
-      "parent": "tests_context_domains_equip_test_equip_catalog_py",
-      "docstring": null,
-      "exported": true
-    },
-    {
-      "symbol_id": "test_equip_catalog_test_frontend_stack_still_adopts_frontend_registry",
-      "kind": "function",
-      "name": "test_frontend_stack_still_adopts_frontend_registry",
-      "path": "tests/context/domains/equip/test_equip_catalog.py",
-      "range": [
-        200,
-        200
+        264,
+        264
       ],
       "parent": "tests_context_domains_equip_test_equip_catalog_py",
       "docstring": null,
@@ -40788,8 +42816,8 @@
       "name": "test_database_registry_adoption_unaffected_by_frontend_gate",
       "path": "tests/context/domains/equip/test_equip_catalog.py",
       "range": [
-        213,
-        213
+        278,
+        278
       ],
       "parent": "tests_context_domains_equip_test_equip_catalog_py",
       "docstring": null,
@@ -40801,8 +42829,8 @@
       "name": "test_project_frontend_agent_still_adopted_on_backend_stack",
       "path": "tests/context/domains/equip/test_equip_catalog.py",
       "range": [
-        227,
-        227
+        293,
+        293
       ],
       "parent": "tests_context_domains_equip_test_equip_catalog_py",
       "docstring": null,
@@ -40814,8 +42842,8 @@
       "name": "test_profile_has_frontend_predicate",
       "path": "tests/context/domains/equip/test_equip_catalog.py",
       "range": [
-        241,
-        241
+        308,
+        308
       ],
       "parent": "tests_context_domains_equip_test_equip_catalog_py",
       "docstring": null,
@@ -42356,6 +44384,253 @@
       "exported": true
     },
     {
+      "symbol_id": "test_equip_library_cap",
+      "kind": "function",
+      "name": "_cap",
+      "path": "tests/context/domains/equip/test_equip_library.py",
+      "range": [
+        30,
+        30
+      ],
+      "parent": "tests_context_domains_equip_test_equip_library_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_equip_library_stored",
+      "kind": "function",
+      "name": "stored",
+      "path": "tests/context/domains/equip/test_equip_library.py",
+      "range": [
+        42,
+        42
+      ],
+      "parent": "tests_context_domains_equip_test_equip_library_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_library_test_store_then_reuse_copies_body",
+      "kind": "function",
+      "name": "test_store_then_reuse_copies_body",
+      "path": "tests/context/domains/equip/test_equip_library.py",
+      "range": [
+        50,
+        50
+      ],
+      "parent": "tests_context_domains_equip_test_equip_library_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_library_test_unchanged_is_ok",
+      "kind": "function",
+      "name": "test_unchanged_is_ok",
+      "path": "tests/context/domains/equip/test_equip_library.py",
+      "range": [
+        58,
+        58
+      ],
+      "parent": "tests_context_domains_equip_test_equip_library_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_library_test_changed_grounding_needs_reverify",
+      "kind": "function",
+      "name": "test_changed_grounding_needs_reverify",
+      "path": "tests/context/domains/equip/test_equip_library.py",
+      "range": [
+        63,
+        63
+      ],
+      "parent": "tests_context_domains_equip_test_equip_library_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_library_test_deleted_grounding_needs_reverify",
+      "kind": "function",
+      "name": "test_deleted_grounding_needs_reverify",
+      "path": "tests/context/domains/equip/test_equip_library.py",
+      "range": [
+        69,
+        69
+      ],
+      "parent": "tests_context_domains_equip_test_equip_library_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_library_test_missing_entry_needs_reverify",
+      "kind": "function",
+      "name": "test_missing_entry_needs_reverify",
+      "path": "tests/context/domains/equip/test_equip_library.py",
+      "range": [
+        75,
+        75
+      ],
+      "parent": "tests_context_domains_equip_test_equip_library_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_library_test_reuse_refuses_edited_target_without_force",
+      "kind": "function",
+      "name": "test_reuse_refuses_edited_target_without_force",
+      "path": "tests/context/domains/equip/test_equip_library.py",
+      "range": [
+        80,
+        80
+      ],
+      "parent": "tests_context_domains_equip_test_equip_library_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_library_test_experience_carries_lesson_fields",
+      "kind": "function",
+      "name": "test_experience_carries_lesson_fields",
+      "path": "tests/context/domains/equip/test_equip_library.py",
+      "range": [
+        91,
+        91
+      ],
+      "parent": "tests_context_domains_equip_test_equip_library_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_library_test_invalid_lesson_rejected",
+      "kind": "function",
+      "name": "test_invalid_lesson_rejected",
+      "path": "tests/context/domains/equip/test_equip_library.py",
+      "range": [
+        108,
+        108
+      ],
+      "parent": "tests_context_domains_equip_test_equip_library_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_library_test_none_lesson_rejected",
+      "kind": "function",
+      "name": "test_none_lesson_rejected",
+      "path": "tests/context/domains/equip/test_equip_library.py",
+      "range": [
+        114,
+        114
+      ],
+      "parent": "tests_context_domains_equip_test_equip_library_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_library_test_injected_validator_used",
+      "kind": "function",
+      "name": "test_injected_validator_used",
+      "path": "tests/context/domains/equip/test_equip_library.py",
+      "range": [
+        120,
+        120
+      ],
+      "parent": "tests_context_domains_equip_test_equip_library_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_library_cap_id",
+      "kind": "function",
+      "name": "_cap_id",
+      "path": "tests/context/domains/equip/test_equip_library.py",
+      "range": [
+        126,
+        126
+      ],
+      "parent": "tests_context_domains_equip_test_equip_library_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_equip_library_test_unsafe_capability_id_rejected",
+      "kind": "function",
+      "name": "test_unsafe_capability_id_rejected",
+      "path": "tests/context/domains/equip/test_equip_library.py",
+      "range": [
+        144,
+        144
+      ],
+      "parent": "tests_context_domains_equip_test_equip_library_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_library_test_reuse_target_escape_rejected",
+      "kind": "function",
+      "name": "test_reuse_target_escape_rejected",
+      "path": "tests/context/domains/equip/test_equip_library.py",
+      "range": [
+        155,
+        155
+      ],
+      "parent": "tests_context_domains_equip_test_equip_library_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_library_test_edited_library_body_needs_reverify",
+      "kind": "function",
+      "name": "test_edited_library_body_needs_reverify",
+      "path": "tests/context/domains/equip/test_equip_library.py",
+      "range": [
+        161,
+        161
+      ],
+      "parent": "tests_context_domains_equip_test_equip_library_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_library_test_crlf_grounding_still_ok",
+      "kind": "function",
+      "name": "test_crlf_grounding_still_ok",
+      "path": "tests/context/domains/equip/test_equip_library.py",
+      "range": [
+        168,
+        168
+      ],
+      "parent": "tests_context_domains_equip_test_equip_library_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_library_test_files_are_lf_only",
+      "kind": "function",
+      "name": "test_files_are_lf_only",
+      "path": "tests/context/domains/equip/test_equip_library.py",
+      "range": [
+        174,
+        174
+      ],
+      "parent": "tests_context_domains_equip_test_equip_library_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_library_test_reuse_accepts_manifest_baseline_target",
+      "kind": "function",
+      "name": "test_reuse_accepts_manifest_baseline_target",
+      "path": "tests/context/domains/equip/test_equip_library.py",
+      "range": [
+        181,
+        181
+      ],
+      "parent": "tests_context_domains_equip_test_equip_library_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "test_equip_lifecycle_renders",
       "kind": "function",
       "name": "_renders",
@@ -43700,8 +45975,8 @@
       "name": "_report",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        36,
-        36
+        43,
+        43
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -43713,8 +45988,8 @@
       "name": "_profile",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        54,
-        54
+        69,
+        69
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -43726,8 +46001,8 @@
       "name": "test_database_and_security_have_templates",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        62,
-        62
+        77,
+        77
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -43739,21 +46014,21 @@
       "name": "test_registry_is_immutable",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        69,
-        69
+        84,
+        84
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
       "exported": true
     },
     {
-      "symbol_id": "test_equip_specialists_test_frontend_has_no_template_so_it_stays_adoptable",
+      "symbol_id": "test_equip_specialists_test_new_capabilities_have_procedure_and_domain_templates",
       "kind": "function",
-      "name": "test_frontend_has_no_template_so_it_stays_adoptable",
+      "name": "test_new_capabilities_have_procedure_and_domain_templates",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        75,
-        75
+        92,
+        92
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -43765,8 +46040,8 @@
       "name": "test_every_template_targets_a_shared_capability_file",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        82,
-        82
+        109,
+        109
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -43778,8 +46053,8 @@
       "name": "test_specialist_name_is_proj_scoped_and_deterministic",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        94,
-        94
+        122,
+        122
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -43791,8 +46066,8 @@
       "name": "test_proposal_database_generates_specialist_not_adopts",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        105,
-        105
+        133,
+        133
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -43804,8 +46079,8 @@
       "name": "test_proposal_frontend_adopts_registry_when_no_template",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        116,
-        116
+        144,
+        144
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -43817,8 +46092,8 @@
       "name": "test_existing_project_agent_preferred_over_generation",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        127,
-        127
+        155,
+        155
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -43830,8 +46105,8 @@
       "name": "test_forced_specialist_generates_even_with_project_agent",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        140,
-        140
+        168,
+        168
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -43843,8 +46118,8 @@
       "name": "test_forced_untemplated_capability_is_dropped",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        153,
-        153
+        181,
+        181
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -43856,8 +46131,8 @@
       "name": "test_catalog_generates_security_specialist_for_proposal",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        169,
-        169
+        198,
+        198
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -43869,8 +46144,8 @@
       "name": "test_catalog_forced_specialist_appends_one_agent",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        186,
-        186
+        215,
+        215
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -43882,8 +46157,8 @@
       "name": "test_every_specialist_renders_frontmatter_first_and_grounded",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        207,
-        207
+        236,
+        236
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -43895,8 +46170,8 @@
       "name": "test_catalog_bare_pass_is_core_four_plus_every_specialist",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        236,
-        236
+        265,
+        265
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -43908,8 +46183,8 @@
       "name": "_python_project",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        255,
-        255
+        286,
+        286
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -43921,8 +46196,8 @@
       "name": "_status",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        273,
-        273
+        304,
+        304
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -43934,8 +46209,8 @@
       "name": "test_add_specialist_database_full_lifecycle",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        281,
-        281
+        312,
+        312
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -43947,8 +46222,8 @@
       "name": "test_rls_and_tenant_isolation_surface_security_without_the_word",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        345,
-        345
+        378,
+        378
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -43960,8 +46235,8 @@
       "name": "test_existing_security_signals_still_match",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        355,
-        355
+        389,
+        389
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -43973,8 +46248,8 @@
       "name": "test_migration_proposal_with_rls_criticals_yields_security_specialist",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        363,
-        363
+        398,
+        398
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -43986,8 +46261,8 @@
       "name": "test_patch_specialist_then_carry_forward_keeps_evolution",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        393,
-        393
+        429,
+        429
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -43999,8 +46274,8 @@
       "name": "test_specialist_never_clobbers_foreign_user_file",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        442,
-        442
+        479,
+        479
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -44012,8 +46287,8 @@
       "name": "test_uninstall_keeps_user_modified_specialist",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        461,
-        461
+        499,
+        499
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -44025,8 +46300,8 @@
       "name": "test_apply_specialist_flag_generates_file",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        479,
-        479
+        519,
+        519
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -44038,8 +46313,8 @@
       "name": "test_apply_specialist_flag_unknown_exits_2",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        491,
-        491
+        531,
+        531
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -44051,8 +46326,8 @@
       "name": "test_add_specialist_unknown_capability_exits_2",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        498,
-        498
+        538,
+        538
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -44064,8 +46339,8 @@
       "name": "test_existing_four_core_repo_unaffected_by_specialist_feature",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        507,
-        507
+        547,
+        547
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -44077,8 +46352,8 @@
       "name": "test_specialist_grounded_in_filtered_to_existing_docs",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        525,
-        525
+        567,
+        567
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -44090,8 +46365,8 @@
       "name": "test_grounding_filter_never_shifts_origin_hash",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        550,
-        550
+        594,
+        594
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -44103,8 +46378,60 @@
       "name": "test_specialists_declare_both_decisions_candidates",
       "path": "tests/context/domains/equip/test_equip_specialists.py",
       "range": [
-        575,
-        575
+        619,
+        619
+      ],
+      "parent": "tests_context_domains_equip_test_equip_specialists_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_specialists_test_apply_writes_procedure_and_domain_per_capability",
+      "kind": "function",
+      "name": "test_apply_writes_procedure_and_domain_per_capability",
+      "path": "tests/context/domains/equip/test_equip_specialists.py",
+      "range": [
+        633,
+        633
+      ],
+      "parent": "tests_context_domains_equip_test_equip_specialists_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_specialists_test_second_apply_is_idempotent",
+      "kind": "function",
+      "name": "test_second_apply_is_idempotent",
+      "path": "tests/context/domains/equip/test_equip_specialists.py",
+      "range": [
+        656,
+        656
+      ],
+      "parent": "tests_context_domains_equip_test_equip_specialists_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_specialists_test_manifest_item_without_dimension_loads",
+      "kind": "function",
+      "name": "test_manifest_item_without_dimension_loads",
+      "path": "tests/context/domains/equip/test_equip_specialists.py",
+      "range": [
+        674,
+        674
+      ],
+      "parent": "tests_context_domains_equip_test_equip_specialists_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_equip_specialists_test_proposal_signals_detect_new_capabilities",
+      "kind": "function",
+      "name": "test_proposal_signals_detect_new_capabilities",
+      "path": "tests/context/domains/equip/test_equip_specialists.py",
+      "range": [
+        688,
+        688
       ],
       "parent": "tests_context_domains_equip_test_equip_specialists_py",
       "docstring": null,
@@ -51066,6 +53393,84 @@
       "exported": true
     },
     {
+      "symbol_id": "test_build_loop_test_next_wave_refuses_live_items",
+      "kind": "function",
+      "name": "test_next_wave_refuses_live_items",
+      "path": "tests/context/domains/test_build_loop.py",
+      "range": [
+        937,
+        937
+      ],
+      "parent": "tests_context_domains_test_build_loop_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_build_loop_test_next_wave_allows_live_ok_and_clean",
+      "kind": "function",
+      "name": "test_next_wave_allows_live_ok_and_clean",
+      "path": "tests/context/domains/test_build_loop.py",
+      "range": [
+        945,
+        945
+      ],
+      "parent": "tests_context_domains_test_build_loop_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_build_loop_test_scaffold_checklist_states_live_rule",
+      "kind": "function",
+      "name": "test_scaffold_checklist_states_live_rule",
+      "path": "tests/context/domains/test_build_loop.py",
+      "range": [
+        953,
+        953
+      ],
+      "parent": "tests_context_domains_test_build_loop_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_build_loop_test_closeout_moves_flagged_live_item_unchanged",
+      "kind": "function",
+      "name": "test_closeout_moves_flagged_live_item_unchanged",
+      "path": "tests/context/domains/test_build_loop.py",
+      "range": [
+        961,
+        961
+      ],
+      "parent": "tests_context_domains_test_build_loop_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_build_loop_test_next_refuses_live_items",
+      "kind": "function",
+      "name": "test_next_refuses_live_items",
+      "path": "tests/context/domains/test_build_loop.py",
+      "range": [
+        1009,
+        1009
+      ],
+      "parent": "tests_context_domains_test_build_loop_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_build_loop_test_domain_dimension_agents_are_not_dispatched",
+      "kind": "function",
+      "name": "test_domain_dimension_agents_are_not_dispatched",
+      "path": "tests/context/domains/test_build_loop.py",
+      "range": [
+        1018,
+        1018
+      ],
+      "parent": "tests_context_domains_test_build_loop_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "test_build_loop_routing_make_proposal",
       "kind": "function",
       "name": "_make_proposal",
@@ -51612,13 +54017,78 @@
       "exported": true
     },
     {
+      "symbol_id": "test_checklist_lint_parse",
+      "kind": "function",
+      "name": "_parse",
+      "path": "tests/context/domains/test_checklist_lint.py",
+      "range": [
+        15,
+        15
+      ],
+      "parent": "tests_context_domains_test_checklist_lint_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_checklist_lint_test_positives_flagged",
+      "kind": "function",
+      "name": "test_positives_flagged",
+      "path": "tests/context/domains/test_checklist_lint.py",
+      "range": [
+        37,
+        37
+      ],
+      "parent": "tests_context_domains_test_checklist_lint_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_checklist_lint_test_negatives_ignored",
+      "kind": "function",
+      "name": "test_negatives_ignored",
+      "path": "tests/context/domains/test_checklist_lint.py",
+      "range": [
+        42,
+        42
+      ],
+      "parent": "tests_context_domains_test_checklist_lint_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_checklist_lint_test_live_ok_honoured",
+      "kind": "function",
+      "name": "test_live_ok_honoured",
+      "path": "tests/context/domains/test_checklist_lint.py",
+      "range": [
+        47,
+        47
+      ],
+      "parent": "tests_context_domains_test_checklist_lint_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_checklist_lint_test_ticked_ignored",
+      "kind": "function",
+      "name": "test_ticked_ignored",
+      "path": "tests/context/domains/test_checklist_lint.py",
+      "range": [
+        56,
+        56
+      ],
+      "parent": "tests_context_domains_test_checklist_lint_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "test_closeout_local_only",
       "kind": "function",
       "name": "_local_only",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        26,
-        26
+        33,
+        33
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -51630,8 +54100,8 @@
       "name": "_workspace",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        36,
-        36
+        43,
+        43
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -51643,8 +54113,8 @@
       "name": "_manifest",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        55,
-        55
+        62,
+        62
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -51656,8 +54126,8 @@
       "name": "_packaged_audit_manifest",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        81,
-        81
+        88,
+        88
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -51669,8 +54139,8 @@
       "name": "test_transfer_live_verification_and_retirement_preserve_durable_work",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        116,
-        116
+        123,
+        123
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -51682,8 +54152,8 @@
       "name": "test_audit_knowledge_requires_same_transfer_before_retirement",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        168,
-        168
+        175,
+        175
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -51695,8 +54165,8 @@
       "name": "test_audit_reflection_uses_managed_learning_gate_and_is_idempotent",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        180,
-        180
+        187,
+        187
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -51708,8 +54178,8 @@
       "name": "test_stale_review_missing_assets_and_unevaluated_claims_fail_without_writes",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        295,
-        295
+        302,
+        302
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -51721,8 +54191,8 @@
       "name": "test_inbound_durable_dependencies_and_source_escape_fail_closed",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        317,
-        317
+        324,
+        324
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -51734,8 +54204,8 @@
       "name": "test_changed_accepted_unit_requires_explicit_supersession",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        337,
-        337
+        344,
+        344
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -51747,8 +54217,8 @@
       "name": "test_reclose_preserves_moved_live_checks_through_gc",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        353,
-        353
+        360,
+        360
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -51760,8 +54230,8 @@
       "name": "test_pending_check_resolution_requires_reason_and_durable_evidence",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        382,
-        382
+        389,
+        389
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -51773,8 +54243,8 @@
       "name": "test_closeout_outcome_evidence_rejects_resolved_ephemeral_paths",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        435,
-        435
+        442,
+        442
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -51786,8 +54256,8 @@
       "name": "test_gc_rechecks_durable_closeout_outcome_hash",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        454,
-        454
+        461,
+        461
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -51799,8 +54269,8 @@
       "name": "test_accepted_unit_id_cannot_replace_prior_identity",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        472,
-        472
+        479,
+        479
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -51812,8 +54282,8 @@
       "name": "test_second_write_failure_restores_preexisting_destination",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        497,
-        497
+        504,
+        504
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -51825,8 +54295,8 @@
       "name": "test_interruption_before_receipt_protects_even_metadata_only_workspace",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        522,
-        522
+        529,
+        529
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -51838,8 +54308,125 @@
       "name": "test_closeout_cli_uses_the_same_reviewed_receipt",
       "path": "tests/context/domains/test_closeout.py",
       "range": [
-        566,
-        566
+        573,
+        573
+      ],
+      "parent": "tests_context_domains_test_closeout_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_closeout_learning_audit",
+      "kind": "function",
+      "name": "_learning_audit",
+      "path": "tests/context/domains/test_closeout.py",
+      "range": [
+        596,
+        596
+      ],
+      "parent": "tests_context_domains_test_closeout_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_closeout_learner_for",
+      "kind": "function",
+      "name": "_learner_for",
+      "path": "tests/context/domains/test_closeout.py",
+      "range": [
+        627,
+        627
+      ],
+      "parent": "tests_context_domains_test_closeout_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_closeout_test_every_learning_status_is_persisted_and_only_failed_exits_nonzero",
+      "kind": "function",
+      "name": "test_every_learning_status_is_persisted_and_only_failed_exits_nonzero",
+      "path": "tests/context/domains/test_closeout.py",
+      "range": [
+        667,
+        667
+      ],
+      "parent": "tests_context_domains_test_closeout_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_closeout_test_failed_learning_keeps_receipt_bytes_and_rerun_retries",
+      "kind": "function",
+      "name": "test_failed_learning_keeps_receipt_bytes_and_rerun_retries",
+      "path": "tests/context/domains/test_closeout.py",
+      "range": [
+        708,
+        708
+      ],
+      "parent": "tests_context_domains_test_closeout_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_closeout_test_settled_status_clears_stale_failed_record",
+      "kind": "function",
+      "name": "test_settled_status_clears_stale_failed_record",
+      "path": "tests/context/domains/test_closeout.py",
+      "range": [
+        729,
+        729
+      ],
+      "parent": "tests_context_domains_test_closeout_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_closeout_test_failed_event_after_creation_is_marked_and_retried",
+      "kind": "function",
+      "name": "test_failed_event_after_creation_is_marked_and_retried",
+      "path": "tests/context/domains/test_closeout.py",
+      "range": [
+        745,
+        745
+      ],
+      "parent": "tests_context_domains_test_closeout_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_closeout_test_legacy_reflection_closes_flagged_legacy_shape_not_failed",
+      "kind": "function",
+      "name": "test_legacy_reflection_closes_flagged_legacy_shape_not_failed",
+      "path": "tests/context/domains/test_closeout.py",
+      "range": [
+        772,
+        772
+      ],
+      "parent": "tests_context_domains_test_closeout_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_closeout_test_malformed_lesson_reflection_is_rejected_before_closeout",
+      "kind": "function",
+      "name": "test_malformed_lesson_reflection_is_rejected_before_closeout",
+      "path": "tests/context/domains/test_closeout.py",
+      "range": [
+        785,
+        785
+      ],
+      "parent": "tests_context_domains_test_closeout_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_closeout_test_disposable_ref_has_a_single_home",
+      "kind": "function",
+      "name": "test_disposable_ref_has_a_single_home",
+      "path": "tests/context/domains/test_closeout.py",
+      "range": [
+        796,
+        796
       ],
       "parent": "tests_context_domains_test_closeout_py",
       "docstring": null,
@@ -56474,6 +59061,58 @@
       "exported": true
     },
     {
+      "symbol_id": "test_evolve_learning_test_new_shape_lesson_applies_and_persists_status",
+      "kind": "function",
+      "name": "test_new_shape_lesson_applies_and_persists_status",
+      "path": "tests/context/domains/test_evolve_learning.py",
+      "range": [
+        322,
+        322
+      ],
+      "parent": "tests_context_domains_test_evolve_learning_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_evolve_learning_test_legacy_reflection_is_flagged_and_warned",
+      "kind": "function",
+      "name": "test_legacy_reflection_is_flagged_and_warned",
+      "path": "tests/context/domains/test_evolve_learning.py",
+      "range": [
+        355,
+        355
+      ],
+      "parent": "tests_context_domains_test_evolve_learning_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_evolve_learning_test_new_shape_lesson_missing_a_field_is_rejected",
+      "kind": "function",
+      "name": "test_new_shape_lesson_missing_a_field_is_rejected",
+      "path": "tests/context/domains/test_evolve_learning.py",
+      "range": [
+        371,
+        371
+      ],
+      "parent": "tests_context_domains_test_evolve_learning_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_evolve_learning_test_harvest_and_gate_payloads_carry_no_status",
+      "kind": "function",
+      "name": "test_harvest_and_gate_payloads_carry_no_status",
+      "path": "tests/context/domains/test_evolve_learning.py",
+      "range": [
+        393,
+        393
+      ],
+      "parent": "tests_context_domains_test_evolve_learning_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "test_evolve_native_native",
       "kind": "function",
       "name": "native",
@@ -58069,6 +60708,175 @@
         25
       ],
       "parent": "tests_context_domains_test_handoff_envelopes_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_lesson_raw",
+      "kind": "function",
+      "name": "_raw",
+      "path": "tests/context/domains/test_lesson.py",
+      "range": [
+        21,
+        21
+      ],
+      "parent": "tests_context_domains_test_lesson_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_lesson_project",
+      "kind": "function",
+      "name": "project",
+      "path": "tests/context/domains/test_lesson.py",
+      "range": [
+        32,
+        32
+      ],
+      "parent": "tests_context_domains_test_lesson_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_lesson_delta",
+      "kind": "function",
+      "name": "_delta",
+      "path": "tests/context/domains/test_lesson.py",
+      "range": [
+        43,
+        43
+      ],
+      "parent": "tests_context_domains_test_lesson_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_lesson_apply",
+      "kind": "function",
+      "name": "_apply",
+      "path": "tests/context/domains/test_lesson.py",
+      "range": [
+        58,
+        58
+      ],
+      "parent": "tests_context_domains_test_lesson_py",
+      "docstring": null,
+      "exported": false
+    },
+    {
+      "symbol_id": "test_lesson_test_valid_lesson_round_trips",
+      "kind": "function",
+      "name": "test_valid_lesson_round_trips",
+      "path": "tests/context/domains/test_lesson.py",
+      "range": [
+        64,
+        64
+      ],
+      "parent": "tests_context_domains_test_lesson_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_lesson_test_missing_or_empty_field_rejected",
+      "kind": "function",
+      "name": "test_missing_or_empty_field_rejected",
+      "path": "tests/context/domains/test_lesson.py",
+      "range": [
+        75,
+        75
+      ],
+      "parent": "tests_context_domains_test_lesson_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_lesson_test_list_of_lessons_rejected",
+      "kind": "function",
+      "name": "test_list_of_lessons_rejected",
+      "path": "tests/context/domains/test_lesson.py",
+      "range": [
+        85,
+        85
+      ],
+      "parent": "tests_context_domains_test_lesson_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_lesson_test_bad_confidence_and_verdict_rejected",
+      "kind": "function",
+      "name": "test_bad_confidence_and_verdict_rejected",
+      "path": "tests/context/domains/test_lesson.py",
+      "range": [
+        90,
+        90
+      ],
+      "parent": "tests_context_domains_test_lesson_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_lesson_test_legacy_reflection_flagged_not_rejected",
+      "kind": "function",
+      "name": "test_legacy_reflection_flagged_not_rejected",
+      "path": "tests/context/domains/test_lesson.py",
+      "range": [
+        100,
+        100
+      ],
+      "parent": "tests_context_domains_test_lesson_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_lesson_test_delta_is_pure_and_add_vs_revise",
+      "kind": "function",
+      "name": "test_delta_is_pure_and_add_vs_revise",
+      "path": "tests/context/domains/test_lesson.py",
+      "range": [
+        108,
+        108
+      ],
+      "parent": "tests_context_domains_test_lesson_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_lesson_test_supersede_only_when_explicit",
+      "kind": "function",
+      "name": "test_supersede_only_when_explicit",
+      "path": "tests/context/domains/test_lesson.py",
+      "range": [
+        122,
+        122
+      ],
+      "parent": "tests_context_domains_test_lesson_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_lesson_test_double_apply_is_byte_identical",
+      "kind": "function",
+      "name": "test_double_apply_is_byte_identical",
+      "path": "tests/context/domains/test_lesson.py",
+      "range": [
+        130,
+        130
+      ],
+      "parent": "tests_context_domains_test_lesson_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_lesson_test_owner_edit_between_plan_and_apply_refused",
+      "kind": "function",
+      "name": "test_owner_edit_between_plan_and_apply_refused",
+      "path": "tests/context/domains/test_lesson.py",
+      "range": [
+        138,
+        138
+      ],
+      "parent": "tests_context_domains_test_lesson_py",
       "docstring": null,
       "exported": true
     },
@@ -64586,13 +67394,26 @@
       "exported": true
     },
     {
+      "symbol_id": "test_hooks_test_reinstall_rewrites_old_write_matcher",
+      "kind": "function",
+      "name": "test_reinstall_rewrites_old_write_matcher",
+      "path": "tests/context/test_hooks.py",
+      "range": [
+        538,
+        538
+      ],
+      "parent": "tests_context_test_hooks_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
       "symbol_id": "test_hooks_test_global_install_pre_tool_use_carries_self_gate_and_global_guard",
       "kind": "function",
       "name": "test_global_install_pre_tool_use_carries_self_gate_and_global_guard",
       "path": "tests/context/test_hooks.py",
       "range": [
-        528,
-        528
+        552,
+        552
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64604,8 +67425,8 @@
       "name": "test_global_per_prompt_contract_carries_override_guard",
       "path": "tests/context/test_hooks.py",
       "range": [
-        549,
-        549
+        574,
+        574
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64617,8 +67438,8 @@
       "name": "test_pre_tool_use_guard_idempotent_byte_stable",
       "path": "tests/context/test_hooks.py",
       "range": [
-        570,
-        570
+        595,
+        595
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64630,8 +67451,8 @@
       "name": "test_uninstall_removes_pre_tool_use_guard",
       "path": "tests/context/test_hooks.py",
       "range": [
-        586,
-        586
+        612,
+        612
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64643,8 +67464,8 @@
       "name": "test_legacy_post_tool_use_scrub_keeps_pre_tool_use_guard",
       "path": "tests/context/test_hooks.py",
       "range": [
-        597,
-        597
+        624,
+        624
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64656,8 +67477,8 @@
       "name": "test_pre_tool_use_preserves_co_located_and_foreign_user_hooks",
       "path": "tests/context/test_hooks.py",
       "range": [
-        619,
-        619
+        647,
+        647
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64669,8 +67490,8 @@
       "name": "_write_global_settings",
       "path": "tests/context/test_hooks.py",
       "range": [
-        670,
-        670
+        700,
+        700
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64682,8 +67503,8 @@
       "name": "test_statusline_left_alone_when_local_sets_status_line",
       "path": "tests/context/test_hooks.py",
       "range": [
-        675,
-        675
+        705,
+        705
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64695,8 +67516,8 @@
       "name": "test_statusline_left_alone_when_global_sets_status_line",
       "path": "tests/context/test_hooks.py",
       "range": [
-        694,
-        694
+        724,
+        724
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64708,8 +67529,8 @@
       "name": "test_statusline_is_wired_when_neither_configured",
       "path": "tests/context/test_hooks.py",
       "range": [
-        713,
-        713
+        743,
+        743
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64721,8 +67542,8 @@
       "name": "test_statusline_wiring_is_idempotent_across_installs",
       "path": "tests/context/test_hooks.py",
       "range": [
-        736,
-        736
+        766,
+        766
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64734,8 +67555,8 @@
       "name": "test_statusline_preserves_other_settings_keys",
       "path": "tests/context/test_hooks.py",
       "range": [
-        752,
-        752
+        782,
+        782
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64747,8 +67568,8 @@
       "name": "test_statusline_refuses_to_clobber_malformed_settings",
       "path": "tests/context/test_hooks.py",
       "range": [
-        768,
-        768
+        798,
+        798
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64760,8 +67581,8 @@
       "name": "test_statusline_malformed_global_does_not_block_local_user_value",
       "path": "tests/context/test_hooks.py",
       "range": [
-        789,
-        789
+        819,
+        819
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64773,8 +67594,8 @@
       "name": "test_install_wires_statusline_when_unconfigured",
       "path": "tests/context/test_hooks.py",
       "range": [
-        808,
-        808
+        838,
+        838
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64786,8 +67607,8 @@
       "name": "test_install_never_clobbers_a_user_statusline",
       "path": "tests/context/test_hooks.py",
       "range": [
-        828,
-        828
+        858,
+        858
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64799,8 +67620,8 @@
       "name": "test_uninstall_also_scrubs_legacy_entries",
       "path": "tests/context/test_hooks.py",
       "range": [
-        851,
-        851
+        881,
+        881
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64812,8 +67633,8 @@
       "name": "test_uninstall_leaves_user_session_start_hooks",
       "path": "tests/context/test_hooks.py",
       "range": [
-        869,
-        869
+        899,
+        899
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64825,8 +67646,8 @@
       "name": "test_uninstall_idempotent_when_nothing_present",
       "path": "tests/context/test_hooks.py",
       "range": [
-        894,
-        894
+        924,
+        924
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64838,8 +67659,8 @@
       "name": "test_uninstall_preserves_malformed_settings",
       "path": "tests/context/test_hooks.py",
       "range": [
-        902,
-        902
+        932,
+        932
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64851,8 +67672,8 @@
       "name": "test_status_false_when_absent",
       "path": "tests/context/test_hooks.py",
       "range": [
-        920,
-        920
+        950,
+        950
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64864,8 +67685,8 @@
       "name": "test_status_true_after_install",
       "path": "tests/context/test_hooks.py",
       "range": [
-        934,
-        934
+        964,
+        964
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64877,8 +67698,8 @@
       "name": "test_cli_hooks_install_status_uninstall",
       "path": "tests/context/test_hooks.py",
       "range": [
-        946,
-        946
+        976,
+        976
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64890,8 +67711,8 @@
       "name": "test_cli_hooks_unknown_verb",
       "path": "tests/context/test_hooks.py",
       "range": [
-        968,
-        968
+        998,
+        998
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64903,8 +67724,8 @@
       "name": "test_ingest_auto_installs_hooks",
       "path": "tests/context/test_hooks.py",
       "range": [
-        981,
-        981
+        1011,
+        1011
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64916,8 +67737,8 @@
       "name": "test_ingest_skips_hooks_with_no_hooks_flag",
       "path": "tests/context/test_hooks.py",
       "range": [
-        1000,
-        1000
+        1030,
+        1030
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64929,8 +67750,8 @@
       "name": "test_install_writes_memory_session_start_command",
       "path": "tests/context/test_hooks.py",
       "range": [
-        1017,
-        1017
+        1047,
+        1047
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64942,8 +67763,8 @@
       "name": "_session_start_commands",
       "path": "tests/context/test_hooks.py",
       "range": [
-        1036,
-        1036
+        1066,
+        1066
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64955,8 +67776,8 @@
       "name": "test_install_writes_gc_signal_command_alongside_existing",
       "path": "tests/context/test_hooks.py",
       "range": [
-        1047,
-        1047
+        1077,
+        1077
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64968,8 +67789,8 @@
       "name": "test_gc_signal_command_matches_session_start_shape",
       "path": "tests/context/test_hooks.py",
       "range": [
-        1059,
-        1059
+        1089,
+        1089
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64981,8 +67802,8 @@
       "name": "test_install_idempotent_does_not_duplicate_gc_signal",
       "path": "tests/context/test_hooks.py",
       "range": [
-        1074,
-        1074
+        1104,
+        1104
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -64994,8 +67815,8 @@
       "name": "test_skill_feedback_hooks_are_independent_bounded_and_stop_unchanged",
       "path": "tests/context/test_hooks.py",
       "range": [
-        1089,
-        1089
+        1119,
+        1119
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -65007,8 +67828,8 @@
       "name": "_python_dummyindex_bin",
       "path": "tests/context/test_hooks.py",
       "range": [
-        1120,
-        1120
+        1150,
+        1150
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -65020,8 +67841,8 @@
       "name": "test_dynamic_prompt_hook_executes_valid_json_and_fails_open",
       "path": "tests/context/test_hooks.py",
       "range": [
-        1135,
-        1135
+        1165,
+        1165
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -65033,8 +67854,8 @@
       "name": "test_install_writes_stop_and_precompact_hooks",
       "path": "tests/context/test_hooks.py",
       "range": [
-        1179,
-        1179
+        1209,
+        1209
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -65046,8 +67867,8 @@
       "name": "test_status_true_after_install_all_five",
       "path": "tests/context/test_hooks.py",
       "range": [
-        1206,
-        1206
+        1236,
+        1236
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -65059,8 +67880,8 @@
       "name": "test_uninstall_removes_stop_and_precompact",
       "path": "tests/context/test_hooks.py",
       "range": [
-        1221,
-        1221
+        1251,
+        1251
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -65072,8 +67893,8 @@
       "name": "test_cli_hooks_status_lists_all_five",
       "path": "tests/context/test_hooks.py",
       "range": [
-        1231,
-        1231
+        1261,
+        1261
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -65085,8 +67906,8 @@
       "name": "test_stop_entry_has_nudge_and_gate",
       "path": "tests/context/test_hooks.py",
       "range": [
-        1252,
-        1252
+        1282,
+        1282
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -65098,8 +67919,8 @@
       "name": "test_install_idempotent_with_gate",
       "path": "tests/context/test_hooks.py",
       "range": [
-        1263,
-        1263
+        1293,
+        1293
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -65111,8 +67932,8 @@
       "name": "test_global_install_targets_home_and_guards",
       "path": "tests/context/test_hooks.py",
       "range": [
-        1272,
-        1272
+        1302,
+        1302
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -65124,8 +67945,8 @@
       "name": "test_global_bodies_guarded_local_not",
       "path": "tests/context/test_hooks.py",
       "range": [
-        1283,
-        1283
+        1313,
+        1313
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -65137,8 +67958,8 @@
       "name": "test_local_install_present_detects_sentinel",
       "path": "tests/context/test_hooks.py",
       "range": [
-        1295,
-        1295
+        1325,
+        1325
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -65150,8 +67971,8 @@
       "name": "test_global_uninstall_scrubs_home",
       "path": "tests/context/test_hooks.py",
       "range": [
-        1302,
-        1302
+        1332,
+        1332
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -65163,8 +67984,8 @@
       "name": "test_global_status_independent_of_local",
       "path": "tests/context/test_hooks.py",
       "range": [
-        1313,
-        1313
+        1343,
+        1343
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -65176,8 +67997,8 @@
       "name": "_all_managed_commands",
       "path": "tests/context/test_hooks.py",
       "range": [
-        1327,
-        1327
+        1357,
+        1357
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -65189,8 +68010,8 @@
       "name": "test_new_bodies_carry_clearer_label_and_legacy_sentinel",
       "path": "tests/context/test_hooks.py",
       "range": [
-        1339,
-        1339
+        1369,
+        1369
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -65202,8 +68023,8 @@
       "name": "test_session_start_has_degraded_mode_echo",
       "path": "tests/context/test_hooks.py",
       "range": [
-        1353,
-        1353
+        1383,
+        1383
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -65215,8 +68036,8 @@
       "name": "test_uninstall_removes_old_style_bodies",
       "path": "tests/context/test_hooks.py",
       "range": [
-        1368,
-        1368
+        1398,
+        1398
       ],
       "parent": "tests_context_test_hooks_py",
       "docstring": null,
@@ -74172,8 +76993,8 @@
       "name": "_all_skill_markdown",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        29,
-        29
+        37,
+        37
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74185,8 +77006,8 @@
       "name": "_installed_skill_sources",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        37,
-        37
+        45,
+        45
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74198,8 +77019,8 @@
       "name": "test_installed_skill_frontmatter_is_agent_skills_portable",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        47,
-        47
+        55,
+        55
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74211,8 +77032,8 @@
       "name": "test_skill_bodies_name_the_portable_host_path",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        95,
-        95
+        108,
+        108
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74224,8 +77045,8 @@
       "name": "test_no_install_scope_user_skew_remedy",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        122,
-        122
+        138,
+        138
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74237,8 +77058,8 @@
       "name": "test_recouncil_never_presented_as_bare_cli_command",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        136,
-        136
+        154,
+        154
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74250,8 +77071,8 @@
       "name": "test_no_stale_equipment_schema_version_in_skills",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        159,
-        159
+        177,
+        177
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74263,8 +77084,8 @@
       "name": "test_skew_banners_point_at_diagnosis_verb",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        182,
-        182
+        200,
+        200
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74276,8 +77097,8 @@
       "name": "_build_skill",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        199,
-        199
+        217,
+        217
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74289,8 +77110,8 @@
       "name": "test_build_skill_via_substitution_is_a_failure",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        204,
-        204
+        222,
+        222
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74302,8 +77123,8 @@
       "name": "test_build_skill_verify_demands_tool_provenance",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        211,
-        211
+        229,
+        229
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74315,8 +77136,8 @@
       "name": "test_build_skill_excludes_consumer_specific_canvas_gate",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        218,
-        218
+        236,
+        236
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74328,8 +77149,8 @@
       "name": "test_build_skill_marks_gate_and_main_session_undispatchable",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        226,
-        226
+        246,
+        246
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74341,8 +77162,8 @@
       "name": "_plan_skill",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        237,
-        237
+        257,
+        257
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74354,8 +77175,8 @@
       "name": "test_plan_skill_teaches_the_two_class_via_rule",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        242,
-        242
+        262,
+        262
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74367,8 +77188,8 @@
       "name": "test_plan_skill_step8_assertion_is_two_class",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        254,
-        254
+        274,
+        274
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74380,8 +77201,8 @@
       "name": "test_build_skill_documents_models_disclosure_and_route",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        265,
-        265
+        285,
+        285
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74393,8 +77214,8 @@
       "name": "_gc_skill",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        280,
-        280
+        300,
+        300
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74406,8 +77227,8 @@
       "name": "test_gc_skill_marks_confirm_and_gate_non_dispatchable",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        285,
-        285
+        305,
+        305
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74419,8 +77240,8 @@
       "name": "test_gc_skill_documents_ordered_contract",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        304,
-        304
+        325,
+        325
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74432,8 +77253,8 @@
       "name": "test_gc_skill_states_never_a_bare_delete_sentinel",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        335,
-        335
+        359,
+        359
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74445,8 +77266,8 @@
       "name": "test_gc_skill_no_runnable_gc_delete_without_yes",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        343,
-        343
+        367,
+        367
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74458,8 +77279,8 @@
       "name": "test_plan_skill_uses_host_native_critics",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        376,
-        376
+        408,
+        408
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74471,8 +77292,8 @@
       "name": "test_plan_prepares_shared_capabilities_without_assuming_native_tools",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        384,
-        384
+        416,
+        416
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74484,8 +77305,8 @@
       "name": "test_build_delegates_selected_capability_and_policy_on_every_host",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        393,
-        393
+        425,
+        425
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74497,8 +77318,8 @@
       "name": "test_equip_prepares_shared_bodies_with_optional_native_adapters",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        405,
-        405
+        437,
+        437
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74510,8 +77331,8 @@
       "name": "test_codex_onboarding_and_audit_use_current_without_claude_hooks",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        416,
-        416
+        448,
+        448
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74523,8 +77344,8 @@
       "name": "test_plan_skill_keeps_open_decisions_out_of_checklist",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        431,
-        431
+        463,
+        463
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74536,8 +77357,8 @@
       "name": "test_plan_skill_says_read_before_editing",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        438,
-        438
+        470,
+        470
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74549,8 +77370,8 @@
       "name": "_equip_skill",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        447,
-        447
+        479,
+        479
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74562,8 +77383,8 @@
       "name": "test_equip_uses_real_project_checks_and_hash_owned_learning",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        452,
-        452
+        484,
+        484
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74575,8 +77396,8 @@
       "name": "test_update_skill_documents_version_pinning",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        465,
-        465
+        497,
+        497
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74588,8 +77409,8 @@
       "name": "test_update_skill_documents_generated_tool_refresh",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        474,
-        474
+        506,
+        506
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74601,8 +77422,8 @@
       "name": "test_trivial_filter_doc_locates_count_fields_in_index_json",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        492,
-        492
+        526,
+        526
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74614,8 +77435,8 @@
       "name": "test_how_to_use_describes_reconcile_as_read_only",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        506,
-        506
+        540,
+        540
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74627,8 +77448,8 @@
       "name": "test_how_to_use_drops_blanket_no_handedit_rule",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        516,
-        516
+        550,
+        550
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74640,8 +77461,8 @@
       "name": "test_how_to_use_documents_index_json_field_names",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        523,
-        523
+        558,
+        558
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74653,8 +77474,8 @@
       "name": "test_how_to_use_user_overrides_index",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        531,
-        531
+        566,
+        566
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74666,8 +77487,8 @@
       "name": "test_managed_block_describes_reconcile_correctly",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        537,
-        537
+        572,
+        572
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74679,8 +77500,8 @@
       "name": "_scan_council_doc",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        550,
-        550
+        586,
+        586
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74692,8 +77513,8 @@
       "name": "test_codebase_scan_doc_edits_the_ranked_seed",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        555,
-        555
+        591,
+        591
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74705,8 +77526,8 @@
       "name": "test_codebase_scan_doc_requires_symbol_ref_and_evidence",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        565,
-        565
+        602,
+        602
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74718,8 +77539,8 @@
       "name": "test_codebase_scan_doc_carries_current_caps",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        579,
-        579
+        617,
+        617
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74731,8 +77552,8 @@
       "name": "test_codebase_scan_doc_keeps_strong_sections",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        591,
-        591
+        629,
+        629
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74744,8 +77565,8 @@
       "name": "test_skill_md_scan_phase_matches_current_caps",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        602,
-        602
+        641,
+        641
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74757,8 +77578,8 @@
       "name": "test_playbooks_pair_rebuild_with_reconcile_for_new_files",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        610,
-        610
+        649,
+        649
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74770,8 +77591,8 @@
       "name": "_fleet_skill",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        626,
-        626
+        666,
+        666
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74783,8 +77604,8 @@
       "name": "test_fleet_skill_carries_resume_from_state_and_foreground_rules",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        631,
-        631
+        671,
+        671
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,
@@ -74796,8 +77617,73 @@
       "name": "test_fleet_skill_has_no_hardcoded_project_identifiers",
       "path": "tests/test_skills_doc_hygiene.py",
       "range": [
-        652,
-        652
+        694,
+        694
+      ],
+      "parent": "tests_test_skills_doc_hygiene_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_skills_doc_hygiene_test_packaged_skill_word_counts_within_ratchet",
+      "kind": "function",
+      "name": "test_packaged_skill_word_counts_within_ratchet",
+      "path": "tests/test_skills_doc_hygiene.py",
+      "range": [
+        717,
+        717
+      ],
+      "parent": "tests_test_skills_doc_hygiene_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_skills_doc_hygiene_test_skill_ratchet_covers_every_packaged_skill_without_stale_entries",
+      "kind": "function",
+      "name": "test_skill_ratchet_covers_every_packaged_skill_without_stale_entries",
+      "path": "tests/test_skills_doc_hygiene.py",
+      "range": [
+        727,
+        727
+      ],
+      "parent": "tests_test_skills_doc_hygiene_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_skills_doc_hygiene_test_primary_skill_documents_placement_rule",
+      "kind": "function",
+      "name": "test_primary_skill_documents_placement_rule",
+      "path": "tests/test_skills_doc_hygiene.py",
+      "range": [
+        743,
+        743
+      ],
+      "parent": "tests_test_skills_doc_hygiene_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_skills_doc_hygiene_test_plan_skill_carries_no_live_testing_rule",
+      "kind": "function",
+      "name": "test_plan_skill_carries_no_live_testing_rule",
+      "path": "tests/test_skills_doc_hygiene.py",
+      "range": [
+        749,
+        749
+      ],
+      "parent": "tests_test_skills_doc_hygiene_py",
+      "docstring": null,
+      "exported": true
+    },
+    {
+      "symbol_id": "test_skills_doc_hygiene_test_context_doc_budget_ratchet_exists_and_passes",
+      "kind": "function",
+      "name": "test_context_doc_budget_ratchet_exists_and_passes",
+      "path": "tests/test_skills_doc_hygiene.py",
+      "range": [
+        756,
+        756
       ],
       "parent": "tests_test_skills_doc_hygiene_py",
       "docstring": null,

@@ -19,6 +19,11 @@ PACKAGE_FIELDS = (
 )
 
 
+def capability_id(item: EquipmentItem) -> str:
+    """The reusable id of ``item``: its recorded id, else ``local/<name>``."""
+    return item.capability_id or f"local/{item.name}"
+
+
 def capability_metadata(item: EquipmentItem) -> dict:
     return {name: getattr(item, name) for name in PACKAGE_FIELDS}
 
@@ -43,7 +48,7 @@ def capability_identity(
             f"Capability {item.name!r} body differs from its recorded baseline"
         )
     return dict(
-        id=item.capability_id or f"local/{item.name}",
+        id=capability_id(item),
         version=item.version or digest[:12],
         path=item.path,
         sha256=digest,

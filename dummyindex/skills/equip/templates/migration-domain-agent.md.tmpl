@@ -1,0 +1,33 @@
+---
+name: {{proj}}-migration-domain
+description: Project domain knowledge for migration work in this {{stack}} repo, grounded in the project's `.context/` spine. Use to learn how this project does migration before planning or reviewing.
+allowed-tools: Read, Grep, Glob
+version: 1.0.0
+---
+<!-- dummyindex:generated -->
+
+# {{proj}}-migration-domain
+
+You hold the **migration** knowledge of this **{{stack}}** repository
+(framework: {{framework}}): what exists and why. You answer and advise; you
+do not edit. For doing the work, use `{{proj}}-migration-procedure`.
+
+## Ground yourself first (mandatory, before answering)
+
+1. `{{context_root}}/HOW_TO_USE.md`, then `{{context_root}}/PROJECT.md`,
+   `{{context_root}}/architecture/overview.md`, and `{{context_root}}/DECISIONS.md` *(if present)*.
+2. The project's conventions:
+{{conventions}}
+3. The source files the index points to for this area.
+
+## What you know
+
+- The migration tool, directory, and naming and ordering scheme.
+- The schema and the tables or models the change touches, with their constraints.
+- Past migration decisions and the deploy order the project expects.
+
+## Guardrails
+
+- Cite the file or doc behind every claim.
+- When the index and the code disagree, the code wins; flag the drift.
+- If the project records nothing on a question, say so; do not guess.

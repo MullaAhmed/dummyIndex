@@ -2,81 +2,80 @@
 
 `confidence: INFERRED`
 
-## Where it lives
+## Bounded context
 
-- `dummyindex/context/domains/enrich.py` — selection, batching, `tree.json` writeback.
-- `dummyindex/cli/enrich.py` — `run_plan` (`:12-51`), `run_apply` (`:54-123`): validation, plan
-  path, exit codes.
-- Consumed, not owned: authoring (`dummyindex/skills/council/52-tree-enrich.md:49-76`),
-  stage scheduling (`dummyindex/context/domains/council_batch.py:62-77`), layout migration
-  (`dummyindex/context/build/upgrade.py:501-552`). Own tests: `tests/context/domains/test_enrich.py:35-296`;
-  co-clustered tests are noise.
+`dummyindex/context/domains/enrich.py` owns the enrichment worklist and tree
+writeback; `dummyindex/cli/enrich.py` validates CLI arguments/payloads and maps
+outcomes to exit codes. Both layers perform filesystem I/O. The authoring step
+belongs to the host workflow, not a Python model client. Co-clustered CLI tests
+and `tests/context/domains/test_query.py` do not make other CLI/retrieval domains
+part of enrichment's ownership boundary.
 
-## Architecture in three sentences
+The frozen records are `EnrichNode`, `EnrichBatch`, `EnrichPlan` and `ApplyResult`
+(`dummyindex/context/domains/enrich.py:31-90`,
+`dummyindex/context/domains/enrich.py:193-204`). The shared dispatcher exposes
+`enrich-plan`/`enrich-apply`; this feature consumes that dispatch seam.
 
-`run_plan` calls `build_plan` (pre-order `_walk` selecting `EXTRACTED` or `source-stale` nodes,
-`dummyindex/context/domains/enrich.py:86-173`), migrates the layout only after that succeeds, then
-writes `.context/cache/_enrich_plan.json` (`dummyindex/cli/enrich.py:28-39`). The host session
-authors a `{node_id: abstract}` mapping out of process; no Python model client. `run_apply`
-validates it and `apply_updates` writes known IDs (abstract, `INFERRED`, `source-stale` dropped)
-and reports unknown ones (`dummyindex/context/domains/enrich.py:198-218`, `:259-276`).
+## Plan / author / apply
 
-## Patterns named
+1. `build_plan` resolves the context directory and walks `tree.json` in
+   pre-order. It selects nodes with `EXTRACTED` confidence **or** a
+   `source-stale` label. Project/directory nodes form `structure`; file nodes
+   and their selected symbols form `file_subtree` batches. A file node need
+   not itself be selected for its stale child to enter a batch
+   (`dummyindex/context/domains/enrich.py:93-182`).
+2. `run_plan` upgrades the managed ignore rules, removes the legacy root plan
+   and atomically writes `.context/cache/_enrich_plan.json`. The host authors
+   a string-to-string update mapping outside the process
+   (`dummyindex/cli/enrich.py:12-57`,
+   `dummyindex/context/domains/enrich.py:185-190`). This is a plan/apply workflow,
+   not an atomic transaction spanning authoring.
+3. `run_apply` validates the mapping's shape, then `apply_updates` checks IDs
+   against the current tree, applies known entries and replaces `tree.json`.
+   `_apply` sets the supplied abstract and confidence to `INFERRED`, clearing
+   `source-stale` on changed entries. Identical abstract/confidence is a no-op
+   for that node (`dummyindex/cli/enrich.py:60-129`,
+   `dummyindex/context/domains/enrich.py:207-227`,
+   `dummyindex/context/domains/enrich.py:268-285`).
 
-- Two-phase plan/apply via a file hand-off (`dummyindex/context/domains/enrich.py:176-181`, `:198-218`),
-  behind a table dispatcher (`dummyindex/cli/__init__.py:91-92`).
-- Wire-only CLI handler (`.context/conventions/coding-practices.md:55-62`) at
-  `dummyindex/cli/enrich.py:12-123`, except `json.loads` (`:100`): malformed JSON crashes (exit `1`).
-- Frozen records + `to_dict()` (`dummyindex/context/domains/enrich.py:24-83`, `:184-195`);
-  `range: list`/`stats: dict` break the tuple-only rule (`.context/conventions/coding-practices.md:10-12`).
-- Hand-rolled tmp+`replace` with a fixed `<name>.tmp` (`dummyindex/context/domains/enrich.py:179-181`,
-  `:215-217`), not the unique-temp `write_text_atomic` (`.context/conventions/data-access.md:7`); rationale unstated.
+## Dependencies and feedback
 
-## Dependencies surfaced
+The deterministic backbone supplies the tree and stale labels; the host consumes
+the plan and supplies authored updates. The written tree feeds future tree
+navigation and the next plan. This is data feedback through the tree, not a
+Python dependency on the authoring model. Enrichment runs after feature council
+and before index refresh in the declared workflow
+(`dummyindex/skills/council/52-tree-enrich.md:3-12`). The domain never accepts a
+run-mode flag.
 
-- Upstream code: `ConfidenceLevel` (`dummyindex/pipeline/enums.py:13`) is the domain's sole
-  first-party import.
-- Upstream data: `write_tree` seeds `EXTRACTED` stubs (`dummyindex/context/build/runner.py:370`);
-  `refresh_tree` keeps annotated abstracts across `rebuild --changed` and is the only
-  `source-stale` producer (`dummyindex/context/build/navigation_refresh.py:133-153`).
-- Downstream: `estimate_run` counts `plan.nodes` per feature, so the selection predicate drives
-  fleet estimates (`dummyindex/context/domains/fleet.py:423-435`); `active_stages` appends
-  `CouncilStage.TREE` in every mode unless `--no-tree-enrich`
-  (`dummyindex/context/domains/council_batch.py:75-76`, `dummyindex/cli/council_batch.py:102-105`).
-- Cycles: none at import level. Data cycle via `tree.json`: apply sets `INFERRED` → `refresh_tree`
-  flags drift → `build_plan` reselects → apply clears the label.
+## Decisions and limits
 
-## Data model
+- Per-file batches permit incremental authoring and application. `structure`
+  contains project/directories; file heads remain in their file batches
+  (`dummyindex/context/domains/enrich.py:137-164`). A host choosing skeleton-only
+  work must filter node kinds, not assume every file is in `structure`.
+- Apply accepts any current tree ID, not only IDs from the latest worklist.
+  Unknown IDs are reported after known updates are written; the CLI exits `1`
+  for that partial result. It is not an all-or-nothing rejection
+  (`dummyindex/context/domains/enrich.py:217-227`,
+  `dummyindex/cli/enrich.py:116-129`).
+- Temp-file replacement protects each completed write from a partial-file
+  publish. It does not provide a project lock or detect an intervening tree
+  generation (`dummyindex/context/domains/enrich.py:185-190`,
+  `dummyindex/context/domains/enrich.py:223-226`).
+- Current workflow prose disagrees on light mode: the phase says on in every
+  mode, while the mode table says skip. That is an unresolved orchestration
+  contradiction; the mode-agnostic domain cannot settle it
+  (`dummyindex/skills/skill.md:334-340`,
+  `dummyindex/skills/council/52-tree-enrich.md:11-12`,
+  `dummyindex/skills/council/52-tree-enrich.md:34-43`).
 
-No database. `tree.json` node fields are read at `dummyindex/context/domains/enrich.py:109-124` and
-written at `:259-273`; `_enrich_plan.json` is `SCHEMA_VERSION = 1` (`:21`; shapes in `spec.md`).
-`stats.stub_nodes` includes stale nodes (`:156-160`).
+## Verification seam
 
-## Key decisions
-
-- Decided per-file `file_subtree` batches because partial progress must survive an interrupted
-  session (`dummyindex/context/domains/enrich.py:3-5`). `structure` holds only project/dir nodes;
-  file heads stay in their file batch (`:126-130`).
-- Decided `source-stale` nodes re-enter at any confidence because `refresh_tree` preserves
-  annotated abstracts instead of resetting them (`dummyindex/context/build/navigation_refresh.py:133-153`).
-- Decided `enrich-plan` runs the full layout migration because reconcile-only repos never run a
-  full build, with `package_version=None` because it does not extract; the plan is gitignored
-  scratch under `cache/` (`dummyindex/cli/enrich.py:33-37`). Cost: retired paths are deleted or
-  backed up (`dummyindex/context/build/upgrade.py:300-307`), and the `LayoutMigration` the build
-  callers keep (`dummyindex/context/build/runner.py:126`) is discarded, so failures are silent.
-- Decided unknown IDs are reported, not rejected, as likely typos (`dummyindex/context/domains/enrich.py:190-191`);
-  known updates are already written when the CLI exits `1` (`dummyindex/cli/enrich.py:110-123`).
-  Any tree ID is accepted.
-- Decided apply is idempotent per node (`dummyindex/context/domains/enrich.py:7`, `:264-267`);
-  `tree.json` is still rewritten (`:215-217`); no lock or generation check.
-- Decided mode scoping is the host's, for cost control
-  (`dummyindex/skills/council/52-tree-enrich.md:34-47`); the domain takes no mode.
-
-## Open questions
-
-- Is discarding `LayoutMigration` in `run_plan` deliberate?
-- Light mode: code schedules `CouncilStage.TREE` in light, so "light skips"
-  (`dummyindex/skills/skill.md:334`, `dummyindex/skills/council/52-tree-enrich.md:41`) is stale;
-  which kinds light authors is undocumented. `dummyindex/skills/skill.md:334-335` also puts files in `structure`.
-- Untested: `source-stale` selection/label clearing, retired-path removal via `enrich-plan`,
-  malformed JSON to `enrich-apply`.
+`tests/context/domains/test_enrich.py:35-159` covers planning, file grouping,
+writeback, unknown IDs and repeated applies. Its CLI checks cover scratch-plan
+placement/migration, payload validation and exit behavior
+(`tests/context/domains/test_enrich.py:166-296`). The release's shared query-test
+changes add no enrichment behavior or new model-quality measurement. Historical
+claims that this checkout indexes only foreign benchmark files are no longer
+current and are not an architectural dependency.

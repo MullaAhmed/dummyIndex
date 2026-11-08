@@ -10,14 +10,15 @@
   cursors. JSONL-only discovery is not complete Codex database coverage.
 - Text classification is conservative, not semantic proof. Human correction
   evidence gets one reflection; speculative audit prose never becomes a rule
-  directly. Verified reflections still need source/outcome review and checks.
+  directly. Verified reflections still need review and checks.
+- Lesson `confidence` and edit verdicts are author claims, not stored or measured.
+  Legacy-shape reflections pass with a warning.
 - Case identities and ancestry must be supplied honestly. Held-out fixture files
   are absent from development snapshots; undeclared prior exposure cannot be
   undone.
-- Utility attributes outcomes to loaded versions. It cannot prove that one rule
-  caused the result. Suspect versions are repair signals, not deletion orders.
-- Captured guidance bytes are a size proxy, not a measure of semantic complexity.
-  They break ties only after measured quality, cost and tokens are equal.
+- Utility cannot prove that one rule
+  caused a result. Suspect versions are repair signals, not deletion orders.
+- Captured guidance bytes are only a size proxy. They break ties last.
 - Native workspaces are not an OS sandbox. Hosts must deliver only the prepared
   task and guidance, keep evaluator/held-out content out of authoring, persist
   dispatch IDs and interrupt workers at the fixed deadline. Numeric resource caps

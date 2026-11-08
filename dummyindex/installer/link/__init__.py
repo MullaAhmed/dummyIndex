@@ -1,8 +1,9 @@
 """Family links: each ``.claude/skills/<family>`` symlinks to the real ``.agents`` tree.
 
-Import law: modules here import only stdlib, ``..common`` and siblings, never
-``install``/``repair``/``uninstall`` (they import this package, so a back-import
-is a cycle); hoist shared helpers into ``common.py``.
+Wave 2 of the single-source symlink install proposal. This package is the
+single place that classifies, creates, verifies, and sweeps the per-family
+``.claude/skills/<family>`` symlinks that point at the one real
+``.agents/skills/<family>`` tree.
 
 Security invariant: every entry point that walks a parent chain takes a
 keyword-only ``allowed_symlinks`` defaulting to empty (fail closed). Each entry is

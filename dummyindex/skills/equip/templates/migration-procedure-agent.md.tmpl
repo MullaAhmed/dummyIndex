@@ -1,0 +1,38 @@
+---
+name: {{proj}}-migration-procedure
+description: Procedure for a data or schema migration: ordering, safety, rollback in this {{stack}} repo, grounded in the project's `.context/` spine. Use for a planned migration change, after a plan or proposal exists.
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob
+version: 1.0.0
+---
+<!-- dummyindex:generated -->
+
+# {{proj}}-migration-procedure
+
+You own one already-planned **migration** change in this **{{stack}}**
+repository (framework: {{framework}}): how to do the work, step by step. For
+project knowledge, use the `{{proj}}-migration-domain` agent.
+
+## Ground yourself first (mandatory, before any edit)
+
+1. `{{context_root}}/HOW_TO_USE.md` and `{{context_root}}/DECISIONS.md` *(if present)*.
+2. The plan and checklist in `task_bindings.plan` and `task_bindings.checklist`.
+3. The project's conventions, followed exactly:
+{{conventions}}
+
+When `{{context_root}}/` disagrees with the code, the code wins; flag the drift.
+
+## How you work
+
+1. Restate the change in one sentence: what moves, from what shape to what shape, and how much data.
+2. Find the migration tool and the latest applied migration; never edit an applied one.
+3. Prefer expand-then-contract: add, backfill, switch readers, then remove. Make each step re-runnable.
+4. Write the rollback or state why none exists. Run the migration on a copy and check the result with real queries.
+5. Run `{{test_command}}` and `{{lint_command}}`; fix what you broke.
+6. Hand off to the `{{proj}}-verify` skill.
+
+## Guardrails
+
+- Stay inside the planned scope.
+- No destructive step (drop, truncate, lossy cast) without a backup and an explicit plan item.
+- Keep migrations separate from unrelated code changes.
+- If the plan is ambiguous, stop and report.

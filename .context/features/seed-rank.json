@@ -3,2003 +3,2003 @@
   "ranked": [
     {
       "id": "str",
-      "score": 0.00991114
+      "score": 0.00989418
     },
     {
       "id": "enums_confidencelevel",
-      "score": 0.00852513
-    },
-    {
-      "id": "claude_settings_malformedsettingserror",
-      "score": 0.00433131
+      "score": 0.00835569
     },
     {
       "id": "evolve_gate_evolveerror",
-      "score": 0.00410779
+      "score": 0.00487324
+    },
+    {
+      "id": "claude_settings_malformedsettingserror",
+      "score": 0.00422036
     },
     {
       "id": "config_configerror",
-      "score": 0.00389158
+      "score": 0.00373012
     },
     {
       "id": "enums_equipmentkind",
-      "score": 0.00314246
-    },
-    {
-      "id": "models_equipmentmanifest",
-      "score": 0.00266989
-    },
-    {
-      "id": "default_plugins_wiredentry",
-      "score": 0.00262795
-    },
-    {
-      "id": "config_councilmode",
-      "score": 0.00256785
+      "score": 0.00340117
     },
     {
       "id": "models_equipmentitem",
-      "score": 0.00256021
+      "score": 0.00287509
+    },
+    {
+      "id": "models_equipmentmanifest",
+      "score": 0.00261983
+    },
+    {
+      "id": "default_plugins_wiredentry",
+      "score": 0.00256618
+    },
+    {
+      "id": "config_councilmode",
+      "score": 0.00247525
     },
     {
       "id": "default_plugins_wiredkind",
-      "score": 0.00249665
+      "score": 0.00243827
     },
     {
       "id": "enums_equipmentsource",
-      "score": 0.00242927
+      "score": 0.00238287
     },
     {
       "id": "common_linkmode",
-      "score": 0.00208556
-    },
-    {
-      "id": "init_dispatch",
-      "score": 0.00187643
-    },
-    {
-      "id": "models_feature",
-      "score": 0.00183017
-    },
-    {
-      "id": "enums_candidatekind",
-      "score": 0.00174586
+      "score": 0.00209727
     },
     {
       "id": "enum",
-      "score": 0.00169378
+      "score": 0.00182745
+    },
+    {
+      "id": "init_dispatch",
+      "score": 0.00181872
+    },
+    {
+      "id": "models_feature",
+      "score": 0.00178292
+    },
+    {
+      "id": "enums_candidatekind",
+      "score": 0.00169704
     },
     {
       "id": "config_modelchoice",
-      "score": 0.00168478
+      "score": 0.00164495
     },
     {
       "id": "errors_featurerenameerror",
-      "score": 0.00163051
-    },
-    {
-      "id": "council_batch_councilmode",
-      "score": 0.00152323
-    },
-    {
-      "id": "drift_driftreport",
-      "score": 0.00144613
-    },
-    {
-      "id": "dev_pick_subagenttype",
-      "score": 0.00143792
-    },
-    {
-      "id": "common_make_id",
-      "score": 0.00142148
-    },
-    {
-      "id": "models_realityreport",
-      "score": 0.00138704
-    },
-    {
-      "id": "enums_memorytier",
-      "score": 0.00124858
-    },
-    {
-      "id": "dummyindex_cli_common_py",
-      "score": 0.00122933
-    },
-    {
-      "id": "dummyindex_context_domains_dev_pick_py",
-      "score": 0.00122751
-    },
-    {
-      "id": "enums_dockind",
-      "score": 0.0012094
-    },
-    {
-      "id": "runner_build_all",
-      "score": 0.00119874
-    },
-    {
-      "id": "common_usage_error",
-      "score": 0.00119181
-    },
-    {
-      "id": "dummyindex_context_domains_fleetrun_py",
-      "score": 0.00118715
-    },
-    {
-      "id": "config_depthcommand",
-      "score": 0.00118518
-    },
-    {
-      "id": "common_resolve_context_root",
-      "score": 0.00118194
-    },
-    {
-      "id": "dummyindex_cli_init_py__7f81cb43d8c31a40",
-      "score": 0.00117695
+      "score": 0.00158828
     },
     {
       "id": "errors_equiperror",
-      "score": 0.00114548
+      "score": 0.0014953
     },
     {
-      "id": "dummyindex_context_domains_evolve_py",
-      "score": 0.0011304
+      "id": "council_batch_councilmode",
+      "score": 0.00148348
     },
     {
-      "id": "models_claim",
-      "score": 0.00112843
+      "id": "drift_driftreport",
+      "score": 0.00140747
     },
     {
-      "id": "evolve_gate_gatestage",
-      "score": 0.0011234
+      "id": "dev_pick_subagenttype",
+      "score": 0.00140049
     },
     {
-      "id": "evolve_gate_gateresult",
-      "score": 0.00110349
+      "id": "models_realityreport",
+      "score": 0.00139473
     },
     {
-      "id": "errors_buildlooperror",
-      "score": 0.00109653
+      "id": "common_make_id",
+      "score": 0.00138395
     },
     {
-      "id": "models_familylinkstate",
-      "score": 0.00108734
+      "id": "enums_memorytier",
+      "score": 0.00121605
     },
     {
-      "id": "models_flow",
-      "score": 0.00107567
+      "id": "dummyindex_cli_common_py",
+      "score": 0.00120297
     },
     {
-      "id": "dummyindex_pipeline_extract_languages_wrappers_py",
-      "score": 0.00104462
+      "id": "dummyindex_context_domains_dev_pick_py",
+      "score": 0.00119583
     },
     {
-      "id": "atomic_io_write_text_atomic",
-      "score": 0.0010422
+      "id": "enums_dockind",
+      "score": 0.00117806
     },
     {
-      "id": "models_preflightreport",
-      "score": 0.00103443
+      "id": "runner_build_all",
+      "score": 0.00116325
     },
     {
-      "id": "models_turnusage",
-      "score": 0.00102397
+      "id": "dummyindex_context_domains_fleetrun_py",
+      "score": 0.00115615
     },
     {
-      "id": "enums_scannodekind",
-      "score": 0.00101699
+      "id": "common_usage_error",
+      "score": 0.00115187
     },
     {
-      "id": "models_stackprofile",
-      "score": 0.00100847
+      "id": "common_resolve_context_root",
+      "score": 0.00115143
+    },
+    {
+      "id": "dummyindex_cli_init_py__7f81cb43d8c31a40",
+      "score": 0.00114986
     },
     {
       "id": "maps_filesmap",
-      "score": 0.00100256
+      "score": 0.00114833
     },
     {
       "id": "maps_symbolsmap",
-      "score": 0.00100087
+      "score": 0.00114667
     },
     {
-      "id": "rank_seedrank",
-      "score": 0.00098586
+      "id": "config_depthcommand",
+      "score": 0.00113895
     },
     {
-      "id": "enums_docrole",
-      "score": 0.00097679
-    },
-    {
-      "id": "generic_extract_generic",
-      "score": 0.00097667
-    },
-    {
-      "id": "enums_proposalstatus",
-      "score": 0.00097194
-    },
-    {
-      "id": "enums_contextsubcommand",
-      "score": 0.00096566
-    },
-    {
-      "id": "tests_test_install_py",
-      "score": 0.00096329
+      "id": "atomic_io_write_text_atomic",
+      "score": 0.00110592
     },
     {
       "id": "errors_closeouterror",
-      "score": 0.0009575
+      "score": 0.00110339
+    },
+    {
+      "id": "models_claim",
+      "score": 0.00109767
+    },
+    {
+      "id": "dummyindex_context_domains_evolve_py",
+      "score": 0.00109218
+    },
+    {
+      "id": "evolve_gate_gatestage",
+      "score": 0.00108129
+    },
+    {
+      "id": "errors_buildlooperror",
+      "score": 0.00106988
+    },
+    {
+      "id": "evolve_gate_gateresult",
+      "score": 0.00106215
+    },
+    {
+      "id": "models_familylinkstate",
+      "score": 0.00106099
+    },
+    {
+      "id": "models_preflightreport",
+      "score": 0.00105196
+    },
+    {
+      "id": "models_flow",
+      "score": 0.00104806
+    },
+    {
+      "id": "models_stackprofile",
+      "score": 0.00103775
+    },
+    {
+      "id": "dummyindex_pipeline_extract_languages_wrappers_py",
+      "score": 0.0010168
+    },
+    {
+      "id": "models_turnusage",
+      "score": 0.00099644
+    },
+    {
+      "id": "enums_scannodekind",
+      "score": 0.00099121
+    },
+    {
+      "id": "rank_seedrank",
+      "score": 0.00095973
+    },
+    {
+      "id": "enums_docrole",
+      "score": 0.0009516
+    },
+    {
+      "id": "generic_extract_generic",
+      "score": 0.00095075
+    },
+    {
+      "id": "enums_proposalstatus",
+      "score": 0.00094702
+    },
+    {
+      "id": "enums_contextsubcommand",
+      "score": 0.00094149
+    },
+    {
+      "id": "tests_test_install_py",
+      "score": 0.00093019
     },
     {
       "id": "enums_docconfidence",
-      "score": 0.00094802
-    },
-    {
-      "id": "enums_skilldirectivekind",
-      "score": 0.00093457
-    },
-    {
-      "id": "fleetrun_fleetstatecorrupterror",
-      "score": 0.00093329
-    },
-    {
-      "id": "errors_sourceerror",
-      "score": 0.00092947
-    },
-    {
-      "id": "models_candidate",
-      "score": 0.00092939
-    },
-    {
-      "id": "dummyindex_context_default_plugins_py",
-      "score": 0.00092113
-    },
-    {
-      "id": "dummyindex_context_output_viewer_extras_py",
-      "score": 0.00092081
-    },
-    {
-      "id": "config_config",
-      "score": 0.00091934
+      "score": 0.0009279
     },
     {
       "id": "valueerror",
-      "score": 0.00091718
+      "score": 0.00091403
     },
     {
-      "id": "fleetrun_fleeterror",
-      "score": 0.00090778
+      "id": "enums_skilldirectivekind",
+      "score": 0.00091037
     },
     {
-      "id": "models_toolcallrecord",
-      "score": 0.00090265
+      "id": "fleetrun_fleetstatecorrupterror",
+      "score": 0.0009082
     },
     {
-      "id": "reconcile_reconcilereport",
-      "score": 0.00089379
+      "id": "errors_sourceerror",
+      "score": 0.00090446
     },
     {
-      "id": "common_read_text",
-      "score": 0.00088511
-    },
-    {
-      "id": "dummyindex_context_domains_fleet_py",
-      "score": 0.00088433
-    },
-    {
-      "id": "dummyindex_pipeline_extract_common_py",
-      "score": 0.00088276
-    },
-    {
-      "id": "errors_proposalslugerror",
-      "score": 0.00088083
-    },
-    {
-      "id": "common_parse_path_and_root",
-      "score": 0.00088037
-    },
-    {
-      "id": "errors_usageerror",
-      "score": 0.00087478
-    },
-    {
-      "id": "drift_driftrow",
-      "score": 0.00087221
-    },
-    {
-      "id": "models_skilldirectiveevent",
-      "score": 0.0008658
-    },
-    {
-      "id": "models_section",
-      "score": 0.0008509
-    },
-    {
-      "id": "fleet_fleetrunerror",
-      "score": 0.00082258
-    },
-    {
-      "id": "config_scopekind",
-      "score": 0.0008186
-    },
-    {
-      "id": "models_recurringskillcorrection",
-      "score": 0.0008029
-    },
-    {
-      "id": "default_plugins_runresult",
-      "score": 0.00080199
-    },
-    {
-      "id": "models_totals",
-      "score": 0.00079988
-    },
-    {
-      "id": "dummyindex_context_domains_evolve_gate_py",
-      "score": 0.00079625
-    },
-    {
-      "id": "verify_reality_check_feature",
-      "score": 0.00079417
-    },
-    {
-      "id": "enums_capability",
-      "score": 0.00078994
-    },
-    {
-      "id": "bootstrap_unbalancedmarkerserror",
-      "score": 0.00076588
-    },
-    {
-      "id": "models_chatreport",
-      "score": 0.00076514
+      "id": "models_candidate",
+      "score": 0.00090393
     },
     {
       "id": "meta_meta",
-      "score": 0.00076441
+      "score": 0.00090254
+    },
+    {
+      "id": "config_config",
+      "score": 0.00090085
+    },
+    {
+      "id": "dummyindex_context_default_plugins_py",
+      "score": 0.00089827
+    },
+    {
+      "id": "dummyindex_context_output_viewer_extras_py",
+      "score": 0.00089694
+    },
+    {
+      "id": "enums_dimension",
+      "score": 0.00088744
+    },
+    {
+      "id": "fleetrun_fleeterror",
+      "score": 0.00088331
+    },
+    {
+      "id": "models_toolcallrecord",
+      "score": 0.00087861
+    },
+    {
+      "id": "dummyindex_context_domains_fleet_py",
+      "score": 0.00086154
+    },
+    {
+      "id": "common_read_text",
+      "score": 0.0008615
+    },
+    {
+      "id": "common_parse_path_and_root",
+      "score": 0.00086145
+    },
+    {
+      "id": "dummyindex_pipeline_extract_common_py",
+      "score": 0.0008596
+    },
+    {
+      "id": "errors_proposalslugerror",
+      "score": 0.00085679
+    },
+    {
+      "id": "errors_usageerror",
+      "score": 0.00085127
+    },
+    {
+      "id": "enums_capability",
+      "score": 0.00085028
+    },
+    {
+      "id": "reconcile_reconcilereport",
+      "score": 0.00084912
+    },
+    {
+      "id": "drift_driftrow",
+      "score": 0.00084907
+    },
+    {
+      "id": "models_skilldirectiveevent",
+      "score": 0.00084272
+    },
+    {
+      "id": "models_section",
+      "score": 0.00082823
+    },
+    {
+      "id": "enums_learningstatus",
+      "score": 0.00080344
+    },
+    {
+      "id": "config_scopekind",
+      "score": 0.00080332
+    },
+    {
+      "id": "fleet_fleetrunerror",
+      "score": 0.00080107
+    },
+    {
+      "id": "dummyindex_context_domains_evolve_gate_py",
+      "score": 0.00079133
+    },
+    {
+      "id": "models_recurringskillcorrection",
+      "score": 0.00078154
+    },
+    {
+      "id": "models_totals",
+      "score": 0.00077842
+    },
+    {
+      "id": "default_plugins_runresult",
+      "score": 0.00077697
+    },
+    {
+      "id": "verify_reality_check_feature",
+      "score": 0.00077364
+    },
+    {
+      "id": "bootstrap_unbalancedmarkerserror",
+      "score": 0.00074461
+    },
+    {
+      "id": "models_chatreport",
+      "score": 0.00074461
     },
     {
       "id": "models_doccatalog",
-      "score": 0.00076137
+      "score": 0.00074313
     },
     {
       "id": "tests_context_domains_test_config_py",
-      "score": 0.00075426
+      "score": 0.00073626
     },
     {
       "id": "models_symbolgraph",
-      "score": 0.00074755
-    },
-    {
-      "id": "living_rules_sha256",
-      "score": 0.00074248
+      "score": 0.00072806
     },
     {
       "id": "marketplace_pluginentry",
-      "score": 0.00074246
+      "score": 0.00072346
     },
     {
-      "id": "models_sessionbucket",
-      "score": 0.00072944
+      "id": "living_rules_sha256",
+      "score": 0.00072227
     },
     {
       "id": "models_flowstep",
-      "score": 0.00072906
+      "score": 0.0007105
+    },
+    {
+      "id": "models_sessionbucket",
+      "score": 0.00070986
     },
     {
       "id": "models_placementresult",
-      "score": 0.00072502
+      "score": 0.00070635
     },
     {
       "id": "errors_unknownsymbolerror",
-      "score": 0.00072057
+      "score": 0.00070164
     },
     {
       "id": "tests_context_domains_test_reality_check_py",
-      "score": 0.0007188
-    },
-    {
-      "id": "evolve_experiments_run_experiment",
-      "score": 0.00071799
-    },
-    {
-      "id": "enums_scanedgekind",
-      "score": 0.00071431
-    },
-    {
-      "id": "enums_scanevidence",
-      "score": 0.00071431
-    },
-    {
-      "id": "models_periodbucket",
-      "score": 0.00071192
-    },
-    {
-      "id": "rank_rankentry",
-      "score": 0.00070295
-    },
-    {
-      "id": "models_removeresult",
-      "score": 0.00069968
-    },
-    {
-      "id": "fleet_unitstatus",
-      "score": 0.00069603
-    },
-    {
-      "id": "models_docentry",
-      "score": 0.00069523
-    },
-    {
-      "id": "dummyindex_context_domains_reality_check_verify_py",
-      "score": 0.00069304
-    },
-    {
-      "id": "models_straygroup",
-      "score": 0.00069016
-    },
-    {
-      "id": "models_block",
-      "score": 0.00069008
-    },
-    {
-      "id": "errors_gctargeterror",
-      "score": 0.00068895
-    },
-    {
-      "id": "enums_itemstate",
-      "score": 0.0006863
+      "score": 0.0007004
     },
     {
       "id": "dummyindex_installer_common_py",
-      "score": 0.00068531
+      "score": 0.00070012
     },
     {
-      "id": "errors_auditerror",
-      "score": 0.00068301
+      "id": "enums_scanedgekind",
+      "score": 0.00069654
     },
     {
-      "id": "models_moveplan",
-      "score": 0.00068081
+      "id": "enums_scanevidence",
+      "score": 0.00069654
     },
     {
-      "id": "models_moveresult",
-      "score": 0.00068071
+      "id": "evolve_experiments_run_experiment",
+      "score": 0.00069283
+    },
+    {
+      "id": "models_periodbucket",
+      "score": 0.00069282
     },
     {
       "id": "evolve_gate_safe_file",
-      "score": 0.00067932
+      "score": 0.00068813
     },
     {
-      "id": "enums_loopkind",
-      "score": 0.00067869
+      "id": "rank_rankentry",
+      "score": 0.0006842
     },
     {
-      "id": "dummyindex_pipeline_extract_imports_py",
-      "score": 0.00067783
+      "id": "errors_auditerror",
+      "score": 0.00068314
+    },
+    {
+      "id": "models_removeresult",
+      "score": 0.00068163
+    },
+    {
+      "id": "models_docentry",
+      "score": 0.00067872
+    },
+    {
+      "id": "fleet_unitstatus",
+      "score": 0.00067841
+    },
+    {
+      "id": "enums_itemstate",
+      "score": 0.00067719
+    },
+    {
+      "id": "dummyindex_context_domains_reality_check_verify_py",
+      "score": 0.00067472
+    },
+    {
+      "id": "models_straygroup",
+      "score": 0.00067197
     },
     {
       "id": "models_personacard",
-      "score": 0.0006724
+      "score": 0.0006716
+    },
+    {
+      "id": "models_block",
+      "score": 0.00067157
+    },
+    {
+      "id": "errors_gctargeterror",
+      "score": 0.00066822
+    },
+    {
+      "id": "models_moveplan",
+      "score": 0.00066275
+    },
+    {
+      "id": "models_moveresult",
+      "score": 0.00066263
+    },
+    {
+      "id": "enums_loopkind",
+      "score": 0.00066132
+    },
+    {
+      "id": "dummyindex_pipeline_extract_imports_py",
+      "score": 0.00065979
     },
     {
       "id": "errors_gcpatherror",
-      "score": 0.00067027
-    },
-    {
-      "id": "enriched_refresh_refresh_deterministic_artifacts",
-      "score": 0.00064698
+      "score": 0.00065018
     },
     {
       "id": "dummyindex_context_output_bootstrap_py",
-      "score": 0.00064338
+      "score": 0.00062715
     },
     {
       "id": "dummyindex_pipeline_extract_python_dispatch_py",
-      "score": 0.00064186
-    },
-    {
-      "id": "dummyindex_context_domains_query_py",
-      "score": 0.00063761
-    },
-    {
-      "id": "models_linkresult",
-      "score": 0.0006339
-    },
-    {
-      "id": "models_graphqueryresult",
-      "score": 0.00062377
-    },
-    {
-      "id": "models_skilldirective",
-      "score": 0.00061825
-    },
-    {
-      "id": "dummyindex_context_domains_config_py",
-      "score": 0.00061436
-    },
-    {
-      "id": "dummyindex_context_domains_features_helpers_py",
-      "score": 0.00061119
-    },
-    {
-      "id": "reconcile_compute_reconcile_report",
-      "score": 0.000608
-    },
-    {
-      "id": "config_read_config",
-      "score": 0.00060597
-    },
-    {
-      "id": "models_choice",
-      "score": 0.00060261
-    },
-    {
-      "id": "config_buildpolicy",
-      "score": 0.00060023
-    },
-    {
-      "id": "config_default_config",
-      "score": 0.00059825
-    },
-    {
-      "id": "tests_context_domains_features_test_scan_py",
-      "score": 0.0005978
-    },
-    {
-      "id": "runner_buildresult",
-      "score": 0.00059382
-    },
-    {
-      "id": "models_familylinkclassification",
-      "score": 0.00058809
-    },
-    {
-      "id": "upgrade_layoutmigration",
-      "score": 0.00058667
-    },
-    {
-      "id": "dummyindex_context_domains_equip_models_py",
-      "score": 0.00058593
-    },
-    {
-      "id": "claude_settings_load_settings",
-      "score": 0.00058337
-    },
-    {
-      "id": "dummyindex_installer_repair_py",
-      "score": 0.00057954
-    },
-    {
-      "id": "tests_context_domains_audit_test_audit_domain_py",
-      "score": 0.00057597
-    },
-    {
-      "id": "checklist_parse_checklist",
-      "score": 0.00057555
-    },
-    {
-      "id": "tests_context_domains_equip_test_equip_py",
-      "score": 0.00057501
-    },
-    {
-      "id": "enums_graphrelation",
-      "score": 0.00057436
-    },
-    {
-      "id": "models_proposal",
-      "score": 0.00057435
-    },
-    {
-      "id": "models_debtrow",
-      "score": 0.00057286
-    },
-    {
-      "id": "dummyindex_context_hooks_py",
-      "score": 0.00057063
-    },
-    {
-      "id": "models_consistencyhits",
-      "score": 0.00056934
-    },
-    {
-      "id": "dummyindex_cli_build_loop_waves_py",
-      "score": 0.00056906
-    },
-    {
-      "id": "drift_compute_drift",
-      "score": 0.00056655
-    },
-    {
-      "id": "builder_scaffold_features",
-      "score": 0.00056512
-    },
-    {
-      "id": "dummyindex_cli_evolve_py",
-      "score": 0.00056386
-    },
-    {
-      "id": "inventory_build_preflight_report",
-      "score": 0.00056322
-    },
-    {
-      "id": "dummyindex_context_domains_equip_init_py",
-      "score": 0.00056229
-    },
-    {
-      "id": "dummyindex_context_domains_features_placement_py",
-      "score": 0.00056209
-    },
-    {
-      "id": "dummyindex_context_domains_graph_query_verbs_py",
-      "score": 0.00056086
-    },
-    {
-      "id": "models_docclassification",
-      "score": 0.00056019
-    },
-    {
-      "id": "default_plugins_wiredclass",
-      "score": 0.00055691
-    },
-    {
-      "id": "models_scannode",
-      "score": 0.0005542
-    },
-    {
-      "id": "models_settingsstate",
-      "score": 0.00055355
-    },
-    {
-      "id": "dummyindex_context_domains_proposals_store_py",
-      "score": 0.00055218
-    },
-    {
-      "id": "reconcile_anchorstatus",
-      "score": 0.00054923
-    },
-    {
-      "id": "dummyindex_context_output_agents_md_py",
-      "score": 0.00054727
-    },
-    {
-      "id": "tests_test_install_link_primitives_py",
-      "score": 0.00054492
-    },
-    {
-      "id": "models_scanedge",
-      "score": 0.00054319
-    },
-    {
-      "id": "dummyindex_context_domains_equip_lifecycle_status_py",
-      "score": 0.00054169
-    },
-    {
-      "id": "dummyindex_cli_equip_dispatch_py",
-      "score": 0.00054105
-    },
-    {
-      "id": "init_extract",
-      "score": 0.00053847
-    },
-    {
-      "id": "dummyindex_context_build_reconcile_py",
-      "score": 0.00053438
+      "score": 0.00062534
     },
     {
       "id": "models_checklistitem",
-      "score": 0.00053322
+      "score": 0.00062318
     },
     {
-      "id": "enums_edgedirection",
-      "score": 0.00053293
+      "id": "dummyindex_context_domains_query_py",
+      "score": 0.00062045
     },
     {
-      "id": "query_query",
-      "score": 0.00053195
+      "id": "models_linkresult",
+      "score": 0.0006187
     },
     {
-      "id": "placement_scaffold_feature",
-      "score": 0.00053115
+      "id": "models_graphqueryresult",
+      "score": 0.00060749
     },
     {
-      "id": "models_graphrow",
-      "score": 0.0005308
+      "id": "models_skilldirective",
+      "score": 0.00060187
     },
     {
-      "id": "dummyindex_context_build_upgrade_py",
-      "score": 0.00053008
+      "id": "dummyindex_context_domains_config_py",
+      "score": 0.00059731
     },
     {
-      "id": "reconcile_gate_decide_block",
-      "score": 0.00052876
+      "id": "dummyindex_context_domains_features_helpers_py",
+      "score": 0.00059527
     },
     {
-      "id": "dummyindex_context_drift_py",
-      "score": 0.000527
+      "id": "reconcile_compute_reconcile_report",
+      "score": 0.00059501
     },
     {
-      "id": "marketplace_marketplacecatalog",
-      "score": 0.00052614
+      "id": "dummyindex_context_domains_equip_models_py",
+      "score": 0.00059277
     },
     {
-      "id": "enums_scanviolationseverity",
-      "score": 0.0005237
+      "id": "enriched_refresh_refresh_deterministic_artifacts",
+      "score": 0.0005922
     },
     {
-      "id": "dummyindex_pipeline_io_cache_py",
-      "score": 0.000523
-    },
-    {
-      "id": "models_generatespec",
-      "score": 0.00052031
-    },
-    {
-      "id": "dummyindex_context_domains_gc_delete_py",
-      "score": 0.00051785
-    },
-    {
-      "id": "orchestrate_install",
-      "score": 0.00051642
-    },
-    {
-      "id": "structure_build_structure",
-      "score": 0.00051423
-    },
-    {
-      "id": "seed_seed_scan",
-      "score": 0.00051341
-    },
-    {
-      "id": "enums_pluginsurface",
-      "score": 0.00051264
-    },
-    {
-      "id": "claude_plugins_declaredmarketplace",
-      "score": 0.00051222
-    },
-    {
-      "id": "models_deleteresult",
-      "score": 0.00051171
-    },
-    {
-      "id": "errors_docpatherror",
-      "score": 0.00051156
-    },
-    {
-      "id": "enriched_refresh_refreshresult",
-      "score": 0.00050959
-    },
-    {
-      "id": "dummyindex_pipeline_build_references_py",
-      "score": 0.00050897
-    },
-    {
-      "id": "models_scanproject",
-      "score": 0.00050778
-    },
-    {
-      "id": "dummyindex_cli_equip_common_py",
-      "score": 0.00050277
-    },
-    {
-      "id": "dummyindex_context_domains_atomic_io_py",
-      "score": 0.0005022
-    },
-    {
-      "id": "repair_plan_repairs",
-      "score": 0.00050092
-    },
-    {
-      "id": "models_minerreport",
-      "score": 0.00049883
-    },
-    {
-      "id": "models_debtledger",
-      "score": 0.00049759
-    },
-    {
-      "id": "dummyindex_context_build_tree_py",
-      "score": 0.00049587
-    },
-    {
-      "id": "dummyindex_pipeline_extract_languages_init_py",
-      "score": 0.0004956
-    },
-    {
-      "id": "dummyindex_context_domains_equip_enums_py",
-      "score": 0.00049557
-    },
-    {
-      "id": "models_scanstats",
-      "score": 0.00049517
-    },
-    {
-      "id": "dummyindex_context_domains_audit_workspace_py",
-      "score": 0.00049259
-    },
-    {
-      "id": "errors_proposalexistserror",
-      "score": 0.00049148
-    },
-    {
-      "id": "dispatch_run_apply",
-      "score": 0.00049096
-    },
-    {
-      "id": "dummyindex_pipeline_extract_helpers_py",
-      "score": 0.00048917
-    },
-    {
-      "id": "dummyindex_context_domains_gc_enumerate_py",
-      "score": 0.00048816
-    },
-    {
-      "id": "dummyindex_context_reconcile_gate_py",
-      "score": 0.00048794
-    },
-    {
-      "id": "validate_validate_scan",
-      "score": 0.00048406
-    },
-    {
-      "id": "fleet_create_run",
-      "score": 0.00048317
-    },
-    {
-      "id": "errors_auditslugerror",
-      "score": 0.0004804
-    },
-    {
-      "id": "dummyindex_usage_transcripts_py",
-      "score": 0.00047769
-    },
-    {
-      "id": "models_modelusage",
-      "score": 0.00047753
-    },
-    {
-      "id": "errors_auditlogerror",
-      "score": 0.00047751
-    },
-    {
-      "id": "dummyindex_context_build_maps_py",
-      "score": 0.00047711
-    },
-    {
-      "id": "tests_context_domains_equip_test_equip_discover_cli_py",
-      "score": 0.00047694
-    },
-    {
-      "id": "errors_migrationcontainmenterror",
-      "score": 0.00047531
-    },
-    {
-      "id": "common_parse_kv_flags",
-      "score": 0.00047446
-    },
-    {
-      "id": "mapping_map_task_to_equipment",
-      "score": 0.00047275
-    },
-    {
-      "id": "errors_templateerror",
-      "score": 0.00047253
-    },
-    {
-      "id": "bootstrap_bootstrap_claude_md",
-      "score": 0.00047126
-    },
-    {
-      "id": "errors_reseterror",
-      "score": 0.00046974
-    },
-    {
-      "id": "evolve_validate_candidate",
-      "score": 0.00046614
-    },
-    {
-      "id": "dummyindex_cli_maintain_py",
-      "score": 0.00046476
-    },
-    {
-      "id": "tests_context_domains_test_council_batch_py",
-      "score": 0.00046346
-    },
-    {
-      "id": "dummyindex_context_domains_equip_plugins_sources_py",
-      "score": 0.00046336
-    },
-    {
-      "id": "dummyindex_installer_link_create_py",
-      "score": 0.00046331
-    },
-    {
-      "id": "ops_merge_feature",
-      "score": 0.00046265
-    },
-    {
-      "id": "tests_context_test_reconcile_gate_py",
-      "score": 0.00046215
+      "id": "config_buildpolicy",
+      "score": 0.0005904
     },
     {
       "id": "dummyindex_context_domains_proposals_closeout_py",
-      "score": 0.00045901
+      "score": 0.00058969
     },
     {
-      "id": "enums_graphverb",
-      "score": 0.00045719
+      "id": "models_generatespec",
+      "score": 0.00058832
     },
     {
-      "id": "dummyindex_cli_fleet_py",
-      "score": 0.00045706
+      "id": "models_choice",
+      "score": 0.0005881
     },
     {
-      "id": "evolve_harvest",
-      "score": 0.00045602
+      "id": "config_read_config",
+      "score": 0.00058724
     },
     {
-      "id": "storage_write_graph_payload",
-      "score": 0.00045452
+      "id": "config_default_config",
+      "score": 0.00058331
     },
     {
-      "id": "incremental_rebuild_changed",
-      "score": 0.00045264
+      "id": "tests_context_domains_features_test_scan_py",
+      "score": 0.00058223
     },
     {
-      "id": "config_write_config",
-      "score": 0.00045214
+      "id": "models_budgetviolation",
+      "score": 0.00058065
     },
     {
-      "id": "dummyindex_context_domains_evolve_native_py",
-      "score": 0.00045191
+      "id": "checklist_parse_checklist",
+      "score": 0.00057577
     },
     {
-      "id": "dummyindex_context_domains_features_scan_seed_py",
-      "score": 0.00045039
+      "id": "models_familylinkclassification",
+      "score": 0.00057405
     },
     {
-      "id": "council_batch_next_batch",
-      "score": 0.00044991
+      "id": "claude_settings_load_settings",
+      "score": 0.00056792
     },
     {
-      "id": "models_scan",
-      "score": 0.00044974
+      "id": "runner_buildresult",
+      "score": 0.00056368
     },
     {
-      "id": "communities_rollup_communities",
-      "score": 0.00044928
+      "id": "dummyindex_installer_repair_py",
+      "score": 0.000563
     },
     {
-      "id": "detect_detect",
-      "score": 0.00044889
+      "id": "enums_graphrelation",
+      "score": 0.00055999
     },
     {
-      "id": "catalog_build_doc_catalog",
-      "score": 0.00044784
+      "id": "tests_context_domains_equip_test_equip_py",
+      "score": 0.00055939
     },
     {
-      "id": "errors_catalogerror",
-      "score": 0.00044731
+      "id": "models_proposal",
+      "score": 0.00055927
     },
     {
-      "id": "dummyindex_codex_guidance_py",
-      "score": 0.00044721
+      "id": "models_debtrow",
+      "score": 0.0005575
     },
     {
-      "id": "test_config_context_dir",
-      "score": 0.00044686
+      "id": "tests_context_domains_audit_test_audit_domain_py",
+      "score": 0.00055733
     },
     {
-      "id": "dummyindex_installer_ownership_py",
-      "score": 0.00044665
+      "id": "dummyindex_context_hooks_py",
+      "score": 0.00055545
     },
     {
-      "id": "config_languageconfig",
-      "score": 0.00044527
+      "id": "models_consistencyhits",
+      "score": 0.00055434
     },
     {
-      "id": "dummyindex_context_domains_docguard_migrate_py",
-      "score": 0.00044484
+      "id": "drift_compute_drift",
+      "score": 0.00055158
     },
     {
-      "id": "dummyindex_pipeline_build_structure_py",
-      "score": 0.00044411
+      "id": "builder_scaffold_features",
+      "score": 0.00055143
     },
     {
-      "id": "council_councillogerror",
-      "score": 0.00044368
+      "id": "dummyindex_context_domains_equip_init_py",
+      "score": 0.00054888
     },
     {
-      "id": "tests_context_domains_test_graph_query_py",
-      "score": 0.00044281
+      "id": "dummyindex_context_domains_features_placement_py",
+      "score": 0.00054755
     },
     {
-      "id": "enums_logstatus",
-      "score": 0.00044143
+      "id": "inventory_build_preflight_report",
+      "score": 0.0005472
     },
     {
-      "id": "dummyindex_context_domains_council_py",
-      "score": 0.00044121
+      "id": "dummyindex_context_domains_graph_query_verbs_py",
+      "score": 0.0005462
     },
     {
-      "id": "manifest_count",
-      "score": 0.00043758
+      "id": "dummyindex_cli_equip_dispatch_py",
+      "score": 0.00054606
     },
     {
-      "id": "tests_context_domains_test_build_loop_py",
-      "score": 0.0004374
+      "id": "models_docclassification",
+      "score": 0.00054564
     },
     {
-      "id": "dummyindex_context_domains_features_models_py",
-      "score": 0.00043689
+      "id": "default_plugins_wiredclass",
+      "score": 0.00054317
     },
     {
-      "id": "agents_md_bootstrap_project_agents_md",
-      "score": 0.00043613
+      "id": "dummyindex_cli_evolve_py",
+      "score": 0.00054043
     },
     {
-      "id": "tests_context_domains_features_test_placement_py",
-      "score": 0.00043588
+      "id": "models_scannode",
+      "score": 0.00053975
     },
     {
-      "id": "upgrade_retirer",
-      "score": 0.00043432
+      "id": "dummyindex_context_domains_proposals_store_py",
+      "score": 0.00053778
     },
     {
-      "id": "reconcile_stamp_reconciled",
-      "score": 0.00043186
+      "id": "tests_test_install_link_primitives_py",
+      "score": 0.00053568
     },
     {
-      "id": "catalog_rosteragent",
-      "score": 0.00043164
+      "id": "models_settingsstate",
+      "score": 0.00053489
     },
     {
-      "id": "common_skills_root_rel",
-      "score": 0.00043109
+      "id": "dummyindex_context_domains_equip_enums_py",
+      "score": 0.00053452
     },
     {
-      "id": "dummyindex_context_domains_evolve_experiments_py",
-      "score": 0.00043103
+      "id": "dummyindex_context_output_agents_md_py",
+      "score": 0.00053276
     },
     {
-      "id": "dummyindex_context_domains_enrich_py",
-      "score": 0.00042971
+      "id": "dummyindex_cli_build_loop_waves_py",
+      "score": 0.00053202
     },
     {
-      "id": "classify_classify_family_link",
-      "score": 0.00042718
+      "id": "models_scanedge",
+      "score": 0.00052903
     },
     {
-      "id": "enrich_build_plan",
-      "score": 0.00042578
+      "id": "init_extract",
+      "score": 0.00052779
     },
     {
-      "id": "evolve_evolve_promote",
-      "score": 0.00042381
+      "id": "dummyindex_context_domains_equip_lifecycle_status_py",
+      "score": 0.00052712
     },
     {
-      "id": "fleetrun_init_run",
-      "score": 0.00042358
+      "id": "orchestrate_install",
+      "score": 0.00052495
     },
     {
-      "id": "dummyindex_context_domains_docguard_classify_py",
-      "score": 0.00042274
+      "id": "dummyindex_context_build_reconcile_py",
+      "score": 0.00052146
     },
     {
-      "id": "ownership_sync_family",
-      "score": 0.00042246
+      "id": "enums_edgedirection",
+      "score": 0.00051962
     },
     {
-      "id": "models_hookspec",
-      "score": 0.00042245
+      "id": "dispatch_run_apply",
+      "score": 0.00051805
     },
     {
-      "id": "default_plugins_wire_default_plugins",
-      "score": 0.00042187
+      "id": "query_query",
+      "score": 0.0005177
     },
     {
-      "id": "dummyindex_context_domains_memory_transcript_py",
-      "score": 0.00042089
+      "id": "models_updateresult",
+      "score": 0.00051767
     },
     {
-      "id": "dev_pick_pick_dev",
-      "score": 0.00041993
+      "id": "placement_scaffold_feature",
+      "score": 0.00051754
     },
     {
-      "id": "dummyindex_context_domains_evidence_py",
-      "score": 0.00041973
+      "id": "models_graphrow",
+      "score": 0.00051696
     },
     {
-      "id": "errors_migrationerror",
-      "score": 0.00041938
+      "id": "enums_budgetgroup",
+      "score": 0.0005155
     },
     {
-      "id": "dummyindex_context_domains_memory_nudge_py",
-      "score": 0.00041803
+      "id": "reconcile_gate_decide_block",
+      "score": 0.0005147
     },
     {
-      "id": "indexes_rebuild_features_graph",
-      "score": 0.00041662
+      "id": "dummyindex_context_drift_py",
+      "score": 0.00051277
     },
     {
-      "id": "models_breadcrumbfacts",
-      "score": 0.00041532
+      "id": "marketplace_marketplacecatalog",
+      "score": 0.00051259
     },
     {
-      "id": "create_create_family_links",
-      "score": 0.00041474
+      "id": "enums_scanviolationseverity",
+      "score": 0.00051095
     },
     {
-      "id": "tests_test_install_link_py",
-      "score": 0.00041408
+      "id": "dummyindex_cli_equip_common_py",
+      "score": 0.00050742
     },
     {
-      "id": "dummyindex_context_domains_memory_miner_scan_py",
-      "score": 0.00041372
+      "id": "reconcile_anchorstatus",
+      "score": 0.0005044
     },
     {
-      "id": "waves_do_next_wave",
-      "score": 0.00041248
+      "id": "structure_build_structure",
+      "score": 0.00050331
     },
     {
-      "id": "tests_context_test_drift_py",
-      "score": 0.00041241
+      "id": "dummyindex_context_domains_gc_delete_py",
+      "score": 0.00050327
     },
     {
-      "id": "dummyindex_context_domains_council_batch_py",
-      "score": 0.00041061
+      "id": "enums_pluginsurface",
+      "score": 0.00050073
     },
     {
-      "id": "models_moveskip",
-      "score": 0.00041006
+      "id": "seed_seed_scan",
+      "score": 0.00049993
     },
     {
-      "id": "tests_context_domains_test_source_docs_py",
-      "score": 0.00040965
+      "id": "claude_plugins_declaredmarketplace",
+      "score": 0.00049822
     },
     {
-      "id": "dummyindex_context_domains_memory_breadcrumb_py",
-      "score": 0.00040963
+      "id": "errors_docpatherror",
+      "score": 0.00049797
     },
     {
-      "id": "errors_ambiguoussymbolerror",
-      "score": 0.00040942
+      "id": "models_deleteresult",
+      "score": 0.00049706
     },
     {
-      "id": "dummyindex_context_domains_equip_errors_py",
-      "score": 0.00040762
+      "id": "enums_confidence",
+      "score": 0.0004968
     },
     {
-      "id": "store_memory_dir",
-      "score": 0.00040736
+      "id": "dummyindex_pipeline_build_references_py",
+      "score": 0.00049564
     },
     {
-      "id": "workspace_ensure_audit",
-      "score": 0.0004067
+      "id": "models_scanproject",
+      "score": 0.00049456
     },
     {
-      "id": "render_render_preflight_md",
-      "score": 0.00040498
+      "id": "dummyindex_context_domains_atomic_io_py",
+      "score": 0.00048966
     },
     {
-      "id": "dispatch_apply_write",
-      "score": 0.00040454
+      "id": "errors_auditslugerror",
+      "score": 0.00048896
     },
     {
-      "id": "dummyindex_context_build_communities_py",
-      "score": 0.00040351
+      "id": "dummyindex_context_build_tree_py",
+      "score": 0.00048666
     },
     {
-      "id": "evolve_parse_flags",
-      "score": 0.0004018
+      "id": "repair_plan_repairs",
+      "score": 0.0004865
     },
     {
-      "id": "dummyindex_usage_render_py",
-      "score": 0.00039978
+      "id": "models_minerreport",
+      "score": 0.00048557
     },
     {
-      "id": "models_docbackup",
-      "score": 0.00039913
+      "id": "models_debtledger",
+      "score": 0.00048426
     },
     {
-      "id": "models_restoreresult",
-      "score": 0.00039896
+      "id": "dummyindex_pipeline_extract_languages_init_py",
+      "score": 0.00048249
     },
     {
-      "id": "install_run_install",
-      "score": 0.00039868
+      "id": "models_scanstats",
+      "score": 0.00048229
     },
     {
-      "id": "waves_do_next",
-      "score": 0.00039788
+      "id": "errors_proposalexistserror",
+      "score": 0.00047886
     },
     {
-      "id": "errors_backuperror",
-      "score": 0.00039693
-    },
-    {
-      "id": "models_moveitem",
-      "score": 0.00039498
-    },
-    {
-      "id": "models_plannedgroup",
-      "score": 0.00039498
-    },
-    {
-      "id": "dummyindex_cli_status_py",
-      "score": 0.00039428
-    },
-    {
-      "id": "tests_test_install_repair_py",
-      "score": 0.000394
-    },
-    {
-      "id": "dummyindex_pipeline_io_detect_py",
-      "score": 0.00039152
-    },
-    {
-      "id": "evolve_learning_finish_learning",
-      "score": 0.00039008
-    },
-    {
-      "id": "evolve_evolvewarning",
-      "score": 0.00038992
-    },
-    {
-      "id": "dummyindex_context_domains_buildloop_checklist_py",
-      "score": 0.00038965
-    },
-    {
-      "id": "tests_context_domains_features_test_features_py",
-      "score": 0.00038964
-    },
-    {
-      "id": "hooks_hookstatus",
-      "score": 0.00038912
-    },
-    {
-      "id": "catalog_build_catalog",
-      "score": 0.00038777
-    },
-    {
-      "id": "dummyindex_export_storage_py",
-      "score": 0.00038769
-    },
-    {
-      "id": "resolve_resolve_symbol",
-      "score": 0.00038628
-    },
-    {
-      "id": "roll_roll_tiers",
-      "score": 0.00038558
-    },
-    {
-      "id": "evolve_gate_run_gate",
-      "score": 0.00038555
-    },
-    {
-      "id": "ownership_contextownership",
-      "score": 0.00038339
-    },
-    {
-      "id": "evolve_evolve_apply",
-      "score": 0.0003831
-    },
-    {
-      "id": "dummyindex_installer_link_models_py",
-      "score": 0.00038229
-    },
-    {
-      "id": "errors_dirtytreeerror",
-      "score": 0.0003822
-    },
-    {
-      "id": "dummyindex_context_domains_preflight_render_py",
-      "score": 0.00038134
-    },
-    {
-      "id": "harvest_harvest_debt",
-      "score": 0.00038066
-    },
-    {
-      "id": "maps_build_maps",
-      "score": 0.00038045
-    },
-    {
-      "id": "exception",
-      "score": 0.00037948
-    },
-    {
-      "id": "claude_md_reconcile_claude_md",
-      "score": 0.00037934
-    },
-    {
-      "id": "dev_pick_any_path_endswith",
-      "score": 0.000378
-    },
-    {
-      "id": "dummyindex_context_domains_memory_miner_models_py",
-      "score": 0.00037783
-    },
-    {
-      "id": "models_auditconfig",
-      "score": 0.00037761
-    },
-    {
-      "id": "dummyindex_context_domains_audit_log_py",
-      "score": 0.00037686
-    },
-    {
-      "id": "ops_rename_feature",
-      "score": 0.00037626
-    },
-    {
-      "id": "dispatch_run__d34efca69e0b4d32",
-      "score": 0.00037564
-    },
-    {
-      "id": "transcript_sessionsignal",
-      "score": 0.00037519
-    },
-    {
-      "id": "tests_test_release_script_py",
-      "score": 0.00037445
-    },
-    {
-      "id": "storage_read_graph_payload",
-      "score": 0.00037422
-    },
-    {
-      "id": "dummyindex_cli_equip_discover_py",
-      "score": 0.00037362
-    },
-    {
-      "id": "dummyindex_usage_aggregate_py",
-      "score": 0.00037255
-    },
-    {
-      "id": "dummyindex_context_build_manifest_py",
-      "score": 0.00037211
-    },
-    {
-      "id": "waves_entry_for",
-      "score": 0.000368
-    },
-    {
-      "id": "evolve_context_dir",
-      "score": 0.00036722
-    },
-    {
-      "id": "dummyindex_cli_gc_py",
-      "score": 0.000367
-    },
-    {
-      "id": "default_plugins_install_default_plugins",
-      "score": 0.00036689
-    },
-    {
-      "id": "dummyindex_context_domains_equip_generate_render_py",
-      "score": 0.00036604
-    },
-    {
-      "id": "tests_context_test_hooks_py",
-      "score": 0.00036534
-    },
-    {
-      "id": "errors_auditexistserror",
-      "score": 0.0003652
-    },
-    {
-      "id": "models_auditstart",
-      "score": 0.00036501
-    },
-    {
-      "id": "python_dispatch_resolve_python_dispatch",
-      "score": 0.00036481
-    },
-    {
-      "id": "errors_auditnotfounderror",
-      "score": 0.00036473
-    },
-    {
-      "id": "dummyindex_installer_link_classify_py",
-      "score": 0.00036465
-    },
-    {
-      "id": "tests_context_test_default_plugins_py",
-      "score": 0.00036399
-    },
-    {
-      "id": "models_adoptspec",
-      "score": 0.00036376
-    },
-    {
-      "id": "python_dispatch_walk_file",
-      "score": 0.00036218
-    },
-    {
-      "id": "scripts_release_py",
-      "score": 0.00036188
-    },
-    {
-      "id": "extras_build_viewer_extras",
-      "score": 0.00036142
-    },
-    {
-      "id": "report_build_report",
-      "score": 0.00036128
-    },
-    {
-      "id": "evolve_record_event",
-      "score": 0.00036119
-    },
-    {
-      "id": "models_put",
-      "score": 0.00036107
-    },
-    {
-      "id": "tests_context_domains_test_fleetrun_py",
-      "score": 0.00036076
-    },
-    {
-      "id": "fleet_fleet_init",
-      "score": 0.00036051
-    },
-    {
-      "id": "dummyindex_context_domains_reality_check_models_py",
-      "score": 0.00035686
-    },
-    {
-      "id": "status_collect",
-      "score": 0.00035579
-    },
-    {
-      "id": "models_mergeresult",
-      "score": 0.00035257
-    },
-    {
-      "id": "errors_modelrequirederror",
-      "score": 0.00035184
-    },
-    {
-      "id": "errors_graphartifactinvaliderror",
-      "score": 0.0003505
-    },
-    {
-      "id": "errors_graphartifactmissingerror",
-      "score": 0.0003505
-    },
-    {
-      "id": "evolve_missing_context",
-      "score": 0.0003502
-    },
-    {
-      "id": "meta_read_meta",
-      "score": 0.00035005
-    },
-    {
-      "id": "common_fresh_rendered",
-      "score": 0.00034948
-    },
-    {
-      "id": "dummyindex_context_domains_features_communities_py",
-      "score": 0.00034853
-    },
-    {
-      "id": "dummyindex_context_build_incremental_py",
-      "score": 0.00034839
-    },
-    {
-      "id": "hooks_install",
-      "score": 0.00034686
-    },
-    {
-      "id": "dummyindex_context_domains_buildloop_mapping_py",
-      "score": 0.00034681
-    },
-    {
-      "id": "evolve_native_run_native",
-      "score": 0.0003466
-    },
-    {
-      "id": "default_plugins_default_wired",
-      "score": 0.00034497
-    },
-    {
-      "id": "evolve_native_accept",
-      "score": 0.00034466
-    },
-    {
-      "id": "repair_dedupe",
-      "score": 0.00034395
-    },
-    {
-      "id": "dummyindex_cli_check_py",
-      "score": 0.00034378
-    },
-    {
-      "id": "tests_context_output_test_agents_md_py",
-      "score": 0.00034374
-    },
-    {
-      "id": "dummyindex_cli_equip_install_py",
-      "score": 0.00034286
-    },
-    {
-      "id": "detect_detect_stack",
-      "score": 0.00034246
-    },
-    {
-      "id": "test_equip_discover_cli_install_fake_runner",
-      "score": 0.00034231
-    },
-    {
-      "id": "evidence_scan_hosts",
-      "score": 0.00033995
-    },
-    {
-      "id": "git_resolve_git_dir",
-      "score": 0.00033933
-    },
-    {
-      "id": "repair_installedcopy",
-      "score": 0.00033918
-    },
-    {
-      "id": "evolve_evidenceitem",
-      "score": 0.00033893
-    },
-    {
-      "id": "tests_context_build_test_upgrade_py",
-      "score": 0.00033844
-    },
-    {
-      "id": "drift_render_drift_summary",
-      "score": 0.0003371
-    },
-    {
-      "id": "cache_read_source_bytes",
-      "score": 0.00033582
+      "id": "enriched_refresh_refreshresult",
+      "score": 0.00047876
     },
     {
       "id": "dummyindex_context_domains_evolve_learning_py",
-      "score": 0.0003356
+      "score": 0.00047647
     },
     {
-      "id": "test_install_link_primitives_require_real_symlinks",
-      "score": 0.0003348
+      "id": "dummyindex_pipeline_extract_helpers_py",
+      "score": 0.00047613
     },
     {
-      "id": "dummyindex_context_claude_plugins_py",
-      "score": 0.00033293
+      "id": "dummyindex_context_reconcile_gate_py",
+      "score": 0.00047486
     },
     {
-      "id": "tests_context_build_test_reconcile_py",
-      "score": 0.00033293
+      "id": "dummyindex_context_domains_gc_enumerate_py",
+      "score": 0.00047473
     },
     {
-      "id": "dummyindex_context_domains_gc_anchor_py",
-      "score": 0.00033209
+      "id": "dummyindex_context_domains_audit_workspace_py",
+      "score": 0.00047448
     },
     {
-      "id": "scope_buildscopeerror",
-      "score": 0.00033083
+      "id": "dummyindex_context_build_maps_py",
+      "score": 0.00047442
     },
     {
-      "id": "load_load_symbol_graph",
-      "score": 0.00033053
+      "id": "validate_validate_scan",
+      "score": 0.0004716
     },
     {
-      "id": "transcripts_iter_all_turns",
-      "score": 0.0003295
+      "id": "fleet_create_run",
+      "score": 0.00047046
     },
     {
-      "id": "dummyindex_context_domains_features_scan_validate_py",
-      "score": 0.00032889
+      "id": "errors_auditlogerror",
+      "score": 0.00046996
     },
     {
-      "id": "status_refresh",
-      "score": 0.00032886
+      "id": "dummyindex_context_domains_equip_lifecycle_library_py",
+      "score": 0.00046527
     },
     {
-      "id": "dummyindex_context_output_docs_py",
-      "score": 0.00032854
+      "id": "enums_deltaop",
+      "score": 0.00046506
     },
     {
-      "id": "dummyindex_cli_equip_verbs_py",
-      "score": 0.00032818
+      "id": "enums_verdict",
+      "score": 0.00046506
     },
     {
-      "id": "dummyindex_context_domains_features_scan_refs_py",
-      "score": 0.0003279
+      "id": "dummyindex_usage_transcripts_py",
+      "score": 0.00046488
     },
     {
-      "id": "create_plan_and_execute_one_family",
-      "score": 0.0003277
+      "id": "models_modelusage",
+      "score": 0.00046472
     },
     {
-      "id": "evolve_promotion_project_lock",
-      "score": 0.00032758
+      "id": "tests_context_domains_equip_test_equip_discover_cli_py",
+      "score": 0.00046287
     },
     {
-      "id": "repair_repaircandidate",
-      "score": 0.00032671
+      "id": "common_parse_kv_flags",
+      "score": 0.00046271
     },
     {
-      "id": "repair_repairplan",
-      "score": 0.00032671
+      "id": "errors_migrationcontainmenterror",
+      "score": 0.0004627
     },
     {
-      "id": "placement_assign_files",
-      "score": 0.0003261
+      "id": "models_hookspec",
+      "score": 0.00046145
     },
     {
-      "id": "dummyindex_analysis_cluster_py",
-      "score": 0.00032581
+      "id": "errors_reseterror",
+      "score": 0.00045986
     },
     {
-      "id": "dummyindex_context_domains_debt_models_py",
-      "score": 0.00032541
+      "id": "errors_templateerror",
+      "score": 0.0004596
     },
     {
-      "id": "maintain_maintain_begin",
-      "score": 0.00032464
+      "id": "bootstrap_bootstrap_claude_md",
+      "score": 0.00045938
     },
     {
-      "id": "memory_run",
-      "score": 0.00032435
+      "id": "mapping_map_task_to_equipment",
+      "score": 0.00045595
     },
     {
-      "id": "evolve_evolve_harvest",
-      "score": 0.00032243
+      "id": "tests_context_domains_test_build_loop_py",
+      "score": 0.0004541
     },
     {
-      "id": "dummyindex_context_domains_memory_miner_pipeline_py",
-      "score": 0.0003221
+      "id": "dummyindex_cli_maintain_py",
+      "score": 0.00045323
     },
     {
-      "id": "references_derive_textual_references",
-      "score": 0.00032198
+      "id": "dummyindex_installer_link_create_py",
+      "score": 0.00045236
     },
     {
-      "id": "dummyindex_context_domains_memory_miner_corrections_py",
-      "score": 0.00032121
+      "id": "ops_merge_feature",
+      "score": 0.00045137
     },
     {
-      "id": "docs_generate_project_md",
-      "score": 0.00032117
+      "id": "tests_context_domains_test_council_batch_py",
+      "score": 0.0004511
     },
     {
-      "id": "dummyindex_context_domains_audit_catalog_py",
-      "score": 0.00032112
+      "id": "dummyindex_context_domains_equip_plugins_sources_py",
+      "score": 0.00045073
     },
     {
-      "id": "dummyindex_cli_build_loop_dispatch_py",
-      "score": 0.00032062
+      "id": "tests_context_test_reconcile_gate_py",
+      "score": 0.00044976
     },
     {
-      "id": "fleet_parse_state",
-      "score": 0.00032044
+      "id": "evolve_validate_candidate",
+      "score": 0.00044819
     },
     {
-      "id": "enumerate_enumerate_candidates",
-      "score": 0.00032037
+      "id": "incremental_rebuild_changed",
+      "score": 0.0004473
     },
     {
-      "id": "validate_scanviolation",
-      "score": 0.00031972
+      "id": "enums_graphverb",
+      "score": 0.00044589
     },
     {
-      "id": "dummyindex_context_domains_source_docs_catalog_py",
-      "score": 0.00031964
+      "id": "dummyindex_cli_fleet_py",
+      "score": 0.00044472
     },
     {
-      "id": "status_refreshreport",
-      "score": 0.00031933
+      "id": "detect_detect",
+      "score": 0.00044184
     },
     {
-      "id": "portable_graph_normalize_extraction_paths",
-      "score": 0.00031866
+      "id": "config_write_config",
+      "score": 0.00044129
     },
     {
-      "id": "release_main",
-      "score": 0.0003185
+      "id": "catalog_rosteragent",
+      "score": 0.00044118
     },
     {
-      "id": "dummyindex_usage_models_py",
-      "score": 0.00031829
+      "id": "evolve_harvest",
+      "score": 0.00044053
     },
     {
-      "id": "dummyindex_pipeline_extract_generic_py",
-      "score": 0.00031828
+      "id": "dummyindex_context_domains_features_scan_seed_py",
+      "score": 0.0004385
     },
     {
-      "id": "placement_remove_feature",
-      "score": 0.00031774
+      "id": "models_scan",
+      "score": 0.00043805
     },
     {
-      "id": "evolve_evolve_rollback",
-      "score": 0.00031738
+      "id": "council_batch_next_batch",
+      "score": 0.00043802
     },
     {
-      "id": "tests_context_domains_test_evolve_py",
-      "score": 0.00031736
+      "id": "catalog_build_doc_catalog",
+      "score": 0.00043793
     },
     {
-      "id": "enums_memoryverb",
-      "score": 0.00031732
+      "id": "enums_logstatus",
+      "score": 0.00043756
     },
     {
-      "id": "project_init_wire_default_plugins_step",
-      "score": 0.00031626
+      "id": "dummyindex_context_domains_evolve_native_py",
+      "score": 0.00043734
+    },
+    {
+      "id": "communities_rollup_communities",
+      "score": 0.00043725
+    },
+    {
+      "id": "dummyindex_installer_ownership_py",
+      "score": 0.00043641
+    },
+    {
+      "id": "test_config_context_dir",
+      "score": 0.00043607
+    },
+    {
+      "id": "dummyindex_codex_guidance_py",
+      "score": 0.00043552
+    },
+    {
+      "id": "errors_catalogerror",
+      "score": 0.00043551
+    },
+    {
+      "id": "ownership_sync_family",
+      "score": 0.00043495
+    },
+    {
+      "id": "config_languageconfig",
+      "score": 0.00043345
+    },
+    {
+      "id": "dummyindex_pipeline_build_structure_py",
+      "score": 0.00043276
+    },
+    {
+      "id": "tests_context_domains_test_graph_query_py",
+      "score": 0.00043173
+    },
+    {
+      "id": "council_councillogerror",
+      "score": 0.00043148
+    },
+    {
+      "id": "dummyindex_context_domains_docbudget_ratchet_py",
+      "score": 0.00043143
+    },
+    {
+      "id": "dummyindex_context_domains_docguard_migrate_py",
+      "score": 0.00043033
+    },
+    {
+      "id": "dummyindex_context_domains_council_py",
+      "score": 0.00042878
+    },
+    {
+      "id": "evolve_learning_finish_learning",
+      "score": 0.0004269
+    },
+    {
+      "id": "dummyindex_context_domains_features_models_py",
+      "score": 0.00042566
+    },
+    {
+      "id": "agents_md_bootstrap_project_agents_md",
+      "score": 0.00042547
+    },
+    {
+      "id": "catalog_build_catalog",
+      "score": 0.00042542
+    },
+    {
+      "id": "reconcile_stamp_reconciled",
+      "score": 0.00042481
+    },
+    {
+      "id": "tests_context_domains_features_test_placement_py",
+      "score": 0.00042477
+    },
+    {
+      "id": "manifest_count",
+      "score": 0.00042081
+    },
+    {
+      "id": "common_skills_root_rel",
+      "score": 0.0004189
+    },
+    {
+      "id": "dummyindex_context_domains_enrich_py",
+      "score": 0.00041818
+    },
+    {
+      "id": "classify_classify_family_link",
+      "score": 0.00041743
+    },
+    {
+      "id": "dummyindex_context_domains_evolve_experiments_py",
+      "score": 0.00041677
+    },
+    {
+      "id": "enrich_build_plan",
+      "score": 0.00041385
+    },
+    {
+      "id": "dummyindex_context_domains_equip_errors_py",
+      "score": 0.00041314
+    },
+    {
+      "id": "fleetrun_init_run",
+      "score": 0.00041234
+    },
+    {
+      "id": "dummyindex_context_domains_docguard_classify_py",
+      "score": 0.00041161
+    },
+    {
+      "id": "dummyindex_pipeline_io_cache_py",
+      "score": 0.0004115
+    },
+    {
+      "id": "default_plugins_wire_default_plugins",
+      "score": 0.00041107
+    },
+    {
+      "id": "dummyindex_context_domains_memory_transcript_py",
+      "score": 0.00040962
+    },
+    {
+      "id": "dev_pick_pick_dev",
+      "score": 0.00040911
+    },
+    {
+      "id": "errors_migrationerror",
+      "score": 0.00040812
+    },
+    {
+      "id": "evolve_evolve_promote",
+      "score": 0.00040801
+    },
+    {
+      "id": "dummyindex_context_domains_memory_nudge_py",
+      "score": 0.00040703
+    },
+    {
+      "id": "indexes_rebuild_features_graph",
+      "score": 0.00040689
+    },
+    {
+      "id": "create_create_family_links",
+      "score": 0.00040623
+    },
+    {
+      "id": "dummyindex_context_domains_evidence_py",
+      "score": 0.00040605
+    },
+    {
+      "id": "models_breadcrumbfacts",
+      "score": 0.00040426
+    },
+    {
+      "id": "tests_test_install_link_py",
+      "score": 0.00040343
+    },
+    {
+      "id": "dummyindex_context_domains_memory_miner_scan_py",
+      "score": 0.00040264
+    },
+    {
+      "id": "tests_context_test_drift_py",
+      "score": 0.00040161
+    },
+    {
+      "id": "tests_context_domains_test_source_docs_py",
+      "score": 0.00040105
+    },
+    {
+      "id": "dummyindex_context_domains_council_batch_py",
+      "score": 0.00040034
+    },
+    {
+      "id": "models_moveskip",
+      "score": 0.00039921
+    },
+    {
+      "id": "dummyindex_context_domains_memory_breadcrumb_py",
+      "score": 0.00039884
+    },
+    {
+      "id": "errors_ambiguoussymbolerror",
+      "score": 0.0003986
+    },
+    {
+      "id": "store_memory_dir",
+      "score": 0.00039668
+    },
+    {
+      "id": "waves_do_next_wave",
+      "score": 0.00039486
+    },
+    {
+      "id": "workspace_ensure_audit",
+      "score": 0.00039452
+    },
+    {
+      "id": "dispatch_apply_write",
+      "score": 0.00039399
+    },
+    {
+      "id": "render_render_preflight_md",
+      "score": 0.00039391
+    },
+    {
+      "id": "dummyindex_context_build_communities_py",
+      "score": 0.00039277
+    },
+    {
+      "id": "models_auditconfig",
+      "score": 0.00039049
+    },
+    {
+      "id": "dummyindex_usage_render_py",
+      "score": 0.00038905
+    },
+    {
+      "id": "models_docbackup",
+      "score": 0.00038847
+    },
+    {
+      "id": "models_restoreresult",
+      "score": 0.0003883
+    },
+    {
+      "id": "dummyindex_cli_check_py",
+      "score": 0.00038672
+    },
+    {
+      "id": "errors_backuperror",
+      "score": 0.00038632
+    },
+    {
+      "id": "install_run_install",
+      "score": 0.00038587
+    },
+    {
+      "id": "tests_test_install_repair_py",
+      "score": 0.00038461
+    },
+    {
+      "id": "models_moveitem",
+      "score": 0.00038456
+    },
+    {
+      "id": "models_plannedgroup",
+      "score": 0.00038456
+    },
+    {
+      "id": "evolve_parse_flags",
+      "score": 0.0003843
+    },
+    {
+      "id": "dummyindex_cli_status_py",
+      "score": 0.00038429
+    },
+    {
+      "id": "dispatch_run__d34efca69e0b4d32",
+      "score": 0.0003827
+    },
+    {
+      "id": "dummyindex_pipeline_io_detect_py",
+      "score": 0.00038265
+    },
+    {
+      "id": "waves_do_next",
+      "score": 0.00038072
+    },
+    {
+      "id": "tests_context_domains_features_test_features_py",
+      "score": 0.0003802
+    },
+    {
+      "id": "dummyindex_context_domains_buildloop_checklist_py",
+      "score": 0.00037947
+    },
+    {
+      "id": "hooks_hookstatus",
+      "score": 0.00037846
+    },
+    {
+      "id": "models_auditstart",
+      "score": 0.00037818
+    },
+    {
+      "id": "errors_auditexistserror",
+      "score": 0.00037789
+    },
+    {
+      "id": "errors_auditnotfounderror",
+      "score": 0.00037742
+    },
+    {
+      "id": "maps_build_maps",
+      "score": 0.00037682
+    },
+    {
+      "id": "resolve_resolve_symbol",
+      "score": 0.00037622
+    },
+    {
+      "id": "roll_roll_tiers",
+      "score": 0.0003755
+    },
+    {
+      "id": "evolve_evolvewarning",
+      "score": 0.00037544
+    },
+    {
+      "id": "dummyindex_installer_link_models_py",
+      "score": 0.0003744
+    },
+    {
+      "id": "ownership_contextownership",
+      "score": 0.00037329
+    },
+    {
+      "id": "errors_dirtytreeerror",
+      "score": 0.00037198
+    },
+    {
+      "id": "claude_md_reconcile_claude_md",
+      "score": 0.0003714
+    },
+    {
+      "id": "dummyindex_context_domains_preflight_render_py",
+      "score": 0.00037086
+    },
+    {
+      "id": "harvest_harvest_debt",
+      "score": 0.00037077
+    },
+    {
+      "id": "evolve_gate_run_gate",
+      "score": 0.00036999
     },
     {
       "id": "dispatch_run__da46f3295a18c04c",
-      "score": 0.00031615
+      "score": 0.00036917
     },
     {
-      "id": "models_renameresult",
-      "score": 0.00031526
+      "id": "evolve_evolve_apply",
+      "score": 0.00036907
     },
     {
-      "id": "dummyindex_context_domains_graph_query_resolve_py",
-      "score": 0.00031505
+      "id": "ops_rename_feature",
+      "score": 0.00036875
     },
     {
-      "id": "render_render_chat",
-      "score": 0.00031451
+      "id": "exception",
+      "score": 0.0003685
     },
     {
-      "id": "graph_run",
-      "score": 0.00031432
+      "id": "dev_pick_any_path_endswith",
+      "score": 0.00036801
+    },
+    {
+      "id": "dummyindex_context_domains_memory_miner_models_py",
+      "score": 0.00036786
+    },
+    {
+      "id": "transcript_sessionsignal",
+      "score": 0.00036514
+    },
+    {
+      "id": "storage_write_graph_payload",
+      "score": 0.0003651
+    },
+    {
+      "id": "errors_modelrequirederror",
+      "score": 0.00036496
+    },
+    {
+      "id": "tests_test_release_script_py",
+      "score": 0.00036438
+    },
+    {
+      "id": "dummyindex_usage_aggregate_py",
+      "score": 0.00036257
+    },
+    {
+      "id": "dummyindex_cli_equip_discover_py",
+      "score": 0.00036231
+    },
+    {
+      "id": "dummyindex_context_build_manifest_py",
+      "score": 0.00036224
+    },
+    {
+      "id": "tree_tree",
+      "score": 0.00035946
+    },
+    {
+      "id": "tests_context_test_hooks_py",
+      "score": 0.00035911
+    },
+    {
+      "id": "models_adoptspec",
+      "score": 0.00035796
+    },
+    {
+      "id": "default_plugins_install_default_plugins",
+      "score": 0.00035741
+    },
+    {
+      "id": "dummyindex_context_domains_equip_generate_render_py",
+      "score": 0.0003563
+    },
+    {
+      "id": "dummyindex_installer_link_classify_py",
+      "score": 0.00035608
+    },
+    {
+      "id": "dummyindex_cli_gc_py",
+      "score": 0.00035558
+    },
+    {
+      "id": "python_dispatch_resolve_python_dispatch",
+      "score": 0.00035551
+    },
+    {
+      "id": "tests_context_test_default_plugins_py",
+      "score": 0.0003551
+    },
+    {
+      "id": "python_dispatch_walk_file",
+      "score": 0.0003527
+    },
+    {
+      "id": "dummyindex_context_domains_audit_log_py",
+      "score": 0.00035249
+    },
+    {
+      "id": "scripts_release_py",
+      "score": 0.00035216
+    },
+    {
+      "id": "extras_build_viewer_extras",
+      "score": 0.00035196
+    },
+    {
+      "id": "evolve_learning_prepare_learning",
+      "score": 0.0003517
+    },
+    {
+      "id": "report_build_report",
+      "score": 0.00035159
+    },
+    {
+      "id": "models_put",
+      "score": 0.00035143
+    },
+    {
+      "id": "evolve_context_dir",
+      "score": 0.00035135
+    },
+    {
+      "id": "tests_context_domains_test_fleetrun_py",
+      "score": 0.00035115
+    },
+    {
+      "id": "fleet_fleet_init",
+      "score": 0.00035065
+    },
+    {
+      "id": "evolve_record_event",
+      "score": 0.00034812
+    },
+    {
+      "id": "dummyindex_context_domains_reality_check_models_py",
+      "score": 0.00034734
+    },
+    {
+      "id": "dummyindex_context_build_incremental_py",
+      "score": 0.00034685
+    },
+    {
+      "id": "status_collect",
+      "score": 0.00034667
+    },
+    {
+      "id": "models_mergeresult",
+      "score": 0.00034368
+    },
+    {
+      "id": "errors_graphartifactinvaliderror",
+      "score": 0.00034137
+    },
+    {
+      "id": "errors_graphartifactmissingerror",
+      "score": 0.00034137
     },
     {
       "id": "manifest_write_manifest",
-      "score": 0.00031405
+      "score": 0.00034019
     },
     {
-      "id": "dummyindex_context_domains_debt_harvest_py",
-      "score": 0.00031323
+      "id": "dummyindex_context_domains_features_communities_py",
+      "score": 0.00033919
     },
     {
-      "id": "dummyindex_context_domains_memory_roll_py",
-      "score": 0.00031276
+      "id": "dummyindex_context_domains_buildloop_mapping_py",
+      "score": 0.00033845
     },
     {
-      "id": "closeout_close",
-      "score": 0.00031253
+      "id": "common_fresh_rendered",
+      "score": 0.0003381
     },
     {
-      "id": "nudge_decide_nudge",
-      "score": 0.00031127
+      "id": "hooks_install",
+      "score": 0.00033761
     },
     {
-      "id": "fleet_mark_done",
-      "score": 0.00031113
+      "id": "default_plugins_default_wired",
+      "score": 0.00033624
     },
     {
-      "id": "dummyindex_context_domains_features_scan_models_py",
-      "score": 0.00031105
+      "id": "dummyindex_cli_equip_verbs_py",
+      "score": 0.00033555
     },
     {
-      "id": "tests_pipeline_io_test_cache_py",
-      "score": 0.00031052
+      "id": "evolve_native_run_native",
+      "score": 0.0003354
     },
     {
-      "id": "dummyindex_context_build_portable_graph_py",
-      "score": 0.00031021
+      "id": "tests_context_output_test_agents_md_py",
+      "score": 0.00033481
     },
     {
-      "id": "dummyindex_context_build_git_delta_py",
-      "score": 0.00031016
+      "id": "evolve_missing_context",
+      "score": 0.00033478
     },
     {
-      "id": "project_init_auto_init_project",
-      "score": 0.0003096
+      "id": "repair_dedupe",
+      "score": 0.00033462
+    },
+    {
+      "id": "storage_read_graph_payload",
+      "score": 0.00033447
+    },
+    {
+      "id": "evolve_promotion_project_lock",
+      "score": 0.00033425
+    },
+    {
+      "id": "evolve_native_accept",
+      "score": 0.00033356
+    },
+    {
+      "id": "dummyindex_cli_equip_install_py",
+      "score": 0.00033293
+    },
+    {
+      "id": "detect_detect_stack",
+      "score": 0.00033255
+    },
+    {
+      "id": "evolve_learning_enqueue_learning",
+      "score": 0.0003325
     },
     {
       "id": "tests_context_domains_equip_test_equip_specialists_py",
-      "score": 0.00030937
+      "score": 0.00033242
     },
     {
-      "id": "dummyindex_context_domains_equip_plugins_marketplace_py",
-      "score": 0.00030902
+      "id": "evolve_evolve_learning",
+      "score": 0.00033237
     },
     {
-      "id": "dummyindex_context_domains_equip_generate_detect_py",
-      "score": 0.0003079
+      "id": "test_equip_discover_cli_install_fake_runner",
+      "score": 0.0003323
     },
     {
-      "id": "dummyindex_context_domains_docguard_models_py",
-      "score": 0.00030771
+      "id": "git_resolve_git_dir",
+      "score": 0.00033013
+    },
+    {
+      "id": "closeout_closeout_workspace",
+      "score": 0.00032949
+    },
+    {
+      "id": "test_install_link_primitives_require_real_symlinks",
+      "score": 0.00032937
+    },
+    {
+      "id": "cache_read_source_bytes",
+      "score": 0.00032906
+    },
+    {
+      "id": "drift_render_drift_summary",
+      "score": 0.00032808
+    },
+    {
+      "id": "evidence_scan_hosts",
+      "score": 0.00032775
+    },
+    {
+      "id": "evolve_evidenceitem",
+      "score": 0.00032642
+    },
+    {
+      "id": "repair_installedcopy",
+      "score": 0.00032642
+    },
+    {
+      "id": "load_load_symbol_graph",
+      "score": 0.00032408
+    },
+    {
+      "id": "dummyindex_context_claude_plugins_py",
+      "score": 0.000324
+    },
+    {
+      "id": "dummyindex_context_domains_gc_anchor_py",
+      "score": 0.00032332
+    },
+    {
+      "id": "waves_entry_for",
+      "score": 0.0003219
+    },
+    {
+      "id": "dummyindex_context_output_docs_py",
+      "score": 0.00032141
+    },
+    {
+      "id": "status_refresh",
+      "score": 0.00032117
+    },
+    {
+      "id": "dummyindex_context_domains_equip_generate_catalog_py",
+      "score": 0.00032086
     },
     {
       "id": "dummyindex_context_domains_proposals_retirement_py",
-      "score": 0.00030688
+      "score": 0.00032084
     },
     {
-      "id": "test_reconcile_seed_index",
-      "score": 0.00030686
+      "id": "transcripts_iter_all_turns",
+      "score": 0.00032062
     },
     {
-      "id": "discover_match_candidates",
-      "score": 0.0003065
+      "id": "dummyindex_context_domains_features_scan_validate_py",
+      "score": 0.00032022
     },
     {
-      "id": "dummyindex_context_domains_equip_generate_adopt_py",
-      "score": 0.00030601
+      "id": "create_plan_and_execute_one_family",
+      "score": 0.00031971
     },
     {
-      "id": "claude_settings_install_hook_entry",
-      "score": 0.00030584
+      "id": "dummyindex_cli_guard_doc_write_py",
+      "score": 0.00031964
     },
     {
-      "id": "tree_build_tree",
-      "score": 0.00030567
+      "id": "dummyindex_context_domains_lesson_models_py",
+      "score": 0.00031955
     },
     {
-      "id": "delete_delete_workspace_locked",
-      "score": 0.00030535
+      "id": "dummyindex_context_domains_features_scan_refs_py",
+      "score": 0.00031922
     },
     {
-      "id": "init_render_viewer_html",
-      "score": 0.00030517
+      "id": "placement_assign_files",
+      "score": 0.00031838
     },
     {
-      "id": "test_scan_minimal_payload",
-      "score": 0.00030486
+      "id": "dummyindex_analysis_cluster_py",
+      "score": 0.00031713
     },
     {
-      "id": "store_ensure_proposal",
-      "score": 0.00030442
+      "id": "memory_run",
+      "score": 0.0003171
     },
     {
-      "id": "migrate_docs_run",
-      "score": 0.00030324
+      "id": "dummyindex_context_domains_debt_models_py",
+      "score": 0.00031668
     },
     {
-      "id": "dummyindex_context_domains_proposals_models_py",
+      "id": "maintain_maintain_begin",
+      "score": 0.00031603
+    },
+    {
+      "id": "tests_context_build_test_reconcile_py",
+      "score": 0.00031594
+    },
+    {
+      "id": "status_refreshreport",
+      "score": 0.00031549
+    },
+    {
+      "id": "tests_test_skills_doc_hygiene_py",
+      "score": 0.00031522
+    },
+    {
+      "id": "scope_buildscopeerror",
+      "score": 0.00031479
+    },
+    {
+      "id": "docs_generate_project_md",
+      "score": 0.00031469
+    },
+    {
+      "id": "repair_repaircandidate",
+      "score": 0.00031421
+    },
+    {
+      "id": "repair_repairplan",
+      "score": 0.00031421
+    },
+    {
+      "id": "references_derive_textual_references",
+      "score": 0.00031364
+    },
+    {
+      "id": "dummyindex_context_domains_memory_miner_pipeline_py",
+      "score": 0.00031354
+    },
+    {
+      "id": "portable_graph_normalize_extraction_paths",
+      "score": 0.00031285
+    },
+    {
+      "id": "dummyindex_context_domains_memory_miner_corrections_py",
+      "score": 0.00031261
+    },
+    {
+      "id": "fleet_parse_state",
+      "score": 0.00031198
+    },
+    {
+      "id": "enumerate_enumerate_candidates",
+      "score": 0.00031156
+    },
+    {
+      "id": "dummyindex_context_domains_source_docs_catalog_py",
+      "score": 0.00031155
+    },
+    {
+      "id": "validate_scanviolation",
+      "score": 0.0003114
+    },
+    {
+      "id": "evolve_evolve_harvest",
+      "score": 0.00031083
+    },
+    {
+      "id": "enums_memoryverb",
+      "score": 0.00031008
+    },
+    {
+      "id": "dummyindex_pipeline_extract_generic_py",
+      "score": 0.00031006
+    },
+    {
+      "id": "release_main",
+      "score": 0.00030995
+    },
+    {
+      "id": "dummyindex_usage_models_py",
+      "score": 0.00030977
+    },
+    {
+      "id": "placement_remove_feature",
+      "score": 0.0003095
+    },
+    {
+      "id": "dummyindex_context_domains_audit_catalog_py",
+      "score": 0.00030782
+    },
+    {
+      "id": "project_init_wire_default_plugins_step",
+      "score": 0.00030781
+    },
+    {
+      "id": "models_renameresult",
+      "score": 0.00030742
+    },
+    {
+      "id": "meta_read_meta",
+      "score": 0.00030722
+    },
+    {
+      "id": "dummyindex_context_domains_graph_query_resolve_py",
+      "score": 0.00030675
+    },
+    {
+      "id": "graph_run",
+      "score": 0.00030624
+    },
+    {
+      "id": "tests_context_domains_test_evolve_py",
+      "score": 0.00030623
+    },
+    {
+      "id": "render_render_chat",
+      "score": 0.00030606
+    },
+    {
+      "id": "evolve_evolve_rollback",
+      "score": 0.00030574
+    },
+    {
+      "id": "models_catalogdecision",
+      "score": 0.00030532
+    },
+    {
+      "id": "dummyindex_context_domains_debt_harvest_py",
+      "score": 0.00030485
+    },
+    {
+      "id": "dummyindex_context_build_git_delta_py",
+      "score": 0.00030476
+    },
+    {
+      "id": "dummyindex_context_domains_memory_roll_py",
+      "score": 0.00030456
+    },
+    {
+      "id": "closeout_close",
+      "score": 0.00030444
+    },
+    {
+      "id": "dummyindex_cli_build_loop_dispatch_py",
+      "score": 0.00030332
+    },
+    {
+      "id": "nudge_decide_nudge",
       "score": 0.00030308
     },
     {
+      "id": "dummyindex_context_domains_buildloop_models_py",
+      "score": 0.00030306
+    },
+    {
+      "id": "fleet_mark_done",
+      "score": 0.00030293
+    },
+    {
+      "id": "dummyindex_context_domains_features_scan_models_py",
+      "score": 0.00030289
+    },
+    {
+      "id": "dummyindex_context_build_portable_graph_py",
+      "score": 0.00030205
+    },
+    {
+      "id": "dummyindex_context_domains_equip_plugins_marketplace_py",
+      "score": 0.00030123
+    },
+    {
+      "id": "dummyindex_context_domains_equip_generate_adopt_py",
+      "score": 0.0003
+    },
+    {
+      "id": "dummyindex_context_domains_docguard_models_py",
+      "score": 0.00029955
+    },
+    {
+      "id": "dummyindex_context_domains_equip_generate_detect_py",
+      "score": 0.0002995
+    },
+    {
+      "id": "tree_build_tree",
+      "score": 0.0002993
+    },
+    {
       "id": "graph_build_graph",
-      "score": 0.00030295
+      "score": 0.00029881
+    },
+    {
+      "id": "discover_match_candidates",
+      "score": 0.00029826
+    },
+    {
+      "id": "claude_settings_install_hook_entry",
+      "score": 0.00029806
+    },
+    {
+      "id": "init_render_viewer_html",
+      "score": 0.00029796
+    },
+    {
+      "id": "test_scan_minimal_payload",
+      "score": 0.00029693
+    },
+    {
+      "id": "graph_graphresult",
+      "score": 0.00029645
+    },
+    {
+      "id": "delete_delete_workspace_locked",
+      "score": 0.00029629
+    },
+    {
+      "id": "common_pull_bool_flag",
+      "score": 0.00029586
+    },
+    {
+      "id": "store_ensure_proposal",
+      "score": 0.00029568
+    },
+    {
+      "id": "dummyindex_context_domains_proposals_models_py",
+      "score": 0.00029531
+    },
+    {
+      "id": "migrate_docs_run",
+      "score": 0.000295
     },
     {
       "id": "dummyindex_context_output_viewer_init_py",
-      "score": 0.00030284
-    },
-    {
-      "id": "dummyindex_context_domains_source_docs_models_py",
-      "score": 0.00030246
+      "score": 0.00029486
     },
     {
       "id": "classify_relative_link_value",
-      "score": 0.00030213
+      "score": 0.00029481
+    },
+    {
+      "id": "dummyindex_context_domains_source_docs_models_py",
+      "score": 0.00029476
     },
     {
       "id": "errors_removeerror",
-      "score": 0.0003017
+      "score": 0.00029458
     },
     {
       "id": "codex_guidance_project_instruction_paths",
-      "score": 0.00030149
+      "score": 0.00029421
     },
     {
-      "id": "evolve_harvestreport",
-      "score": 0.00030141
+      "id": "models_edit",
+      "score": 0.00029196
     },
     {
       "id": "render_render_template",
-      "score": 0.00029976
+      "score": 0.00029185
     },
     {
       "id": "council_batch_councilstage",
-      "score": 0.00029938
-    },
-    {
-      "id": "sources_list_skills",
-      "score": 0.00029869
-    },
-    {
-      "id": "dummyindex_context_domains_gc_signals_py",
-      "score": 0.00029858
+      "score": 0.00029153
     },
     {
       "id": "dummyindex_context_domains_memory_miner_feedback_py",
-      "score": 0.00029853
+      "score": 0.0002907
+    },
+    {
+      "id": "sources_list_skills",
+      "score": 0.00029066
     },
     {
       "id": "placement_unassign_files",
-      "score": 0.00029824
+      "score": 0.00029054
+    },
+    {
+      "id": "test_reconcile_seed_index",
+      "score": 0.00029027
+    },
+    {
+      "id": "dummyindex_context_domains_gc_signals_py",
+      "score": 0.00029026
     },
     {
       "id": "tests_context_domains_test_query_py",
-      "score": 0.00029818
+      "score": 0.00029026
     },
     {
       "id": "dummyindex_context_domains_graph_query_models_py",
-      "score": 0.00029799
+      "score": 0.00029014
     },
     {
-      "id": "tests_context_build_test_incremental_py",
-      "score": 0.00029665
+      "id": "evolve_harvestreport",
+      "score": 0.00028998
     },
     {
       "id": "status_classify_item",
-      "score": 0.00029609
-    },
-    {
-      "id": "refs_symbolrefindex",
-      "score": 0.00029595
-    },
-    {
-      "id": "dummyindex_context_domains_memory_parse_py",
-      "score": 0.00029562
-    },
-    {
-      "id": "delete_delete_workspace",
-      "score": 0.00029554
+      "score": 0.00028942
     },
     {
       "id": "enums_installmechanism",
-      "score": 0.00029415
+      "score": 0.00028904
     },
     {
-      "id": "evolve_evolve_diagnose",
-      "score": 0.00029408
-    },
-    {
-      "id": "models_linkinstallresult",
-      "score": 0.00029381
-    },
-    {
-      "id": "evolve_candidate",
-      "score": 0.0002937
-    },
-    {
-      "id": "dummyindex_context_domains_features_indexes_py",
-      "score": 0.00029333
-    },
-    {
-      "id": "upgrade_migrate_context_layout",
-      "score": 0.00029314
-    },
-    {
-      "id": "agents_md_project_guidance_plan",
-      "score": 0.00029277
-    },
-    {
-      "id": "check_run_version_check",
-      "score": 0.00029273
-    },
-    {
-      "id": "dummyindex_context_domains_equip_plugins_discover_py",
-      "score": 0.00029248
-    },
-    {
-      "id": "dummyindex_context_domains_evolve_promotion_py",
-      "score": 0.00029244
-    },
-    {
-      "id": "tests_context_domains_memory_test_nudge_py",
-      "score": 0.0002919
-    },
-    {
-      "id": "dummyindex_context_domains_source_docs_refs_py",
-      "score": 0.00029169
-    },
-    {
-      "id": "hooks_uninstall",
-      "score": 0.00029117
-    },
-    {
-      "id": "codex_guidance_config_layers",
-      "score": 0.00029116
-    },
-    {
-      "id": "signals_classify",
-      "score": 0.00029112
+      "id": "tests_context_build_test_incremental_py",
+      "score": 0.00028875
     }
   ]
 }

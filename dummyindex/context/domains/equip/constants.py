@@ -44,6 +44,9 @@ _PROPOSAL_CAPABILITY_TOKENS: tuple[tuple[str, tuple[str, ...]], ...] = (
     (Capability.PERFORMANCE, ("performance", "optimi")),
     (Capability.DOCS, ("docs", "documentation")),
     (Capability.SEARCH, ("search", "embedding", "vector", "rag", "semantic")),
+    (Capability.API, ("api", "endpoint", "openapi", "graphql", "restful")),
+    (Capability.MIGRATION, ("migrate", "backfill", "alembic", "rollback")),
+    (Capability.CI, ("cicd", "workflow", "github", "gitlab", "jenkins")),
 )
 
 # Marker embedded in every vendored `.claude/**.md`, distinct from

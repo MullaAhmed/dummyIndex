@@ -22,7 +22,14 @@
     "test_retrieval_eval_test_negative_control_scores_zero",
     "test_retrieval_eval_test_retrieval_eval_gate"
   ],
-  "name": "Correctness-gated retrieval eval",
-  "schema_version": 1,
-  "summary": "Deterministic benchmark over the SAMPLE_REPO index gating context-query retrieval on hit-rate@3 + MRR against a committed baseline, with a negative control proving the gate is non-vacuous."
+  "files": [
+    "tests/eval/BASELINE.md",
+    "tests/eval/__init__.py",
+    "tests/eval/retrieval_fixtures.json",
+    "tests/eval/test_retrieval_eval.py"
+  ],
+  "entry_points": [],
+  "flow_ids": [],
+  "confidence": "INFERRED",
+  "confidence_demoted_from": "EXTRACTED"
 }

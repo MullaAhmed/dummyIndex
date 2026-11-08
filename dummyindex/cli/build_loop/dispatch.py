@@ -171,6 +171,11 @@ def run(args: list[str]) -> int:
             ProposalSlugError,
             closeout_from_file,
         )
+        from dummyindex.context.domains.proposals.closeout import (
+            failed_record_path,
+            learning_exit_code,
+            learning_line,
+        )
 
         try:
             receipt = closeout_from_file(
@@ -182,9 +187,13 @@ def run(args: list[str]) -> int:
         print(
             json.dumps(receipt, indent=2)
             if as_json
-            else f"build closeout [{proposal}]: {receipt['state']}; {len(receipt['pending_verification'])} pending verification"
+            else f"build closeout [{proposal}]: {receipt['state']}; {len(receipt['pending_verification'])} pending verification; "
+            + learning_line(
+                receipt.get("learning"),
+                failed_record_path(context_dir, "proposal", proposal),
+            )
         )
-        return 0
+        return learning_exit_code(receipt.get("learning"))
 
     try:
         items = parse_checklist(checklist_path)

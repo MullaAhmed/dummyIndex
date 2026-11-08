@@ -22,12 +22,14 @@ from dummyindex.context.domains.buildloop import (
     dispatch_mode,
     resolve_routing,
 )
+from dummyindex.context.domains.buildloop.checklist_lint import live_items
 from dummyindex.context.domains.equip import (
     EQUIPMENT_REL,
     EquipmentKind,
     EquipmentSource,
     capabilities_from_text,
 )
+from dummyindex.context.domains.equip.enums import Dimension
 
 # Rendered agent name when no equipment item matches (fallback). The domain
 # Choice stores equipment_name=None / fallback=True; this literal is the
@@ -143,6 +145,9 @@ def _dispatchable(manifest: list[dict]) -> list[dict]:
         for it in manifest
         if str(it.get("kind") or agent_kind) == agent_kind
         and str(it.get("source") or "") not in plugin_sources
+        # Domain-dimension agents are read-only knowledge holders: never a
+        # build-item dispatch target.
+        and str(it.get("dimension") or "") != Dimension.DOMAIN.value
     ]
     typed = [it for it in agents if it.get("subagent_type")]
     return typed or agents
@@ -363,6 +368,22 @@ def _resolve_routing_or_report(
         return None
 
 
+def _refuse_live_items(items: tuple[ChecklistItem, ...]) -> bool:
+    """Report live-testing/production checklist items; True when any exist."""
+    flagged = live_items(items)
+    if not flagged:
+        return False
+    print(
+        "error: checklist has live-testing/production items; move them to "
+        "closeout pending_verification or add a `<!-- live-ok: reason -->` "
+        "marker for a false positive:",
+        file=sys.stderr,
+    )
+    for it in flagged:
+        print(f"  #{it.index} {it.text}", file=sys.stderr)
+    return True
+
+
 def do_next(
     items: tuple[ChecklistItem, ...],
     proposal: str,
@@ -376,6 +397,9 @@ def do_next(
     pending = next((it for it in items if not it.done), None)
     if pending is None:
         return _print_all_done(proposal, "next", as_json=as_json)
+
+    if _refuse_live_items(items):
+        return 2
 
     routing = _resolve_routing_or_report(proposal_dir, route_override)
     if routing is None:
@@ -451,6 +475,9 @@ def do_next_wave(
     wave = next_wave(items)
     if not wave:
         return _print_all_done(proposal, "next-wave", as_json=as_json)
+
+    if _refuse_live_items(items):
+        return 2
 
     routing = _resolve_routing_or_report(proposal_dir, route_override)
     if routing is None:
