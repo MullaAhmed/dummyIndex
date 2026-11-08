@@ -4,14 +4,14 @@ confidence: INFERRED
 
 ## Bounded context
 
-This feature owns the **badge cache file and the two readers of it** — nothing more. It deliberately does *not* own drift computation (that's `community-8`/drift) nor settings mutation (it only reads). Its surface is three thin seams bolted onto existing code:
+This feature owns the **badge cache file and the two readers of it** — nothing more. It deliberately does *not* own drift computation (that's `community-8`/drift) nor settings mutation (it only reads). Its surface is four thin seams bolted onto existing code:
 
 1. a **pure renderer** it consumes but does not own (`compute_badge`);
 2. a **best-effort cache write** wedged into the existing `plan-update` CLI boundary;
 3. a **cold-path CLI reader** plus the shipped **shell wrappers** that are the real per-prompt hot path;
 4. a **write-if-absent install wire** that installs the `statusLine` when neither scope defines one, and never clobbers an existing value.
 
-The unifying contract across all four: **every path degrades to silence, never to a crash.** A missing cache, an unwritable dir, a malformed settings file — each yields an empty badge or a skipped wire (plus a one-line advisory), never an exception out of the SessionStart hook or the user's shell.
+The unifying contract: **every path degrades to silence, never to a crash.** A missing cache, an unwritable dir, or a malformed settings file each yields an empty badge or a skipped wire. A one-line advisory may follow. Never an exception escapes to the SessionStart hook or the user's shell.
 
 ## Where it lives
 
@@ -24,19 +24,19 @@ The unifying contract across all four: **every path degrades to silence, never t
 
 ## Patterns
 
-- **Pure renderer + best-effort side-effect** — `compute_badge` (`context/drift.py:91-109`) is total and I/O-free: `DriftReport → str`. The only I/O, `_write_badge` (`cli/plan_update.py:39-50`), is a *separable* side effect: the caller wraps it in a bare `try/except: pass` (`cli/plan_update.py:71-74`) so the cache write is severed from the drift report it decorates. The renderer can be unit-tested with no filesystem; the writer's failure mode is "no badge," tested in isolation (`test_badge_write_failure_is_swallowed`).
-- **Single source of truth for the cache path** — the cache name is a constant once (`BADGE_CACHE_NAME`, `cli/plan_update.py:31`); both writer and the Python reader resolve through `badge_cache_path` (the reader *imports* it rather than re-deriving — `cli/statusline.py:28,53`). Writer and reader cannot diverge. The one place this single-source rule is *not* enforced is the shell wrapper, which hard-codes the relative literal (see Decisions).
-- **Hot path / cold path split** — per-prompt rendering is a one-line `cat` in the shipped wrapper (`dummyindex/skills/statusline/statusline.sh:16`), zero Python import cost. The `dummyindex context statusline` command (`cli/statusline.py:37-66`) is the portable cold-path equivalent for hosts that prefer invoking a single tool; it reads the *same* `badge_cache_path`.
-- **Emit-only hook** — `statusline_nudge` (`context/hooks.py:225-241`) is a pure decision helper: it reads both settings scopes and returns advice or `None`, never writing. Install surfaces the return value on `HookResult.nudges` (`context/hooks.py:400-411`); the decision lives in exactly one place.
+- **Pure renderer + best-effort side-effect** — `compute_badge` (`context/drift.py:91-109`) is total and I/O-free: `DriftReport → str`. The only I/O is `_write_badge` (`cli/plan_update.py:39-50`), a *separable* side effect. The caller wraps it in a bare `try/except: pass` (`cli/plan_update.py:71-74`), severing the cache write from the drift report it decorates. The renderer needs no filesystem to unit-test. The writer's failure mode is "no badge," tested in isolation (`test_badge_write_failure_is_swallowed`).
+- **Single source of truth for the cache path** — the cache name is defined once (`BADGE_CACHE_NAME`, `cli/plan_update.py:31`). Writer and Python reader both resolve through `badge_cache_path`. The reader *imports* it, not re-derives it (`cli/statusline.py:28,53`). Writer and reader cannot diverge. The one place this rule is *not* enforced is the shell wrapper, which hard-codes the relative literal (see Decisions).
+- **Hot path / cold path split** — per-prompt rendering is a one-line `cat` in the shipped wrapper (`dummyindex/skills/statusline/statusline.sh:16`). It has zero Python import cost. The `dummyindex context statusline` command (`cli/statusline.py:37-66`) is the portable cold-path equivalent. It suits hosts that prefer invoking a single tool. It reads the *same* `badge_cache_path`.
+- **Emit-only hook** — `statusline_nudge` (`context/hooks.py:225-241`) is a pure decision helper. It reads both settings scopes and returns advice or `None`, never writing. Install surfaces the return value on `HookResult.nudges` (`context/hooks.py:400-411`). The decision lives in exactly one place.
 - **Atomic write, verbatim read** — `write_text_atomic` (tmp+rename, `cli/plan_update.py:21,50`) guarantees a concurrent reader never sees a half-written badge. Readers echo the file's exact bytes with no trailing newline (`cli/statusline.py:58-63`, `dummyindex/skills/statusline/statusline.sh:16`) so the host renders precisely what was cached.
 
 ## Dependencies surfaced
 
 - **Reads the drift cache from `community-8`/drift.** `_write_badge` receives the already-computed `DriftReport` and calls `compute_badge` on it (`cli/plan_update.py:50`). This feature never recomputes drift; it is a *projection* of drift onto a one-line string, refreshed only when `plan-update` runs.
-- **Wedged into the `plan-update` CLI boundary.** The write fires inside the existing SessionStart `plan-update` path (`cli/plan_update.py:71-74`) — it adds a side effect to a boundary the drift feature already owns. The badge is only as fresh as the last `plan-update` invocation.
+- **Wedged into the `plan-update` CLI boundary.** The write fires inside the existing SessionStart `plan-update` path (`cli/plan_update.py:71-74`). It adds a side effect to a boundary the drift feature already owns. The badge is only as fresh as the last `plan-update` invocation.
 - **Imports `badge_cache_path` across the CLI layer.** `cli/statusline.py:28` depends on `cli/plan_update.py` for the path — a deliberate intra-layer coupling to preserve the single source of truth.
 - **Reads `settings.json` in both scopes** via `_status_line_configured` → `load_settings`/`_settings_path_for` (`context/hooks.py:208-222`). It is a *reader* of settings; it never participates in the install's settings mutation.
-- **Ships shell scripts as package-data.** `SCRIPT_DIR` (`cli/statusline.py:34`) and `pyproject` package-data are what put `statusline.sh`/`.ps1` on disk after install; the wrappers are the deliverable, the Python command the fallback.
+- **Ships shell scripts as package-data.** `SCRIPT_DIR` (`cli/statusline.py:34`) and `pyproject` package-data put `statusline.sh`/`.ps1` on disk after install. The wrappers are the deliverable. The Python command is the fallback.
 
 ## Data model
 
@@ -44,13 +44,13 @@ The unifying contract across all four: **every path degrades to silence, never t
 
 ## Decisions promoted
 
-- **The badge write never fails the hook.** This is the load-bearing decision. `_write_badge` is fully isolated from the drift report; the caller's bare `try/except: pass` (`cli/plan_update.py:71-74`) means an unwritable cache dir, a read-only filesystem, or any other error degrades to "no badge" rather than crashing SessionStart or perturbing stdout. The writer documents this best-effort contract in its docstring (`cli/plan_update.py:42-47`).
-- **The badge is wired by install; an existing `statusLine` is never clobbered.** A `statusLine` is a *scalar with no sentinel*, so a re-write cannot tell "we wrote this" from "the user wrote this" — which rules out overwriting, not writing. `install_statusline` therefore does **write-if-absent**: if *either* scope already defines a truthy `statusLine` it returns `None` and touches nothing; otherwise it writes the shipped command into the target scope (`context/hooks.py:271-296`). Absence is the only trigger, so a re-install is byte-identical without needing a sentinel. This supersedes the original emit-only design: the badge was an opt-in and is now an ability, and "never clobber" was the requirement all along — "never write" was a stronger constraint than it needed to be. An unparseable `settings.json` is still refused rather than overwritten, degrading to the advisory.
-- **Hot path carries zero Python cost.** The per-prompt render is a one-line `cat`; the Python `run` command exists only as a portable fallback and reads the identical `badge_cache_path`. The cost asymmetry justifies shipping two readers instead of one.
-- **The wrapper hard-codes the relative cache path** (`dummyindex/skills/statusline/statusline.sh:16`), the lone deliberate violation of single-source. Rationale: the wrapper must run with no Python and no argument plumbing, so it assumes the host invokes `statusLine` from the project root. A non-root cwd silently yields the empty (degraded) badge — acceptable under the degrade-to-silent contract, but a known constraint, not a bug.
+- **The badge write never fails the hook.** This is the load-bearing decision. `_write_badge` is fully isolated from the drift report. The caller's bare `try/except: pass` (`cli/plan_update.py:71-74`) handles failure. An unwritable cache dir, a read-only filesystem, or any other error degrades to no badge. It never crashes SessionStart or perturbs stdout. The writer documents this best-effort contract in its docstring (`cli/plan_update.py:42-47`).
+- **The badge is wired by install; an existing `statusLine` is never clobbered.** A `statusLine` is a *scalar with no sentinel*. A re-write cannot tell a user-written value from one we wrote. That rules out overwriting, not writing. `install_statusline` therefore does **write-if-absent**. If *either* scope already defines a truthy `statusLine`, it returns `None` and touches nothing. Otherwise it writes the shipped command into the target scope (`context/hooks.py:271-296`). Absence is the only trigger, so a re-install is byte-identical without a sentinel. This supersedes the original emit-only design. The badge was an opt-in and is now an ability. The requirement all along was never to clobber. Never writing was a stronger constraint than it needed to be. An unparseable `settings.json` is still refused rather than overwritten, degrading to the advisory.
+- **Hot path carries zero Python cost.** The per-prompt render is a one-line `cat`. The Python `run` command exists only as a portable fallback. It reads the identical `badge_cache_path`. The cost asymmetry justifies shipping two readers instead of one.
+- **The wrapper hard-codes the relative cache path** (`dummyindex/skills/statusline/statusline.sh:16`). It is the lone deliberate violation of single-source. Rationale: the wrapper must run with no Python and no argument plumbing. So it assumes the host invokes `statusLine` from the project root. A non-root cwd silently yields the empty (degraded) badge. That is acceptable under the degrade-to-silent contract. It is a known constraint, not a bug.
 - **The badge refreshes only at SessionStart `plan-update`.** Drift recompute is intentionally off the per-prompt path, so a mid-session edit leaves the badge stale (e.g. `[ctx ✓]` after a source edit) until the next session. Intentional; called out so a stale badge mid-session isn't mistaken for a defect.
 
 ## Open questions
 
-- Non-root `cwd` for the wrapper silently degrades to an empty badge (`dummyindex/skills/statusline/statusline.sh:16`) — acceptable, but unstated for users in any shipped doc.
-- A mid-session stale badge is by design (refresh is per-session, not per-prompt); worth a user-facing note so it reads as "expected," not "broken."
+- Non-root `cwd` for the wrapper silently degrades to an empty badge (`dummyindex/skills/statusline/statusline.sh:16`). Acceptable, but no shipped doc states it for users.
+- A mid-session stale badge is by design. Refresh is per-session, not per-prompt. A user-facing note helps it read as "expected," not "broken."

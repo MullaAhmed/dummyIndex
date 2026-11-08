@@ -32,29 +32,30 @@ each other.
 | `statusline.ps1` | the SessionStart freshness surface (Windows shells) | reads a hook-written cache file |
 | three guard tests | the CLI dispatcher and the shipped SKILL.md docs | assertions only |
 
-So there are really two cohesive sub-groups (the **release driver** and the **shared
-test backbone** `conftest`+`paths`) and four orphans that each lean on a *different*
-product feature. The Open questions track the orphans.
+So there are two cohesive sub-groups: the **release driver** and the **shared
+test backbone** `conftest`+`paths`. Four orphans each lean on a *different* product
+feature. The Open questions track the orphans.
 
 ## The one boundary worth naming: pure core vs. CI side effects
 
 The single design line in this pool lives inside `scripts/release.py`. Pure decision
 logic — commit-type parsing, bump decision, version math, notes rendering
 (`scripts/release.py:47-115`) — is kept apart from git/filesystem side effects
-(`scripts/release.py:121-208`), and the irreversible steps (commit, push, GitHub
+(`scripts/release.py:121-208`). The irreversible steps (commit, push, GitHub
 Release) live in the **workflow**, not the module. That keeps the module unit-testable
-with plain data and puts every destructive step in one visible place. Everything else
-here is plain pytest convention — `tmp_path` isolation, importable anchors,
-dependency-injection at the boundary over mocking, deterministic hand-built corpora —
-and the statusline is a stateless one-shot that prints a cached badge and swallows
+with plain data and puts every destructive step in one visible place.
+
+Everything else here is plain pytest convention — `tmp_path` isolation, importable
+anchors, dependency-injection at the boundary over mocking, deterministic hand-built
+corpora. The statusline is a stateless one-shot that prints a cached badge and swallows
 every error.
 
 ## Data model
 
 None, and none is implied. These members move strings and files —
 conventional-commit subjects/bodies, semver triples, changelog text, JSONL lines,
-on-disk paths. The synthetic usage corpus is the closest thing to an entity and it is
-a throwaway `tmp_path` fixture rebuilt per test, not a persisted store.
+on-disk paths. The synthetic usage corpus is the closest thing to an entity.
+It is a throwaway `tmp_path` fixture rebuilt per test, not a persisted store.
 
 ## Key decisions
 
@@ -72,8 +73,8 @@ a throwaway `tmp_path` fixture rebuilt per test, not a persisted store.
 - **Deterministic corpora over recordings.** Fixed timestamps/token counts let usage
   tests assert exact aggregates (`tests/usage/conftest.py:1-8`).
 - **Guard tests as executable docs-consistency contracts.** The help-guard pins
-  exit-0 + no-mutation for every subcommand after a dispatcher bug let `--help` fall
-  through and mutate the repo; the skill-doc guards pin SKILL.md against stale/false
+  exit-0 + no-mutation for every subcommand, after a dispatcher bug let `--help` fall
+  through and mutate the repo. The skill-doc guards pin SKILL.md against stale/false
   claims (`tests/cli/test_subcommand_help.py:1-12`,
   `tests/cli/test_update_skill_doc.py:1-12`).
 - **Statusline never recomputes.** It reads a hook-cached badge and exits 0 on any
@@ -83,8 +84,8 @@ a throwaway `tmp_path` fixture rebuilt per test, not a persisted store.
 ## Open questions
 
 This feature pools unrelated infrastructure. The release driver and the
-`conftest`+`paths` test backbone genuinely belong here (the backbone is repo-wide, not
-owned by any one feature). The remaining members each lean on a single *product*
+`conftest`+`paths` test backbone genuinely belong here. The backbone is repo-wide, not
+owned by any one feature. The remaining members each lean on a single *product*
 feature and arguably belong with it:
 
 - **`usage_corpus`** (`tests/usage/conftest.py`) exists solely to test usage-reporting;
@@ -98,4 +99,4 @@ feature and arguably belong with it:
   documented alongside it.
 
 Open: is the release driver's notes/changelog format covered by any acceptance test
-beyond the unit tests, or only validated by eye in CI output?
+beyond the unit tests? Or is it only validated by eye in CI output?

@@ -18,7 +18,7 @@ Emit the three Claude-facing documents that make `.context/` self-navigable for 
 
 **`architecture/overview.md`** is derived deterministically from the file and symbol maps plus meta (`instructions.py:215-309`). It holds a Stack block (languages, file and symbol counts) and a top-level layout table. Each row has a heuristic role hint, file count, symbol count and languages (`instructions.py:255`). It lists root files. With a `DocCatalog`, it adds a "Documented architecture" section. That section is labelled **advisory only** and sorts high-confidence first (`instructions.py:281-300`). Role hints come from a fixed dir-name lookup. Unknown dirs render `_unknown_`, not a guessed role (`instructions.py:154-203`, `:332-334`).
 
-**`playbooks/*.md`** are five static recipes selected by id from `_PLAYBOOK_BODIES` (`instructions.py:370-519`): `add-endpoint`, `add-feature`, `add-migration`, `fix-bug`, `refactor`. Each is a numbered procedure. It routes the agent through `map/symbols.json`, `tree.json` and `conventions/naming.md`. It ends by pairing `rebuild --changed` with reconcile when new files appear. `generate_playbook_md` raises `KeyError`, listing available ids, for an unknown id (`instructions.py:525-530`).
+**`playbooks/*.md`** are five static recipes selected by id from `_PLAYBOOK_BODIES` (`instructions.py:370-546`): `add-endpoint`, `add-feature`, `add-migration`, `fix-bug`, `refactor`. Each is a numbered procedure. It routes the agent through `map/symbols.json`, `tree.json` and `conventions/naming.md`. It ends by pairing `rebuild --changed` with reconcile when new files appear. `generate_playbook_md` raises `KeyError`, listing available ids, for an unknown id (`instructions.py:552-557`).
 
 The doc-evidence pointers catalogued for this feature (`docs.md`) are MEDIUM/LOW confidence with broken refs. They are historical only and not quoted here.
 
@@ -27,13 +27,13 @@ The doc-evidence pointers catalogued for this feature (`docs.md`) are MEDIUM/LOW
 Public functions and constants (`dummyindex/context/output/instructions.py`):
 - `generate_how_to_use_md() -> str` (`:147-148`) returns the static `_HOW_TO_USE` template.
 - `generate_architecture_overview_md(repo_root: Path, files_map: FilesMap, symbols_map: SymbolsMap, meta: Meta, *, doc_catalog: Optional[DocCatalog] = None) -> str` (`:215-309`).
-- `generate_playbook_md(playbook_id: str) -> str` (`:525-530`) raises `KeyError` for an unknown id.
-- `PLAYBOOK_IDS: tuple[str, ...]` is the sorted keys of `_PLAYBOOK_BODIES` (`:522`).
-- `write_how_to_use_md(path: Path) -> None` (`:536-537`).
-- `write_architecture_overview_md(path, repo_root, files_map, symbols_map, meta, *, doc_catalog=None) -> None` (`:540-555`).
-- `write_playbook_md(path: Path, playbook_id: str) -> None` (`:557-558`).
+- `generate_playbook_md(playbook_id: str) -> str` (`:552-557`) raises `KeyError` for an unknown id.
+- `PLAYBOOK_IDS: tuple[str, ...]` is the sorted keys of `_PLAYBOOK_BODIES` (`:549`).
+- `write_how_to_use_md(path: Path) -> None` (`:563-564`).
+- `write_architecture_overview_md(path, repo_root, files_map, symbols_map, meta, *, doc_catalog=None) -> None` (`:567-581`).
+- `write_playbook_md(path: Path, playbook_id: str) -> None` (`:584-585`).
 
-Private helpers: `_atomic_write(path, content)` writes `path.suffix + ".tmp"`, then `replace()` (`:561-565`). It is atomic, so no partial file appears. `_group_files_by_top_level_dir` and `_group_symbols_by_top_level_dir` skip root files (`:312-331`). `_role_hint_for` is a case-insensitive `_DIR_ROLE_HINTS` lookup (`:332-334`). `_select_architecture_docs` matches filename signals or an "architecture" title. It drops externals and sorts by `DOC_CONFIDENCE_ORDER` (`:348-364`).
+Private helpers: `_atomic_write(path, content)` writes `path.suffix + ".tmp"`, then `replace()` (`:588-592`). It is atomic, so no partial file appears. `_group_files_by_top_level_dir` and `_group_symbols_by_top_level_dir` skip root files (`:312-331`). `_role_hint_for` is a case-insensitive `_DIR_ROLE_HINTS` lookup (`:332-334`). `_select_architecture_docs` matches filename signals or an "architecture" title. It drops externals and sorts by `DOC_CONFIDENCE_ORDER` (`:348-364`).
 
 ## Examples
 
