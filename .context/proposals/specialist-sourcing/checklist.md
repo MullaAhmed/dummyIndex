@@ -12,7 +12,7 @@
 - [x] `compose_body`, `sourced_item` + tests (dummyindex/context/domains/equip/generate/sourced.py, tests/context/domains/equip/test_equip_sourced.py)
 
 ## Wave 3 — orchestration
-- [ ] `source_rendered`: degrade, upstream check, channel chain, caches, shortlist, approval, output routing (dummyindex/cli/equip/source.py)
+- [x] `source_rendered`: degrade, upstream check, channel chain, caches, shortlist, approval, output routing (dummyindex/cli/equip/source.py)
 
 ## Wave 4 — surfaces
 - [ ] `--source`/`--yes` wiring, sourced keep in `_apply_write` and `_apply_dry_run`, usage line + CLI tests with `_install_sourcing_runner` (dummyindex/cli/equip/dispatch.py, tests/cli/equip/test_equip_source_apply.py)
