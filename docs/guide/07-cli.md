@@ -539,7 +539,7 @@ equipment manifest does not block native delegation.
 - `--force` overwrites an existing proposal.
 - Why: gives `/dummyindex-plan` a structured, index-grounded scaffold to fill rather than drafting into the void.
 
-### `dummyindex context equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--platform agents|claude|both] [--lesson-file F] [--json]`
+### `dummyindex context equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--platform agents|claude|both] [--lesson-file F] [--source [--yes]] [--json]`
 
 - Prepare canonical capability bodies in `.context/equipment/` from the index and preflight data; record ownership in `.context/equipment.json` (schema v4). Every host uses these same bodies. `--platform claude` adds thin native references and supported hooks; default preparation creates no new Claude setup. Existing pristine native bodies migrate to references; edited/evolved files remain registered at their current paths.
 - **`apply` is an explicit verb.** A bare `dummyindex context equip` (no verb, no flags) is a help probe: it prints usage and **exits 2 without writing** — a discovery probe never mutates the repo. The only verbless form is the read-only `equip --dry-run` preview. `apply` also **refuses** (`exit 1`) on a repo with no `.context/` (equip renders *from* the index — run `dummyindex ingest` first).
@@ -547,6 +547,7 @@ equipment manifest does not block native delegation.
 - **Generated vs adopted.** A capability a template backs (**db / security / performance / docs / search**) is *generated* as a real, file-backed `<proj>-<cap>-specialist.md` (marker + `version`/`origin_hash`/`grounded_in`, lifecycle-managed like the core four). A capability with **no** template (e.g. frontend → *Frontend Developer*) is *adopted* manifest-only (`path: ""`, no file written).
 - `--for-proposal S` covers the capabilities `S`'s `plan.md`/`checklist.md` demand (adopting the ones no template backs; RLS / tenant-isolation map to `security`). `--specialist C` forces capability `C` to lead the specialist order. Neither flag is required to *get* a template-backed specialist — every one is generated on every pass — and already-applied specialists are carried forward, so a plain re-apply never drops or renames one.
 - Equipment-eval scaffolding and scoring are removed. Existing user-authored suites are left untouched.
+- `--source [--yes]` sources each db / security / performance / docs / search and procedure specialist from catalogs before templates: seed marketplaces (incl. ECC), then skills.sh (`npx --no skills find`), then GitHub search. A qualified `skills/<name>/SKILL.md`, pinned to a commit sha and scanned, becomes the body under a repo overlay; no candidate keeps the template. Untrusted or `warn:` candidates need `--yes`; `block:` findings never adopt. With no `gh`, it prints `source: gh unavailable — templates kept`. A later `apply --source` reports `needs-reverify (upstream changed)`; re-source with `equip reset NAME`, then `apply --source`. The sourced body lives at `.context/equipment/<name>.md`: plain `apply` keeps it (`(sourced, kept)`), `refresh` skips it, and `reset` restores the template and clears the origin fields. `--source --dry-run` is a read-only query and writes nothing. With `--json`, sourcing lines go to stderr.
 - `--dry-run` writes nothing; additive + never-clobber on real runs.
 
 ### `dummyindex context equip add-specialist CAPABILITY [--root DIR] [--dry-run] [--json]`
@@ -581,6 +582,7 @@ equipment manifest does not block native delegation.
 ### `dummyindex context equip reset NAME [--root DIR]`
 
 - Restore one generated item to its pristine render (the escape hatch), re-baseline + bump.
+- Resetting a sourced item restores the template and clears `origin_repo`, `origin_ref` and `marketplace`.
 
 ### `dummyindex context equip uninstall [--root DIR] [--dry-run]`
 

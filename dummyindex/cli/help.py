@@ -368,7 +368,7 @@ Subcommands:
                                     current|opus|sonnet|haiku|fable) records the
                                     optional model-routing block in proposal.json.
                                     --force overwrites an existing proposal.
-  equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--platform agents|claude|both] [--lesson-file F] [--json]
+  equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--platform agents|claude|both] [--lesson-file F] [--source [--yes]] [--json]
                                     Build loop — render this repo's project-tuned
                                     toolkit. `apply` is EXPLICIT — a bare `equip`
                                     (no verb, no flags) prints this usage and exits
@@ -402,6 +402,20 @@ Subcommands:
                                     Additive + never-clobber: a user file is skipped;
                                     a hand-edited generated file (USER_MODIFIED) is
                                     preserved forever. --dry-run writes nothing.
+                                    --source looks up catalogs before templates for
+                                    each db / security / performance / docs / search
+                                    and procedure specialist: seed marketplaces
+                                    (incl. ECC), then skills.sh (npx --no skills
+                                    find), then GitHub search. A qualified
+                                    skills/<name>/SKILL.md, pinned to a commit sha
+                                    and scanned, becomes the body under a repo
+                                    overlay; no candidate keeps the template.
+                                    Untrusted or warn: candidates need --yes;
+                                    block: findings never adopt. No gh prints
+                                    "source: gh unavailable — templates kept".
+                                    A later apply --source reports
+                                    "needs-reverify (upstream changed)"; re-source
+                                    with equip reset NAME, then apply --source.
   equip add-specialist CAPABILITY [--root DIR] [--dry-run] [--json]
                                     Generate one grounded specialist on demand
                                     (db | security | performance | docs | search) as a

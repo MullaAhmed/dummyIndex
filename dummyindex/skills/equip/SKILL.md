@@ -175,10 +175,11 @@ dummyindex context equip discover "postgres perf" # query: search seeds + GitHub
 dummyindex context equip install <plugin>@<marketplace> [--yes] [--scope project|local|user]
 ```
 
+Before `equip apply --source`, follow [sourcing.md](sourcing.md).
+
 ### Two discovery channels (know which you're reaching for)
 
-There are **two** ecosystems available to the Claude workflow — use both, but
-keep them straight:
+Two ecosystems. Use both, keep them straight:
 
 - **Channel A — Claude plugin marketplaces** (`equip discover` / `equip
   install`, above). Plugins are wired **natively** into `.claude/settings.json`
