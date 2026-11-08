@@ -6208,6 +6208,10 @@
       "reason": "hidden file"
     },
     {
+      "path": ".pytest_cache",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
       "path": ".ruff_cache",
       "reason": "hidden or generated directory; subtree excluded"
     },
@@ -6261,6 +6265,10 @@
     },
     {
       "path": "dummyindex/context/domains/buildloop/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
+      "path": "dummyindex/context/domains/docbudget/__pycache__",
       "reason": "hidden or generated directory; subtree excluded"
     },
     {
@@ -6409,6 +6417,18 @@
     },
     {
       "path": "tests/context/domains/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
+      "path": "tests/context/domains/docbudget/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
+      "path": "tests/context/domains/docguard/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
+      "path": "tests/context/output/__pycache__",
       "reason": "hidden or generated directory; subtree excluded"
     },
     {

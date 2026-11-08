@@ -37224,10 +37224,10 @@
                         "title": "_atomic_write",
                         "path": "dummyindex/context/output/instructions.py",
                         "range": [
-                          561,
-                          561
+                          588,
+                          588
                         ],
-                        "abstract": "Function _atomic_write at dummyindex/context/output/instructions.py:561.",
+                        "abstract": "Function _atomic_write at dummyindex/context/output/instructions.py:588.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -37292,10 +37292,10 @@
                         "title": "generate_playbook_md",
                         "path": "dummyindex/context/output/instructions.py",
                         "range": [
-                          525,
-                          525
+                          552,
+                          552
                         ],
-                        "abstract": "Function generate_playbook_md at dummyindex/context/output/instructions.py:525.",
+                        "abstract": "Function generate_playbook_md at dummyindex/context/output/instructions.py:552.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -37377,10 +37377,10 @@
                         "title": "write_architecture_overview_md",
                         "path": "dummyindex/context/output/instructions.py",
                         "range": [
-                          540,
-                          540
+                          567,
+                          567
                         ],
-                        "abstract": "Function write_architecture_overview_md at dummyindex/context/output/instructions.py:540.",
+                        "abstract": "Function write_architecture_overview_md at dummyindex/context/output/instructions.py:567.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -37394,10 +37394,10 @@
                         "title": "write_how_to_use_md",
                         "path": "dummyindex/context/output/instructions.py",
                         "range": [
-                          536,
-                          536
+                          563,
+                          563
                         ],
-                        "abstract": "Function write_how_to_use_md at dummyindex/context/output/instructions.py:536.",
+                        "abstract": "Function write_how_to_use_md at dummyindex/context/output/instructions.py:563.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",
@@ -37411,10 +37411,10 @@
                         "title": "write_playbook_md",
                         "path": "dummyindex/context/output/instructions.py",
                         "range": [
-                          557,
-                          557
+                          584,
+                          584
                         ],
-                        "abstract": "Function write_playbook_md at dummyindex/context/output/instructions.py:557.",
+                        "abstract": "Function write_playbook_md at dummyindex/context/output/instructions.py:584.",
                         "overview_ref": null,
                         "detail_ref": null,
                         "confidence": "EXTRACTED",

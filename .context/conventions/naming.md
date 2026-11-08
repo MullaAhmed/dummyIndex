@@ -1,6 +1,6 @@
 # Naming conventions (derived)
 
-_Generated 2026-11-08T01:37:12+00:00_
+_Generated 2026-11-08T02:28:47+00:00_
 
 ## powershell
 

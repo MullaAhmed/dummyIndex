@@ -2,74 +2,6 @@
   "schema_version": 1,
   "communities": [
     {
-      "slug": "agent-instructions-budgetviolation",
-      "size": 114,
-      "feature": "agent-instructions",
-      "summary": "One doc over budget. ``recorded`` is ``None`` for an unrecorded doc.",
-      "members": [
-        {
-          "id": "models_budgetviolation",
-          "label": "BudgetViolation",
-          "score": 0.00051161,
-          "path": "dummyindex/context/domains/docbudget/models.py:11"
-        },
-        {
-          "id": "models_updateresult",
-          "label": "UpdateResult",
-          "score": 0.00045701,
-          "path": "dummyindex/context/domains/docbudget/models.py:29"
-        },
-        {
-          "id": "enums_budgetgroup",
-          "label": "BudgetGroup",
-          "score": 0.00045573,
-          "path": "dummyindex/context/domains/docbudget/enums.py:10"
-        },
-        {
-          "id": "dummyindex_context_domains_docbudget_ratchet_py",
-          "label": "ratchet.py",
-          "score": 0.00043467,
-          "path": "dummyindex/context/domains/docbudget/ratchet.py:1"
-        },
-        {
-          "id": "dummyindex_context_domains_docbudget_style_py",
-          "label": "style.py",
-          "score": 0.0002936,
-          "path": "dummyindex/context/domains/docbudget/style.py:1"
-        },
-        {
-          "id": "tests_test_skills_doc_hygiene_py",
-          "label": "test_skills_doc_hygiene.py",
-          "score": 0.00028851,
-          "path": "tests/test_skills_doc_hygiene.py:1"
-        },
-        {
-          "id": "style_lint_text",
-          "label": "lint_text()",
-          "score": 0.00024766,
-          "path": "dummyindex/context/domains/docbudget/style.py:74"
-        },
-        {
-          "id": "ratchet_check",
-          "label": "check()",
-          "score": 0.00024474,
-          "path": "dummyindex/context/domains/docbudget/ratchet.py:103"
-        },
-        {
-          "id": "ratchet_update_ratchet",
-          "label": "update_ratchet()",
-          "score": 0.00019615,
-          "path": "dummyindex/context/domains/docbudget/ratchet.py:121"
-        },
-        {
-          "id": "style_lint_unit",
-          "label": "_lint_unit()",
-          "score": 0.00019577,
-          "path": "dummyindex/context/domains/docbudget/style.py:58"
-        }
-      ]
-    },
-    {
       "slug": "audit-panel-auditerror",
       "size": 113,
       "feature": "audit-panel",
@@ -680,6 +612,74 @@
       ]
     },
     {
+      "slug": "doc-budget-budgetviolation",
+      "size": 114,
+      "feature": "doc-budget",
+      "summary": "One doc over budget. ``recorded`` is ``None`` for an unrecorded doc.",
+      "members": [
+        {
+          "id": "models_budgetviolation",
+          "label": "BudgetViolation",
+          "score": 0.00051161,
+          "path": "dummyindex/context/domains/docbudget/models.py:11"
+        },
+        {
+          "id": "models_updateresult",
+          "label": "UpdateResult",
+          "score": 0.00045701,
+          "path": "dummyindex/context/domains/docbudget/models.py:29"
+        },
+        {
+          "id": "enums_budgetgroup",
+          "label": "BudgetGroup",
+          "score": 0.00045573,
+          "path": "dummyindex/context/domains/docbudget/enums.py:10"
+        },
+        {
+          "id": "dummyindex_context_domains_docbudget_ratchet_py",
+          "label": "ratchet.py",
+          "score": 0.00043467,
+          "path": "dummyindex/context/domains/docbudget/ratchet.py:1"
+        },
+        {
+          "id": "dummyindex_context_domains_docbudget_style_py",
+          "label": "style.py",
+          "score": 0.0002936,
+          "path": "dummyindex/context/domains/docbudget/style.py:1"
+        },
+        {
+          "id": "tests_test_skills_doc_hygiene_py",
+          "label": "test_skills_doc_hygiene.py",
+          "score": 0.00028851,
+          "path": "tests/test_skills_doc_hygiene.py:1"
+        },
+        {
+          "id": "style_lint_text",
+          "label": "lint_text()",
+          "score": 0.00024766,
+          "path": "dummyindex/context/domains/docbudget/style.py:74"
+        },
+        {
+          "id": "ratchet_check",
+          "label": "check()",
+          "score": 0.00024474,
+          "path": "dummyindex/context/domains/docbudget/ratchet.py:103"
+        },
+        {
+          "id": "ratchet_update_ratchet",
+          "label": "update_ratchet()",
+          "score": 0.00019615,
+          "path": "dummyindex/context/domains/docbudget/ratchet.py:121"
+        },
+        {
+          "id": "style_lint_unit",
+          "label": "_lint_unit()",
+          "score": 0.00019577,
+          "path": "dummyindex/context/domains/docbudget/style.py:58"
+        }
+      ]
+    },
+    {
       "slug": "doc-budget-test-check-budget-py",
       "size": 18,
       "feature": "doc-budget",
@@ -1171,6 +1171,74 @@
           "label": "capabilities_for()",
           "score": 0.00023712,
           "path": "dummyindex/context/domains/equip/plugins/discover.py:59"
+        }
+      ]
+    },
+    {
+      "slug": "equip-test-equip-source-apply-py",
+      "size": 31,
+      "feature": "equip",
+      "summary": "``apply --source`` acceptance tests (spec: specialist-sourcing, Acceptance).",
+      "members": [
+        {
+          "id": "tests_cli_equip_test_equip_source_apply_py",
+          "label": "test_equip_source_apply.py",
+          "score": 0.00011233,
+          "path": "tests/cli/equip/test_equip_source_apply.py:1"
+        },
+        {
+          "id": "test_equip_source_apply_install_sourcing_runner",
+          "label": "_install_sourcing_runner()",
+          "score": 7.058e-05,
+          "path": "tests/cli/equip/test_equip_source_apply.py:70"
+        },
+        {
+          "id": "test_equip_source_apply_direct",
+          "label": "_direct()",
+          "score": 6.371e-05,
+          "path": "tests/cli/equip/test_equip_source_apply.py:180"
+        },
+        {
+          "id": "test_equip_source_apply_apply",
+          "label": "_apply()",
+          "score": 5.415e-05,
+          "path": "tests/cli/equip/test_equip_source_apply.py:140"
+        },
+        {
+          "id": "test_equip_source_apply_project",
+          "label": "_project()",
+          "score": 4.647e-05,
+          "path": "tests/cli/equip/test_equip_source_apply.py:52"
+        },
+        {
+          "id": "test_equip_source_apply_db",
+          "label": "_db()",
+          "score": 3.982e-05,
+          "path": "tests/cli/equip/test_equip_source_apply.py:144"
+        },
+        {
+          "id": "test_equip_source_apply_test_acc_dry_run_writes_nothing",
+          "label": "test_acc_dry_run_writes_nothing()",
+          "score": 3.376e-05,
+          "path": "tests/cli/equip/test_equip_source_apply.py:528"
+        },
+        {
+          "id": "test_equip_source_apply_test_acc_trusted_seed_adopted",
+          "label": "test_acc_trusted_seed_adopted()",
+          "score": 3.37e-05,
+          "path": "tests/cli/equip/test_equip_source_apply.py:219"
+        },
+        {
+          "id": "test_equip_source_apply_rendered_for",
+          "label": "_rendered_for()",
+          "score": 3.353e-05,
+          "path": "tests/cli/equip/test_equip_source_apply.py:164"
+        },
+        {
+          "id": "test_equip_source_apply_test_acc_reset_restores_template_and_delete_rewrites",
+          "label": "test_acc_reset_restores_template_and_delete_rewrites()",
+          "score": 2.966e-05,
+          "path": "tests/cli/equip/test_equip_source_apply.py:469"
         }
       ]
     },
@@ -3116,73 +3184,6 @@
           "label": "statusline.ps1",
           "score": 1.879e-05,
           "path": "dummyindex/skills/statusline/statusline.ps1:1"
-        }
-      ]
-    },
-    {
-      "slug": "test-equip-source-apply-py",
-      "size": 31,
-      "summary": "``apply --source`` acceptance tests (spec: specialist-sourcing, Acceptance).",
-      "members": [
-        {
-          "id": "tests_cli_equip_test_equip_source_apply_py",
-          "label": "test_equip_source_apply.py",
-          "score": 0.00011233,
-          "path": "tests/cli/equip/test_equip_source_apply.py:1"
-        },
-        {
-          "id": "test_equip_source_apply_install_sourcing_runner",
-          "label": "_install_sourcing_runner()",
-          "score": 7.058e-05,
-          "path": "tests/cli/equip/test_equip_source_apply.py:70"
-        },
-        {
-          "id": "test_equip_source_apply_direct",
-          "label": "_direct()",
-          "score": 6.371e-05,
-          "path": "tests/cli/equip/test_equip_source_apply.py:180"
-        },
-        {
-          "id": "test_equip_source_apply_apply",
-          "label": "_apply()",
-          "score": 5.415e-05,
-          "path": "tests/cli/equip/test_equip_source_apply.py:140"
-        },
-        {
-          "id": "test_equip_source_apply_project",
-          "label": "_project()",
-          "score": 4.647e-05,
-          "path": "tests/cli/equip/test_equip_source_apply.py:52"
-        },
-        {
-          "id": "test_equip_source_apply_db",
-          "label": "_db()",
-          "score": 3.982e-05,
-          "path": "tests/cli/equip/test_equip_source_apply.py:144"
-        },
-        {
-          "id": "test_equip_source_apply_test_acc_dry_run_writes_nothing",
-          "label": "test_acc_dry_run_writes_nothing()",
-          "score": 3.376e-05,
-          "path": "tests/cli/equip/test_equip_source_apply.py:528"
-        },
-        {
-          "id": "test_equip_source_apply_test_acc_trusted_seed_adopted",
-          "label": "test_acc_trusted_seed_adopted()",
-          "score": 3.37e-05,
-          "path": "tests/cli/equip/test_equip_source_apply.py:219"
-        },
-        {
-          "id": "test_equip_source_apply_rendered_for",
-          "label": "_rendered_for()",
-          "score": 3.353e-05,
-          "path": "tests/cli/equip/test_equip_source_apply.py:164"
-        },
-        {
-          "id": "test_equip_source_apply_test_acc_reset_restores_template_and_delete_rewrites",
-          "label": "test_acc_reset_restores_template_and_delete_rewrites()",
-          "score": 2.966e-05,
-          "path": "tests/cli/equip/test_equip_source_apply.py:469"
         }
       ]
     },

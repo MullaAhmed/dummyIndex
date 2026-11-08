@@ -25578,8 +25578,8 @@
       "name": "generate_playbook_md",
       "path": "dummyindex/context/output/instructions.py",
       "range": [
-        525,
-        525
+        552,
+        552
       ],
       "parent": "dummyindex_context_output_instructions_py",
       "docstring": null,
@@ -25591,8 +25591,8 @@
       "name": "write_how_to_use_md",
       "path": "dummyindex/context/output/instructions.py",
       "range": [
-        536,
-        536
+        563,
+        563
       ],
       "parent": "dummyindex_context_output_instructions_py",
       "docstring": null,
@@ -25604,8 +25604,8 @@
       "name": "write_architecture_overview_md",
       "path": "dummyindex/context/output/instructions.py",
       "range": [
-        540,
-        540
+        567,
+        567
       ],
       "parent": "dummyindex_context_output_instructions_py",
       "docstring": null,
@@ -25617,8 +25617,8 @@
       "name": "write_playbook_md",
       "path": "dummyindex/context/output/instructions.py",
       "range": [
-        557,
-        557
+        584,
+        584
       ],
       "parent": "dummyindex_context_output_instructions_py",
       "docstring": null,
@@ -25630,8 +25630,8 @@
       "name": "_atomic_write",
       "path": "dummyindex/context/output/instructions.py",
       "range": [
-        561,
-        561
+        588,
+        588
       ],
       "parent": "dummyindex_context_output_instructions_py",
       "docstring": null,

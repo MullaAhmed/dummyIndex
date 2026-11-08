@@ -2695,11 +2695,11 @@
     {
       "path": "dummyindex/context/output/instructions.py",
       "language": "python",
-      "size_bytes": 30907,
-      "loc": 565,
+      "size_bytes": 30444,
+      "loc": 592,
       "role": null,
       "summary": null,
-      "sha256": "e5afc806f207d811050accd27af75939f94ec782d9862c1fb9a6f832a1ab97c7"
+      "sha256": "c50b07f08f742d7e5b39981c2828448bf1690f18843c2ce26311dcc00e109540"
     },
     {
       "path": "dummyindex/context/output/viewer/__init__.py",
