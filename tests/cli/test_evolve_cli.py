@@ -1,15 +1,10 @@
 """CLI lifecycle for ``dummyindex context evolve`` — one JSONL line per transition.
 
-Drives ``dispatch(["evolve", ...])`` over a throwaway repo and pins the
-contract the skill depends on: harvest writes run artifacts + a `harvest`
-event; the sleep contract exits 0 having written nothing; diagnose validates
-candidates; apply tests exact staged guidance; missing checks block;
-promote rejects stale receipts and incomplete writes, but
-records the reason when given; rollback restores; discard drops. Every
-transition appends exactly one line to `.context/gc/evolution.jsonl`.
-
-The pytest-subset stage runs for real here (a trivial in-repo test file) so
-the G1 subprocess contract is exercised end to end once.
+Harvest writes run artifacts + a `harvest` event; the sleep contract exits 0
+having written nothing; diagnose validates candidates; apply tests exact staged
+guidance; missing checks block; promote rejects stale receipts and incomplete
+writes but records a given reason; rollback restores; discard drops. Each
+transition appends one line to `.context/gc/evolution.jsonl`; pytest runs for real.
 """
 
 from __future__ import annotations
@@ -24,7 +19,7 @@ from dummyindex.cli import dispatch
 pytestmark = pytest.mark.integration
 
 
-# ----- fixtures -----------------------------------------------------------------
+# --- fixtures
 
 
 @pytest.fixture()
@@ -84,7 +79,7 @@ def _gate(repo: Path, index: int) -> dict:
     )
 
 
-# ----- harvest + sleep contract --------------------------------------------------
+# --- harvest + sleep contract
 
 
 def test_native_experiment_cli_resumes_without_external_command(
@@ -173,7 +168,7 @@ def test_sleep_with_nothing_new_exits_0_writing_nothing(
     assert before == after  # no run dir, no evolution.jsonl, nothing
 
 
-# ----- diagnose ------------------------------------------------------------------
+# --- diagnose
 
 
 def test_diagnose_validates_candidates_into_the_run(repo: Path) -> None:

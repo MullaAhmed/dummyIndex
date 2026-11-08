@@ -1,7 +1,3 @@
-# Project equipment toolkit — concerns
-
-`confidence: INFERRED`
-
 ## Data integrity
 
 - `dummyindex/context/domains/equip/lifecycle/evolve.py:61-70` — a learning patch writes the body before persisting its manifest hash/version. Manifest-write failure leaves the patched body against the old baseline; inspect both files before retrying, because exact-once patch text may no longer match.

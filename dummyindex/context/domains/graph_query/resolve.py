@@ -54,12 +54,11 @@ def _describe_candidates(graph: SymbolGraph, node_ids: list[str]) -> tuple[str, 
 def resolve_symbol(graph: SymbolGraph, query: str) -> str:
     """Resolve a user-supplied symbol to a node id.
 
-    Accepted forms, tried in order: exact node id, bare name
-    (``helper`` / ``app.py``), ``path:name`` suffix
-    (``cli/common.py:resolve_context_root``), and finally an unambiguous
-    prefix of a node id or bare name. Raises
-    :class:`AmbiguousSymbolError` (with cited candidates) when several
-    nodes match and :class:`UnknownSymbolError` when none do.
+    Tried in order: exact node id, bare name (``helper`` / ``app.py``),
+    ``path:name`` suffix (``cli/common.py:resolve_context_root``), then an
+    unambiguous prefix of a node id or bare name. Raises
+    :class:`AmbiguousSymbolError` (cited candidates) when several match and
+    :class:`UnknownSymbolError` when none do.
     """
     q = query.strip()
     if not q:

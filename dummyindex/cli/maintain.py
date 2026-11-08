@@ -1,39 +1,10 @@
-"""`dummyindex context maintain <verb>` — the one-command maintenance loop.
+"""`dummyindex context maintain <verb>`: the one-command maintenance loop.
 
-Sub-dispatches the first positional verb (``plan|begin|next|done|stamp|status``)
-the same way ``cli/gc.py`` dispatches its verbs: parse this command's own flag
-alphabet, lazy-import the domain inside ``run`` (the layering rule — ``cli``
-imports the domain, never the reverse), call a fleet-domain function, print,
-and return an exit code. No LLM calls live here: the host skill consumes
-``next`` units and launches one subagent per unit, then reports back through
-``done``/``stamp``. The loop's durable state is the committed
-``.context/fleet/maintain-<ts>/`` run dir written by the fleet domain.
-
-The six verbs:
-
-- ``plan [--max-features N] [--json] [--root DIR]`` — read-only assembly:
-  compute the reconcile report, list drifted features + awaiting-enrichment
-  features (in that priority) with ``estimate:`` lines per feature, and note
-  unassigned new files (placement work — they gate ``stamp`` but are not
-  feature units). Exit 0.
-- ``begin [--max-features N] [--all] [--json] [--root DIR]`` — write the run
-  manifest + state under ``.context/fleet/maintain-<ts>/``. Requires either
-  ``--max-features N`` or an explicit ``--all`` so an unbounded spend is
-  never started silently.
-- ``next [--run NAME] [--json] [--root DIR]`` — print the earliest incomplete
-  unit (frontier semantics reused from ``council_batch.next_batch``) so the
-  host skill launches exactly that unit.
-- ``done --feature ID [--stage N] [--run NAME] [--root DIR]`` — mark a unit
-  complete; without ``--stage`` the feature's earliest pending stage is taken.
-- ``stamp --feature ID [--run NAME] [--force] [--to SHA] [--heal-orphaned]
-  [--root DIR]`` — wrap ``reconcile-stamp`` for the finished feature and tick
-  its units done in state on success; a refused stamp leaves state untouched.
-- ``status [--run NAME] [--json] [--root DIR]`` — counts done/pending/skipped,
-  elapsed, and the clearly-labelled heuristic remaining estimate.
-
-Every verb accepts ``--run <name-or-dir>`` where relevant; the default is the
-newest ``maintain-*`` run under ``.context/fleet/`` (prefix-scoped, so other
-proposals' runs there are never picked up).
+``plan`` lists drifted, then awaiting-enrichment features with estimates (read-only);
+``begin`` writes the run under ``.context/fleet/maintain-<ts>/`` and needs
+``--max-features N`` or ``--all`` so an unbounded spend is never started silently;
+``next``/``done``/``status`` drive it; ``stamp`` runs ``reconcile-stamp`` and ticks the
+feature's units only on success. The host skill runs one subagent per ``next`` unit.
 """
 
 from __future__ import annotations
@@ -448,7 +419,7 @@ def _maintain_status(args: list[str]) -> int:
     return 0
 
 
-# ----- helpers ---------------------------------------------------------------
+# --- helpers
 
 
 def work_list(drifted: tuple[str, ...], awaiting: tuple[str, ...]) -> list[str]:

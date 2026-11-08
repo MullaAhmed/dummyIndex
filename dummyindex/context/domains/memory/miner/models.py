@@ -12,13 +12,10 @@ from .enums import LoopKind, SkillDirectiveKind
 class ToolCallRecord:
     """One tool_use/tool_result pair extracted from a transcript.
 
-    ``signature`` is the canonicalized form (see ``signatures.py``) used to
-    group re-fetch/retry variants of the same call together.
-
-    No excerpt of the tool's output is retained. An earlier cut kept a
-    200-character `sample_output` and rendered it into a git-tracked file,
-    which would publish whatever happened to be in that output — another
-    repo's source, a token, a credential. Only the measured size survives.
+    ``signature`` is the canonical form (see ``signatures.py``) that groups
+    re-fetch/retry variants. No output excerpt is kept: the report is
+    git-tracked, and an excerpt could publish another repo's source, a token,
+    or a credential. Only the measured size survives.
     """
 
     tool_name: str
@@ -44,9 +41,7 @@ class MinerReport:
     """The deterministic result of one scan over a transcript store.
 
     ``scanned_sessions`` counts transcripts that parsed; ``unreadable_sessions``
-    counts those opened but yielding nothing usable. Reporting them separately
-    keeps the coverage claim honest — a single number would silently overstate
-    how much of the store was actually read.
+    those yielding nothing usable, kept separate so coverage isn't overstated.
     """
 
     signatures: tuple[RepeatedSignature, ...] = ()

@@ -20,7 +20,7 @@ assert _SPEC.loader is not None
 _SPEC.loader.exec_module(release)
 
 
-# ----- commit_type ----------------------------------------------------------
+# --- commit_type
 
 
 @pytest.mark.unit
@@ -39,7 +39,7 @@ def test_commit_type(subject, expected):
     assert release.commit_type(subject) == expected
 
 
-# ----- decide_bump ----------------------------------------------------------
+# --- decide_bump
 
 
 @pytest.mark.unit
@@ -111,7 +111,7 @@ def test_released_substring_does_not_trigger():
     assert release.decide_bump(["docs: tidy the released notes"], [""]) is None
 
 
-# ----- next_version ---------------------------------------------------------
+# --- next_version
 
 
 @pytest.mark.unit
@@ -130,7 +130,42 @@ def test_unknown_bump_raises():
         release.next_version("1.2.3", "major")
 
 
-# ----- describe / render_notes ----------------------------------------------
+# --- next_beta_version / beta_notes
+
+
+@pytest.mark.unit
+def test_first_beta_is_b1():
+    assert release.next_beta_version("0.38.0", ["v0.37.0"]) == "0.38.0b1"
+
+
+@pytest.mark.unit
+def test_beta_number_follows_highest_tag_numerically():
+    tags = ["v0.37.0", "v0.38.0b1", "v0.38.0b9", "v0.38.0b10", "v0.37.1b4"]
+    assert release.next_beta_version("0.38.0", tags) == "0.38.0b11"
+
+
+@pytest.mark.unit
+def test_beta_ignores_other_versions_and_lookalikes():
+    tags = ["v0.38.1b5", "v0.38.0rc2", "v10.38.0b3", "v0.38.0b2x"]
+    assert release.next_beta_version("0.38.0", tags) == "0.38.0b1"
+
+
+@pytest.mark.unit
+def test_no_beta_once_target_is_released():
+    # development behind main: a beta of a shipped version would sort below it.
+    assert release.next_beta_version("0.38.0", ["v0.38.0b3", "v0.38.0"]) is None
+
+
+@pytest.mark.unit
+def test_beta_notes_lead_with_opt_in_install():
+    notes = release.beta_notes("0.38.0b1", "### Fixed\n\n- x")
+    assert notes.startswith("Pre-release.")
+    assert "pip install dummyindex==0.38.0b1" in notes
+    assert "pip install --pre dummyindex" in notes
+    assert notes.endswith("### Fixed\n\n- x")
+
+
+# --- describe / render_notes
 
 
 @pytest.mark.unit
@@ -174,13 +209,10 @@ def test_render_notes_empty_is_maintenance():
     assert release.render_notes(["chore: x"]) == "Maintenance release."
 
 
-# ----- squashed_subjects / effective_subjects -------------------------------
-#
-# GitHub's "Squash and merge" collapses a branch into one commit whose *subject*
-# is the PR title — which defaults to the branch name, e.g. the un-conventional
-# `Feat/curated codebase scan (#10)`. The real conventional commits survive only
-# as `* `-prefixed bullets in the body. Reading the subject alone silently
-# skipped the release for PRs #9 and #10 (v0.34.0 was never cut).
+# --- squashed_subjects / effective_subjects
+# A squash merge's subject is the PR title, often the un-conventional branch name
+# (`Feat/curated codebase scan (#10)`); the real commits survive only as `* ` body
+# bullets. Reading the subject alone silently skipped a release (v0.34.0).
 
 
 @pytest.mark.unit

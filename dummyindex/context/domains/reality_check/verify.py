@@ -209,24 +209,11 @@ def _resolve_cited_path(
 ) -> Path | tuple[str, str]:
     """Resolve a cited path to a concrete file, or a (status, reason) verdict.
 
-    Precedence (deterministic — never indexes an unsorted collection):
-
-    1. Exact ``map/files.json`` entry.
-    2. The literal path on disk under the repo root — manifests and docs the
-       code index doesn't track (``package.json``, ``docs/spec.md``) are
-       legitimate citation targets; the claim is about the file.
-    3. A bare name among the feature's own docs (``spec.md:12`` cited from
-       ``concerns.md``).
-    4. Basename match over ``map/files.json``: a unique match resolves; with
-       several matches, a *unique* hit among the feature's own ``files``
-       resolves; otherwise the claim is ambiguous (fully qualify the path).
-
-    **Confinement:** every concrete-path branch is routed through
-    :func:`resolve_under_root` against ``repo_root`` (or ``feat_dir`` for the
-    feature-own-doc branch). A citation that resolves outside that root — an
-    absolute path, a ``../`` escape, or an in-repo symlink whose realpath
-    leaves the tree — yields a not-found verdict *without ever opening the
-    target*, so the verifier is never a filesystem read oracle.
+    Order: ``map/files.json`` entry → literal path under the repo root (untracked
+    manifests/docs are valid targets) → bare name in the feature's own docs →
+    unique basename, else a unique feature-``files`` hit, else ambiguous. Every
+    branch is confined by :func:`resolve_under_root` (``feat_dir`` for own docs):
+    an absolute, ``../`` or symlink escape is ``contradicted`` without opening it.
     """
     if path_str in file_paths:
         return _confine(repo_root / path_str, repo_root)
@@ -349,7 +336,7 @@ def _summarize(feature_id: str, claims: list[Claim]) -> RealityReport:
     )
 
 
-# ----- IO helpers -----------------------------------------------------------
+# --- IO helpers
 
 
 def _load_symbols(context_dir: Path) -> tuple[frozenset[str], dict[str, str]]:
@@ -448,11 +435,8 @@ def _load_feature_files(context_dir: Path, feature_id: str) -> frozenset[str]:
 def _git_toplevel(context_dir: Path) -> Path | None:
     """The resolved git working-tree root at or above ``context_dir``, if any.
 
-    Walks ``context_dir`` and its ancestors looking for a git working tree
-    (plain checkout *or* submodule/worktree, via :func:`is_git_repo`) and
-    returns the **resolved** toplevel. ``None`` when no ancestor is a repo.
-    This is the trusted anchor: a ``meta.json`` ``root`` is honored only when
-    it resolves to exactly this directory.
+    Walks ancestors via :func:`is_git_repo` (plain checkout, submodule or
+    worktree). This is a trusted anchor for :func:`_trusted_repo_root`.
     """
     here = context_dir.resolve()
     for candidate in (here, *here.parents):
@@ -479,16 +463,11 @@ def _repo_root_from_meta(context_dir: Path) -> str | None:
 def _trusted_repo_root(context_dir: Path) -> Path:
     """Resolve a trustworthy ``repo_root`` to confine every cited-path read.
 
-    The recorded ``meta.json`` ``root`` is **untrusted** — it is honored only
-    when it resolves to one of two independently safe anchors: the context
-    directory's direct parent or the discovered git toplevel. Anything else
-    (e.g. a poisoned ``"/"``) falls back to the git anchor, never to an
-    arbitrary ancestor of ``context_dir`` (which would admit ``/``). When
-    there is no git toplevel, fall back to ``context_dir.parent`` (the
-    historical default for a non-repo ``.context/`` skeleton).
-
-    Equality anchors to the **resolved** toplevel, not raw string equality —
-    so ``"/repo/."`` or a symlinked spelling still matches.
+    The ``meta.json`` ``root`` is **untrusted**: honored only when it resolves to
+    the context dir's parent or the git toplevel. Anything else (e.g. a poisoned
+    ``"/"``) falls back to the git toplevel, never an arbitrary ancestor; with no
+    git toplevel, to ``context_dir.parent``. Paths compare resolved, so
+    ``"/repo/."`` or a symlinked spelling still matches.
     """
     context_parent = context_dir.parent.resolve()
     anchor = _git_toplevel(context_dir)
@@ -497,11 +476,9 @@ def _trusted_repo_root(context_dir: Path) -> Path:
         from dummyindex.context.build.meta import resolve_recorded_root
 
         resolved_meta_root = resolve_recorded_root(meta_root, context_dir).resolve()
-        # A context directory directly beneath its recorded root is a safe,
-        # self-contained project even when an unrelated Git checkout happens
-        # to exist farther up the filesystem tree (for example /tmp/.git in a
-        # test runner).  Both this parent and the discovered Git toplevel are
-        # trusted anchors; no other meta.json value is accepted.
+        # A context dir directly beneath its recorded root is self-contained even
+        # when an unrelated checkout sits farther up (e.g. /tmp/.git in a test
+        # runner). Only this parent and the git toplevel are trusted anchors.
         if resolved_meta_root == context_parent:
             return context_parent
         if anchor is not None and resolved_meta_root == anchor:

@@ -1,29 +1,10 @@
 """Deterministic structural extraction from source code using tree-sitter.
 
-Public surface (kept stable for `dummyindex.__init__`'s lazy `__getattr__`
-map and for tests):
+Public surface, kept stable for `dummyindex.__init__`'s lazy `__getattr__` and tests:
 
-- `extract(paths, cache_root=None)` → `{"nodes": [...], "edges": [...],
-  "file_bytes": {str(path): bytes}}` — `file_bytes` carries the source bytes the
-  extraction already read so the downstream textual-reference pass
-  (`build/references.py`, via `build/structure.py`) consumes the cached bytes
-  instead of re-reading disk (P2: each file read ≤2× per build, all passes the
-  same bytes).
+- `extract(paths, cache_root=None)` → dict with `nodes`, `edges`, `file_status`
+  and `file_bytes` (`str(path)` → bytes, so `build/references.py` needn't re-read).
 - `collect_files(target, *, follow_symlinks=False, root=None)` → `list[Path]`
-
-The implementation is split across siblings:
-
-- `config.py` — `LanguageConfig` dataclass
-- `_common.py` — id / name / body / read helpers
-- `_imports.py` — per-language `_import_<lang>` handlers
-- `_helpers.py` — extra-walk helpers and C/C++ name resolvers
-- `language_configs.py` — `LanguageConfig` instances per language
-- `_generic.py` — `_extract_generic` (the parametric driver)
-- `_python_rationale.py` — Python docstring + rationale post-pass
-- `_resolve.py` — cross-file import resolvers (Python, Java)
-- `python_dispatch.py` — narrow dispatch-idiom resolver (enum-keyed dict
-  handlers, function-body imports)
-- `languages/` — per-language `extract_<lang>` functions
 """
 
 from __future__ import annotations
@@ -130,24 +111,15 @@ _PROGRESS_INTERVAL = 100
 def extract(paths: list[Path], cache_root: Path | None = None) -> dict:
     """Extract AST nodes and edges from a list of code files.
 
-    Two-pass process:
-    1. Per-file structural extraction (classes, functions, imports)
-    2. Cross-file import resolution: turns file-level imports into
-       class-level INFERRED edges (DigestAuth --uses--> Response)
-
-    Args:
-        paths: files to extract from
-        cache_root: explicit root for .context/cache/ (overrides the
-            inferred common path prefix). Pass Path('.') when running on a
-            subdirectory so the cache stays at ./.context/cache/.
+    Per-file structural extraction, then cross-file passes: dispatch idioms,
+    Python/Java import resolution and raw-call resolution. ``cache_root``
+    overrides the inferred common-prefix root for ``.context/cache/``; pass
+    ``Path('.')`` on a subdirectory run so the cache stays at ``./.context/cache/``.
     """
     _check_tree_sitter_version()
     per_file: list[dict] = []
-    # P2: bytes read for each path during this extraction, keyed by str(path).
-    # Threaded out through the return so the textual-reference pass reuses them
-    # instead of re-reading disk. Populated from the same build-scoped read cache
-    # that collapses the hash / extractor / rationale / cross-file reads into a
-    # single Path.read_bytes per file.
+    # Bytes read per path, keyed by str(path); returned so the textual-reference
+    # pass reuses them instead of re-reading disk.
     file_bytes: dict[str, bytes] = {}
 
     try:
@@ -170,11 +142,8 @@ def extract(paths: list[Path], cache_root: Path | None = None) -> dict:
 
     total = len(paths)
     file_status: dict[str, dict] = {}
-    # One build-scoped read cache spans the per-file pass AND the cross-file
-    # resolve passes, so the hash read, the extractor read, the Python rationale
-    # post-pass, and the cross-file import re-parse all share a single
-    # Path.read_bytes per path (P2). The bytes are captured into file_bytes so
-    # the textual-reference pass (run later in build_structure) reuses them.
+    # One build-scoped read cache spans the per-file and cross-file passes, so
+    # every read of a path shares one Path.read_bytes and one byte-state.
     with build_read_cache():
         for i, path in enumerate(paths):
             if total >= _PROGRESS_INTERVAL and i % _PROGRESS_INTERVAL == 0 and i > 0:
@@ -332,8 +301,6 @@ def extract(paths: list[Path], cache_root: Path | None = None) -> dict:
                 continue
             callee_key = callee.lower()
             if callee_key in ambiguous_labels:
-                # Two distinct symbols normalize to this label — skip rather
-                # than bind to an arbitrary (last-iterated) node.
                 continue
             tgt = global_label_to_nid.get(callee_key)
             caller = rc["caller_nid"]
@@ -411,11 +378,9 @@ def collect_files(
             )
         return sorted(results)
     results = []
-    # Containment root for the follow_symlinks walk: the explicit `root` if
-    # given, else `target`. A leaf whose realpath escapes this root is rejected
-    # BEFORE emission so neither downstream read sink (the cache-hash read at
-    # cache.py:38 nor the extractor read at generic.py:42) ever touches an
-    # out-of-tree target.
+    # Containment root for the follow_symlinks walk: `root` if given, else
+    # `target`. Leaves whose realpath escapes it are rejected before emission,
+    # so neither the cache-hash read nor the extractor read touches them.
     containment_root = (root if root is not None else target).resolve()
     for dirpath, dirnames, filenames in os.walk(target, followlinks=True):
         if os.path.islink(dirpath):
@@ -435,11 +400,9 @@ def collect_files(
                 and not fname.startswith(".")
                 and not _ignored(p)
             ):
-                # WALK-TIME containment: reject leaves whose realpath escapes
-                # the containment root (e.g. a symlink pointing outside it).
-                # This is walk-time, not read-time — a post-enumeration symlink
-                # swap (TOCTOU) is a documented residual; a true read-time
-                # guard would live in generic.py (deferred to a later task).
+                # Walk-time containment only: a symlink swapped after
+                # enumeration (TOCTOU) is a known residual; a read-time guard
+                # would belong in generic.py.
                 if (
                     resolve_under_root(Path(os.path.realpath(p)), containment_root)
                     is None

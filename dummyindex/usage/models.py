@@ -87,12 +87,11 @@ class ModelUsage:
 class ChatReport:
     """The single-session view behind the `/tokens` command.
 
-    `window_now` is the most recent main-thread turn's input + cache (what
-    `/context` shows); `context_limit` is the inferred model context ceiling
-    used for the window percentage. `by_model` breaks the deduplicated
-    cumulative totals down per model; `total` is their sum and `subagents` is
-    the subagent-only portion (folded into `total`). `started`/`last` are the
-    first and last main-turn timestamps (None when the session has no turns).
+    `window_now` is the latest main-thread turn's input + cache (what `/context`
+    shows); `context_limit` is the inferred ceiling for its percentage. `by_model`
+    splits the deduplicated totals per model; `total` is their sum and `subagents`
+    the subagent-only part of it. `started`/`last` are the first/last main-turn
+    timestamps (None when the session has no turns).
     """
 
     session_id: str

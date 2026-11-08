@@ -1,10 +1,8 @@
 """Tests for ``domains/docguard/migrate.py`` — stray-doc migration into homes.
 
-Covers the spec's ``Migration (migrate-docs)`` Acceptance matrix. Per the
-project marker convention, a test that drives a real ``git init`` / ``git mv``
-is ``@pytest.mark.integration``; the pure-logic / ``Path.replace`` (non-git)
-ones are ``@pytest.mark.unit``. Every throwaway repo is built under ``tmp_path``
-— the host repo and ``SAMPLE_REPO`` are never touched.
+Tests that drive a real ``git init`` / ``git mv`` are integration; the pure /
+``Path.replace`` ones are unit. Every throwaway repo lives under ``tmp_path`` —
+the host repo and ``SAMPLE_REPO`` are never touched.
 """
 
 from __future__ import annotations
@@ -33,7 +31,7 @@ from dummyindex.context.domains.proposals.store import (
     write_proposal_json,
 )
 
-# ----- fixtures / helpers ---------------------------------------------------
+# --- fixtures / helpers
 
 
 def _repo(tmp_path: Path) -> tuple[Path, Path]:
@@ -80,7 +78,7 @@ def _migrate(root: Path, context_dir: Path, *, force: bool = False):
     return apply_moves(plan, yes=True, force=force)
 
 
-# ----- dry-run --------------------------------------------------------------
+# --- dry-run
 
 
 @pytest.mark.unit
@@ -102,7 +100,7 @@ def test_dry_run_moves_nothing(tmp_path: Path) -> None:
     assert not (context_dir / "proposals").exists()
 
 
-# ----- tracked / untracked git paths (integration) --------------------------
+# --- tracked / untracked git paths (integration)
 
 
 @pytest.mark.integration
@@ -149,7 +147,7 @@ def test_untracked_gitignored_path_ends_staged_at_target(tmp_path: Path) -> None
     assert (root / target).is_file()
 
 
-# ----- non-git (Path.replace, no git invoked) -------------------------------
+# --- non-git (Path.replace, no git invoked)
 
 
 @pytest.mark.unit
@@ -173,7 +171,7 @@ def test_non_git_repo_uses_replace_and_invokes_no_git(
     assert not stray.exists()
 
 
-# ----- overwrite refusal + --force fills missing only -----------------------
+# --- overwrite refusal + --force fills missing only
 
 
 @pytest.mark.unit
@@ -216,7 +214,7 @@ def test_force_fills_missing_only_leaving_existing_byte_identical(
     assert ".context/proposals/widget/spec.md" in skipped_targets
 
 
-# ----- containment + symlink skips ------------------------------------------
+# --- containment + symlink skips
 
 
 @pytest.mark.unit
@@ -260,7 +258,7 @@ def test_symlinked_stray_is_skipped(tmp_path: Path) -> None:
     assert slugs == {"real"}  # ghost skipped via is_symlink()
 
 
-# ----- source untouched + idempotency ---------------------------------------
+# --- source untouched + idempotency
 
 
 @pytest.mark.unit
@@ -300,7 +298,7 @@ def test_idempotent_second_run_finds_nothing(tmp_path: Path) -> None:
     assert second.moved == ()
 
 
-# ----- titles ---------------------------------------------------------------
+# --- titles
 
 
 @pytest.mark.unit
@@ -316,7 +314,7 @@ def test_title_from_h1_and_fallback_to_base_slug(tmp_path: Path) -> None:
     assert titles["2026-01-01-nofirst"] == "2026-01-01-nofirst"  # base_slug fallback
 
 
-# ----- proposal.json byte-stability + round-trip ----------------------------
+# --- proposal.json byte-stability + round-trip
 
 
 @pytest.mark.unit
@@ -362,7 +360,7 @@ def test_migrated_proposal_is_terminal_with_no_template_checklist(
     assert not (home / "plan.md").exists()  # no plan member ⇒ no template plan
 
 
-# ----- audit workspace ------------------------------------------------------
+# --- audit workspace
 
 
 @pytest.mark.unit
@@ -388,7 +386,7 @@ def test_audit_stray_lands_as_well_formed_workspace(tmp_path: Path) -> None:
     assert read_audit(context_dir, "cache-report").slug == "cache-report"
 
 
-# ----- paired spec/plan group ----------------------------------------------
+# --- paired spec/plan group
 
 
 @pytest.mark.unit
@@ -408,7 +406,7 @@ def test_same_dir_spec_plan_pair_is_one_group_two_moves(tmp_path: Path) -> None:
     assert (context_dir / "proposals" / "widget" / "proposal.json").is_file()
 
 
-# ----- write_proposal_json (the narrow writer) ------------------------------
+# --- write_proposal_json (the narrow writer)
 
 
 @pytest.mark.unit
@@ -429,11 +427,11 @@ def test_write_proposal_json_writes_only_proposal_json(tmp_path: Path) -> None:
     assert read_proposal(context_dir, "demo").status is ProposalStatus.DONE
 
 
-# ----- public-surface re-exports stay intact --------------------------------
+# --- public-surface re-exports stay intact
 
 
 @pytest.mark.unit
 def test_docguard_package_still_exports_classifier_surface() -> None:
-    # T2 must not disturb the docguard public surface (a sibling owns __init__).
+    # The migrate module must not disturb the docguard public surface.
     assert hasattr(docguard, "classify_doc_path")
     assert hasattr(docguard, "group_strays")

@@ -1,12 +1,9 @@
 """`equip apply` / `add-specialist` must MERGE with the prior manifest.
 
-REGRESSION (audit 2026-06-13, C2-P0): `_apply_write` used to rebuild
-equipment.json from scratch — every MARKETPLACE plugin record, VENDORED skill,
-and INSTALLED (adopted) entry silently vanished on the next apply while staying
-live in .claude/settings.json / on disk. The contract is never-silently-drop:
-foreign records carry forward verbatim; a re-derived adoption replaces (never
-duplicates) its prior record; this run's hook records replace prior same-name
-hook records.
+Never silently drop a record that is still live in settings or on disk: foreign
+records (MARKETPLACE, VENDORED, INSTALLED) carry forward verbatim; a re-derived
+adoption replaces (never duplicates) its prior record; this run's hook records
+replace prior same-name hook records.
 """
 
 from __future__ import annotations
@@ -203,8 +200,8 @@ def test_hook_records_do_not_duplicate_across_reapplies(tmp_path: Path) -> None:
 
 @pytest.mark.integration
 def test_adoption_printed_in_non_dry_run_output(tmp_path: Path, capsys) -> None:
-    # Quick win (evidence: "i dont see them under .claude"): a manifest-only
-    # adoption is announced in the apply output, mirroring the dry-run wording.
+    # A manifest-only adoption writes no file, so the apply output announces it,
+    # mirroring the dry-run wording.
     root = _project(tmp_path, ["javascript"])
     _user_ui_agent(root)
     prop = root / ".context" / "proposals" / "add-ui"
@@ -219,8 +216,8 @@ def test_adoption_printed_in_non_dry_run_output(tmp_path: Path, capsys) -> None:
 
 @pytest.mark.integration
 def test_summary_counts_file_writes_not_records(tmp_path: Path, capsys) -> None:
-    # Quick win (evidence 12): the summary line must count actual FILE writes —
-    # not carried-forward records, manifest-only adoptions, or hook records.
+    # The summary counts actual FILE writes, not carried-forward records,
+    # manifest-only adoptions, or hook records.
     root = _project(tmp_path, ["python"])
     (root / "pyproject.toml").write_text("[tool.ruff]\n", encoding="utf-8")
     capsys.readouterr()
@@ -245,19 +242,18 @@ def test_apply_json_reports_carried_forward(tmp_path: Path, capsys) -> None:
     )
 
 
-# ----- duplicate-entry defect: equip's own files must never be re-adopted ----
+# --- duplicate-entry defect: equip's own files must never be re-adopted
 
 
 @pytest.mark.integration
 def test_generated_reviewer_not_readopted_as_project_agent(tmp_path: Path) -> None:
-    # REGRESSION (audit C2-P1): a repo dir named `frontend` makes the generated
-    # reviewer literally `frontend-reviewer`; a frontend proposal then re-adopted
-    # that same file as a project agent — two conflicting records for one path.
+    # A repo dir named `frontend` yields a generated `frontend-reviewer`; a
+    # frontend proposal must not re-adopt it as a project agent (two records).
     root = _project(tmp_path / "frontend", ["javascript", "javascript"])
     root.mkdir(parents=True, exist_ok=True)
     assert (
         run_equip(["apply", str(root)]) == 0
-    )  # writes .claude/agents/frontend-reviewer.md
+    )  # writes .context/equipment/frontend-reviewer.md
 
     prop = root / ".context" / "proposals" / "add-ui"
     prop.mkdir(parents=True)

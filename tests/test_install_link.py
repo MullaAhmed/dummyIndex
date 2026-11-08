@@ -1,50 +1,10 @@
-"""Tests for Wave 3 of the symlink-single-source-install proposal: wiring
-`installer/link.py`'s primitives into `install()` itself.
+"""Tests for wiring `installer/link.py`'s primitives into `install()`.
 
-Covers exactly the items owned by this task (`.context/proposals/
-symlink-single-source-install/plan.md`, task 4):
-
-- The preflight admission (`install()`'s per-host symlink refusal now admits
-  OURS_HEALTHY / OURS_DANGLING / MATERIALIZED family dirs, in every
-  `LinkMode`, while FOREIGN and deeper companion-dir symlinks keep today's
-  refusal byte-for-byte).
-- The write path staying unconditional: `_install_skill_family` never writes
-  through a family-dir symlink or a materialized placeholder.
-- The direct-write loop consulting `classify_family_link` first, so an
-  OURS_DANGLING/MATERIALIZED family reports (under `--copy`) or defers to
-  `create_family_links` (under AUTO/LINK) instead of crashing.
-- The pinned sequencing + AUTO/LINK/COPY dispatch after `execute_repairs`,
-  including the forced-migration transcript ("migrated ->" lines) and the
-  `--platform claude` narrowing's stamp-currency gate.
-- Side surfaces (commands, CLAUDE.md, hooks, auto-init) still running
-  unchanged under link mode.
-
-Also covers the three Wave-3 audit findings fixed alongside this file
-(`.context/proposals/symlink-single-source-install/`):
-
-- **HIGH-1**: `_install_skill_family` now stamps `.dummyindex_version` on
-  every sibling too, not just the main family dir, on both hosts; and
-  `_backfill_sibling_stamps` mints the same stamp onto a pre-existing
-  install's unstamped-but-real siblings (main's own value, never
-  `PACKAGE_VERSION`), so a realistic migration seed (main stamped, siblings
-  real and unstamped, exactly as every prior release shipped) converts all
-  8 families to links instead of permanently duplicating its siblings.
-- **HIGH-2**: `_is_unstamped_own_family_link` is deleted — the preflight
-  admission now routes through plain `classify_family_link`/
-  `verify_family_links` results only — and the direct-write loop never
-  calls `_install_skill_family` through a family-dir symlink, however it
-  classifies, closing the residual crash a de-stamped `.agents` target
-  could still reach.
-- **MEDIUM-1**: an unexpected (non-`LinkCapabilityError`) `run_link_install`
-  failure still lands the deferred blank-slate Claude write before exiting
-  — the "never neither" invariant (exactly one of {8 links, 8 real Claude
-  dirs} at the end of every run) holds even on an unforeseen failure.
-
-`installer/link.py`'s own primitives (classification alphabet, the safe
-replacement dance, the capability pre-probe) are Wave 2 and already covered
-by `tests/test_install_link_primitives.py` — this module stays focused on
-the `install()` wiring, mirroring that module's own "primitives vs wiring"
-split.
+Covers the preflight admission (OURS_HEALTHY/OURS_DANGLING/MATERIALIZED family dirs
+pass, FOREIGN and companion-dir symlinks keep the refusal), the never-write-through
+write path, MISSING-state deferral, AUTO/LINK/COPY dispatch after `execute_repairs`,
+sibling stamping and backfill, and the "never neither" invariant: every run ends with
+exactly one of {8 links, 8 real Claude dirs}. Primitives: test_install_link_primitives.py.
 """
 
 from __future__ import annotations
@@ -75,22 +35,18 @@ from dummyindex.installer.link.orchestrate import _probe_symlink_capability
 from dummyindex.installer.repair import dedupe
 
 # The families, derived from the constant (never a `dummyindex*` glob —
-# that would also catch the equip-generated `dummyindex-verify` skill, which
-# is NOT part of this family). Mirrors `tests/test_install_link_primitives.py`.
+# that would also catch equip's `dummyindex-verify`).
 FAMILIES = ("dummyindex", *(label for _sub_name, label in _SIBLING_SKILLS))
 
 
-# ----- shared fixtures ------------------------------------------------------
+# --- shared fixtures
 
 
 def _require_real_symlinks(tmp_path: Path) -> None:
     """Skip the calling test when this environment cannot create symlinks.
 
-    Only applied to tests that create (or expect `install()` to create) a
-    REAL symlink — simulated/pure-logic tests (the `_claude_narrowing_link_gate`
-    / `_agents_family_stamp_state` / `_link_state_report_line` unit tests, and
-    the MATERIALIZED-only tests, which never touch a real symlink) are never
-    guarded, mirroring `tests/test_install_link_primitives.py`'s own rule.
+    Only for tests that create (or expect `install()` to create) a REAL symlink;
+    pure-logic and MATERIALIZED-only tests are never guarded.
     """
     probe = tmp_path / ".test-install-link-capability-probe"
     target = tmp_path / ".test-install-link-capability-target"
@@ -156,14 +112,9 @@ def _seed_all_claude_families_real(
 def _seed_realistic_claude_layout(
     project_root: Path, *, version: str = PACKAGE_VERSION
 ) -> None:
-    """Main stamped, every sibling REAL and UNSTAMPED — the shape every
-    release actually produced before the HIGH-1 fix
-    (`_install_skill_family` stamped only the main family dir; see
-    `.context/proposals/symlink-single-source-install/`). Distinct from
-    `_seed_all_claude_families_real` (which stamps every sibling too) —
-    that helper is intentionally kept for the OTHER tests in this module
-    that need every family already provably linkable; this one is the
-    realistic migration seed the HIGH-1 fix targets."""
+    """Main stamped, every sibling REAL and UNSTAMPED: what older releases shipped,
+    when `_install_skill_family` stamped only main. The realistic migration seed;
+    `_seed_all_claude_families_real` stamps every sibling."""
     _seed_claude_family_real(project_root, "dummyindex", version=version)
     for _sub_name, label in _SIBLING_SKILLS:
         _seed_claude_family_real(project_root, label, version=None)
@@ -233,14 +184,13 @@ def _bump_major(version: str) -> str:
     return ".".join(str(p) for p in parts)
 
 
-# ----- pure-logic unit tests (no symlinks; never guarded) -------------------
+# --- unit tests
 
 
 @pytest.mark.unit
 def test_install_skill_family_raises_on_symlinked_family_dir(tmp_path: Path) -> None:
-    """Write path stays unconditional: never write through a family-dir
-    symlink, even an OURS_HEALTHY one — link mode replaces links via the
-    rename dance, it never writes through them."""
+    """Never write through a family-dir symlink, even an OURS_HEALTHY one: link
+    mode replaces links via the rename dance."""
     _require_real_symlinks(tmp_path)
     _seed_agents_family(tmp_path)
     result = create_family_links(tmp_path)
@@ -256,9 +206,8 @@ def test_install_skill_family_raises_on_symlinked_family_dir(tmp_path: Path) -> 
 
 @pytest.mark.unit
 def test_install_skill_family_raises_on_materialized_family_dir(tmp_path: Path) -> None:
-    """Same guard, no real symlink involved: a MATERIALIZED regular file
-    occupying the family-dir slot must never be written through either —
-    `mkdir(exist_ok=True)` would otherwise raise `FileExistsError` uncaught."""
+    """Nor through a MATERIALIZED file in the family-dir slot, where
+    `mkdir(exist_ok=True)` would raise an uncaught `FileExistsError`."""
     _seed_materialized_claude_family(tmp_path)
     src = tmp_path / "skill-src.md"
     src.write_text(
@@ -384,7 +333,7 @@ def test_claude_narrowing_link_gate_force_downgrade_bypasses_newer_stamp(
     )
 
 
-# ----- the preflight admission ----------------------------------------------
+# --- the preflight admission
 
 
 @pytest.mark.integration
@@ -392,9 +341,7 @@ def test_claude_narrowing_link_gate_force_downgrade_bypasses_newer_stamp(
 def test_preflight_admits_ours_healthy_family_in_every_link_mode(
     tmp_path: Path, link_mode: LinkMode
 ) -> None:
-    """OURS_HEALTHY must not trip the symlink refusal, in ANY LinkMode — the
-    preflight itself never converts anything, only decides whether to
-    refuse."""
+    """OURS_HEALTHY never trips the symlink refusal, in ANY LinkMode."""
     _require_real_symlinks(tmp_path)
     _seed_all_agents_families(tmp_path)
     result = create_family_links(tmp_path)
@@ -418,9 +365,7 @@ def test_preflight_admits_ours_dangling_family_in_every_link_mode(
     _require_real_symlinks(tmp_path)
     _seed_dangling_claude_family(tmp_path)
 
-    # `--platform both` so the `--platform claude` narrowing's separate
-    # stamp-currency gate (tested on its own below) never enters into it —
-    # this test is purely about the OLD preflight refusal not firing.
+    # `--platform both` keeps the claude narrowing's stamp gate (tested below) out.
     install(
         scope="project",
         project_dir=tmp_path,
@@ -451,8 +396,7 @@ def test_preflight_admits_materialized_family_in_every_link_mode(
 def test_preflight_still_refuses_foreign_claude_family_byte_for_byte(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """FOREIGN keeps today's refusal byte-for-byte — regression-asserts the
-    EXACT existing message text/shape is unchanged by the admission logic."""
+    """FOREIGN keeps the exact existing refusal message."""
     _require_real_symlinks(tmp_path)
     foreign_target = _seed_foreign_claude_family(tmp_path)
 
@@ -475,9 +419,8 @@ def test_preflight_still_refuses_foreign_claude_family_byte_for_byte(
 def test_preflight_still_refuses_deeper_companion_symlink_under_real_family(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """A real, proven main family dir with a symlinked COMPANION subdir
-    (`agents/`) underneath it is still refused, byte-for-byte — the
-    admission only ever applies to the top-level family dir itself."""
+    """A symlinked COMPANION subdir (`agents/`) under a real family is still
+    refused: the admission applies only to the top-level family dir."""
     _require_real_symlinks(tmp_path)
     _seed_claude_family_real(tmp_path)
     external = tmp_path / "external-companion"
@@ -501,7 +444,7 @@ def test_preflight_still_refuses_deeper_companion_symlink_under_real_family(
     )
 
 
-# ----- direct-write loop: no crash on OURS_DANGLING / MATERIALIZED ----------
+# --- direct-write loop: no crash on OURS_DANGLING / MATERIALIZED
 
 
 @pytest.mark.integration
@@ -521,8 +464,7 @@ def test_copy_mode_reports_dangling_family_instead_of_crashing(
 
     out = capsys.readouterr().out
     assert "dangling dummyindex-owned symlink" in out
-    # Never healed under --copy: still a dangling link, not converted, not
-    # crashed into a real directory either.
+    # Never healed under --copy: still a dangling link, not a real directory.
     assert _claude_family_dir(tmp_path).is_symlink()
 
 
@@ -586,25 +528,17 @@ def test_auto_mode_replaces_materialized_placeholder(tmp_path: Path) -> None:
     assert classification.state is FamilyLinkState.OURS_HEALTHY
 
 
-# ----- the AUTO matrix + forced migration -----------------------------------
+# --- the AUTO matrix + forced migration
 
 
 @pytest.mark.integration
 def test_flagless_forced_migration_of_duplicated_layout(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """THE primary GATE-style scenario, seeded REALISTICALLY (spec:
-    symlink-single-source-install, HIGH-1): main family stamped, every
-    SIBLING real and UNSTAMPED on BOTH host trees — exactly what every
-    prior release actually produced, since `_install_skill_family` stamped
-    only the main family dir. BEFORE the HIGH-1 fix this reproduced
-    `claude links=1/N, real-dirs-remaining=(N-1)/N` (only main converts; every
-    sibling stays permanently duplicated because `create_family_links`
-    requires the stamp specifically before replacing a real directory with
-    a link). AFTER the fix, a flagless install backfills a stamp onto
-    every `.agents`-side sibling first, then converts every proven Claude
-    families to links, prints one `migrated ->` line + the hand-edits
-    caveat per family, and a second run is a pure idempotent noop."""
+    """Realistic duplicated layout: main stamped, siblings real and UNSTAMPED on both
+    trees. `create_family_links` needs a stamp to replace a real dir, so a flagless
+    install backfills sibling stamps, links every family with one `migrated ->` line
+    + hand-edits caveat each, and a rerun is a noop."""
     _require_real_symlinks(tmp_path)
     _seed_realistic_claude_layout(tmp_path)
     _seed_realistic_agents_layout(tmp_path)
@@ -635,11 +569,8 @@ def test_flagless_forced_migration_of_duplicated_layout(
     assert links == len(FAMILIES), "not every family converted to a link"
     assert real_remaining == 0, "a sibling stayed a permanently duplicated real dir"
 
-    # HIGH-1: every .agents-side sibling is now stamped too, with the
-    # MAIN's own pre-repair value (PACKAGE_VERSION here, since that's what
-    # the realistic seed wrote for main) — never a bare PACKAGE_VERSION
-    # mint blind to what the main actually carried. This is what lets the
-    # sibling's Claude-side link classify OURS_HEALTHY, not FOREIGN.
+    # Each .agents sibling carries the MAIN's own pre-repair stamp (here
+    # PACKAGE_VERSION), so its Claude link classifies OURS_HEALTHY, not FOREIGN.
     for family in FAMILIES:
         stamp = _agents_family_dir(tmp_path, family) / ".dummyindex_version"
         assert stamp.read_text(encoding="utf-8").strip() == PACKAGE_VERSION, family
@@ -659,13 +590,9 @@ def test_flagless_forced_migration_of_duplicated_layout(
 def test_flagless_claude_only_layout_migrates_to_universal(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A claude-only layout, seeded REALISTICALLY (spec: symlink-single-
-    source-install, HIGH-1): main stamped, every sibling real and
-    UNSTAMPED — today's most common install shape, no `.agents` at all. A
-    flagless install writes `.agents` for real, converts EVERY `.claude`
-    family (main + all 7 siblings, not just main) to a link, and writes
-    AGENTS.md. Before the HIGH-1 fix only the main family converted; every
-    sibling stayed a permanently duplicated real directory."""
+    """Realistic claude-only layout (main stamped, siblings real and unstamped, no
+    `.agents`): a flagless install writes `.agents`, links EVERY `.claude` family,
+    not just main, and writes AGENTS.md."""
     _require_real_symlinks(tmp_path)
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -803,9 +730,8 @@ def test_strict_link_platform_claude_force_downgrade_links_despite_newer_stamp(
 
 @pytest.mark.integration
 def test_platform_agents_never_touches_claude_side(tmp_path: Path) -> None:
-    """AUTO + `--platform agents` never touches `.claude/**` — even a
-    detected duplicated layout is left for `plan_repairs` to report, never
-    converted by the link dispatch (which is never even entered)."""
+    """AUTO + `--platform agents` never touches `.claude/**`: a duplicated layout is
+    left for `plan_repairs` to report, and the link dispatch never runs."""
     _seed_all_claude_families_real(tmp_path)
     _seed_all_agents_families(tmp_path)
 
@@ -823,7 +749,7 @@ def test_platform_agents_never_touches_claude_side(tmp_path: Path) -> None:
         assert not claude_dir.is_symlink(), family
 
 
-# ----- --copy characterization ----------------------------------------------
+# --- --copy characterization
 
 
 @pytest.mark.integration
@@ -882,7 +808,7 @@ def test_copy_mode_leaves_duplicated_layout_unconverted(tmp_path: Path) -> None:
         assert not claude_dir.is_symlink(), family
 
 
-# ----- side surfaces still work under link mode -----------------------------
+# --- side surfaces still work under link mode
 
 
 @pytest.mark.integration
@@ -941,29 +867,19 @@ def test_link_mode_still_runs_auto_init_hooks_and_agents_md(
     assert _claude_family_dir(repo).is_symlink()
 
 
-# ----- MISSING-state deferral (the bug this task fixes) ---------------------
-#
-# Root cause this section guards against: the direct-write loop only
-# special-cased OURS_DANGLING/MATERIALIZED for `host == "claude"`; a MISSING
-# family dir (a fresh install) fell through to the unconditional
-# `_install_skill_family` call, which writes every Claude family as real
-# trees but stamps only the MAIN one. `create_family_links` then converted
-# the stamped main family but refused every unstamped sibling ("no
-# .dummyindex_version stamp"), permanently duplicating the family instead of
-# linking it. The fix defers the MISSING-state write until it's known
-# whether this run actually links; these tests are the regression guard.
+# --- MISSING-state deferral
+# Regression guard: a MISSING family dir once got an eager real write (main-only
+# stamp), so `create_family_links` refused every sibling. The write now waits
+# until the run knows whether it links.
 
 
 @pytest.mark.integration
 def test_flagless_fresh_install_all_8_families_become_claude_symlinks(
     tmp_path: Path,
 ) -> None:
-    """THE primary regression test for this task: a completely fresh,
-    flagless project install — nothing pre-existing on either side — must
+    """A fresh flagless project install must
     leave every enumerated family (main + `_SIBLING_SKILLS`, derived from
-    the constant) as Claude-side symlinks pointing at
-    `../../.agents/skills/<family>`. No enumerated family may exist as a
-    real directory under `.claude/skills/`."""
+    the constant) as a Claude-side symlink to `../../.agents/skills/<family>`."""
     _require_real_symlinks(tmp_path)
 
     install(scope="project", project_dir=tmp_path, skill_only=True)  # flagless
@@ -986,19 +902,12 @@ def test_flagless_fresh_install_all_8_families_become_claude_symlinks(
 def test_auto_capability_fallback_writes_real_claude_dirs_never_neither(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """AUTO whose capability pre-probe fails (a symlink-incapable host, e.g.
-    Windows without Developer Mode) falls back to copy for the WHOLE run:
-    every family must exist as REAL Claude directories, none dangling and
-    none missing — the "never neither" invariant (never a mix of links and
-    reals, and never neither at all). `install()` has no `symlink_fn` seam
-    of its own, so the fake is injected via `run_link_install` (the single
-    dispatch point `install.py` calls) rather than monkeypatching
-    `os.symlink` — a bound default argument evaluated at import time, which
-    a later `os.symlink` patch cannot reach. `importlib.import_module` (not
-    `import dummyindex.installer.install as ...`) is required to reach the
-    real submodule: `dummyindex/installer/__init__.py`'s own
-    `from .install import install` rebinds the package's `install` attribute
-    to the FUNCTION, shadowing the submodule there."""
+    """A failed AUTO capability pre-probe (e.g. Windows without Developer Mode) falls
+    back to copy for the WHOLE run: every family is a REAL Claude dir ("never neither").
+
+    The fake goes through `run_link_install`: `install()` has no `symlink_fn` seam and
+    `os.symlink` is a default bound at import time. `importlib` reaches the submodule,
+    since the package's `install` attribute is the function."""
     import importlib
 
     from dummyindex.installer.link import run_link_install as real_run_link_install
@@ -1029,12 +938,9 @@ def test_auto_capability_fallback_writes_real_claude_dirs_never_neither(
 def test_already_real_proven_claude_family_migration_still_converts(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Guards the OTHER branch the MISSING-deferral fix must not disturb: a
-    family that already exists as a proven real Claude directory (NOT
-    MISSING) is still converted by the forced-migration rename dance, and
-    prints the `migrated ->` transcript line — a mixed layout (one real
-    proven family, every sibling still MISSING) exercises both branches of
-    the direct-write loop's new MISSING check in the same run."""
+    """The non-MISSING branch: a proven real Claude family is still converted by
+    the rename dance and prints `migrated ->`. One real family plus MISSING
+    siblings exercises both branches of the MISSING check in one run."""
     _require_real_symlinks(tmp_path)
     _seed_claude_family_real(tmp_path)
     _seed_agents_family(tmp_path)
@@ -1049,15 +955,13 @@ def test_already_real_proven_claude_family_migration_still_converts(
     assert claude_dir.resolve() == _agents_family_dir(tmp_path).resolve()
 
 
-# ----- HIGH-1: `_install_skill_family` stamps every family, on both hosts ---------
+# --- HIGH-1: `_install_skill_family` stamps every family, on both hosts
 
 
 @pytest.mark.unit
 def test_install_skill_family_stamps_every_family_on_both_hosts(tmp_path: Path) -> None:
-    """`_install_skill_family` now stamps `.dummyindex_version` onto every
-    sibling too, not just the main family dir, on BOTH hosts (HIGH-1 fix,
-    spec: symlink-single-source-install) — asserted directly, no `install()`
-    orchestration involved."""
+    """`_install_skill_family` stamps `.dummyindex_version` on every family, not
+    just main, on BOTH hosts."""
     src = tmp_path / "skill-src.md"
     src.write_text(
         "---\nname: dummyindex\ndescription: t\n---\nbody\n", encoding="utf-8"
@@ -1076,7 +980,7 @@ def test_install_skill_family_stamps_every_family_on_both_hosts(tmp_path: Path) 
             )
 
 
-# ----- HIGH-1: `_backfill_sibling_stamps` characterization -----------------
+# --- HIGH-1: `_backfill_sibling_stamps` characterization
 
 
 @pytest.mark.unit
@@ -1094,9 +998,7 @@ def test_backfill_mints_sibling_stamp_from_stamped_main(tmp_path: Path) -> None:
 
 @pytest.mark.unit
 def test_backfill_mints_the_mains_value_not_package_version(tmp_path: Path) -> None:
-    """The minted value EQUALS the main's stamp value, never `PACKAGE_VERSION`
-    blindly -- seed main at an OLD version and confirm the sibling gets
-    THAT value, not the running package's."""
+    """The minted value is the main's own (old) stamp, never `PACKAGE_VERSION`."""
     old_version = "0.1.0"
     assert old_version != PACKAGE_VERSION  # precondition: the two must differ
     _seed_claude_family_real(tmp_path, "dummyindex", version=old_version)
@@ -1122,11 +1024,8 @@ def test_backfill_mints_nothing_when_main_is_unstamped(tmp_path: Path) -> None:
 
 @pytest.mark.unit
 def test_backfill_mints_nothing_when_main_is_heading_only(tmp_path: Path) -> None:
-    """NO stamp minted when the main is proven only by the legacy Codex
-    heading -- `is_owned_copy` would accept that, but the backfill demands
-    the STAMP specifically (`_read_stamp`), the same stronger evidence
-    `_has_version_stamp` requires before replacing a real directory with a
-    link."""
+    """NO stamp minted when main is proven only by the legacy Codex heading: the
+    backfill demands the STAMP, as replacing a real dir with a link does."""
     main_dir = tmp_path / ".claude" / "skills" / "dummyindex"
     main_dir.mkdir(parents=True)
     (main_dir / "SKILL.md").write_text(
@@ -1146,11 +1045,8 @@ def test_backfill_mints_nothing_when_main_is_heading_only(tmp_path: Path) -> Non
 def test_backfill_never_mints_for_a_non_enumerated_sibling_name(
     tmp_path: Path,
 ) -> None:
-    """NO stamp minted for a non-enumerated name: `dummyindex-verify` (the
-    equip-generated skill, never part of this family) seeded beside a
-    stamped main stays completely untouched by the backfill -- it is
-    enumerated strictly from `_SIBLING_SKILLS`, never a `dummyindex*`
-    glob."""
+    """NO stamp minted for equip's `dummyindex-verify`: the backfill enumerates
+    `_SIBLING_SKILLS`, never a `dummyindex*` glob."""
     _seed_claude_family_real(tmp_path, "dummyindex", version=PACKAGE_VERSION)
     _seed_claude_family_real(tmp_path, "dummyindex-verify", version=None)
 
@@ -1166,11 +1062,8 @@ def test_backfill_never_mints_for_a_non_enumerated_sibling_name(
 def test_backfill_leaves_non_enumerated_sibling_untouched_and_unlinked(
     tmp_path: Path,
 ) -> None:
-    """End-to-end version of the above through `install()` itself: a
-    `dummyindex-verify` dir beside a realistic (main-stamped,
-    siblings-unstamped) layout stays untouched AND unlinked after a
-    flagless install -- never stamped, never converted to a link, because
-    it is not one of the 8 enumerated families."""
+    """The same through `install()`: a flagless install leaves `dummyindex-verify`
+    unstamped and unlinked, since it is not one of the 8 families."""
     _require_real_symlinks(tmp_path)
     _seed_realistic_claude_layout(tmp_path)
     _seed_realistic_agents_layout(tmp_path)
@@ -1207,9 +1100,8 @@ def test_backfill_never_writes_through_a_sibling_that_is_itself_a_symlink(
 def test_backfill_never_writes_through_a_symlinked_claude_parent(
     tmp_path: Path,
 ) -> None:
-    """NO write when the parent chain is unclean -- a symlinked `.claude`
-    not present in ``allowed_symlinks`` must refuse the mint even though
-    the main dir inside it is legitimately stamped."""
+    """NO write through a symlinked `.claude` absent from ``allowed_symlinks``,
+    even when the main inside it is legitimately stamped."""
     _require_real_symlinks(tmp_path)
     real_target = tmp_path / "real-claude-target"
     real_target.mkdir()
@@ -1226,27 +1118,22 @@ def test_backfill_never_writes_through_a_symlinked_claude_parent(
     )
     (tmp_path / ".claude").symlink_to(real_target, target_is_directory=True)
 
-    # Empty allowlist: a project-scope symlinked `.claude` is never
-    # tolerated (mirrors `claude_link_allowlist` being empty at project
-    # scope in `install()`).
+    # Empty allowlist, as `install()` uses at project scope.
     _backfill_sibling_stamps(tmp_path, "claude", allowed_symlinks=frozenset())
 
     stamp = real_target / "skills" / "dummyindex-plan" / ".dummyindex_version"
     assert not stamp.exists()
 
 
-# ----- HIGH-2: the weaker classifier is gone; the residual crash is fixed --
+# --- HIGH-2: the weaker classifier is gone; the residual crash is fixed
 
 
 @pytest.mark.integration
 def test_sibling_healthy_link_classifies_ours_healthy_with_helper_deleted(
     tmp_path: Path,
 ) -> None:
-    """HIGH-2 fix: with `_is_unstamped_own_family_link` deleted entirely, a
-    sibling's own healthy link must classify OURS_HEALTHY through the plain,
-    full-strength `classify_family_link` on its own -- the HIGH-1 backfill
-    stamps its `.agents` target first, so the ownership check passes
-    without any second, weaker classifier."""
+    """With `_is_unstamped_own_family_link` gone, a sibling's healthy link classifies
+    OURS_HEALTHY via plain `classify_family_link`: the backfill stamps its target."""
     import dummyindex.installer.install as install_module
 
     assert not hasattr(install_module, "_is_unstamped_own_family_link")
@@ -1268,13 +1155,9 @@ def test_sibling_healthy_link_classifies_ours_healthy_with_helper_deleted(
 def test_destamped_target_linked_layout_exits_cleanly_not_a_traceback(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """HIGH-2 residual: a linked layout whose MAIN `.agents` target lost its
-    ownership evidence (de-stamped -- its directory still exists, only the
-    stamp file is now empty) must classify FOREIGN, and `install()` must
-    never crash with an uncaught `OSError` from `_install_skill_family`'s
-    own `skill_dir.is_symlink()` guard reached through the direct-write
-    loop's fallback -- it must exit cleanly (`SystemExit`, a clear stderr
-    line), never a raw traceback."""
+    """A linked layout whose MAIN `.agents` target has an empty stamp classifies
+    FOREIGN; `install()` exits cleanly (`SystemExit`, one stderr line), never with
+    a raw `OSError` from `_install_skill_family`'s symlink guard."""
     _require_real_symlinks(tmp_path)
     _seed_all_agents_families(tmp_path)
     result = create_family_links(tmp_path)
@@ -1292,26 +1175,21 @@ def test_destamped_target_linked_layout_exits_cleanly_not_a_traceback(
     assert exc.value.code == 1
     err = capsys.readouterr().err
     assert "error: refusing to install through managed directory symlink" in err
-    # The external keep-file inside the real target proves nothing was
-    # torn down or written through on the way to this clean refusal.
+    # The real target's SKILL.md survives: nothing was torn down or written through.
     assert (tmp_path / ".agents" / "skills" / "dummyindex" / "SKILL.md").exists()
 
 
-# ----- MEDIUM-1: an unexpected run_link_install failure never leaves ------
-# ----- neither links nor real dirs -----------------------------------------
+# --- MEDIUM-1: an unexpected run_link_install failure never leaves
+# --- neither links nor real dirs
 
 
 @pytest.mark.integration
 def test_unexpected_run_link_install_exception_still_lands_real_claude_dirs(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """MEDIUM-1 fix (spec: symlink-single-source-install): an unexpected,
-    non-`LinkCapabilityError` exception from `run_link_install` (injected
-    here as a plain `RuntimeError`, simulating a bug elsewhere in
-    `link.py`) must never leave the Claude side with NEITHER links nor
-    real dirs on a fresh, blank-slate install -- the deferred MISSING-
-    family write must still land, unconditionally, before the failure
-    surfaces as a clean stderr line. Never an uncaught traceback."""
+    """An unexpected (non-`LinkCapabilityError`) `run_link_install` failure on a fresh
+    install still lands the deferred MISSING-family write, so the Claude side never
+    has NEITHER links nor real dirs; it exits 1 with a clean stderr line."""
     import importlib
 
     install_module = importlib.import_module("dummyindex.installer.install")
@@ -1329,8 +1207,7 @@ def test_unexpected_run_link_install_exception_still_lands_real_claude_dirs(
     assert "link install failed" in err
     assert "boom: simulated link.py bug" in err
 
-    # "Never neither": every Claude family landed as REAL directories,
-    # not left in limbo (neither linked nor real).
+    # "Never neither": every Claude family landed as a REAL, stamped directory.
     for family in FAMILIES:
         claude_dir = _claude_family_dir(tmp_path, family)
         assert claude_dir.is_dir(), family
@@ -1338,42 +1215,13 @@ def test_unexpected_run_link_install_exception_still_lands_real_claude_dirs(
         assert (claude_dir / ".dummyindex_version").exists(), family
 
 
-# =============================================================================
-# Wave 5 — end-to-end lifecycle (checklist.md Wave 5; plan.md task 9)
-# =============================================================================
-#
-# Each stage below is its own focused `@pytest.mark.integration` test, each in
-# its OWN fresh `tmp_path` project, rather than one giant mutation saga
-# threading all 14 stages through a single directory. Several stages need
-# CONTRADICTORY starting shapes for the very same family slot (a duplicated
-# real tree vs. an already-linked layout vs. a dangling link vs. a
-# materialized placeholder vs. mid-crash temp artifacts vs. a symlink-
-# incapable host) — forcing all of them into one continuously-evolving tree
-# would make every stage's precondition fragile and hard to review, exactly
-# the case plan.md task 9 itself carves out an escape hatch for ("you may
-# split this into several focused integration tests... if that reads
-# cleaner"). The two stages that DO compose naturally without any conflicting
-# precondition — a flagless install immediately followed by an idempotent
-# rerun — are threaded together in one test below; dedupe/uninstall get their
-# own fresh runs so a failure in one stage's assertions never cascades into
-# an unrelated one.
-#
-# Every test below is real-filesystem `@pytest.mark.integration`. Tests that
-# create or expect a REAL symlink are guarded with `_require_real_symlinks`;
-# the DI-injected-failure tests (EPERM pre-probe fallback, Nth-call mid-loop
-# failure) are per this module's own established rule (see
-# `_require_real_symlinks`'s docstring) — the Nth-call test is guarded
-# anyway because its raiser falls through to the real `os.symlink` on every
-# non-failing call (mirrors `tests/test_install_link_primitives.py`'s
-# identical "TEST GAP 1" note), while the whole-run EPERM fallback test never
-# calls the real `os.symlink` at all and is intentionally left unguarded.
+# End-to-end lifecycle. Each stage gets its own fresh project, since stages need
+# contradictory starting shapes for the same family slot; only install and its
+# idempotent rerun are chained, so one stage's failure never cascades.
 
 
 def _init_fake_git_repo(root: Path) -> None:
-    """The minimal on-disk shape `is_git_repo` accepts, so `install()`'s
-    auto-init runs (CLAUDE.md/AGENTS.md registration, hooks, `.context/`
-    build) — mirrors the inline pattern already used above in this module
-    (e.g. `test_link_mode_still_runs_auto_init_hooks_and_agents_md`)."""
+    """The minimal on-disk shape `is_git_repo` accepts, so auto-init runs."""
     root.mkdir(parents=True, exist_ok=True)
     (root / ".git").mkdir(parents=True, exist_ok=True)
     (root / ".git" / "HEAD").write_text("ref: refs/heads/main\n", encoding="utf-8")
@@ -1383,11 +1231,8 @@ def _init_fake_git_repo(root: Path) -> None:
 
 
 def _redirect_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """Every Wave-5 test redirects HOME to a fresh scratch dir, never the
-    real one — `install()`/`uninstall()` read (and, at user scope, write)
-    `Path.home()` even for a project-scope run (duplicate-detection reads
-    the real user scope otherwise, making output assertions depend on
-    whatever happens to be installed on the machine running the suite)."""
+    """Redirect HOME to a scratch dir: `install()`/`uninstall()` read `Path.home()`
+    even at project scope, so duplicate detection would see the real machine."""
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
@@ -1395,28 +1240,18 @@ def _redirect_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return fake_home
 
 
-# ----- stage 1 + 2: flagless universal install, then an idempotent rerun ---
+# --- stage 1 + 2: flagless universal install, then an idempotent rerun
 
 
 @pytest.mark.integration
 def test_e2e_flagless_install_then_idempotent_rerun(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Wave-5 stages 1-2, chained in one project (the one pair of stages
-    with no conflicting precondition).
-
-    Stage 1: a flagless install on a fresh repo yields the universal linked
+    """Stages 1-2, chained. Stage 1: a flagless install yields the universal linked
     layout — every enumerated family (derived from `_SIBLING_SKILLS`,
-    never a glob) real+stamped under `.agents/skills/`, each Claude-side
-    family a symlink whose `os.readlink` parts equal exactly
-    `../../.agents/skills/<family>`, no enumerated family a real dir under
-    `.claude/skills/`, and BOTH CLAUDE.md and AGENTS.md written.
-
-    Stage 2: an immediate second flagless run is a pure LinkResult
-    0-created/0-replaced noop — no `claude skill linked`/`claude skill
-    migrated` transcript lines — and the link itself is untouched at the
-    inode + `st_mtime_ns` level (the secondary, filesystem-level observable
-    behind the primary LinkResult one)."""
+    never a glob) real+stamped in `.agents/skills/`, linked from `.claude/skills/`
+    as `../../.agents/skills/<family>`, plus CLAUDE.md and AGENTS.md. Stage 2: a
+    rerun prints no linked/migrated lines and keeps the link's inode and mtime."""
     _redirect_home(tmp_path, monkeypatch)
     repo = tmp_path / "repo"
     _init_fake_git_repo(repo)
@@ -1434,8 +1269,7 @@ def test_e2e_flagless_install_then_idempotent_rerun(
             encoding="utf-8"
         ).strip() == PACKAGE_VERSION, family
 
-        # No enumerated family is a real dir under .claude/skills/: it must
-        # be a symlink, full stop (a path cannot be both at once).
+        # Every enumerated Claude family is a symlink, never a real dir.
         assert claude_dir.is_symlink(), family
         readlink_parts = PurePath(os.readlink(claude_dir)).parts
         assert readlink_parts == PurePath(f"../../.agents/skills/{family}").parts, (
@@ -1463,21 +1297,16 @@ def test_e2e_flagless_install_then_idempotent_rerun(
     )
 
 
-# ----- stage 3: forced migration, duplicated (realistic) layout -------------
+# --- stage 3: forced migration, duplicated (realistic) layout
 
 
 @pytest.mark.integration
 def test_e2e_forced_migration_duplicated_layout_with_full_auto_init(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Wave-5 stage 3, with full auto-init (CLAUDE.md/AGENTS.md) layered on
-    top of `test_flagless_forced_migration_of_duplicated_layout`'s
-    skill-only coverage above: a repo with proven real families under BOTH
-    `.claude/skills/` and `.agents/skills/` (equal current stamps, siblings
-    realistically unstamped) — a flagless install converts every proven
-    Claude family to a link, prints one `migrated ->` line + the hand-edits
-    caveat per family, leaves `.agents` as the only real tree, AND still
-    writes both CLAUDE.md and AGENTS.md."""
+    """Stage 3: the duplicated-layout migration above, with full auto-init: every
+    Claude family becomes a link with a `migrated ->` line + caveat, `.agents` stays
+    the only real tree, and both CLAUDE.md and AGENTS.md are written."""
     _redirect_home(tmp_path, monkeypatch)
     repo = tmp_path / "repo"
     _init_fake_git_repo(repo)
@@ -1507,21 +1336,16 @@ def test_e2e_forced_migration_duplicated_layout_with_full_auto_init(
     assert (repo / "AGENTS.md").exists()
 
 
-# ----- stage 4: forced migration, claude-only (realistic) layout -----------
+# --- stage 4: forced migration, claude-only (realistic) layout
 
 
 @pytest.mark.integration
 def test_e2e_forced_migration_claude_only_layout_writes_claude_md_too(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Wave-5 stage 4, extending `test_flagless_claude_only_layout_migrates_
-    to_universal`'s AGENTS.md-only coverage above with the readlink-parts
-    assertion AND the CLAUDE.md registration: on a repo with only a proven
-    `.claude` family (today's most common install shape, main stamped,
-    siblings realistically unstamped, no `.agents` at all), a flagless
-    install writes `.agents` for real, converts every `.claude` family
-    (main + all 7 siblings) to a canonical relative link, and writes BOTH
-    CLAUDE.md and AGENTS.md — one command makes an old repo universal."""
+    """Stage 4: the claude-only migration above, plus readlink parts and CLAUDE.md:
+    a flagless install writes `.agents`, links every `.claude` family canonically
+    and writes both CLAUDE.md and AGENTS.md."""
     _redirect_home(tmp_path, monkeypatch)
     repo = tmp_path / "repo"
     _init_fake_git_repo(repo)
@@ -1545,20 +1369,16 @@ def test_e2e_forced_migration_claude_only_layout_writes_claude_md_too(
         assert claude_dir.resolve() == agents_dir.resolve()
 
 
-# ----- stage 5: stale-stamp repair, links untouched -------------------------
+# --- stage 5: stale-stamp repair, links untouched
 
 
 @pytest.mark.integration
 def test_e2e_stale_agents_target_repaired_in_place_links_untouched(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Wave-5 stage 5: an already-linked layout whose `.agents` target
-    stamp is OLDER than the running package — a flagless install repairs
-    the `.agents` target IN PLACE (every family's stamp bumped to the
-    current package version) while the Claude-side links are entirely
-    untouched: readlink parts unchanged, and the MAIN link's inode +
-    `st_mtime_ns` unchanged (repair never rewrites through an OURS_HEALTHY
-    link; only the codex-side real target is repaired)."""
+    """Stage 5: a linked layout with stale `.agents` stamps is repaired in place (all
+    stamps bumped) while the Claude links stay untouched, down to the MAIN link's
+    inode and mtime: repair never rewrites through an OURS_HEALTHY link."""
     _redirect_home(tmp_path, monkeypatch)
     repo = tmp_path / "repo"
     _init_fake_git_repo(repo)
@@ -1588,21 +1408,16 @@ def test_e2e_stale_agents_target_repaired_in_place_links_untouched(
         assert classification.state is FamilyLinkState.OURS_HEALTHY, family
 
 
-# ----- stage 6: dangling heal --------------------------------------------
+# --- stage 6: dangling heal
 
 
 @pytest.mark.integration
 def test_e2e_dangling_link_heals_once_agents_target_is_restored(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Wave-5 stage 6: removing a family's `.agents` target dangles its
-    Claude-side link (`OURS_DANGLING`, confirmed before the rerun below); a
-    single flagless AUTO install — with the `.agents` target restored, the
-    real-world trigger being a plain `dummyindex install`/`/dummyindex-
-    update` reinstall that rewrites `.agents/skills/**` for real before ever
-    reaching the link dispatch — re-resolves the link back to
-    `OURS_HEALTHY` with the exact canonical readlink value, never requiring
-    the family to be recreated by hand a second time."""
+    """Stage 6: a dangling Claude link (`.agents` target removed) heals to OURS_HEALTHY
+    with the canonical readlink value after one flagless reinstall, which rewrites
+    `.agents/skills/**` before the link dispatch."""
     _redirect_home(tmp_path, monkeypatch)
     repo = tmp_path / "repo"
     _init_fake_git_repo(repo)
@@ -1612,14 +1427,8 @@ def test_e2e_dangling_link_heals_once_agents_target_is_restored(
     result = create_family_links(repo)
     assert not result.errors, result.errors
 
-    # MAIN specifically: `install()`'s per-host direct-write loop only
-    # rewrites `.agents` for real when the MAIN family itself is missing or
-    # unproven (`skill_rel(host)` always resolves to the main family path) —
-    # dangling a SIBLING's `.agents` target alone would never get it
-    # recreated by a plain rerun at all, since main still looks fine and the
-    # whole per-host write is skipped. Dangling MAIN reproduces the
-    # real-world trigger: a plain reinstall rewrites `.agents/skills/**` for
-    # real (main + every sibling) before ever reaching the link dispatch.
+    # Dangle MAIN: the direct-write loop rewrites `.agents` only when the main family
+    # is missing or unproven, so a dangled sibling alone would never be recreated.
     family = "dummyindex"
     _remove_tree(_agents_family_dir(repo, family))
     dangling_before = classify_family_link(_claude_family_dir(repo, family), repo)
@@ -1633,20 +1442,16 @@ def test_e2e_dangling_link_heals_once_agents_target_is_restored(
     assert readlink_parts == PurePath(f"../../.agents/skills/{family}").parts
 
 
-# ----- stage 7: materialized replace ----------------------------------------
+# --- stage 7: materialized replace
 
 
 @pytest.mark.integration
 def test_e2e_materialized_placeholder_replaced_by_flagless_auto(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Wave-5 stage 7: a regular file at the family-dir slot whose content
-    is the exact link value (the `core.symlinks=false` Windows-checkout
-    shape) is REPLACED with a real symlink by a flagless AUTO install —
-    unlike the OS-transparent dangling-heal above, this is a genuine write
-    (`create_family_links`'s `replace_materialized` plan): the transcript
-    prints `claude skill migrated` + the hand-edits caveat, and the family
-    ends up a canonical, healthy link."""
+    """Stage 7: a MATERIALIZED placeholder (the `core.symlinks=false` Windows-checkout
+    shape) is REPLACED with a real link, a genuine write unlike the dangling heal: it
+    prints `claude skill migrated` + the caveat and ends OURS_HEALTHY."""
     _redirect_home(tmp_path, monkeypatch)
     repo = tmp_path / "repo"
     _init_fake_git_repo(repo)
@@ -1669,22 +1474,17 @@ def test_e2e_materialized_placeholder_replaced_by_flagless_auto(
     assert classification.state is FamilyLinkState.OURS_HEALTHY
 
 
-# ----- stage 8: EPERM pre-probe -> whole-run AUTO copy-fallback -------------
+# --- stage 8: EPERM pre-probe -> whole-run AUTO copy-fallback
 
 
 @pytest.mark.integration
 def test_e2e_eperm_preprobe_falls_back_to_copy_with_exactly_one_warning(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Wave-5 stage 8: a DI-injected `symlink_fn` that always raises EPERM
-    (never monkeypatching `os.symlink` itself, which `Path.symlink_to` does
-    not route through on py3.10) makes the capability pre-probe fail before
-    anything is destroyed. The WHOLE run falls back to copy mode: every
-    families land as REAL Claude directories (none dangling, none missing —
-    the "never neither" invariant), the install still succeeds (no
-    `SystemExit`), and EXACTLY ONE warning line is printed — never one per
-    family. Never guarded by `_require_real_symlinks`: the raiser never
-    calls the real `os.symlink` at all."""
+    """Stage 8: an injected `symlink_fn` that always raises EPERM fails the pre-probe
+    before anything is destroyed (patching `os.symlink` misses `Path.symlink_to` on
+    py3.10). The WHOLE run falls back to copy: every family a REAL Claude dir, no
+    `SystemExit`, EXACTLY ONE warning. Unguarded: the real `os.symlink` never runs."""
     import errno
     import importlib
 
@@ -1721,22 +1521,16 @@ def test_e2e_eperm_preprobe_falls_back_to_copy_with_exactly_one_warning(
         assert not agents_dir.is_symlink(), family
 
 
-# ----- stage 9: Nth-call mid-loop failure -----------------------------------
+# --- stage 9: Nth-call mid-loop failure
 
 
 @pytest.mark.integration
 def test_e2e_nth_call_symlink_failure_preserves_survivors_names_uncovered(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Wave-5 stage 9: a `symlink_fn` that raises an EPERM-shaped `OSError`
-    on the Nth REAL family conversion (the one-time capability pre-probe
-    itself is never made to fail — it is identified by its throwaway probe
-    path and always allowed through) aborts every family from the Nth
-    onward: already-created links from earlier in the same run SURVIVE, and
-    every uncovered family is named in the printed `link error` lines.
-    Guarded despite being a DI test: the raiser falls through to the real
-    `os.symlink` on every non-failing call (mirrors
-    `tests/test_install_link_primitives.py`'s identical "TEST GAP 1")."""
+    """Stage 9: a `symlink_fn` failing on the Nth real conversion (the pre-probe always
+    passes) aborts from the Nth onward; earlier links SURVIVE and every uncovered
+    family is named in `link error` lines. Guarded: other calls hit the real `os.symlink`."""
     import errno
     import importlib
 
@@ -1791,8 +1585,7 @@ def test_e2e_nth_call_symlink_failure_preserves_survivors_names_uncovered(
     err = capsys.readouterr().err
     for family in (failed_family, *uncovered):
         assert f"{family}:" in err, family
-    # `.agents` stays valid throughout — the failure is entirely on the
-    # Claude-linking side, never the real tree link()`.
+    # `.agents` stays valid: the failure is only on the Claude-linking side.
     for family in FAMILIES:
         assert _agents_family_dir(repo, family).is_dir(), family
 
@@ -1803,21 +1596,16 @@ def test_e2e_nth_call_symlink_failure_preserves_survivors_names_uncovered(
         assert classification.state is FamilyLinkState.OURS_HEALTHY, family
 
 
-# ----- stage 10: crash-window recovery --------------------------------------
+# --- stage 10: crash-window recovery
 
 
 @pytest.mark.integration
 def test_e2e_crash_window_temp_artifacts_converge_on_rerun(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Wave-5 stage 10: leaving BOTH an unpromoted temp link
-    (`.<family>.dummyindex-link.tmp`) AND a renamed-aside real tree
-    (`.<family>.dummyindex-old.tmp`) behind — simulating a process kill
-    partway through the safe-replacement dance, with the family's own slot
-    itself still MISSING — a single flagless AUTO rerun converges to a
-    healthy canonical link for that family, with both temp artifacts
-    cleaned up, and every other (never-touched) family still lands
-    correctly too."""
+    """Stage 10: crash-window leftovers (temp link `.<family>.dummyindex-link.tmp`,
+    renamed-aside `.<family>.dummyindex-old.tmp`, slot MISSING) converge on one
+    flagless rerun: a healthy link, both temps gone, every other family linked."""
     _redirect_home(tmp_path, monkeypatch)
     repo = tmp_path / "repo"
     _init_fake_git_repo(repo)
@@ -1844,21 +1632,15 @@ def test_e2e_crash_window_temp_artifacts_converge_on_rerun(
         assert claude_dir.resolve() == _agents_family_dir(repo, check_family).resolve()
 
 
-# ----- stage 11: dedupe -- link-only removal, never the .agents target -----
+# --- stage 11: dedupe -- link-only removal, never the .agents target
 
 
 @pytest.mark.integration
 def test_e2e_dedupe_removes_linked_side_only_never_the_agents_target(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Wave-5 stage 11 (per checklist.md: "use the existing repair/dedupe
-    entry" — the same `dedupe()` call shape `tests/test_install_repair.py`
-    already establishes, not a new pattern): a family universally installed
-    at BOTH project and user scope is a genuine duplicate at each; deduping
-    the user scope's `claude` copy — itself a LINK, since a flagless
-    user-scope install links too — removes ONLY that link. The user scope's
-    real `.agents` target (the thing the removed link pointed at) survives
-    completely untouched."""
+    """Stage 11: with the family installed at both scopes, deduping the user `claude`
+    copy (itself a LINK) removes only the link; its real `.agents` target survives."""
     fake_home = _redirect_home(tmp_path, monkeypatch)
     repo = tmp_path / "repo"
     _init_fake_git_repo(repo)
@@ -1884,20 +1666,16 @@ def test_e2e_dedupe_removes_linked_side_only_never_the_agents_target(
     assert (user_agents_dir / ".dummyindex_version").exists()
 
 
-# ----- stage 12: uninstall --platform agents sweep --------------------------
+# --- stage 12: uninstall --platform agents sweep
 
 
 @pytest.mark.integration
 def test_e2e_uninstall_agents_sweep_removes_dangling_links_spares_foreign(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Wave-5 stage 12: `uninstall --platform agents` on a fully-linked
-    project removes the real `.agents` tree AND every now-dangling
-    dummyindex-owned Claude-side link (`remove_dangling_family_links`); a
-    separately-planted FOREIGN link (unrelated name, unrelated target)
-    survives completely untouched; and — since the narrowing left the
-    Claude Code surface with nothing to show — the agents-narrowing warning
-    plus its exact recovery command print to stderr."""
+    """Stage 12: `uninstall --platform agents` removes `.agents` and every now-dangling
+    owned Claude link; an unrelated FOREIGN link survives. The narrowing warning goes
+    to stderr and its recovery command to stdout."""
     _redirect_home(tmp_path, monkeypatch)
     repo = tmp_path / "repo"
     _init_fake_git_repo(repo)
@@ -1922,26 +1700,20 @@ def test_e2e_uninstall_agents_sweep_removes_dangling_links_spares_foreign(
     assert (foreign_target / "keep.txt").read_text(encoding="utf-8") == "do not touch\n"
     assert "removed the only real skill tree" in captured.err
     assert f"{len(FAMILIES)} Claude-side references" in captured.err
-    # The recovery command itself prints to stdout (uninstall.py's own
-    # unconditional `print(...)`, no `file=sys.stderr`), right after the
-    # stderr warning naming the collateral.
+    # The recovery command is a plain `print`, so it lands on stdout.
     assert "restore Claude Code without Codex: dummyindex install" in captured.out
     assert "--platform claude" in captured.out
 
 
-# ----- stage 13: flagless uninstall (both) -> clean tree --------------------
+# --- stage 13: flagless uninstall (both) -> clean tree
 
 
 @pytest.mark.integration
 def test_e2e_flagless_uninstall_both_leaves_clean_tree(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Wave-5 stage 13: a flagless `uninstall` (matching install()'s own
-    `platform="both"` default) on a fully-linked, fully-auto-inited project
-    leaves neither links nor real families on either host, removes
-    `.claude/commands/tokens.md`, and removes the managed AGENTS.md block —
-    a genuinely clean tree, symmetric with the flagless install that
-    created it."""
+    """Stage 13: a flagless uninstall of a linked, auto-inited project leaves no links
+    or families on either host and removes `tokens.md` and the managed AGENTS.md block."""
     _redirect_home(tmp_path, monkeypatch)
     repo = tmp_path / "repo"
     _init_fake_git_repo(repo)
@@ -1959,25 +1731,21 @@ def test_e2e_flagless_uninstall_both_leaves_clean_tree(
         assert not claude_dir.exists() and not claude_dir.is_symlink(), family
     assert not (repo / ".claude" / "commands" / "tokens.md").exists()
     if (repo / "AGENTS.md").exists():
-        # The managed dummyindex block specifically must be gone even if the
-        # file survives for some other, non-dummyindex reason.
+        # If AGENTS.md survives for another reason, the dummyindex block is gone.
         assert (
             "dummyindex" not in (repo / "AGENTS.md").read_text(encoding="utf-8").lower()
         )
 
 
-# ----- stage 14: user-scope leg + dotfiles-divergent fallback ---------------
+# --- stage 14: user-scope leg + dotfiles-divergent fallback
 
 
 @pytest.mark.integration
 def test_e2e_user_scope_flagless_auto_lifecycle_passes(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Wave-5 stage 14 (first leg): a plain user-scope AUTO install/
-    uninstall lifecycle passes cleanly with HOME redirected to a scratch
-    dir (never the real one) — the universal linked layout lands at user
-    scope exactly as it does at project scope, and a flagless uninstall
-    cleans it back up."""
+    """Stage 14a: the universal linked layout lands at user scope too (HOME
+    redirected), and a flagless uninstall cleans it up."""
     fake_home = _redirect_home(tmp_path, monkeypatch)
     _require_real_symlinks(fake_home)
 
@@ -2006,27 +1774,11 @@ def test_e2e_user_scope_flagless_auto_lifecycle_passes(
 def test_e2e_user_scope_dotfiles_divergent_link_falls_back_to_copy(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Wave-5 stage 14 (second leg): a dotfiles-symlinked `~/.claude` whose
-    RELATIVE link resolution diverges (`~/.claude -> ~/dotfiles-claude`, one
-    level OUTSIDE home, so `../../.agents/skills/<family>` computed from
-    inside `~/dotfiles-claude/skills/<family>` lands in `~/dotfiles/`, not
-    the real home) is the exact shape
-    `tests/test_install_link_primitives.py::
-    test_create_family_links_detects_dotfiles_divergent_root_and_removes_bad_link`
-    already covers at the `create_family_links` layer. Per the spec's own
-    Acceptance wording, a flagless user-scope AUTO install against this
-    layout falls back to copy mode for the run (a real, working Claude-side
-    tree) rather than leaving the user with NEITHER a link nor a real
-    directory for any of the families.
-
-    Root-cause fix: `_probe_symlink_capability` now probes the CANONICAL
-    RELATIVE value against a real `.agents` family and checks it resolves
-    correctly, BEFORE any per-family link is created — so AUTO falls back
-    to copy before anything is created/removed, never after an N-created-
-    then-8-removed dance (no `link error` transcript lines here, unlike the
-    `create_family_links`-layer test above). A second identical run must
-    also stay copy with no new link errors and no rewrite of the already-
-    real families (no infinite heal churn, per the spec's own wording)."""
+    """Stage 14b: with `~/.claude` symlinked to a dir outside home, the relative link
+    value resolves outside the real home, so a flagless user-scope AUTO install falls
+    back to copy (real Claude dirs, never neither) with one dotfiles warning and no
+    `link error` lines: `_probe_symlink_capability` checks the canonical value
+    resolves before any link is made. A second run stays copy and rewrites nothing."""
     fake_home = _redirect_home(tmp_path, monkeypatch)
     dotfiles_target = tmp_path / "dotfiles-claude"
     dotfiles_target.mkdir()
@@ -2037,9 +1789,8 @@ def test_e2e_user_scope_dotfiles_divergent_link_falls_back_to_copy(
 
     out, err = capsys.readouterr()
     for family in FAMILIES:
-        # Every family is a real, working Claude-side directory — never a
-        # link (the relative value cannot reach the real .agents tree from
-        # inside the dotfiles target), and never neither.
+        # A real dir per family: the relative value can't reach `.agents` from
+        # inside the dotfiles target.
         claude_dir = dotfiles_target / "skills" / family
         assert claude_dir.is_dir(), family
         assert not claude_dir.is_symlink(), family
@@ -2077,16 +1828,14 @@ def test_e2e_user_scope_dotfiles_divergent_link_falls_back_to_copy(
     assert "dotfiles" in warning_lines2[0]
 
 
-# ----- focused unit tests: `_probe_symlink_capability`'s resolution check ---
+# --- focused unit tests: `_probe_symlink_capability`'s resolution check
 
 
 @pytest.mark.unit
 def test_probe_symlink_capability_succeeds_on_normal_non_dotfiles_layout(
     tmp_path: Path,
 ) -> None:
-    """The extended probe (capability + resolution) still passes on a
-    perfectly ordinary layout — no dotfiles divergence — so this fix never
-    regresses the healthy path."""
+    """The capability + resolution probe still passes on an ordinary layout."""
     _require_real_symlinks(tmp_path)
     scope_root = tmp_path / "project"
     _seed_all_agents_families(scope_root)
@@ -2104,10 +1853,8 @@ def test_probe_symlink_capability_succeeds_on_normal_non_dotfiles_layout(
 def test_probe_symlink_capability_detects_dotfiles_divergent_resolution(
     tmp_path: Path,
 ) -> None:
-    """The resolution half of the probe: a dotfiles-symlinked `.claude`
-    whose relative link value resolves OUTSIDE the real scope root fails the
-    probe with a dotfiles-discriminated reason — never the Windows
-    capability hint — and cleans up its own temp artifact either way."""
+    """A `.claude` whose relative link resolves OUTSIDE the scope root fails with a
+    dotfiles hint, never the Windows capability hint, and leaves no temp file."""
     _require_real_symlinks(tmp_path)
     scope_root = tmp_path / "home"
     scope_root.mkdir()
@@ -2134,11 +1881,8 @@ def test_probe_symlink_capability_detects_dotfiles_divergent_resolution(
 def test_probe_symlink_capability_skips_resolution_check_when_no_real_agents_family(
     tmp_path: Path,
 ) -> None:
-    """No real `.agents` family exists yet (should not happen given the
-    pinned sequencing that guarantees one before any non-COPY dispatch
-    reaches this probe, but must never manufacture a false failure out of
-    an unrelated precondition gap): the probe stays capability-only,
-    exactly the pre-fix behavior."""
+    """With no real `.agents` family (sequencing should prevent it), the probe stays
+    capability-only rather than manufacture a false failure."""
     _require_real_symlinks(tmp_path)
     scope_root = tmp_path / "project"
 

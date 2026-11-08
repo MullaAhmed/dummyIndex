@@ -220,7 +220,7 @@ def test_versions_warns_on_shadowed_binary(
     assert str(Path("/venv/bin/dummyindex")) in out
 
 
-# ----- link-state labels (symlink-single-source-install, check --versions) ---
+# --- link-state labels (symlink-single-source-install, check --versions)
 
 
 @pytest.mark.integration

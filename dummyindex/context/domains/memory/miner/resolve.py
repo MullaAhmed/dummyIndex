@@ -2,16 +2,9 @@
 
 Ported (as a technique, not copied source; see the package docstring in
 ``__init__.py`` for the Apache-2.0 attribution) from headroom's
-``learn/_shared.claude_config_dir()`` and the ``claude_dir=`` constructor
-escape hatch on ``learn/plugins/claude.ClaudeCodePlugin``: Claude Code
-relocates its whole config directory (including ``projects/``) when
-``CLAUDE_CONFIG_DIR`` is set, so the config dir — not ``projects/`` itself —
-is what must honor the env var. `dummyindex/context/domains/memory/transcript.py`
-already reimplements this same env-var read for its own narrower need
-(finding *this* session's transcript); this module adds the one thing that
-reader doesn't need: an explicit override parameter for a store the env var
-cannot reach at all, e.g. a fixture directory in tests or a store relocated
-outside Claude Code's own convention.
+``learn/_shared.claude_config_dir()`` and ``ClaudeCodePlugin``'s ``claude_dir=``
+escape hatch. Claude Code moves its whole config dir, ``projects/`` included,
+under ``CLAUDE_CONFIG_DIR``; ``override`` covers stores the env var can't reach.
 """
 
 from __future__ import annotations

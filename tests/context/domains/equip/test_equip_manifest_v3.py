@@ -65,10 +65,9 @@ def test_manifest_round_trips_v3_item():
     assert again.items[0] == item
 
 
-# The pre-invariants v3 key set — the exact serialized shape of an
-# EquipmentItem.to_dict() before the `invariants` field existed. A default
-# item must still emit *only* these keys so existing v3 manifests stay
-# byte-identical (Decision D3 — no SCHEMA_VERSION bump).
+# The v3 key set before `invariants` existed. A default item must emit *only*
+# these keys so existing v3 manifests stay byte-identical without a
+# SCHEMA_VERSION bump.
 _PRE_INVARIANTS_KEYS = {
     "kind",
     "name",
@@ -87,7 +86,7 @@ _PRE_INVARIANTS_KEYS = {
 
 
 def test_default_item_omits_invariants_key_for_byte_identity():
-    """An item with empty invariants serializes exactly as it did pre-D3."""
+    """An item with empty invariants serializes exactly as it did before them."""
     item = EquipmentItem(
         kind=EquipmentKind.AGENT,
         name="python-implementer",

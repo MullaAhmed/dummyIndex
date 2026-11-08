@@ -1,11 +1,9 @@
 """Local Claude Code plugin state — readers + the ``equip verify`` verb.
 
-Subcommand-private sibling of ``discover.py``: everything here reads the
-machine's existing plugin wiring (project/user settings declarations, the
+Read-only: reads the machine's existing plugin wiring (settings declarations, the
 native ``~/.claude/plugins`` registry, on-disk marketplace clones) so the
-plugin-manager verbs can resolve marketplaces Claude Code already knows and
-verify that an install actually loaded. Read-only — nothing in this module
-writes.
+plugin-manager verbs can resolve marketplaces Claude Code already knows and verify
+that an install actually loaded.
 """
 
 from __future__ import annotations
@@ -81,18 +79,16 @@ def catalog_from_local_clone(
     return None
 
 
-# ----- verb: verify ----------------------------------------------------------
+# --- verb: verify
 
 
 def run_verify(rest: list[str]) -> int:
     """``equip verify <plugin>@<marketplace>`` — did the plugin actually load?
 
-    Install only *declares* a plugin in settings; Claude Code loads it at
-    session start via its native registry. This read-only check reports whether
-    the target appears in ``~/.claude/plugins/installed_plugins.json`` (with
-    scope + version), whether the marketplace clone exists on disk, and when
-    the registry last updated it. Exit 0 when loaded; 1 when declared-but-not-
-    loaded (with the actionable next step); 2 on usage errors.
+    Install only *declares* a plugin; Claude Code loads it at session start. Reports
+    the ``installed_plugins.json`` record (scope + version), the marketplace clone
+    and its last registry update. Exit 0 loaded; 1 declared-but-not-loaded (with the
+    next step); 2 usage errors.
     """
     _root, rest = pull_root(rest)  # tolerated for symmetry; verify is home-scoped
     target = next((a for a in rest if "@" in a and not a.startswith("--")), None)

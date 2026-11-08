@@ -1,28 +1,10 @@
 """The `graph-extras` island: tier-2 community cards + tier-3 expansion index.
 
-The viewer's second data island, built in Python at render time so the
-emitted `graph.html` stays a single self-contained file:
-
-- **Tier 2** — one supernode per `features/graph-communities.json` card,
-  with cross-community call volume (from `symbol-graph.json` links) as
-  edge weights.
-- **Tier 3** — a bounded, precomputed expansion index: for every curated
-  node whose `symbolRef` resolves to a symbol-graph node, its top-k
-  neighbors ranked by the seed's PageRank (`seed-rank.json`), each with a
-  `path:line` citation. The full 11MB symbol graph is **never** inlined —
-  entries are truncated whole, by rank, under a hard byte budget enforced
-  here at embed time.
-
-Degradation is deliberate, mirroring `scan/refs.py`: a missing or
-unreadable artifact contributes nothing, and an empty result leaves the
-viewer's placeholder island untouched (tier 2 hidden, nothing expands).
-
-The shared storage reader stays below `context/` and uses only the stdlib.
-`domains/features` imports this package's
-`render_viewer_html` (via `builder`/`indexes`/`ops`), so importing
-`domains.features.*` or `context.build.*` from here would be a cycle.
-The few tolerant-loader helpers duplicated below (`_indexed_root`,
-`_rel`, `_start_line`) note their canonical twins.
+Tier 2: a supernode per `graph-communities.json` card, weighted by cross-community
+call volume. Tier 3: each curated node's top-k symbol-graph neighbors by seed rank,
+with `path:line`; the symbol graph is **never** inlined — whole entries drop by rank
+under a hard byte budget. Missing artifacts contribute nothing. Helpers duplicate
+their `domains.features`/`context.build` twins, as importing those here is a cycle.
 """
 
 from __future__ import annotations
@@ -211,7 +193,7 @@ def _read_symbol_graph(path: Path) -> dict[str, Any] | None:
         return None
 
 
-# ----- tier 2: cards + cross-community call volume ---------------------------
+# --- tier 2: cards + cross-community call volume
 
 
 def _cards(payload: Any) -> tuple[CommunityCardView, ...]:
@@ -309,7 +291,7 @@ def _community_links(
     )
 
 
-# ----- tier 3: the bounded expansion index -----------------------------------
+# --- tier 3: the bounded expansion index
 
 
 def _expansion(
@@ -442,7 +424,7 @@ def _expansion_bytes(
     )
 
 
-# ----- tolerant loaders (canonical twins noted; duplicated for cycle-freedom) --
+# --- tolerant loaders (canonical twins noted; duplicated for cycle-freedom)
 
 
 def _read_json(path: Path) -> Any:

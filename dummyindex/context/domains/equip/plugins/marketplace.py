@@ -41,12 +41,10 @@ class SeedMarketplace:
     is_collection: bool = False
 
 
-# Verified against docs/sources/installable-sources.md (2026-06-13 pass:
-# existence, last push, .claude-plugin/marketplace.json presence). Trust policy:
-# ``trusted=True`` is STRICTLY Anthropic/Vercel official repos — stars are a
-# popularity signal, never a trust signal. Drift fixed in that pass:
-# anthropics/skills now ships marketplace.json (native, not a collection);
-# msitarzewski/agency-agents has no marketplace.json (collection, vendored).
+# Verified against docs/sources/installable-sources.md (2026-06-13). Trust policy:
+# ``trusted=True`` is STRICTLY Anthropic/Vercel official repos; stars are a
+# popularity signal, never a trust signal. ``is_collection`` repos ship no
+# marketplace.json and are vendored.
 SEED_MARKETPLACES: tuple[SeedMarketplace, ...] = (
     SeedMarketplace(
         "claude-plugins-official", "anthropics/claude-plugins-official", trusted=True
@@ -150,16 +148,11 @@ def parse_catalog(
 ) -> MarketplaceCatalog:
     """Validate then build a :class:`MarketplaceCatalog`.
 
-    Malformed plugin entries are dropped (one bad row never crashes the parse);
-    a missing 'plugins' array raises :class:`CatalogError`.
-
-    The JSON-declared ``name`` is preserved deliberately — it is the identifier
-    Claude Code resolves the marketplace by, so overriding it here would break
-    native install. ``name`` is therefore **not** a trust signal: identity is
-    enforced by the discovery orchestration (``cli/_equip_discover``), which
-    drops a catalog that claims a reserved/duplicate name from the wrong repo,
-    and ``trusted`` is set by the caller from the seed/discovery path, never from
-    this JSON.
+    Malformed plugin entries are dropped; a missing 'plugins' array raises
+    :class:`CatalogError`. The JSON ``name`` is kept because Claude Code resolves
+    the marketplace by it, so it is **not** a trust signal: discovery
+    (``cli/equip/discover.py``) drops a catalog claiming a reserved/duplicate name
+    from the wrong repo, and ``trusted`` comes from the caller, never this JSON.
     """
     validate_catalog(data)
     name = data.get("name")

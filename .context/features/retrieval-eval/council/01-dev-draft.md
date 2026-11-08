@@ -1,70 +1,71 @@
-# Retrieval evaluation — plan
+# Correctness-gated retrieval eval — plan
 
 `confidence: INFERRED`
 
 ## Where it lives
 
-The existing correctness gate stays under `tests/eval/`: `test_retrieval_eval.py`
-contains the module-scoped index fixture, metrics gate, negative control and
-vocabulary check; `retrieval_fixtures.json` supplies answers; `BASELINE.md`
-preserves historical threshold rationale
-(`tests/eval/test_retrieval_eval.py:46-81`, `:117-265`).
+- `tests/eval/test_retrieval_eval.py` — fixture, helpers and the three tests.
+- `tests/eval/retrieval_fixtures.json` — the authored question corpus.
+- `tests/eval/BASELINE.md` — rationale record for the floors.
+- `tests/eval/__init__.py` — empty package marker.
 
-The feature also owns `benchmarks/retrieval/run_eval.py`, its three question JSON
-files and `RESULTS.md`. The runner consumes the production `query` API; it does
-not introduce a second scorer. Production query behavior remains owned by
-`context-query` (`benchmarks/retrieval/run_eval.py:134-175`).
+`tests/eval/` also holds the behavior gate (`behavior_gate.py`,
+`behavior_arms.py`, `BEHAVIOR_BASELINE.md`). It is owned separately, and none of
+this feature's floors apply to it (`tests/eval/BASELINE.md:3-6`).
 
 ## Architecture in three sentences
 
-The pytest lane builds a frozen sample index once, evaluates authored expected
-feature IDs and citation paths, and applies fixed hit-rate/MRR floors plus
-non-vacuity guards. The benchmark lane checks out pinned repositories into a
-separate work directory, rebuilds only deterministic indexes, and scores a gold
-file's first matching feature among the top ten. Both lanes observe the same
-public retrieval API, while the benchmark explicitly rejects truncated answers
-before aggregating metrics.
+The module-scoped `indexed_repo` fixture copies `SAMPLE_REPO` into a temp dir
+and runs `build_all(dest, cache_root=...)` once
+(`tests/eval/test_retrieval_eval.py:60-67`,
+`dummyindex/context/build/runner.py:92-100`). Each test loads the JSON corpus,
+calls production `query`/`tokenize` against `<copy>/.context`, and evaluates the
+result with pure helpers (`tests/eval/test_retrieval_eval.py:36-38`, `:89-109`,
+`:216-245`). The pattern is a black-box evaluator: it imports production code
+one way only, and production code never imports it.
 
-## Data and decisions
+## Data model
 
-The frozen corpus contains twelve positives and one negative; the code asserts
-at least twelve positives and exactly one negative. Correctness uses rank and
-expected citation paths, while estimated token cost remains a recorded signal.
-The existing floors stay `T_HIT=0.90` and `T_MRR=0.85`; changing corpus/build
-behavior requires deliberate re-observation rather than lowering thresholds to
-hide a regression (`tests/eval/test_retrieval_eval.py:40-81`, `:125-172`).
+None persisted. The tests read the freshly built index: `features/INDEX.json`
+through `query`, and `features/<id>/feature.json` (`files`, `members`) plus
+`map/symbols.json` (joined on `symbol_id` or `node_id`) for the vocabulary check
+(`tests/eval/test_retrieval_eval.py:226-243`).
 
-Benchmark question files map repository names to ordered `[question, golds]`
-rows. The default file has eighteen questions each for requests, Flask and
-dummyindex; the later files have seven each across three and four repos.
-Development/holdout is determined by even/odd position within each repo;
-`--split all` bypasses that alternating assignment
-(`benchmarks/retrieval/run_eval.py:138-163`). Full path, basename and directory
-gold matching remain explicit benchmark policy, not the frozen gate's citation
-check (`benchmarks/retrieval/run_eval.py:91-118`).
+## Key decisions
 
-Pinned commits and `context init --force --depth standard` keep the benchmark
-about deterministic retrieval, not council enrichment. Index rebuilding occurs
-inside the benchmark checkout and can replace its existing context, so it needs
-a disposable work directory (`benchmarks/retrieval/run_eval.py:27-88`).
+- **Frozen sample index, not the live `.context/`.** Live cluster IDs change
+  when the index is rebuilt. `SAMPLE_REPO` yields stable `community-0/1/2` for
+  `app.py`, `web/app.ts` and `helpers.py` (`tests/eval/test_retrieval_eval.py:3-9`).
+- **The path is checked through citations.** The built `INDEX.json` has no
+  `files` key, so `expected_path` can only surface in `match.citations`
+  (`tests/eval/test_retrieval_eval.py:23-25`, `:97-109`). The code's stated
+  reason is that paths survive re-clustering while IDs do not (`:143-144`).
+- **Fixed floors with headroom.** `T_HIT = 0.90` tolerates 1 miss in 12;
+  `T_MRR = 0.85` absorbs about 3 single-rank slips (`tests/eval/BASELINE.md:62-81`,
+  a low-confidence historical record; the constants at
+  `tests/eval/test_retrieval_eval.py:46-47` are authoritative). Mean tokens are
+  recorded but not asserted (`:13-16`, `:157-163`); `BASELINE.md:80-81` calls
+  them a cost signal.
+- **The negative control asserts the strongest form.** The test requires
+  `matches == ()`, not just a missing target, so the gate cannot pass by
+  matching every question (`tests/eval/test_retrieval_eval.py:201-206`).
+- **The vocabulary check uses the scorer's own `tokenize`.** Fixture overlap
+  then matches what `query` can score, which matters because `summary` is null
+  in the frozen index (`tests/eval/test_retrieval_eval.py:216-223`, `:248-255`).
+- **The gate ranks post-budget output.** It uses `query` defaults
+  `budget_tokens=2000`, `max_bytes=16_000`
+  (`dummyindex/context/domains/query.py:294-301`) and never reads
+  `QueryResult.truncated` (`dummyindex/context/domains/query.py:237`). A budget
+  change can therefore move the gate even when scoring is unchanged.
 
-The integration supplies `max_bytes=65_536` alongside `top_k=10` and
-`budget_tokens=100000`, then fails if the result is truncated. Increasing the
-token estimate alone cannot bypass production's byte ceiling. This preserves
-complete top-ten evaluation rather than silently treating byte-dropped matches
-as misses (`benchmarks/retrieval/run_eval.py:163-175`).
+## Open questions
 
-## Verification and open questions
-
-The pytest gate remains the default correctness check; the networked benchmark
-is an explicitly invoked experiment and has no success threshold beyond correct
-execution. Historical `RESULTS.md` documents selection reuse and small validation
-sets; these records are not regenerated or promoted into new release claims by
-integration. `BASELINE.md` remains historical rationale, with authoritative
-current floors read from the test constants.
-
-Basename matching can accept identically named files in different directories,
-and small authored corpora do not establish generalization or model task gains.
-The benchmark reports such retrieval metrics separately from the sibling
-model-dependent behavior gate. No new measurements or broader quality guarantee
-is added here.
+- The docstring cites "Contract §4, Decision D5" of a spec
+  (`tests/eval/test_retrieval_eval.py:3`). No such spec is in the repo, so the
+  original acceptance text cannot be checked.
+- Mean tokens drift. The comment at `tests/eval/test_retrieval_eval.py:42-44` and
+  `tests/eval/BASELINE.md:45` record 40.5, but HEAD prints 43.0. The value is
+  not gated, and neither record has been re-observed.
+- The ≥12 guard allows the corpus to grow while the floors stay fixed
+  (`tests/eval/test_retrieval_eval.py:127`). It is unclear whether the margin
+  rationale should be recalculated when fixtures are added.

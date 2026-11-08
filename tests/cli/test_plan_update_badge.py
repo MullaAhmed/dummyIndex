@@ -1,17 +1,10 @@
 """Badge-write boundary tests for ``dummyindex context plan-update``.
 
-The drift report is the SessionStart hook's stdout contract (covered in
-``tests/context/test_drift.py``). *Additionally*, after computing the report,
-``plan-update`` writes the ``compute_badge(report)`` string to a gitignored
-cache file under ``.context/cache/`` so the statusline command can read a
-pre-computed badge off the per-prompt hot path without re-running Python's
-drift scan.
-
-That write is **best-effort** (spec §5): a missing or unwritable cache must
-never fail the hook and must never perturb the drift report that prints to
-stdout. These tests pin exactly that — the badge is written on the happy
-path, the cache dir is created when absent, and a write failure is swallowed
-while the report still prints and the verb still returns 0.
+After the drift report (its stdout contract is in ``tests/context/test_drift.py``),
+``plan-update`` writes ``compute_badge(report)`` to a gitignored
+``.context/cache/`` file so the statusline skips the drift scan per prompt. The
+write is best-effort: it creates the cache dir, and a failed write must never
+fail the hook or perturb the printed report (the verb still returns 0).
 """
 
 from __future__ import annotations

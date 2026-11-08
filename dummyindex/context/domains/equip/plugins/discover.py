@@ -1,10 +1,8 @@
 """Match + rank discovered plugins against needed capabilities and/or a query.
 
-Pure; no I/O. Capability inference reuses the shared Capability vocabulary via
-the ``_PLUGIN_CAPABILITY_TOKENS`` table, matched on WHOLE WORDS (plus a few
-deliberate prefix stems and a plural form) — never bare substrings, which used
-to tag a brainstorming plugin as database ('orm' in 'brainstorming') and an
-author tool as security ('auth' in 'author').
+Pure; no I/O. Capabilities come from ``_PLUGIN_CAPABILITY_TOKENS`` matched on
+WHOLE WORDS (plus a few prefix stems and plurals), never bare substrings, so
+'orm' never fires in 'brainstorming' nor 'auth' in 'author'.
 """
 
 from __future__ import annotations
@@ -59,10 +57,7 @@ def _token_matches(token: str, words: frozenset[str]) -> bool:
 def capabilities_for(entry: PluginEntry) -> tuple[str, ...]:
     """Infer capabilities from the entry's name/description/keywords/category.
 
-    First match in table order wins per capability; one entry can yield several.
-    Whole-word matching keeps the tags deterministic and honest — the same
-    plugin no longer collects different capability sets per marketplace just
-    because one listing's prose happens to contain an unlucky substring.
+    Each capability is added once, in table order; one entry can yield several.
     """
     words = _words(
         " ".join([entry.name, entry.description, entry.category or "", *entry.keywords])
@@ -105,13 +100,11 @@ def match_candidates(
 ) -> tuple[Candidate, ...]:
     """Rank candidates. ``score = 2*(capability overlap) + (query hits)``.
 
-    With a query, an entry must score at least 2 query hits when the query has
-    two or more content words (1 otherwise) unless it also overlaps a needed
-    capability — a single incidental word no longer floods the results.
-    Candidates from ``force_repos`` (explicit ``--repo``) are always kept and
-    sorted first: the user named that repo, so its plugins are the answer even
-    when they score 0. Sorted by (forced, score desc, plugin name asc) — stable
-    and deterministic, so a re-run yields the same plan.
+    With a query, an entry with no capability overlap needs 2 query hits when the
+    query has 2+ content words (1 otherwise), so one incidental word cannot flood
+    the results. ``force_repos`` (explicit ``--repo``) candidates are always kept
+    and sorted first, even at score 0. Sorted by (forced, score desc, name asc)
+    so a re-run yields the same plan.
     """
     needed = set(needed_caps)
     required_hits = 2 if query and len(_content_words(query)) >= 2 else 1

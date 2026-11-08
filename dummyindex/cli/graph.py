@@ -1,13 +1,9 @@
-"""`dummyindex context graph <verb>` — bounded queries over the symbol graph.
+"""`dummyindex context graph <verb>`: bounded symbol-graph queries (wire-only).
 
-Wire-only, per the CLI contract: parse flags, delegate to
-``context.domains.graph_query``, print, return an exit code.
-
-- ``0`` — the query was answered (a valid empty answer counts: zero
-  callers is exactly what ``dead-code`` hunts for)
-- ``1`` — nothing to answer: unknown or ambiguous symbol, no path
-  between the endpoints, empty community
-- ``2`` — usage error, or no ``features/symbol-graph.json`` to query
+Delegates to ``context.domains.graph_query``. Exit 0: answered (an empty answer counts;
+zero callers is what ``dead-code`` hunts for). 1: nothing to answer (unknown or
+ambiguous symbol, no path, empty community). 2: usage error or no
+``features/symbol-graph.json``.
 """
 
 from __future__ import annotations

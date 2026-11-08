@@ -212,7 +212,7 @@ def test_resolve_run_dir_explicit_name_and_absolute(tmp_path: Path) -> None:
         resolve_run_dir(context_dir, "maintain-does-not-exist")
 
 
-# ----- estimator -------------------------------------------------------------
+# --- estimator
 
 
 @pytest.mark.unit

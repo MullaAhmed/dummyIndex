@@ -1,21 +1,10 @@
-"""`dummyindex context gc <verb>` — the context-hygiene GC CLI (wire-only).
+"""`dummyindex context gc <verb>`: the context-hygiene GC CLI (wire-only).
 
-Sub-dispatches the first positional verb (``status|delete|stamp|signal``) the
-same way ``cli/audit.py`` dispatches ``start|show``: parse this command's own
-flag alphabet, lazy-import the ``context.domains.gc`` domain *inside* ``run``
-(the layering rule — ``cli`` imports the domain, never the reverse), call a
-domain function, print, and return an exit code. No business logic lives here;
-the sweep / anchor / delete logic all sits in ``context/domains/gc/``.
-
-The four verbs:
-
-- ``status [--json] [--root DIR]`` — read-only sweep report (``gc.scan``).
-- ``delete --kind proposal|audit (--slug S|--path P) [--yes] [--allow-untracked]
-  [--force-partial] [--root DIR]`` — without ``--yes`` a dry-run that deletes
-  nothing; with ``--yes`` the bounded ``gc.delete_workspace``.
-- ``stamp [--to SHA] [--root DIR]`` — advance the committed GC anchor.
-- ``signal [--json] [--root DIR]`` — the SessionStart throttle probe (consumes
-  the per-session fire-once memo via ``gc.should_signal``).
+Sweep, anchor and delete logic live in ``context/domains/gc/``. Verbs: ``status``
+(read-only sweep report), ``delete --kind proposal|audit (--slug S|--path P)`` (a dry-run
+unless ``--yes``, then the bounded ``gc.delete_workspace``), ``closeout``, ``stamp``
+(advance the committed GC anchor) and ``signal`` (the SessionStart throttle probe; it
+consumes the per-session fire-once memo via ``gc.should_signal``).
 """
 
 from __future__ import annotations
@@ -255,7 +244,7 @@ def _gc_signal(args: list[str]) -> int:
     return 0
 
 
-# ----- status rendering -----------------------------------------------------
+# --- status rendering
 
 
 def _status_payload(report: object) -> dict:
@@ -304,7 +293,7 @@ def _print_status(report: object) -> None:
         )
 
 
-# ----- helpers --------------------------------------------------------------
+# --- helpers
 
 
 def _resolve_kind(kind_raw: str, candidate_kind: type) -> object | None:

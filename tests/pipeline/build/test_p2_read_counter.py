@@ -1,22 +1,10 @@
-"""P2 — each source file is read at most twice per build (plan Task 12).
+"""Each source file is read at most twice per build.
 
-The extraction pipeline used to read each ``.py``/``.java`` file up to five
-times in one build (cache-hash, extractor, Python rationale post-pass,
-cross-file import re-parse, and the textual-reference scan). All five route
-through ``Path.read_bytes`` / ``Path.read_text``, so a method-level spy cannot
-discriminate the sites — the counter is therefore **path-keyed**.
-
-These tests pin the invariant the perf refactor establishes:
-
-- in one ``extract`` + ``build_structure`` pass over a sample repo, every source
-  file is read **at most twice** (the build-scoped read cache collapses the
-  intra-``extract`` reads to one; the threaded ``file_bytes`` removes the
-  reference-pass read entirely);
-- a file mutated on disk *after* its bytes are first read yields **one
-  consistent byte-state** across every pass (no cache-hit stale-node/new-byte
-  mix);
-- the threaded-bytes reference pass is **byte-identical** to the disk-read pass
-  (the optimization changes no committed output).
+Every read site goes through ``Path.read_bytes``/``read_text``, so the spy is
+path-keyed. Pinned: one ``extract`` + ``build_structure`` pass reads each source
+file at most twice; a file mutated after its first read yields one consistent
+byte-state; the threaded-bytes reference pass is byte-identical to the disk-read
+pass.
 """
 
 from __future__ import annotations
@@ -59,8 +47,7 @@ def _spy_reads(monkeypatch) -> dict[str, int]:
 
 @pytest.mark.integration
 def test_each_source_file_read_at_most_twice(tmp_path, monkeypatch):
-    """One extract + build_structure over a sample repo reads each .py/.java
-    file at most twice (path-keyed defaultdict[Path,int] asserting <= 2)."""
+    """One extract + build_structure pass reads each .py/.java file at most twice."""
     repo = tmp_path / "repo"
     shutil.copytree(SAMPLE_REPO, repo)
     files = collect_files(repo, root=repo)
@@ -115,11 +102,10 @@ def test_threaded_bytes_reference_pass_is_byte_identical(tmp_path):
 
 @pytest.mark.integration
 def test_mid_build_mutation_yields_one_consistent_byte_state(tmp_path, monkeypatch):
-    """A file mutated on disk AFTER its bytes are first read within a build is
-    seen with ONE consistent byte-state by every pass — no stale-node/new-byte
-    mix. The build-scoped read cache pins the first-read bytes for the whole
-    build, so the threaded reference bytes match the bytes the hash/extractor
-    saw, not a later on-disk mutation."""
+    """A file mutated on disk after its first read is seen with one byte-state.
+
+    The build-scoped read cache pins the first-read bytes, so the reference pass
+    sees what the hash/extractor saw, not the later mutation."""
     repo = tmp_path / "repo"
     repo.mkdir()
     src = repo / "mod.py"

@@ -1,11 +1,8 @@
 """Tests for the debt-marker vocabulary in ``pipeline/extract/python_rationale.py``.
 
-Covers the shared ``DEBT_PREFIXES`` constant (reused by the later debt
-harvester) and the addition of ``# DEBT:`` to the rationale-comment set. The
-existing rationale prefixes must remain present, and a ``# DEBT:`` comment line
-must now produce a rationale node. No subprocess — ``extract_python`` is the
-real tree-sitter post-pass, driven over a hand-written ``.py`` file under
-``tmp_path``.
+Covers the shared ``DEBT_PREFIXES`` constant and ``# DEBT:`` joining the
+rationale-comment set: existing prefixes stay, and a ``# DEBT:`` comment line
+produces a rationale node via the real tree-sitter post-pass over ``tmp_path``.
 """
 
 from __future__ import annotations

@@ -1,16 +1,10 @@
-"""`dummyindex context memory <verb>` — session-memory store ops.
+"""`dummyindex context memory <verb>`: session-memory store ops (wire-only).
 
-Verbs:
-  session-start   read-only emit for the SessionStart hook (silent when the
-                  remember plugin is present or the store is empty).
-  roll            relocate dated entries down the tiers (idempotent).
-  init            create `.context/session-memory/` + empty tier stubs.
-  nudge           Stop-hook: emit handoff CTA when session is significant.
-  breadcrumb      PreCompact-hook: write a deterministic entry to now.md.
-  mine            SessionStart: refresh local recurring-skill feedback.
-  prompt-context  UserPromptSubmit: emit bounded skill-policy JSON.
-
-Wire-only: parse args, call the memory domain, print, return an exit code.
+``session-start`` (read-only SessionStart emit; silent with the remember plugin or an
+empty store), ``roll`` (move dated entries down the tiers, idempotent), ``init`` (create
+`.context/session-memory/` + tier stubs), ``nudge`` (Stop-hook handoff CTA),
+``breadcrumb`` (PreCompact entry in now.md), ``mine`` (refresh recurring-skill
+feedback), ``prompt-context`` (UserPromptSubmit skill-policy JSON).
 """
 
 from __future__ import annotations

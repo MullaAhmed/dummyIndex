@@ -1,8 +1,7 @@
-"""Wave 1 — pure capability-gap core (no I/O).
+"""Pure capability-gap core (no I/O).
 
 `capability_gaps = required(stack, proposal) - covered(manifest)`, ordered by the
-`Capability` declaration order so discovery/build act on a real, deterministic
-gap instead of the old 2-tag stub.
+`Capability` declaration order so discovery/build act on a deterministic gap.
 """
 
 from __future__ import annotations
@@ -44,7 +43,7 @@ def _manifest(*items: EquipmentItem) -> EquipmentManifest:
     return EquipmentManifest(schema_version=SCHEMA_VERSION, items=items)
 
 
-# ----- covered_capabilities -------------------------------------------------
+# --- covered_capabilities
 
 
 def test_covered_capabilities_unions_every_item():
@@ -56,7 +55,7 @@ def test_covered_capabilities_empty_manifest_is_empty():
     assert covered_capabilities(_manifest()) == frozenset()
 
 
-# ----- required_capabilities ------------------------------------------------
+# --- required_capabilities
 
 
 def test_required_includes_stack_baseline_for_real_stack():
@@ -85,7 +84,7 @@ def test_required_returns_plain_strings():
     assert Capability.TEST.value in required
 
 
-# ----- capability_gaps ------------------------------------------------------
+# --- capability_gaps
 
 
 def test_gaps_subtract_what_the_manifest_already_covers():

@@ -1,12 +1,10 @@
 """Turn ranked candidates into an actionable install plan. Pure; no I/O.
 
-Mechanism: a candidate from a loose collection is VENDORED (copied); everything
-else is NATIVE (enabled via settings keys). Approval: **any UNTRUSTED candidate
-requires explicit ``--yes``** — its ``marketplace.json``-declared surfaces are
-attacker-controlled, so a ``runs_code=False`` claim cannot be relied on to waive
-approval (an inert-looking entry can still ship hooks/bin in the plugin payload).
-Only trusted (Anthropic-official) sources install without the gate. ``runs_code``
-remains for disclosure in the plan.
+A loose-collection candidate is VENDORED (copied); the rest are NATIVE (settings
+keys). **Every UNTRUSTED candidate needs explicit ``--yes``**: its declared surfaces
+are attacker-controlled, so ``runs_code=False`` cannot waive approval (the payload
+can still ship hooks/bin). Only trusted (Anthropic-official) sources skip the gate;
+``runs_code`` stays for disclosure.
 """
 
 from __future__ import annotations

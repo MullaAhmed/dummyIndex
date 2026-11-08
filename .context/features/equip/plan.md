@@ -2,7 +2,8 @@
 
 `confidence: INFERRED`
 
-## Bounded context
+Paths drop the leading `dummyindex/` (except `tests/`, `.context/`,
+`pyproject.toml`); `equip/` stands for `context/domains/equip/`.
 
 Equip prepares and maintains project capability bodies plus the
 `.context/equipment.json` registry. Canonical generated bodies live at
@@ -17,7 +18,7 @@ workflows execute selected mandates; installer linking and plugin trust stay
 separate. This feature
 does not own an optimizer service or model-execution engine.
 
-## Preparation pipeline and patterns
+## Architecture in three sentences
 
 1. `run_apply` defaults to portable `agents` and resolves flags/root. Preparation
    reads prior equipment, preflight inventory, stack and conventions, then asks
@@ -42,7 +43,7 @@ does not own an optimizer service or model-execution engine.
    then stores `--lesson-file` agent bodies (`dispatch.py:204-215`,
    `dispatch.py:709-711`).
 
-## Lifecycle and ownership decisions
+## Data model
 
 **Hash-based ownership** is explicit: equal baseline means pristine; changed
 content stays user-owned. Specialist invariant strings distinguish harmless
@@ -52,13 +53,7 @@ Manifest invariants are metadata; pristine templates must already contain them
 (`dummyindex/context/domains/equip/generate/plan.py:50-62`,
 `tests/context/domains/equip/test_equip_specialist_invariants.py:69-104`).
 
-`apply_patch` is the exact-once learning seam: replace one occurrence, update
-frontmatter/content and baseline/version, then persist the manifest. Refresh and
-reset reuse `fresh_rendered`, the same detection/catalog/render route as apply;
-evolved or user-owned bodies do not silently become fresh templates
-(`dummyindex/context/domains/equip/lifecycle/evolve.py:26-71`,
-`dummyindex/cli/equip/common.py:199-245`,
-`dummyindex/context/domains/equip/lifecycle/status.py:217-357`).
+## Key decisions
 
 The specialist library (`lifecycle/library.py`) stores body and lesson separately.
 `reuse_capability` restores a body to its manifest path and re-baselines a
@@ -71,7 +66,7 @@ settings and the registry have no shared rollback
 (`dummyindex/cli/equip/dispatch.py:467-478`,
 `dispatch.py:551-553`, `dispatch.py:617-687`).
 
-## Dependencies and feedback
+## Open questions
 
 Upstream: context spine, conventions, project commands, prior manifest,
 proposal capability requests. Downstream build dispatch uses each recorded

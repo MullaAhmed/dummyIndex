@@ -46,7 +46,7 @@ def _commit_all(path: Path, message: str) -> str:
     return _git(path, "rev-parse", "HEAD").strip()
 
 
-# ----- head_commit ----------------------------------------------------------
+# --- head_commit
 
 
 @pytest.mark.unit
@@ -69,7 +69,7 @@ def test_head_commit_none_on_unborn_head(tmp_path: Path) -> None:
     assert head_commit(tmp_path) is None
 
 
-# ----- changed_paths --------------------------------------------------------
+# --- changed_paths
 
 
 @pytest.mark.unit
@@ -153,12 +153,10 @@ def test_changed_paths_empty_when_clean(tmp_path: Path) -> None:
 
 @pytest.mark.unit
 def test_changed_paths_non_ascii_untracked_unescaped(tmp_path: Path) -> None:
-    # Discriminating case for WARN 7: git C-escapes bytes >=0x80 under the
-    # default `core.quotePath=true` (a non-ASCII name appears as
-    # `"caf\303\251.py"`). The fix runs `status` with quotePath=false so the
-    # untracked path arrives as raw UTF-8 `café.py`. A space-only name would
-    # NOT discriminate — git never escapes spaces — so this uses a non-ASCII
-    # char on purpose.
+    # git C-escapes bytes >=0x80 under the default `core.quotePath=true`
+    # (`"caf\303\251.py"`); `status` must run with quotePath=false to return raw
+    # UTF-8. Non-ASCII on purpose: git never escapes spaces, so they would not
+    # discriminate.
     _init_repo(tmp_path)
     (tmp_path / "keep.py").write_text("x = 1\n", encoding="utf-8")
     anchor = _commit_all(tmp_path, "init")
@@ -186,7 +184,7 @@ def test_changed_paths_non_ascii_committed_unescaped(tmp_path: Path) -> None:
     assert "café.py" in delta.modified
 
 
-# ----- commit_exists --------------------------------------------------------
+# --- commit_exists
 
 
 @pytest.mark.unit
@@ -220,7 +218,7 @@ def test_commit_exists_none_on_empty_sha(tmp_path: Path) -> None:
     assert commit_exists(tmp_path, "") is None
 
 
-# ----- is_ancestor_of_head --------------------------------------------------
+# --- is_ancestor_of_head
 
 
 @pytest.mark.unit
@@ -258,7 +256,7 @@ def test_is_ancestor_none_on_unknown_sha(tmp_path: Path) -> None:
     )
 
 
-# ----- commits_since --------------------------------------------------------
+# --- commits_since
 
 
 @pytest.mark.unit

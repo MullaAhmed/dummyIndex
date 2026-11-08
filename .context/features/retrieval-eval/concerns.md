@@ -2,6 +2,8 @@
 
 `confidence: INFERRED`
 
+Bare `:N` = `tests/eval/test_retrieval_eval.py`; `query.py` = `dummyindex/context/domains/query.py`; `builder.py` = `dummyindex/context/domains/features/builder.py`. Source lines cite HEAD `0634bfd`.
+
 ## Data integrity
 
 - `tests/eval/test_retrieval_eval.py:133-146` — the frozen gate ranks post-budget `result.matches` using production defaults and does not inspect `truncated`. A changed token/byte budget can move this end-to-end gate even when raw scoring order is unchanged; distinguish output truncation when diagnosing a miss.

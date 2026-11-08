@@ -1,16 +1,10 @@
 # pure-filesystem git-repo detection (submodule / worktree aware)
 """Recognise a git working tree without shelling out to ``git``.
 
-A plain checkout has a ``.git`` *directory*. Submodules and worktrees
-instead carry a ``.git`` *file* whose first line is ``gitdir: <path>``
-pointing at the real git dir (under the superproject's
-``.git/modules/<name>`` or the parent's ``.git/worktrees/<name>``). The
-old ``(.git).is_dir()`` checks reported those valid repos as non-repos.
-
-Everything here is a deterministic filesystem read: no subprocess, no
-network, no third-party deps. Malformed input is treated as "not a repo"
-rather than raised — these helpers gate optional install-time steps and
-must never crash the command they guard.
+A plain checkout has a ``.git`` directory; submodules and worktrees have a
+``.git`` file whose first line is ``gitdir: <path>``. Everything here is a
+deterministic filesystem read (no subprocess). Malformed input means "not a
+repo", never an exception: these helpers gate optional install-time steps.
 """
 
 from __future__ import annotations
@@ -39,15 +33,10 @@ def is_git_repo(root: Path) -> bool:
 def resolve_git_dir(root: Path) -> Path | None:
     """Return the actual git dir for ``root``, or ``None`` if there isn't one.
 
-    - Plain checkout: the ``.git`` directory itself.
-    - Submodule / worktree: the directory named by the ``.git`` file's
-      ``gitdir:`` pointer (relative paths resolve against ``root``).
-    - Worktree refinement: when the pointed-at dir holds a ``commondir``
-      file, follow it to the *common* git dir — that's where ``hooks/`` and
-      ``config`` live, which is what callers scrubbing legacy hooks need.
-
-    Returns ``None`` when ``.git`` is absent or the pointer is empty /
-    unparseable. Never raises on malformed content.
+    A ``.git`` directory is returned resolved; a ``.git`` file's ``gitdir:`` pointer
+    is resolved against ``root``, then any ``commondir`` file is followed to the
+    common git dir (where ``hooks/`` and ``config`` live). ``None`` when ``.git``
+    is absent or the pointer is empty / unparseable; never raises on bad content.
     """
     dot_git = root / ".git"
     if dot_git.is_dir():

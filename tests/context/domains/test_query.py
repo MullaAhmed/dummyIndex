@@ -30,9 +30,7 @@ def indexed_repo(tmp_path: Path) -> Path:
     return dest
 
 
-# ---------------------------------------------------------------------------
 # Tokenization
-# ---------------------------------------------------------------------------
 
 
 def test_tokenize_drops_stopwords_and_short_tokens() -> None:
@@ -67,9 +65,7 @@ def test_retrieval_caps_complete_utf8_records(indexed_repo):
     assert isinstance(json.loads(render_json(result)), dict)
 
 
-# ---------------------------------------------------------------------------
 # Querying
-# ---------------------------------------------------------------------------
 
 
 def test_query_returns_no_matches_when_query_is_pure_stopwords(
@@ -80,7 +76,6 @@ def test_query_returns_no_matches_when_query_is_pure_stopwords(
     result = query(indexed_repo / ".context", "the and how is this")
     assert result.tokens == ()
     assert result.matches == ()
-    # We still report how many features we considered (for the user).
     assert result.feature_count_considered >= 0
 
 
@@ -91,7 +86,6 @@ def test_query_finds_relevant_feature(indexed_repo: Path) -> None:
     # "app" expands through the synonym map to include "application".
     assert result.tokens == ("app", "application")
     assert result.matches, "expected at least one match for 'app' in sample repo"
-    # The top match must mention `app` in some matched field.
     top = result.matches[0].feature
     assert top.score > 0
     assert "app" in top.matched_tokens
@@ -111,12 +105,11 @@ def test_query_respects_top_k(indexed_repo: Path) -> None:
 
 
 def test_query_truncates_at_budget(indexed_repo: Path) -> None:
-    """A very small budget must drop matches and set truncated=True."""
+    """A very small budget drops matches: the result fits it or keeps one."""
     result = query(
         indexed_repo / ".context", "app helper run", top_k=10, budget_tokens=60
     )
-    # With a 60-token budget, at most one match should fit (each one
-    # is at least header + summary + citations ~80 tokens).
+    # Each match is ~80 tokens (header + summary + citations).
     assert result.total_estimated_tokens <= 60 or len(result.matches) <= 1
 
 
@@ -150,20 +143,16 @@ def test_estimate_tokens_floor() -> None:
     assert estimate_tokens("xxxxxxxx") == 2  # 8 chars / 4 = 2
 
 
-# ---------------------------------------------------------------------------
 # CLI plumbing
-# ---------------------------------------------------------------------------
 
 
 def test_cli_query_subcommand_invokes(indexed_repo: Path, capsys) -> None:
     """End-to-end: dispatch("query", "app") prints something useful."""
     from dummyindex.cli import dispatch
 
-    # `--root` lets us point at the indexed repo without cwd shenanigans.
     rc = dispatch(["query", "app", "--root", str(indexed_repo)])
     captured = capsys.readouterr()
-    # rc=0 means matches found; rc=1 means no matches. Both are valid CLI
-    # outcomes — assert we got *some* readable markdown on stdout.
+    # rc 0 (matches) and 1 (no matches) are both valid; stdout must be markdown.
     assert rc in (0, 1)
     assert "query" in captured.out.lower()
 
@@ -213,18 +202,15 @@ def test_cli_query_unknown_flag_errors_not_folded(indexed_repo: Path, capsys) ->
     captured = capsys.readouterr()
     assert rc == 2
     assert "--bogus" in captured.err
-    # Routed through usage_error → carries the canonical help pointer.
     assert "dummyindex context query --help" in captured.err
-    # Never ran a search: no markdown report on stdout, and the flag was not
-    # joined into the query text and quietly searched.
+    # No search ran, so nothing on stdout.
     assert captured.out == ""
 
 
 def test_cli_query_top_k_non_integer_routes_through_usage_error(
     indexed_repo: Path, capsys
 ) -> None:
-    """An existing exit-2 site (non-integer --top-k) now emits the shared
-    `--help` hint via `usage_error`."""
+    """A non-integer --top-k exits 2 with the shared `--help` hint."""
     from dummyindex.cli import dispatch
 
     rc = dispatch(["query", "app", "--root", str(indexed_repo), "--top-k", "notanint"])
@@ -236,8 +222,7 @@ def test_cli_query_top_k_non_integer_routes_through_usage_error(
 
 
 def test_cli_query_trailing_top_k_emits_help_hint(indexed_repo: Path, capsys) -> None:
-    """Regression for the already-shipped trailing-flag guard (`c574d41`):
-    `--top-k` with no value still exits 2, now via `usage_error` so it carries
+    """A trailing `--top-k` with no value exits 2 via `usage_error`, carrying
     the `--help` hint."""
     from dummyindex.cli import dispatch
 
@@ -279,13 +264,8 @@ def test_missing_relative_index_reports_its_canonical_path(
     assert failure.value.args == (tmp_path / "missing/.context/features/INDEX.json",)
 
 
-# ---------------------------------------------------------------------------
-# Ranking-quality regressions (retrieval benchmark findings)
-#
-# These use a hand-built minimal index — features/INDEX.json + per-feature
-# feature.json + map/symbols.json — so each scoring behavior is isolated
-# from the real ingest pipeline.
-# ---------------------------------------------------------------------------
+# Ranking quality, on a hand-built minimal index (INDEX.json + feature.json +
+# symbols.json) so each scoring behavior is isolated from the ingest pipeline.
 
 
 def _write_synthetic_index(

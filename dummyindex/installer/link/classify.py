@@ -29,26 +29,13 @@ def family_link_target(scope_root: Path, family: str) -> Path:
 def _parent_chain_clean(
     scope_root: Path, path: Path, *, allowed_symlinks: frozenset[Path] = frozenset()
 ) -> str | None:
-    """The parent-chain PRECONDITION shared by every write/classify path in
-    this module. Returns a human-readable reason the chain is unsafe, or
-    ``None`` when it is clean.
+    """Parent-chain precondition: a reason the chain is unsafe, or ``None``.
 
-    **Must run before ANY read-then-act or destructive step touches**
-    ``path`` — crash recovery, removal, creation, classification — never
-    after (CRITICAL: a `.claude -> /victim` layout must never let recovery
-    reach into the victim tree one statement before this check runs).
-
-    Two independent checks, both fail closed:
-
-    - ``path.parent`` must be lexically under ``scope_root``: a wrong or
-      foreign ``scope_root`` must never silently disarm the symlink check
-      below the way `_first_symlink_component` does on its own when called
-      directly — it returns ``None`` ("chain clean") the moment
-      ``relative_to`` raises `ValueError` for an out-of-tree path
-      (`common.py`). A caller passing the wrong root must get FOREIGN, not a
-      silently-disarmed gate.
-    - No disallowed symlink component between ``scope_root`` and
-      ``path.parent`` (the original parent-chain rule).
+    Must run before any read-then-act or destructive step touches ``path``, so a
+    ``.claude -> /victim`` layout never lets recovery reach the victim. Fails closed
+    unless ``path.parent`` is lexically under ``scope_root`` (alone,
+    `_first_symlink_component` returns ``None`` out of tree, disarming the gate),
+    has no disallowed symlink, and every existing component is a directory.
     """
     try:
         path.parent.relative_to(scope_root)
@@ -75,17 +62,10 @@ def _parent_chain_clean(
 def _readlink_parts(raw_target: str) -> tuple[str, ...]:
     """Parse a readlink() value into path components.
 
-    Never compare raw strings — only ever compare `PurePath(...).parts`.
-    This module always WRITES forward slashes; a genuine Windows readlink
-    round-trip can normalize them to ``\\``, but on real Windows `PurePath`
-    IS `PureWindowsPath`, which already splits on both separators — no
-    special-casing is needed there. This function previously fell back to a
-    forced `PureWindowsPath` reparse whenever the plain POSIX parse yielded a
-    single component; that fallback fired unconditionally on POSIX, where
-    backslash is a perfectly legal filename character, mis-splitting a link
-    literally named ``..\\..\\.agents\\skills\\dummyindex`` into components
-    it does not have. Platform-native `PurePath` parsing alone is both
-    correct and sufficient.
+    Never compare raw strings, only `PurePath(...).parts`. Links are written with
+    forward slashes; a Windows readlink may return ``\\``, which `PurePath` (there
+    `PureWindowsPath`) already splits. Never force a `PureWindowsPath` reparse: on
+    POSIX a backslash is a legal filename character.
     """
     return PurePath(raw_target).parts
 
@@ -155,11 +135,9 @@ def _classify_symlink(
         )
 
     if not resolves_ok:
-        # The lexical value can be exactly canonical and STILL land outside
-        # scope_root once an allowlisted dotfiles `.claude` hop is followed
-        # (e.g. `~/.claude -> ~/dotfiles/claude` makes the `../..` land in
-        # `~/dotfiles/`, not the real home) — never skip this check just
-        # because the string matched.
+        # A canonical value can still land outside scope_root through an
+        # allowlisted dotfiles `.claude` hop (`~/.claude -> ~/dotfiles/claude`
+        # puts `../..` in `~/dotfiles/`): never skip this because the string matched.
         return FamilyLinkClassification(
             family,
             family_dir,
@@ -221,12 +199,10 @@ def _classify(
             family, family_dir, FamilyLinkState.FOREIGN, unsafe_detail
         )
 
-    # Explicit lstat + errno triage (never `.is_symlink()`/`.exists()`, both
-    # of which swallow ENOTDIR/ELOOP/EBADF into a bare `False` on
-    # py3.10-3.13): an unstatable leaf must classify FOREIGN, never MISSING
-    # — MISSING is the one state the spec says needs no ownership evidence
-    # ("an empty path is safe to fill"), and an unstatable path is not an
-    # empty path.
+    # Explicit lstat + errno triage, never `.is_symlink()`/`.exists()` (on
+    # py3.10-3.13 they turn ENOTDIR/ELOOP/EBADF into `False`). An unstatable leaf
+    # is FOREIGN, never MISSING: MISSING is the one state that needs no
+    # ownership evidence.
     try:
         st = os.lstat(family_dir)
     except FileNotFoundError:
@@ -290,27 +266,11 @@ def classify_family_link(
 ) -> FamilyLinkClassification:
     """Classify one family's ``.claude/skills/<family>`` path.
 
-    ``scope_root`` must always be the copy's OWN scope root (the project
-    directory being installed into, or the genuine user home) — never the
-    invocation's root when they differ, and never a project root passed
-    while classifying a user-scope copy or vice versa. Passing the wrong
-    scope root no longer silently disarms the parent-chain gate: a
-    ``family_dir`` that is not lexically under ``scope_root`` classifies
-    FOREIGN (see the module's cross-scope-root and wrong-scope-root tests).
-
-    ``allowed_symlinks`` is a keyword-only, fail-closed allowlist (default:
-    empty) of parent-chain components that are tolerated symlinks — for
-    example a user-scope dotfiles-managed top-level ``.claude``. This module
-    never infers "user scope" from `Path.home()`/``HOME`` itself; the caller
-    (``install.py``, in a later wave) is expected to pass this explicitly
-    when it already knows the scope is ``"user"``. **Invariant**: every
-    entry must be a host root directly under ``scope_root`` — either
-    ``scope_root / ".claude"`` or ``scope_root / ".claude" / "skills"`` —
-    never anything deeper and never derived from an environment variable.
-
-    Fails closed: any `OSError`/`RuntimeError` raised anywhere during
-    classification is caught here and reported as `FamilyLinkState.FOREIGN`,
-    mirroring `repair.py`'s `_same_root`.
+    ``scope_root`` must be the copy's own scope root (project dir or genuine user
+    home); a path not lexically under it classifies FOREIGN. ``allowed_symlinks``
+    lists tolerated parent-chain symlinks, e.g. a user-scope dotfiles ``.claude``;
+    fail closed, never derived from an environment variable (package invariant,
+    see ``link/__init__.py``). Any `OSError`/`RuntimeError` classifies FOREIGN.
     """
     family = claude_family_dir.name
     try:
@@ -331,12 +291,10 @@ def verify_family_links(
     *,
     allowed_symlinks: frozenset[Path] = frozenset(),
 ) -> tuple[FamilyLinkClassification, ...]:
-    """Read-only classification sweep over all 8 families (repair/check/uninstall
-    reporting). Never writes anything.
+    """Read-only classification sweep over every family. Never writes anything.
 
-    ``allowed_symlinks`` forwards to `classify_family_link` unchanged — see
-    its docstring (including the host-root invariant); defaults to the
-    fail-closed empty allowlist.
+    ``allowed_symlinks`` forwards to `classify_family_link` unchanged (fail
+    closed; package invariant).
     """
     claude_skills_root = scope_root / skills_root_rel("claude")
     return tuple(

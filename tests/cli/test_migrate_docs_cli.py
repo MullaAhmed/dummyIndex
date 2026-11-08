@@ -1,16 +1,10 @@
 """`dummyindex context migrate-docs` — the wire-only doc-migration CLI.
 
-These exercise `cli/migrate_docs.py:run` **in-process** (the `migrate-docs` verb
-is not yet registered in the `context` dispatcher — that lands in a later wave —
-so we import `run` directly rather than shell out). The move mechanics are
-unit-tested in `tests/context/domains/docguard/`; here we pin the *wiring*: flag
-parsing, dry-run-vs-`--yes`, the deterministic sorted listing, the `--json`
-exact key sets, exit codes, and idempotency.
-
-A synthetic repo is built under `tmp_path` (never this repo's mutable contents):
-a `.context/` skeleton plus a `docs/` tree carrying stray planning docs. A real
-`git init` backs the `--yes` path (the one place a real `git` is needed) so the
-tracked-source `git mv` rename is observable in `git status --porcelain`.
+Calls `cli/migrate_docs.py:run` in-process (move mechanics are unit-tested in
+`tests/context/domains/docguard/`) and pins the wiring: flags, dry-run vs
+`--yes`, the sorted listing, exact `--json` key sets, exit codes, idempotency.
+The repo is synthetic under `tmp_path` (never this repo's); a real `git init`
+backs `--yes` so the `git mv` rename shows in `git status --porcelain`.
 """
 
 from __future__ import annotations
@@ -23,8 +17,7 @@ import pytest
 
 from dummyindex.cli.migrate_docs import run
 
-# Slugs the fixture strays resolve to, in their deterministic sorted order
-# (group_strays walks buckets sorted by (directory, pairing_stem)):
+# Fixture strays -> slugs, in group_strays' (directory, pairing_stem) order:
 #   docs/internal/audits/cache-REPORT.md  -> audit    "cache-report"
 #   docs/plans/2026-06-09-cache.md        -> proposal "2026-06-09-cache"
 #   docs/specs/2026-06-08-widget-design.md+ -> proposal "2026-06-08-widget"
@@ -33,7 +26,7 @@ _PLAN_SLUG = "2026-06-09-cache"
 _WIDGET_SLUG = "2026-06-08-widget"
 
 
-# ----- fixture helpers ------------------------------------------------------
+# --- fixture helpers
 
 
 def _git(repo_root: Path, *args: str) -> str:
@@ -102,7 +95,7 @@ def _tree_snapshot(root: Path) -> dict[str, bytes]:
     return snap
 
 
-# ----- dry-run (default) ----------------------------------------------------
+# --- dry-run (default)
 
 
 @pytest.mark.integration
@@ -189,7 +182,7 @@ def test_no_strays_reports_nothing_to_migrate(
     assert "nothing to migrate" in out
 
 
-# ----- --yes (end-to-end) ---------------------------------------------------
+# --- --yes (end-to-end)
 
 
 @pytest.mark.integration
@@ -290,7 +283,7 @@ def test_second_yes_is_idempotent_nothing_to_migrate(
     assert _tree_snapshot(tmp_path) == after_first
 
 
-# ----- exit codes / usage ---------------------------------------------------
+# --- exit codes / usage
 
 
 @pytest.mark.unit

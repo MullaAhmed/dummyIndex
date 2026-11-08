@@ -4,41 +4,86 @@
 
 ## Where it lives
 
-- `dummyindex/pipeline/extract/` — the tree-sitter front end. `__init__.py` is the public surface (`extract`, `collect_files`); `generic.py` holds `_extract_generic`, the parametric driver; `config.py` defines `LanguageConfig`; `common.py` has `_make_id`/`_read_text`/`_find_body`; `imports.py` + `helpers.py` hold per-language import handlers and extra-walk helpers; `language_configs.py` instantiates one `LanguageConfig` per language; `languages/` wraps each `extract_<lang>` (most are thin `_extract_generic` calls in `languages/wrappers.py`, a few — Go, Rust, Julia, Elixir, Verilog, Zig, Dart, PowerShell, Blade — are custom walks); `python_rationale.py` is the Python docstring/rationale post-pass; `resolve.py` holds the two cross-file resolvers; `python_dispatch.py` is the narrow Python dispatch-idiom post-pass (enum-keyed dict handlers + function-body imports).
-- `dummyindex/pipeline/io/` — `cache.py` (content-hash per-file cache) and `git.py` (pure-filesystem repo detection).
-- `dummyindex/analysis/cluster.py` — community detection (committed path: NetworkX-Louvain; Leiden off-path).
-- `dummyindex/export/graph.py` + `export/common.py` — node-link JSON serialisation.
-- `dummyindex/context/build/communities.py` — derived graph artifacts: the personalized-PageRank `features/seed-rank.json` shortlist + the `features/graph-communities.json` community roll-up, written by `write_graph_artifacts` right after the symbol-graph export. Owned by this feature; its wiring hosts — `context/build/graph.py` (`build_graph` calls `write_graph_artifacts`), `enriched_refresh.py`, `runner.py` — remain outside every feature (see concerns, "Ownership & coverage").
-- Tests: `tests/pipeline/extract/test_python_rationale.py`, `tests/pipeline/extract/test_python_dispatch.py`, `tests/pipeline/extract/test_extract_hardening.py`, `tests/pipeline/io/test_git.py`, `tests/pipeline/io/test_cache.py`, `tests/pipeline/io/test_paths.py`, `tests/analysis/test_cluster_determinism.py`, `tests/export/test_graph_determinism.py`, `tests/pipeline/build/test_references.py`, `tests/pipeline/build/test_p2_read_counter.py`, `tests/context/build/test_communities.py`.
+Boundary: source paths in → `extract()` dict, seeded communities, a bounded `symbol-graph.json` and two derived artifacts out. No CLI verb, no taxonomy; `index-lifecycle` wires it.
+
+- `pipeline/extract/`:
+  - `__init__.py`: `extract`, `collect_files` and the extension-keyed dispatch table `_DISPATCH` (`:71-106`). `.blade.php` is matched by name first (`:154-157`).
+  - Parametric driver `_extract_generic` (`generic.py`), configured by `LanguageConfig` records (`config.py:14-48`; instances in `language_configs.py`) with injected strategy hooks `import_handler` and `resolve_function_name_fn` (`config.py:45,48`).
+  - 12 thin wrappers (`languages/wrappers.py:30-91`); `extract_python` adds the `python_rationale.py` post-pass (`:30-35`).
+  - Off the driver: custom tree-sitter walks (Go, Rust, Julia, Elixir, Verilog, Zig, PowerShell) and regex with no tree-sitter (Blade, Dart). Cross-file post-passes: `python_dispatch.py`, `resolve.py`.
+- `pipeline/io/`: `cache.py` (read seam, content-hash cache, version scoping), `paths.py`, `git.py`.
+- `analysis/cluster.py`; `export/graph.py` (`to_json` annotates); `export/storage.py` (the single writer and reader); `context/build/communities.py` (derived artifacts). Tests: see `feature.json`.
+
+**Upstream**
+- `pipeline/io/detect.py` (`equip`, `source-docs`) supplies `code_files` (`context/build/runner.py:129-130`). `collect_files` imports its private `_is_ignored`/`_load_dummyindexignore` (`dummyindex/pipeline/extract/__init__.py:363`).
+- `tree_sitter` >= 0.23 (`extract/__init__.py:53-68`), with grammars imported per config (`generic.py:25`); `networkx`; `ConfidenceLevel`.
+- `context/build/communities.py:19-28` imports `SeedRank`, `RankEntry`, `rollup_communities` and both filenames from `context/domains/features/`, which owns the artifact contracts.
+
+**Downstream**
+- `index-lifecycle` (`context/build/`): `runner.py:126-131` and `enriched_refresh.py:107-113` run migrate → `cache_dir_override` → `detect` → `extract`.
+  - Also there: `graph.py:34-82` (`build_graph`), `upgrade.py:539-546`, `portable_graph.py` (`_make_id`), `incremental.py:26` (`file_hash`), and `pipeline/build/references.py:156-168` (`file_bytes`).
+- `read_graph_payload` callers: `runner.py:213`, `features/indexes.py:137`, `dummyindex/context/domains/features/scan/refs.py:65`, `graph_query/load.py:64`, `reality_check/verify.py:376`, `viewer/extras.py:191`.
+- Leak: `context/domains/evolve_native_snapshot.py:53-55,80` (`evolution`) uses storage's private `_decode`/`_read_manifest`/`_FORMAT`/`_HASH_RE` and hashes its source (`:37`). Renaming those breaks evolve, and any edit to `storage.py` changes evolve's controller hash.
+
+**Cycles**
+- Imports: none. `pipeline/`, `export/` and `analysis/` never import `context/`. Duplication keeps it that way: `cache.py:144-149` mirrors `atomic_io._replace_bytes`, `context/build/communities.py:46-48` mirrors `_CALL_RELATIONS`, and `viewer/extras.py:481` twins `_indexed_root` "(duplicated: import cycle)".
+- Data: community ownership reads the taxonomy that is scaffolded from this graph (`communities.py:266-295`). A fresh ingest gets unowned cards until the next refresh.
 
 ## Architecture in three sentences
 
-`extract()` runs a two-pass pipeline: a per-file structural pass (extension → extractor → `_extract_generic` or a custom walk, each result cached by content hash) followed by cross-file edge synthesis (the narrow Python dispatch-idiom post-pass, Python/Java import resolution, plus global-label call resolution). The graph that pass produces is consumed downstream by `cluster()` — seeded NetworkX-Louvain on the committed path (`_RANDOM_SEED=42`, GATE strategy (b); Leiden off-path), communities re-indexed by `(-size, smallest-member)` for stable IDs — by `to_json()`, which serialises a sorted, `sort_keys=True` node-link document, and by `context/build/communities.py`, which derives `features/seed-rank.json` (pure-Python personalized PageRank) and `features/graph-communities.json` (community cards) from the same in-memory graph inside `build_graph`. The whole chain is intentionally LLM-free and deterministic so the committed artifacts are byte-identical run-to-run.
+`extract()` runs a cacheable per-file pass (dispatch, extractor, content-hash cache), then the cross-file passes (dispatch idioms, `id_remap`, Python/Java imports, global-label calls), and every read goes through one memoized seam, `read_source_bytes` (`cache.py:38-77`). `build_graph` (`context/build/graph.py:47-66`) normalizes paths, builds an undirected NetworkX graph, clusters it with seeded Louvain, publishes it via `to_json` → `write_graph_payload` (plain, or content-addressed shards then an atomic manifest), and derives seed-rank and graph-communities from the same graph. Writers degrade and the single reader fails closed; housekeeping runs only at migration or publish; no stage calls an LLM.
 
 ## Data model
 
-- **Node** (`dict`): `{id, label, file_type, source_file, source_location}`. `id` from `_make_id` (`common.py:12-16`); `source_location` is `"L<line>"`. Class/function/method labels carry shape markers — `"Foo"`, `"bar()"`, `".method()"` — which downstream code keys off (e.g. resolvers skip labels ending in `")"` or `".py"`).
-- **Edge** (`dict`): `{source, target, relation, confidence, source_file, source_location, weight}`, sometimes with `confidence_score`. `confidence` is a `ConfidenceLevel` enum (`EXTRACTED` / `INFERRED` / `AMBIGUOUS`); relations include `contains`, `method`, `calls`, `inherits`/`extends`/`implements`, `imports`/`imports_from`, `uses`, `uses_static_prop`, `references_constant`, `bound_to`, `listened_by`, `references`.
-- **`extract()` return**: `{"nodes": [...], "edges": [...], "file_bytes": {str(path): bytes}, "input_tokens": 0, "output_tokens": 0}` (`file_bytes` feeds the later textual-reference pass — see spec, P2). The per-file extractor return additionally carries `raw_calls` (`generic.py:650`) — unresolved in-file calls handed to the cross-file resolution loop.
-- **`LanguageConfig`** (`config.py:12-47`): node-type frozensets (`class_types`, `function_types`, `import_types`, `call_types`, …), field names (`name_field`, `body_field`, `call_function_field`), and two callables (`import_handler`, `resolve_function_name_fn`) that parametrise `_extract_generic`.
-- **Communities**: `dict[int, list[str]]`, key 0 = largest, each value a sorted node-id list (`cluster.py:110`).
-- **Cache entry**: `.context/cache/<sha256-of-content>.json` holding one file's extraction result (`cache.py:80-108`).
-- **`symbol-graph.json`**: networkx node-link data with added `community`, `norm_label` (per node) and `confidence_score` (per link), plus a top-level `hyperedges` list pulled from `G.graph` (`graph.py:29-41`).
-- **`seed-rank.json`**: `SeedRank.to_dict()` — an ordered list of `RankEntry{id, score}` (top 500, scores rounded to 8 decimals, rationale nodes dropped, sorted `(-score, id)`), consumed by the scan seed (`context/domains/features/scan/rank.py`).
-- **`graph-communities.json`**: `rollup_communities(...).to_dict()` (`context/domains/features/communities.py`) — one card per Louvain community, with owning feature resolved from the on-disk taxonomy (features claim members in sorted-`feature_id` order; unowned when no taxonomy exists yet) and per-symbol rationale quotes from `rationale_for` edges (earliest source line wins, so the docstring beats later `# NOTE:` comments).
+- **Node**: `{id, label, file_type, source_file, source_location: "L<n>"}` (`generic.py:60-71`). The label index strips shape markers (`extract/__init__.py:285-286`).
+- **Edge**: `{source, target, relation, confidence, source_file, source_location, weight}` (`generic.py:73-91`), plus `confidence_score` on inferred cross-file edges.
+  - `relation` is an open set, and per-language code adds `defines`, `instantiates`, `case_of`, …. `references` comes from the downstream textual pass.
+- **Per-file result**: `{nodes, edges, raw_calls}` (`generic.py:773`) or `{nodes: [], edges: [], error}`. `extract()` adds `file_bytes` and `file_status` (`extract/__init__.py:322-329`).
+- **Cache dir** (`.context/cache/`, gitignored): `<sha256>.json` entries plus the `extraction-version` stamp. Scoping deletes only names matching `cache.py:29`, so co-tenants such as the drift `manifest.json` survive.
+- **`symbol-graph.json`**: plain canonical node-link with one top-level `hyperedges` (`storage.py:140-184`), or a manifest.
+  - Manifest: `{format, version, max_file_bytes, graph_sha256, counts, metadata, shards[{kind, path, sha256, bytes, count}]}` (`:377-385`) over `{"kind", "records"}` shards (`:188-189`). `graph_sha256` hashes what a plain write would emit (`:359`), and the reader re-checks it (`:484`).
 
 ## Key decisions
 
-- **Determinism is enforced at three seams, not assumed.** Clustering seeds both the Leiden and Louvain paths with `_RANDOM_SEED=42` (`cluster.py:11,42,52`) and breaks size ties on the lexicographically smallest member (`cluster.py:109`), so community IDs are content-determined, not partition-order-determined. The exporter sorts nodes by `id` and links by `(source, target, relation)` then dumps with `sort_keys=True` (`graph.py:40-43`) so the committed JSON is byte-identical. `collect_files` returns sorted paths (`__init__.py:276,293`). Node IDs are normalised slugs (`common.py:12-16`). These three were the explicitly hardened seams in the most recent change.
-- **One parametric driver over twelve hand-written extractors.** `_extract_generic` (`generic.py:23-650`) absorbs the common tree-walk and call-graph logic; per-language differences are pushed into `LanguageConfig` data and a few inline `if config.ts_module == ...` branches (Python inheritance, Swift conformance, C#/Java base lists, PHP listeners/bindings). The docstring concedes it is ~600 lines and "indivisible — splitting it would require threading too much state across modules" (`generic.py:6-13`), an accepted exception to the file-size convention.
-- **Cache key is content, not path.** `file_hash` deliberately ignores its `root` argument (kept only for API compatibility) and hashes file bytes — so re-runs from a different cwd, subagent absolute-vs-relative paths, and `mv`/repo moves all hit the same entry (`cache.py:20-40`). `.md` frontmatter is stripped first so metadata-only edits don't bust the cache.
-- **Errors are isolated, never fatal.** A per-file parse failure returns an `error` result (not cached, contributing no nodes/edges) rather than aborting `extract`. Cross-file resolution is wrapped in try/except and degrades to a logged warning (`__init__.py:202-214`). Git helpers treat malformed input as "not a repo" rather than raising (`git.py:11-14`), because they gate optional install steps.
-- **graspologic output is muted.** `_partition` redirects stdout and stderr around the Leiden call (`cluster.py:38-44`) because graspologic emits ANSI escape sequences that corrupt PowerShell 5.1's scroll buffer (issue #19).
-- **Dispatch-idiom resolution is precision-first and fails soft.** `_resolve_python_dispatch` emits an edge only when the dict value matches a known extracted symbol AND (for `module.attr` values) the object name is import-bound in the same file and resolution keys on that binding's *real* imported module stem, not the bound object name — so an aliased import now resolves too; a `(stem, name)` key claimed by more than one source file is ambiguous and skipped (`python_dispatch.py:77-103`), and nested `a.b.c` / call-result values are never guessed (`python_dispatch.py:298-331`). `extract()` runs the pass **before** `id_remap` so file-node-sourced edges remap with everything else, dedups its output against extracted edges by `(source, target, relation)`, and degrades any failure — including a missing `tree_sitter_python` — to a warning or empty result (`extract/__init__.py:211-235`).
-- **Committed rank bytes never depend on an optional numeric backend.** `compute_symbol_rank` is a pure-Python power iteration, not `networkx.pagerank` (NetworkX 3.x delegates that to scipy) — the same GATE reasoning that pinned committed communities to always-Louvain (`communities.py:66-86`). Iteration walks nodes in graph insertion order so the float sums (and hence emitted bytes) are reproducible; scores are rounded to 8 decimals to kill float-noise churn; non-convergence returns the last deterministic iterate rather than raising. A failure in `write_graph_artifacts` warns and never blocks `symbol-graph.json` itself (`context/build/graph.py:68-78`).
-- **Textual references are a single regex pass.** `_derive_textual_references` (`references.py:16-103`) builds one combined lookahead alternation over every rel-path-and-eligible-basename needle (`_build_matcher`, `references.py:106-125`) and scans each file once, replacing the old O(F²) per-pair `str.find`. It's documented as behaviour-preserving — a constant-factor win, not an asymptotic one (`references.py:62-66`) — with basename fallback gated on length ≥5 and uniqueness to limit false positives.
+- **Determinism lives at named seams**, because committed bytes must match on any machine (`cluster.py:35-38`).
+  - Seed 42 (`cluster.py:19,41`) and a content-determined re-index (`:124-125`).
+  - Canonical sort and compact `sort_keys` JSON happen in the writer, not in `to_json`, so every payload gets one form (`storage.py:48-61,165-183`).
+  - Sorted collection (`extract/__init__.py:379,412`), slug IDs (`extract/common.py:15-19`), and member claims in sorted-feature order (`context/build/communities.py:286-294`).
+- **Optional backends never decide committed bytes** (`cluster.py:35-37`, `communities.py:59-61`).
+  - `_partition` is Louvain-only (`cluster.py:67-73`), and PageRank is a pure-Python iteration, not scipy `nx.pagerank` (`communities.py:56-73`).
+  - Leiden runs off-path, with its ANSI output muted (`cluster.py:57-63`, #19).
+- **`_extract_generic` stays one 752-line function** (`generic.py:22-773`), because splitting it would thread too much state (`generic.py:6`). That breaks the >600-line rule (`conventions/coding-practices.md:92-93`), and its "extremis" sanction comes from low-confidence `docs/reference/01-conventions.md`, so it is a standing exception.
+- **Content is the cache key; the version is scoped out of band.**
+  - Path-free hashing survives a cwd change, a path-form change or `mv` (`cache.py:107-121`).
+  - Stamp-and-wipe (`cache.py:195-237`) keeps names content-addressed and reports a count (`upgrade.py:546`). After a failed delete the stamp is withheld, so the step retries (`cache.py:234-236`).
+- **Scoping runs before extraction**, because running it after would wipe the entries the build just wrote. The dir is created first so a fresh repo is stamped (`context/build/runner.py:121-126`).
+- **Two cache-dir channels.**
+  - A trusted override pins build paths to `.context/cache/` (`context/build/common.py:164-178`), while the ambient `DUMMYINDEX_CACHE_DIR` counts only inside the repo (`cache.py:127-131`).
+  - The internal target must bypass the confinement applied to user input. That confinement is the containment; the payload guard is only anti-corruption (`cache.py:243-244`).
+- **Cached payloads are never mutated.** `id_remap` builds new dicts because the merged lists alias `load_cached` payloads (`extract/__init__.py:228-230`).
+- **Precision over recall.**
+  - Colliding labels are skipped, never bound last-wins (`extract/__init__.py:279-304`), and ambiguous dispatch keys are dropped (`python_dispatch.py:62-86`).
+  - Dispatch runs before `id_remap`, so its file-sourced edges get remapped (`extract/__init__.py:192-216`).
+- **Writers degrade; the reader fails closed.**
+  - Errored results are never cached, and pass failures warn (`extract/__init__.py:200-207,257-277`). Git helpers never raise (`git.py:6-7`).
+  - A derived-artifact failure still lets the graph land (`context/build/graph.py:64-74`), and the reader never returns a partial graph (`storage.py:489-495`).
+- **Storage keeps only the current generation.**
+  - Content-named shards self-verify: wrong bytes are rewritten, and matching ones are touched and reused (`storage.py:391-398`).
+  - The manifest is published last and atomically, so a failed publish keeps the old generation (`:399-402`).
+  - Pruning protects `keep | shard_names(live manifest)` plus a 600 s grace, never deletes links, non-regular files or foreign names, and only warns (`:276-329`).
+  - The cost: a reader on a superseded manifest fails closed (`:5-6`). Never-delete had leaked every superseded shard (commit `0634bfd`). With a shared parts dir, there is one manifest per directory (`:7`).
+- **Storage paths are hostile input.** `_plain_path` (`storage.py:68-102`) and `_read_bytes` (`:105-127`) refuse links, escapes, non-regular files and oversize.
+- **PageRank down-weights tests** (0.1, against 3.0 for entry points), because test nodes dominated the degree signal in the bakeoff (`context/build/communities.py:5-6,36-38`).
 
 ## Open questions
 
-- **[RESOLVED — GATE strategy (b), `b157a1c`; see concerns]** Leiden-vs-Louvain byte-stability: the committed `community` path is now NetworkX-Louvain only (`_partition` → `_louvain_partition`, `cluster.py:77-84`); Leiden (`_leiden_partition`) is off the committed path, and the docstrings were updated to match.
-- **[RESOLVED — P2, `b157a1c`; see concerns]** The cross-file resolvers no longer issue an independent disk read: all in-build source reads route through the memoized `read_source_bytes` seam inside one `build_read_cache()`, so a fully-cached re-run reuses the bytes the hash read already captured.
+- `save_cached` uses a fixed `<hash>.tmp` (`cache.py:297`), unlike the stamp writer's unique tmp (`cache.py:153-161`). Concurrent identical saves share it, and stray `*.tmp` files are never swept.
+- Scoping targets only `context_dir / "cache"` (`upgrade.py:542`).
+  - `runner.py:128` and `enriched_refresh.py:110` pin extraction there.
+  - `maps.py:110` and `tree.py:69` extract with no override and no migration, so an in-repo `DUMMYINDEX_CACHE_DIR` on those paths is never scoped. Intended?
+  - Enrich skips scoping on purpose, because it does not extract (`dummyindex/cli/enrich.py:37`).
+- `collect_files._EXTENSIONS` (`extract/__init__.py:337-362`) has 24 suffixes against `_DISPATCH`'s 34, missing `.jsx .mjs .ex .exs .jl .vue .svelte .dart .v .sv`. Builds use `detect`, so only `__main__` (`:425`) and the lazy export (`dummyindex/__init__.py:19`) are affected. Intended?
+- Stale comments (code wins):
+  - `extract/__init__.py:5-8`: lists `_`-prefixed siblings and omits `file_status` (citation unverifiable). `:382-383`: old line refs (citation unverifiable).
+  - `cache.py:34-37`: says references use the seam, but they read `file_bytes` (citation unverifiable). `dummyindex/context/build/graph.py:60`: says no final newline, but `storage.py:58` adds one.
+  - `cluster.py:1,17-18` and `dummyindex/context/build/graph.py:39`: Leiden and cohesion (citation unverifiable). `generic.py:6`: "~600 lines" (citation unverifiable).

@@ -1,9 +1,7 @@
 """Model routing — precedence, closed key set, alias validation.
 
-The domain-level contract of build-dispatch-fanout-fix's routing module:
-routing is proposal data validated against the existing ``ModelChoice``
-alphabet (reuse, no new enum), with ``build --route`` overriding at run
-time. Precedence: invocation > proposal > unset.
+Routing is proposal data validated against the ``ModelChoice`` alphabet, with
+``build --route`` overriding at run time. Precedence: invocation > proposal > unset.
 """
 
 from __future__ import annotations
@@ -32,7 +30,7 @@ def _write_proposal(tmp_path: Path, payload: dict) -> Path:
     return path
 
 
-# ----- unset / proposal-only --------------------------------------------------
+# --- unset / proposal-only
 
 
 def test_absent_file_is_unset(tmp_path: Path) -> None:
@@ -60,7 +58,7 @@ def test_empty_routing_block_is_unset(tmp_path: Path) -> None:
     assert resolve_routing(path) == {}
 
 
-# ----- precedence: invocation > proposal > unset ------------------------------
+# --- precedence: invocation > proposal > unset
 
 
 def test_override_adds_roles_beyond_the_proposal(tmp_path: Path) -> None:
@@ -86,7 +84,7 @@ def test_invocation_without_proposal_still_routes(tmp_path: Path) -> None:
     }
 
 
-# ----- validation: closed keys + ModelChoice aliases --------------------------
+# --- validation: closed keys + ModelChoice aliases
 
 
 def test_every_model_choice_alias_is_legal(tmp_path: Path) -> None:
@@ -138,7 +136,7 @@ def test_malformed_proposal_json_raises_build_loop_error(tmp_path: Path) -> None
         read_proposal_routing(path)
 
 
-# ----- CLI-side token parsing -------------------------------------------------
+# --- CLI-side token parsing
 
 
 def test_parse_route_flags_accepts_repeatable_kv_pairs() -> None:

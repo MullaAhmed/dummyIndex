@@ -33,7 +33,7 @@ question to overlap its expected feature vocabulary
   `:133-150`). Stable expectations concern this frozen index, not live cluster
   IDs after a rebuild.
 
-## Examples and evidence limits
+## Examples
 
 The committed positive fixture `how does make_app build an App instance` targets
 `community-0` and `app.py`; the gate checks its rank and cited path. The

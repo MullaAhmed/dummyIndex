@@ -47,7 +47,8 @@ _79 doc(s) — 19 high · 22 medium · 38 low._
 | [`dummyindex/skills/retrieval/00-overview.md`](../../dummyindex/skills/retrieval/00-overview.md) — Retrieval — PageIndex-style tree search | markdown | **medium** | 3 / 13 | recent |
 | [`dummyindex/skills/retrieval/10-feature-lookup.md`](../../dummyindex/skills/retrieval/10-feature-lookup.md) — Feature lookup | markdown | **medium** | 3 / 9 | recent |
 | [`dummyindex/skills/retrieval/20-symbol-lookup.md`](../../dummyindex/skills/retrieval/20-symbol-lookup.md) — Symbol lookup | markdown | **medium** | 3 / 7 | recent |
-| [`CHANGELOG.md`](../../CHANGELOG.md) — Changelog | markdown | **low** | 141 / 298 | recent |
+| [`research_notes/Self evolving harness design review/user_complaints.md`](../../research_notes/Self evolving harness design review/user_complaints.md) — User Complaints and Failure Reports: Self-Improving / Memory-Learning AI Agents (as of 2026-11-08) | markdown | **medium** | 1 / 1 | recent |
+| [`CHANGELOG.md`](../../CHANGELOG.md) — Changelog | markdown | **low** | 142 / 301 | recent |
 | [`README.md`](../../README.md) — dummyindex | markdown | **low** | 4 / 6 | recent |
 | [`SECURITY.md`](../../SECURITY.md) — Security Policy | markdown | **low** | 5 / 8 | recent |
 | [`docs/COMMANDS.md`](../../docs/COMMANDS.md) — Commands | markdown | **low** | 20 / 32 | recent |
@@ -82,6 +83,10 @@ _79 doc(s) — 19 high · 22 medium · 38 low._
 | [`dummyindex/skills/retrieval/30-flow-trace.md`](../../dummyindex/skills/retrieval/30-flow-trace.md) — Flow trace | markdown | **low** | 7 / 14 | recent |
 | [`dummyindex/skills/skill.md`](../../dummyindex/skills/skill.md) — /dummyindex / $dummyindex — The context engine orchestrator | markdown | **low** | 42 / 72 | recent |
 | [`dummyindex/skills/update/SKILL.md`](../../dummyindex/skills/update/SKILL.md) — /dummyindex-update / $dummyindex-update [&lt;version|tag&gt;] — Update (or pin) dummyindex | markdown | **low** | 9 / 11 | recent |
+| [`reports/Self evolving harness design review.md`](../../reports/Self evolving harness design review.md) — Let chats propose, let evidence promote | markdown | **low** | 7 / 11 | recent |
+| [`research_notes/Self evolving harness design review/context_memory_evolution.md`](../../research_notes/Self evolving harness design review/context_memory_evolution.md) — Systems that evolve an agent's context, memory or skill library from experience (notes as of 2026-11-08) | markdown | **low** | 6 / 6 | recent |
+| [`research_notes/Self evolving harness design review/production_tools.md`](../../research_notes/Self evolving harness design review/production_tools.md) — Production coding/agent tools that learn from ordinary user chats (as of 2026-11-08) | markdown | **low** | 43 / 44 | recent |
+| [`research_notes/Self evolving harness design review/verification_safety.md`](../../research_notes/Self evolving harness design review/verification_safety.md) — Verification and Safety for Agents That Learn From User Chats | markdown | **low** | 4 / 4 | recent |
 | [`tests/eval/BASELINE.md`](../../tests/eval/BASELINE.md) — Retrieval eval baseline | markdown | **low** | 8 / 18 | recent |
 | [`tests/eval/BEHAVIOR_BASELINE.md`](../../tests/eval/BEHAVIOR_BASELINE.md) — Behavior-gate two-arm baseline | markdown | **low** | 11 / 13 | recent |
 | [`tests/fixtures/legacy_skill_md/remember_0_36.md`](../../tests/fixtures/legacy_skill_md/remember_0_36.md) — /dummyindex-remember / $dummyindex-remember — save the session into `.context/session-memory/` | markdown | **low** | 5 / 5 | recent |
@@ -95,6 +100,7 @@ These have broken references or are significantly older than the newest code cha
 **Broken references** (no longer in the AST):
 
 - `benchmarks/retrieval/RESULTS.md`
+- `dummyindex_version`
 - `features/seed-rank.json`
 - `features/graph-communities.json`
 - `imports_from`
@@ -103,8 +109,7 @@ These have broken references or are significantly older than the newest code cha
 - `project_doc_max_bytes`
 - `.context/equipment.json`
 - `checklist.md`
-- `stop_hook_active`
-- _… +131 more_
+- _… +132 more_
 
 ### `README.md`
 
@@ -551,6 +556,54 @@ These have broken references or are significantly older than the newest code cha
 - `SKILL.md`
 - `.context/equipment.json`
 - `direct_url.json`
+
+### `reports/Self evolving harness design review.md`
+
+**Broken references** (no longer in the AST):
+
+- `dummyindex/skills/evolve/SKILL.md`
+- `.context/gc/evidence.json`
+- `applies_when`
+- `.context/config.json`
+- `key_insight`
+- `common_pitfalls`
+- `verify_before_returning`
+
+### `research_notes/Self evolving harness design review/context_memory_evolution.md`
+
+**Broken references** (no longer in the AST):
+
+- `applies_when`
+- `key_insight`
+- `common_pitfalls`
+- `verify_before_returning`
+- `created_at`
+- `search_files`
+
+### `research_notes/Self evolving harness design review/production_tools.md`
+
+**Broken references** (no longer in the AST):
+
+- `skill_manage`
+- `old_string`
+- `new_string`
+- `MEMORY.md`
+- `USER.md`
+- `memory.write_approval`
+- `interval_hours`
+- `min_idle_hours`
+- `use_count`
+- `view_count`
+- _… +33 more_
+
+### `research_notes/Self evolving harness design review/verification_safety.md`
+
+**Broken references** (no longer in the AST):
+
+- `dummyindex/skills/evolve/SKILL.md`
+- `tool_result`
+- `evolve/SKILL.md`
+- `snake_case`
 
 ### `tests/eval/BASELINE.md`
 

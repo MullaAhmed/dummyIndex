@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 import json
+import os
+import time
 from pathlib import Path
 
 import pytest
 
+from dummyindex.context.build import enriched_refresh, upgrade
 from dummyindex.context.build.enriched_refresh import refresh_deterministic_artifacts
 from dummyindex.context.build.incremental import rebuild_changed
+from dummyindex.context.build.meta import SCHEMA_VERSION
 from dummyindex.context.build.runner import build_all
 from dummyindex.context.build.scope import BuildScopeError
 from dummyindex.context.domains.features import rename_feature
@@ -39,6 +43,170 @@ def _curate(root: Path) -> Path:
     spec = features / "app/spec.md"
     spec.write_text("Owner-authored specification.\n", encoding="utf-8")
     return spec
+
+
+def _seed_meta(root: Path, **fields: object) -> Path:
+    meta_path = root / ".context/meta.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta.update(fields)
+    meta_path.write_text(json.dumps(meta), encoding="utf-8")
+    return meta_path
+
+
+def _boom(*_args, **_kwargs):
+    raise RuntimeError("boom")
+
+
+@pytest.mark.parametrize(
+    ("target", "artifact", "warning"),
+    [
+        ("build_graph", "features/symbol-graph.json", "symbol-graph refresh failed"),
+        ("write_catalog", "source-docs/INDEX.json", "source-docs catalog refresh"),
+    ],
+)
+def test_required_artifact_failure_holds_version_and_schema_stamp(
+    tmp_path, monkeypatch, target, artifact, warning
+):
+    root = _repo(tmp_path)
+    meta_path = _seed_meta(root, dummyindex_version="0.36.0", schema_version=1)
+    monkeypatch.setattr(enriched_refresh, target, _boom)
+
+    with pytest.warns(UserWarning, match=warning):
+        result = refresh_deterministic_artifacts(root, dummyindex_version="9.9.9")
+
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    assert meta["dummyindex_version"] == "0.36.0"
+    assert meta["schema_version"] == 1
+    assert result.failed == ((artifact, "RuntimeError('boom')"),)
+    project = (root / ".context/PROJECT.md").read_text(encoding="utf-8")
+    assert "- **dummyIndex version:** 0.36.0" in project
+
+
+@pytest.mark.parametrize(
+    ("stored", "running", "allow_downgrade", "expected"),
+    [
+        ("0.37.0", "0.36.0", False, "0.37.0"),
+        ("0.37.0", "unknown", False, "0.37.0"),
+        ("0.37.0", None, False, "0.37.0"),
+        ("0.37.0", "0.37.0", False, "0.37.0"),
+        ("0.37.0", "9.9.9", False, "9.9.9"),
+        ("unknown", "0.37.0", False, "0.37.0"),
+        ("unknown", "unknown", False, "unknown"),
+        ("0.37.0", "0.36.0", True, "0.36.0"),
+    ],
+)
+def test_version_stamp_never_moves_backwards_unless_forced(
+    tmp_path, stored, running, allow_downgrade, expected
+):
+    root = _repo(tmp_path)
+    meta_path = _seed_meta(root, dummyindex_version=stored, schema_version=1)
+
+    result = refresh_deterministic_artifacts(
+        root, dummyindex_version=running, allow_downgrade=allow_downgrade
+    )
+
+    assert result.failed == ()
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    assert meta["dummyindex_version"] == expected
+    # A successful refresh carrying a version upgrades the schema even when the
+    # version is unchanged; no version means no stamp write at all.
+    assert meta["schema_version"] == (1 if running is None else SCHEMA_VERSION)
+
+
+def test_advancing_refresh_renders_new_stamp_and_schema(tmp_path):
+    root = _repo(tmp_path)
+    meta_path = _seed_meta(root, dummyindex_version="0.36.0", schema_version=1)
+
+    refresh_deterministic_artifacts(root, dummyindex_version="9.9.9")
+
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    assert meta["dummyindex_version"] == "9.9.9"
+    assert meta["schema_version"] == SCHEMA_VERSION == 2
+    project = (root / ".context/PROJECT.md").read_text(encoding="utf-8")
+    assert f"- **dummyIndex version:** {meta['dummyindex_version']}\n" in project
+    naming = (root / ".context/conventions/naming.md").read_text(encoding="utf-8")
+    assert meta["updated_at"] in naming
+
+
+def test_refresh_migrates_retired_layout_and_reports_it(tmp_path):
+    from dummyindex.export.storage import SHARD_GRACE_SECONDS
+
+    root = _repo(tmp_path)
+    context = root / ".context"
+    legacy = context / "graph"
+    legacy.mkdir()
+    (legacy / "graph.json").write_text('{"nodes": []}\n', encoding="utf-8")
+    (legacy / "GRAPH_REPORT.md").write_text("# Graph report\n", encoding="utf-8")
+    (context / "_enrich_plan.json").write_text("{}\n", encoding="utf-8")
+    gitignore = context / ".gitignore"
+    gitignore.write_text(
+        "".join(
+            line
+            for line in gitignore.read_text(encoding="utf-8").splitlines(True)
+            if line.strip() != "_council-log.json"
+        ),
+        encoding="utf-8",
+    )
+    parts = context / "features/symbol-graph.parts"
+    parts.mkdir(exist_ok=True)
+    aged = time.time() - SHARD_GRACE_SECONDS - 60
+    for i in range(3):
+        orphan = parts / f"{i:064x}.json"
+        orphan.write_text("{}", encoding="utf-8")
+        os.utime(orphan, (aged, aged))
+
+    result = refresh_deterministic_artifacts(root, dummyindex_version="9.9.9")
+
+    assert not legacy.exists()
+    assert not (context / "_enrich_plan.json").exists()
+    assert "_council-log.json" in gitignore.read_text(encoding="utf-8").splitlines()
+    assert not parts.exists()  # orphan shards: swept by the graph write
+    assert {
+        "graph/graph.json",
+        "graph/GRAPH_REPORT.md",
+        "_enrich_plan.json",
+    } <= set(result.migration.removed)
+    assert set(result.migration.backed_up) == {
+        "_doc_backups/retired/0.6.0/graph/graph.json",
+        "_doc_backups/retired/0.6.0/graph/GRAPH_REPORT.md",
+    }
+    assert result.migration.errors == ()
+    assert result.failed == ()
+
+
+def test_refresh_without_cache_dir_stamps_extraction_version(tmp_path):
+    import shutil
+
+    root = _repo(tmp_path)
+    cache = root / ".context/cache"
+    shutil.rmtree(cache, ignore_errors=True)
+    assert not cache.exists()
+
+    refresh_deterministic_artifacts(root, dummyindex_version="9.9.9")
+
+    stamp = cache / "extraction-version"
+    assert stamp.read_text(encoding="utf-8").strip() == "9.9.9"
+
+
+def test_failing_migration_step_is_reported_and_refresh_still_returns(
+    tmp_path, monkeypatch
+):
+    root = _repo(tmp_path)
+    meta_path = _seed_meta(root, dummyindex_version="0.36.0")
+    (root / ".context/_enrich_plan.json").write_text("{}\n", encoding="utf-8")
+
+    def denied(*_args, **_kwargs):
+        raise OSError("retire denied")
+
+    monkeypatch.setattr(upgrade, "retire_paths", denied)
+
+    result = refresh_deterministic_artifacts(root, dummyindex_version="9.9.9")
+
+    assert result.migration.errors == ("retire_paths: retire denied",)
+    assert "_enrich_plan.json" in result.migration.removed  # other steps ran
+    assert result.failed == ()
+    assert "features/symbol-graph.json" in result.written
+    assert json.loads(meta_path.read_text())["dummyindex_version"] == "9.9.9"
 
 
 def test_refresh_repairs_metadata_and_topology_preserving_annotations_and_notes(

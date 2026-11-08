@@ -28,11 +28,18 @@ not a conventional header — while the real commits survive only as ``* ``
 bullets in the body. Reading subjects alone silently skipped the release for
 PRs #9 and #10, so ``effective_subjects`` folds those bullets back in.
 
+``--channel beta`` (pushes to ``development``) applies the same bump to cut a
+PEP 440 pre-release, ``X.Y.ZbN``. pip skips it unless asked (``--pre`` or an
+exact pin). The bump is written for the tag only, never committed to the
+branch, so ``development`` keeps the stable version and no bot commit reaches
+``main``'s commit range. No CHANGELOG entry for betas.
+
 The decision functions take plain data so they can be tested without git.
 """
 
 from __future__ import annotations
 
+import argparse
 import os
 import re
 import subprocess
@@ -152,6 +159,28 @@ def next_version(current: str, bump: str) -> str:
     raise ValueError(f"unknown bump: {bump!r}")
 
 
+def next_beta_version(target: str, tags: list[str]) -> str | None:
+    """``{target}bN`` with N one past the highest existing ``v{target}bN`` tag.
+
+    ``None`` when ``v{target}`` is already released: ``development`` is behind
+    ``main`` and a beta of a shipped version would sort below it.
+    """
+    if f"v{target}" in tags:
+        return None
+    pattern = re.compile(rf"^v{re.escape(target)}b(\d+)$")
+    numbers = [int(m.group(1)) for t in tags if (m := pattern.match(t))]
+    return f"{target}b{max(numbers, default=0) + 1}"
+
+
+def beta_notes(version: str, notes: str) -> str:
+    """Release notes for a beta, led by the opt-in install commands."""
+    return (
+        f"Pre-release. `pip install dummyindex` skips it; install with "
+        f"`pip install dummyindex=={version}` or `pip install --pre dummyindex`.\n\n"
+        f"{notes}"
+    )
+
+
 def describe(subject: str) -> str:
     """Human changelog line for a subject: the description, with the scope (if
     any) kept as a bold lead. Non-conventional subjects pass through verbatim."""
@@ -223,10 +252,17 @@ def _git(*args: str) -> str:
 
 
 def last_tag() -> str | None:
+    """Nearest stable ``vX.Y.Z`` tag; beta tags (a letter after the ``v``) are skipped."""
     try:
-        return _git("describe", "--tags", "--abbrev=0", "--match", "v*")
+        return _git(
+            "describe", "--tags", "--abbrev=0", "--match", "v*", "--exclude", "v*[a-z]*"
+        )
     except subprocess.CalledProcessError:
         return None  # no release tag yet → first release covers all history
+
+
+def all_tags() -> list[str]:
+    return _git("tag", "--list", "v*").splitlines()
 
 
 def commits_since(tag: str | None) -> list[tuple[str, str]]:
@@ -253,7 +289,11 @@ def emit_output(**pairs: str) -> None:
             fh.write(f"{key}={value}\n")
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--channel", choices=("stable", "beta"), default="stable")
+    channel = parser.parse_args(argv).channel
+
     tag = last_tag()
     commits = commits_since(tag)
     subjects = effective_subjects(commits)
@@ -262,16 +302,26 @@ def main() -> int:
     bump = decide_bump(subjects, bodies)
     if bump is None:
         print(f"No releasable commits since {tag or 'repo start'} — skipping.")
-        emit_output(released="false")
+        emit_output(released="false", channel=channel)
         return 0
 
-    version = next_version(read_current_version(), bump)
+    target = next_version(read_current_version(), bump)
     notes = render_notes(subjects)
-    write_version(version)
-    prepend_changelog(version, notes)
-    NOTES_FILE.write_text(notes + "\n", encoding="utf-8")
-    print(f"Releasing v{version} ({bump} bump, {len(commits)} commits).")
-    emit_output(released="true", version=version)
+    if channel == "beta":
+        version = next_beta_version(target, all_tags())
+        if version is None:
+            print(f"v{target} is already released; merge main into development first.")
+            emit_output(released="false", channel=channel)
+            return 0
+        write_version(version)
+        NOTES_FILE.write_text(beta_notes(version, notes) + "\n", encoding="utf-8")
+    else:
+        version = target
+        write_version(version)
+        prepend_changelog(version, notes)
+        NOTES_FILE.write_text(notes + "\n", encoding="utf-8")
+    print(f"Releasing v{version} ({channel}, {bump} bump, {len(commits)} commits).")
+    emit_output(released="true", version=version, channel=channel)
     return 0
 
 

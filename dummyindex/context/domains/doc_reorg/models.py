@@ -26,12 +26,10 @@ class DocBackup:
 class RestoreResult:
     """Outcome of restoring a backup.
 
-    ``restored`` is content-honest — it overwrites changed docs and recreates
-    deleted ones. ``created_since`` lists docs that exist now but weren't in the
-    backup (i.e. files the reorg *created*); restore leaves them in place rather
-    than guessing — the caller drops them with ``git clean`` for a full rollback.
-    ``skipped`` lists manifest entries whose backup copy was missing (a partial
-    or tampered backup) — surfaced so a short restore never reads as complete.
+    ``restored``: docs the restore overwrites or recreates from the backup.
+    ``created_since``: docs present now but not backed up (the reorg created
+    them), left in place for ``git clean``. ``skipped``: manifest entries whose
+    backup copy is missing, surfaced so a short restore never reads as complete.
     """
 
     backup_dir: str

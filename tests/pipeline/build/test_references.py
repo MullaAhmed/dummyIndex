@@ -1,15 +1,9 @@
 """Tests for textual cross-reference detection.
 
-``_derive_textual_references`` is the O(F·text) single-pass matcher that replaced
-an O(F²·text) per-pair ``str.find`` scan. The optimization is only valid if it is
-**byte-faithful** — same chosen reference, same offset, same precedence (full path
-over basename). These tests pin that:
-
-- a frozen golden asserting the exact emitted edges on a hand-built stress
-  fixture (full-path match, short-basename rejection, basename-collision
-  rejection, overlapping/adjacent occurrences);
-- a randomized differential test comparing the live matcher against a reference
-  implementation of the old per-pair logic.
+``_derive_textual_references`` is a single-pass matcher that must stay
+byte-faithful to the old per-pair ``str.find`` scan: same reference, same
+offset, full path over basename. Pinned by a frozen golden on a stress fixture
+and a randomized differential test against the old logic.
 """
 
 from __future__ import annotations
@@ -47,9 +41,7 @@ def _derive(root: Path, spec: dict[str, str]) -> list[dict]:
     )
 
 
-# ---------------------------------------------------------------------------
 # Frozen golden
-# ---------------------------------------------------------------------------
 
 # Exercises: full-path match, full-path-that-is-a-short-basename (x.py),
 # long unique basename fallback (settings_loader.py), basename collision
@@ -109,9 +101,7 @@ def test_full_path_wins_over_basename(tmp_path: Path) -> None:
     assert by_pair[("main.py", "src/loader.py")] == "offset:15"
 
 
-# ---------------------------------------------------------------------------
 # Randomized differential test vs the old per-pair implementation
-# ---------------------------------------------------------------------------
 
 
 def _old_find(text: str, tgt_rel: str, basename_to_rels: dict[str, list[str]]) -> int:

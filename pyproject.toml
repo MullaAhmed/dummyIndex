@@ -83,7 +83,6 @@ markers = [
     "unit: unit tests",
     "integration: integration tests",
     "behavior_arms: opt-in, model-dependent two-arm behavior-gate run; shells out to the real `claude` CLI and costs real tokens. Excluded from the default run — requires DUMMYINDEX_BEHAVIOR_ARMS=1.",
-    "benchmark_smoke: opt-in smoke stage for benchmarks/ that shells out to the real `opencode` CLI and costs real tokens. Excluded from the default run — requires DUMMYINDEX_BENCH_ALLOW_PAY=1 and --execute.",
 ]
 
 [project.scripts]

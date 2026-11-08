@@ -1,4 +1,4 @@
-"""`dummyindex context equip <verb>` — the codified, evolving toolkit engine.
+"""`dummyindex context equip <verb>`: the codified, evolving toolkit engine (wire-only).
 
 Verb surface (spec §9). ``apply`` is an EXPLICIT verb — a bare ``equip`` (a
 help/discovery probe) no longer applies; it prints usage and exits 2 so a probe
@@ -95,15 +95,14 @@ from .verbs import (
     run_uninstall,
 )
 
-# ----- dispatch -------------------------------------------------------------
+# --- dispatch
 
 
 def run(args: list[str]) -> int:
-    """Parse the verb, route to its handler. ``apply`` is now EXPLICIT.
+    """Parse the verb, route to its handler.
 
-    A verbless invocation no longer silently applies (a help/discovery probe
-    must never mutate the repo). The one carve-out is the read-only
-    ``--dry-run`` plan, which writes nothing — that keeps working verbless.
+    A verbless call refuses (a help/discovery probe must never mutate the repo),
+    except the read-only ``--dry-run`` plan.
     """
     verb, rest = _split_verb(args)
     if verb is None:
@@ -151,14 +150,10 @@ _VERB_REQUIRED_MESSAGE = (
 
 
 def _split_verb(args: list[str]) -> tuple[EquipVerb | None, list[str]]:
-    """Peel a leading verb token off ``args``.
+    """Peel a leading :class:`EquipVerb` token off ``args``.
 
-    The first token is a verb only when it matches an :class:`EquipVerb` member.
-    Returns ``None`` for the verb when there is no leading verb (bare ``equip``,
-    ``equip <path>``, ``equip --dry-run`` …) — apply is no longer the silent
-    default, because a help/discovery probe must never mutate the repo. The
-    caller decides what to do with the verbless case (refuse, or honour the
-    read-only ``--dry-run`` carve-out).
+    The verb is ``None`` when there is none (bare ``equip``, ``equip <path>``,
+    ``equip --dry-run`` …); the caller refuses or honours the ``--dry-run`` carve-out.
     """
     if args:
         try:
@@ -168,7 +163,7 @@ def _split_verb(args: list[str]) -> tuple[EquipVerb | None, list[str]]:
     return None, list(args)
 
 
-# ----- verb: apply ----------------------------------------------------------
+# --- verb: apply
 
 
 def run_apply(rest: list[str]) -> int:
@@ -372,8 +367,8 @@ def _run_apply(
             and not profile_has_frontend(profile)
             and not any(Capability.FRONTEND in a.capabilities for a in decision.adopt)
         ):
-            # Make the stack-consistency skip visible (audit C7): the plan text
-            # asked for frontend, but the repo shows no frontend evidence.
+            # Make the stack-consistency skip visible: the plan text asked for
+            # frontend, but the repo shows no frontend evidence.
             print(
                 "note: proposal mentions frontend work but the stack shows no "
                 "frontend — skipped the Frontend Developer adoption (the "
@@ -465,14 +460,10 @@ def _apply_write(
 ) -> int:
     """Write generated files (USER_MODIFIED-safe), wire hooks, MERGE the manifest.
 
-    ``prior`` is the manifest read once by the caller (so the specialist-carry-
-    forward decision and the never-clobber baselines come from the same read).
-
-    The manifest write is a merge, never a rebuild (never-silently-drop): any
-    prior record this run does not re-derive — marketplace plugins, vendored
-    files, adopted specialists, even a generated record under a stale name —
-    is carried forward verbatim. A re-derived adoption or hook record replaces
-    its prior same-name record exactly once.
+    ``prior`` is read once by the caller so carry-forward and never-clobber baselines
+    agree. The manifest is merged, never rebuilt: every prior record this run does not
+    re-derive (marketplace, vendored, adopted, stale-named generated) carries forward
+    verbatim; a re-derived adoption or hook record replaces its same-name prior once.
     """
     prior_by_name = {i.name: i for i in prior.items}
 
@@ -607,10 +598,8 @@ def _apply_write(
         if not as_json:
             print(f"  write   {item.name}  ->  {rel_path}")
 
-    # Adopted specialists: manifest records only, never written to disk.
-    # Dedupe by name against this run's rendered set — a generated item and a
-    # re-derived adoption of the same name must never coexist (the generated
-    # record wins; the duplicate-frontend-reviewer defect).
+    # Adopted specialists: manifest records only, never written to disk. A generated
+    # item and a re-derived adoption of one name must never coexist: generated wins.
     seen = {i.name for i in written}
     adopted: list[str] = []
     for adopt in decision.adopt:

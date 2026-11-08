@@ -1,9 +1,7 @@
 """Closed alphabet for the audit-debate domain.
 
-The audit feature reuses the council's effort dial (``CouncilMode``) and the
-model alphabet (``ModelChoice``) from ``context.domains.config`` — they mean the
-same thing here, so they are not re-declared. What is local to audit is the
-debate-log status alphabet and the hard cap on rebuttal rounds.
+``CouncilMode`` and ``ModelChoice`` are reused from ``context.domains.config``;
+only the debate-log status alphabet and the rebuttal-round cap are local.
 """
 
 from __future__ import annotations

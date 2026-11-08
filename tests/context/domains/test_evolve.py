@@ -1,14 +1,10 @@
 """Tests for ``context/domains/evolve.py`` — the self-improvement loop domain.
 
-Coverage: harvest parsers keep citations intact (audit findings, session-memory
-corrections, reconcile deltas, transcript adoption misses with
-projects-root-relative slug citations), candidate validation + the scope guard
-(source code / spec bodies / loop state are denied, ≤5 targets), the gate's
-exact-candidate gate (covered in test_evolve_gate.py), tolerant JSONL reads, and the
-prediction re-check (a flipped promote is flagged until rolled back).
-
-Transcript scanning is pointed at a constructed corpus via ``projects_root``
-— never at the machine's real ``~/.claude/projects``.
+Covers: harvest parsers keep citations intact; candidate validation + scope guard
+(source code / spec bodies / loop state denied, ≤5 targets); tolerant JSONL reads;
+the prediction re-check (a flipped promote is flagged until rolled back).
+Transcript scanning uses a constructed corpus via ``projects_root``, never the
+machine's real ``~/.claude/projects``.
 """
 
 from __future__ import annotations
@@ -41,7 +37,7 @@ pytestmark = pytest.mark.unit
 _EVOLVE_FIXTURES = FIXTURES_DIR / "evolve"
 
 
-# ----- shared fixtures ----------------------------------------------------------
+# --- shared fixtures
 
 
 @pytest.fixture()
@@ -89,7 +85,7 @@ def _seed_projects(tmp_path: Path) -> Path:
     return projects
 
 
-# ----- harvest ------------------------------------------------------------------
+# --- harvest
 
 
 def test_harvest_audit_findings_keep_citations(ctx: Path, tmp_path: Path) -> None:
@@ -147,7 +143,7 @@ def test_harvest_report_round_trips_through_dict(ctx: Path, tmp_path: Path) -> N
     assert revived == report
 
 
-# ----- candidate validation + scope guard ---------------------------------------
+# --- candidate validation + scope guard
 
 
 def test_validate_candidate_accepts_a_well_formed_candidate(
@@ -244,7 +240,7 @@ def test_load_candidates_skips_corrupt_lines_with_warnings(
     assert len(warnings) == 1  # the non-JSON line warns instead of failing
 
 
-# ----- decision history + predictions -------------------------------------------
+# --- decision history + predictions
 
 
 def test_record_and_read_events_round_trip(ctx: Path) -> None:

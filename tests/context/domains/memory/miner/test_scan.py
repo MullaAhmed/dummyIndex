@@ -82,7 +82,7 @@ def _human_line(
     return json.dumps(row)
 
 
-# --- discover_project_dirs -------------------------------------------------
+# --- discover_project_dirs
 
 
 def test_discover_returns_empty_tuple_when_store_missing(tmp_path: Path) -> None:
@@ -127,7 +127,7 @@ def test_main_transcript_files_exclude_nested_subagent_files(tmp_path: Path) -> 
     assert iter_main_transcript_files(project) == (main,)
 
 
-# --- parse_transcript -------------------------------------------------
+# --- parse_transcript
 
 
 def test_parse_pairs_tool_use_with_tool_result(tmp_path: Path) -> None:
@@ -192,7 +192,7 @@ def test_parse_missing_file_returns_empty(tmp_path: Path) -> None:
     assert parse_transcript(tmp_path / "nope.jsonl") == ()
 
 
-# --- parse_skill_directive_events ----------------------------------------
+# --- parse_skill_directive_events
 
 
 def test_parse_skill_directives_requires_exact_row_cwd(tmp_path: Path) -> None:

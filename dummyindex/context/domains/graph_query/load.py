@@ -1,11 +1,10 @@
 """Load ``features/symbol-graph.json`` into a directed multigraph.
 
-The storage reader reconstructs legacy or sharded logical node-link data.
-The graph is an **undirected** networkx node-link export whose links
-live under the ``links`` key. networkx normalises ``source``/``target``
-on undirected graphs, so the true direction of every link is carried in
-its ``_src``/``_tgt`` attributes — ``_src calls _tgt``, ``_src
-rationale_for _tgt`` — and this loader reads only those.
+The storage reader reconstructs legacy or sharded node-link data: an
+**undirected** networkx export with links under ``links``. networkx
+normalises ``source``/``target`` on undirected graphs, so true direction
+lives in ``_src``/``_tgt`` (``_src calls _tgt``) and this loader reads only
+those.
 """
 
 from __future__ import annotations

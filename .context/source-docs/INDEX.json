@@ -1270,9 +1270,10 @@
       "mtime": 1794085401.1248212,
       "age_delta_seconds": 235.93499779701233,
       "age_bucket": "recent",
-      "referenced_count": 298,
+      "referenced_count": 301,
       "broken_refs": [
         "benchmarks/retrieval/RESULTS.md",
+        "dummyindex_version",
         "features/seed-rank.json",
         "features/graph-communities.json",
         "imports_from",
@@ -1414,7 +1415,7 @@
         "V0_SCOPE.md",
         "pipeline.structure"
       ],
-      "broken_ratio": 0.4732,
+      "broken_ratio": 0.4718,
       "confidence": "low",
       "is_external": false,
       "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\pr24"

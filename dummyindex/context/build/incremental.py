@@ -1,17 +1,10 @@
-"""Incremental rebuild — quick-exit when no tracked file has changed.
+"""Incremental rebuild: quick-exit when no tracked file has changed.
 
-The check is cheap: hash every detected source + doc file and compare
-against the fingerprints in `.context/map/files.json` (written by every
-refresh). If added/modified/removed sets are all empty, return without
-touching disk.
-
-When anything has changed, fall through to a full build. The per-file
-extraction cache (pipeline.cache) keeps unchanged-file work near zero, so a
-"full rebuild" after a one-file edit is still fast.
-
-Docs land in the same manifest as code, so a README edit triggers a
-rebuild too — important once `source-docs/INDEX.{json,md}` exists,
-because its staleness signals depend on doc content.
+Hashes every detected source and in-repo doc file against the prior fingerprints
+(``map/files.json``, plus ``cache/manifest.json`` for docs) and returns without touching
+disk when nothing changed. Docs count because the source-docs catalog's staleness
+depends on them. Otherwise a curated index gets the non-destructive refresh and any
+other index a full build, which the per-file extraction cache keeps fast.
 """
 
 from __future__ import annotations
@@ -51,16 +44,13 @@ class IncrementalResult:
     skipped: bool
     changes: ChangeSet
     build_result: BuildResult | None
-    # Non-destructive enriched path (Phase 1): when the on-disk index is
-    # curated/enriched, ``--changed`` refreshes only deterministic artefacts
-    # and reports drift instead of re-clustering. ``preserved_enriched`` is
-    # True in that case; ``refresh_result`` / ``reconcile`` carry the detail.
+    # On a curated index ``--changed`` refreshes only deterministic artefacts and
+    # reports drift instead of re-clustering; ``refresh_result``/``reconcile`` carry it.
     preserved_enriched: bool = False
     refresh_result: RefreshResult | None = None
     reconcile: ReconcileReport | None = None
-    # True when the curated taxonomy was detected only via the on-disk
-    # feature dirs while ``features/INDEX.json`` reads deterministic-only —
-    # i.e. INDEX.json is broken / out of sync and needs repair.
+    # Curation was found only in the feature dirs while ``features/INDEX.json`` reads
+    # deterministic-only, i.e. INDEX.json is out of sync and needs repair.
     index_desync: bool = False
 
 
@@ -69,31 +59,17 @@ def rebuild_changed(
     *,
     cache_root: Path | None = None,
     bootstrap: bool = False,
-    dummyindex_version: str = "0.0.0",
+    dummyindex_version: str | None = None,
     extra_doc_roots: Sequence[Path] = (),
     full: bool = False,
 ) -> IncrementalResult:
     """Detect changed files since the last build; rebuild only if any changed.
 
-    ``extra_doc_roots`` are forwarded to ``build_all`` so a rebuild
-    preserves whatever external doc locations the original ingest used.
-    They don't influence the change-detection itself (which fingerprints
-    code files); they only matter once a rebuild actually fires.
-
-    **Non-destructive by default (Phase 1).** When the on-disk index is
-    *enriched/curated* (≥1 feature whose id isn't ``community-*`` or whose
-    confidence is ``INFERRED``), a change does **not** trigger a full
-    ``build_all`` — that would re-run community detection and clobber the
-    council's taxonomy + enriched docs. Instead only the deterministic,
-    enrichment-free artefacts are refreshed and a reconcile report is
-    computed. The reconcile anchor (``meta.indexed_commit``) is **not**
-    advanced here — it tracks the last *reconcile*, and only a council
-    ``reconcile-stamp`` (or a fresh ingest) moves it (Model B). A
-    deterministic-only index (all ``community-*``/``EXTRACTED``) has nothing
-    enriched to lose, so it still full-builds.
-
-    ``full=True`` forces the old full re-cluster regardless — the caller is
-    responsible for warning that it discards curated taxonomy + enrichment.
+    A curated index (a feature not ``community-*``, or ``INFERRED``) is not re-clustered:
+    deterministic artefacts refresh, a reconcile report is computed, and
+    ``meta.indexed_commit`` stays. ``full=True`` forces the destructive re-cluster (the
+    caller must warn). ``dummyindex_version=None`` leaves the stamp and cache scope alone
+    on that path; a full build stamps ``"0.0.0"``. External doc roots are not diffed.
     """
     root = root.resolve()
     context_dir = root / ".context"
@@ -121,22 +97,13 @@ def rebuild_changed(
 
     prior_by_path = _read_prior_fingerprints(files_json)
     if prior_by_path is None:
-        # Fall back to the older cache/manifest.json fingerprints.
-        # map/files.json is refresh-time state and is git-tracked, while
-        # cache/ is gitignored (.gitignore:19, .context/.gitignore:3) and
-        # therefore absent on every fresh clone — so files.json is the
-        # primary change-detection store and the manifest backstops
-        # installs whose files.json predates the refresh-time writer.
+        # Fall back to cache/manifest.json. files.json is git-tracked, but cache/ is
+        # gitignored and absent on every fresh clone, so files.json is primary and the
+        # manifest backstops installs whose files.json predates the refresh-time writer.
         prior_by_path = _read_prior_fingerprints_via_manifest(context_dir)
     else:
-        # files.json tracks code only, but doc edits must still trigger a
-        # rebuild (the source-docs catalog's staleness signals depend on
-        # doc content). Union the manifest's fingerprints underneath:
-        # files.json wins key collisions (fresh file_hash digests), and the
-        # manifest supplies the docs. For non-frontmattered docs the raw
-        # byte sha equals the file_hash digest; frontmatter-bearing docs
-        # can over-report modified — the deferred manifest-hash proposal's
-        # territory, same as drift.py.
+        # files.json tracks code only; the manifest supplies the doc fingerprints
+        # underneath, and files.json wins key collisions.
         manifest_fps = _read_prior_fingerprints_via_manifest(context_dir)
         if manifest_fps:
             for fp_path, fp_sha in manifest_fps.items():
@@ -154,17 +121,13 @@ def rebuild_changed(
     if not changes.has_changes and prior_by_path is not None:
         return IncrementalResult(skipped=True, changes=changes, build_result=None)
 
-    # Non-destructive guard: an enriched/curated index must never be
-    # re-clustered or re-stubbed by `--changed`. Only an explicit `full`
-    # (or a fresh `ingest`) may discard curated taxonomy. The status also
-    # reports a desync when the curated dirs survived but INDEX.json was
-    # clobbered to deterministic-only stubs.
+    # Non-destructive guard: only an explicit `full` (or a fresh `ingest`) may discard
+    # curated taxonomy. The status also flags a desync when the curated dirs survived
+    # but INDEX.json was clobbered to deterministic-only stubs.
     status = enriched_index_status(context_dir)
     if not full and status.enriched:
-        # The refresh leaves ``meta.indexed_commit`` untouched (Model B), so
-        # reconcile always diffs the persisted anchor..HEAD(+worktree) and
-        # captures committed drift regardless of call order. Computed here so
-        # the result carries the drift for the caller to surface.
+        # The refresh keeps the anchor, so reconcile diffs anchor..HEAD(+worktree) in
+        # either call order; computed here so the result carries the drift.
         reconcile = compute_reconcile_report(context_dir, root)
         refresh = refresh_deterministic_artifacts(
             root,
@@ -187,7 +150,7 @@ def rebuild_changed(
         out_root=root,
         cache_root=cache_root,
         bootstrap=bootstrap,
-        dummyindex_version=dummyindex_version,
+        dummyindex_version=dummyindex_version or "0.0.0",
         extra_doc_roots=extra_doc_roots,
     )
     return IncrementalResult(skipped=False, changes=changes, build_result=result)
@@ -197,14 +160,10 @@ def rebuild_changed(
 class EnrichedIndexStatus:
     """Whether an on-disk index carries curated/enriched taxonomy.
 
-    - ``enriched``: True when *anything* curated would be lost by a
-      destructive re-cluster — read from ``features/INDEX.json`` OR the
-      per-feature dirs on disk (so a clobbered INDEX.json can't disarm it).
-    - ``desync``: True when the on-disk feature dirs prove the index is
-      enriched but ``features/INDEX.json`` itself looks deterministic-only —
-      i.e. INDEX.json is broken/out of sync with the curated dirs. The
-      caller surfaces this so the user repairs INDEX.json instead of relying
-      on the silent dir-scan rescue forever.
+    ``enriched``: a destructive re-cluster would lose curation, per ``features/INDEX.json``
+    OR the per-feature dirs (so a clobbered INDEX.json can't disarm it). ``desync``: the
+    dirs prove curation but INDEX.json reads deterministic-only; the caller surfaces it so
+    the user repairs INDEX.json instead of relying on the dir-scan rescue.
     """
 
     enriched: bool
@@ -222,15 +181,11 @@ def _feature_entry_is_enriched(feature_id: str, confidence: object) -> bool:
 
 
 def _index_json_says_enriched(context_dir: Path) -> bool | None:
-    """Read ``features/INDEX.json`` only. Returns:
+    """Read ``features/INDEX.json`` only. Never raises.
 
-    - ``None`` when the index is genuinely absent (nothing to lose there).
-    - ``True`` when INDEX.json is unreadable/corrupt/malformed (bias to
-      preserve) OR lists ≥1 curated feature.
-    - ``False`` when INDEX.json parses cleanly and lists only
-      ``community-*`` / ``EXTRACTED`` features (or is explicitly empty).
-
-    Never raises.
+    ``None``: the file is absent. ``True``: unreadable, corrupt or malformed (bias to
+    preserve), or lists ≥1 curated feature. ``False``: parses cleanly and lists only
+    ``community-*``/``EXTRACTED`` features, or none.
     """
     index_json = context_dir / "features" / "INDEX.json"
     try:
@@ -259,15 +214,12 @@ def _index_json_says_enriched(context_dir: Path) -> bool | None:
 
 
 def _feature_dirs_say_enriched(context_dir: Path) -> bool:
-    """Scan ``features/*/feature.json`` on disk for curated taxonomy.
+    """Scan ``features/*/feature.json`` on disk for curated taxonomy. Never raises.
 
-    A clobbered ``features/INDEX.json`` (re-shattered to ``community-*``
-    stubs) must NOT disarm the guard while the curated per-feature dirs are
-    still on disk. Any dir whose id isn't ``community-*`` — or whose
-    ``feature.json`` carries INFERRED confidence — proves curation survived.
-    Cheap: one glob, reading only ``feature_id`` + ``confidence``. Biases to
-    preserve: an unreadable/corrupt ``feature.json`` counts as enriched.
-    Never raises.
+    An INDEX.json re-shattered into ``community-*`` stubs must not disarm the guard
+    while curated dirs remain: a dir id off ``community-*``, or ``INFERRED`` confidence,
+    proves curation survived. An unreadable or corrupt ``feature.json`` counts as
+    enriched (bias to preserve).
     """
     features_dir = context_dir / "features"
     if not features_dir.is_dir():
@@ -303,20 +255,11 @@ def _feature_dirs_say_enriched(context_dir: Path) -> bool:
 
 
 def enriched_index_status(context_dir: Path) -> EnrichedIndexStatus:
-    """Full enriched-index verdict: INDEX.json OR the per-feature dirs.
+    """Full enriched-index verdict: INDEX.json OR the per-feature dirs. Never raises.
 
-    This gates a *destructive* full rebuild, so it **biases to preserve**:
-    when the index might be enriched but we can't prove it isn't, return
-    ``enriched=True`` (keep the curated taxonomy). Only a genuinely-absent or
-    provably-empty index returns ``enriched=False``.
-
-    The dir-scan closes the self-disarm hole: once ``features/INDEX.json``
-    has been re-shattered into ``community-*`` stubs, the curated per-feature
-    directories still on disk keep the guard armed. When the dir-scan proves
-    enriched but INDEX.json reads deterministic-only, ``desync=True`` flags
-    the broken INDEX.json so the caller can warn.
-
-    Never raises.
+    It gates a destructive rebuild, so it biases to preserve: only an absent or provably
+    deterministic index returns ``enriched=False``. ``desync=True`` when the dirs prove
+    curation but INDEX.json reads deterministic-only, so the caller can warn.
     """
     index_verdict = _index_json_says_enriched(context_dir)
     if index_verdict is True:
@@ -385,13 +328,10 @@ def _read_prior_fingerprints_via_manifest(
 ) -> dict[str, str] | None:
     """Pull doc + code fingerprints from cache/manifest.json.
 
-    Dual role: fallback when ``map/files.json`` is absent/unreadable, and
-    doc-fingerprint supplier otherwise (files.json tracks code only). For
-    non-frontmattered docs its raw-byte shas equal ``file_hash`` digests;
-    frontmatter-bearing files can over-report ``modified`` — the deferred
-    manifest-hash proposal's territory. A corrupt/truncated manifest
-    degrades to ``None`` (same guard as ``drift._manifest_shas``) instead of
-    aborting the rebuild.
+    The fallback when ``map/files.json`` is absent/unreadable, else the doc-fingerprint
+    source (files.json tracks code only). Raw-byte shas equal ``file_hash`` digests for
+    docs without frontmatter; frontmatter-bearing files can over-report ``modified``.
+    A corrupt or truncated manifest degrades to ``None`` instead of aborting.
     """
     from dummyindex.context.build.manifest import read_manifest
 

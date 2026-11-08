@@ -1,19 +1,10 @@
-"""Stack-aware author picker for the v0.14 council.
+"""Stack-aware author picker for the council.
 
-Given a feature's file list and the repo's harvested dependency tokens,
-decide *which* stack-specialist "dev" persona should author that feature's
-docs. Deterministic, first-match-wins, no LLM.
-
-The precedence table is encoded as a tuple of :class:`_Rule` objects — a
-predicate over ``(feature_files, dep_tokens)`` plus the persona/subagent it
-yields and a framework *resolver* (the matched framework can depend on the
-inputs, e.g. React vs. Vue vs. Svelte for the frontend rule). The first
-rule whose predicate returns true wins; the final rule's predicate is the
-constant-true fallback.
-
-The ``subagent_type`` values are the exact **end-user-global** Claude agent
-names (``Backend Architect``, ``Frontend Developer``, …) — never lowercased
-or hyphenated, never project-local.
+Given a feature's file list and the repo's dependency tokens, picks which
+stack-specialist "dev" persona authors that feature's docs. Deterministic, no
+LLM: first-match-wins over :data:`_RULES`, whose last rule is a constant-true
+fallback. ``subagent_type`` values are the exact end-user-global Claude agent
+names (``Backend Architect``, …), never lowercased, hyphenated or project-local.
 """
 
 from __future__ import annotations
@@ -78,7 +69,7 @@ class PersonaId(str, Enum):
     GENERIC_SENIOR = "dev-generic-senior"
 
 
-# --- dependency-token alphabets ----------------------------------------------
+# --- dependency-token alphabets
 _FRONTEND_DEP_TOKENS: tuple[str, ...] = ("react", "vue", "svelte")
 _AI_DEP_TOKENS: frozenset[str] = frozenset(
     {
@@ -126,7 +117,7 @@ class DevPickError(ValueError):
     """Raised when the picker cannot resolve a persona for the given inputs."""
 
 
-# --- predicate / resolver helpers --------------------------------------------
+# --- predicate / resolver helpers
 
 
 def _any_path_contains(files: tuple[str, ...], needle: str) -> bool:
@@ -262,10 +253,8 @@ _RULES: tuple[_Rule, ...] = (
 def pick_dev(*, feature_files: tuple[str, ...], dep_tokens: frozenset[str]) -> DevPick:
     """Resolve the authoring persona for a feature.
 
-    First-match-wins over :data:`_RULES`. The fallback rule guarantees a
-    return, so :class:`DevPickError` is reserved for a malformed table — if
-    no rule matched (which the constant-true fallback should prevent), it is
-    raised rather than returning ``None``.
+    First-match-wins over :data:`_RULES`. The constant-true fallback guarantees
+    a return, so :class:`DevPickError` means a malformed table (never ``None``).
     """
     for rule in _RULES:
         if rule.predicate(feature_files, dep_tokens):
@@ -278,7 +267,7 @@ def pick_dev(*, feature_files: tuple[str, ...], dep_tokens: frozenset[str]) -> D
     raise DevPickError("no rule matched and no fallback fired")
 
 
-# --- feature/manifest I/O (relocated from cli/dev_pick.py so domains own it) ---
+# --- feature/manifest I/O
 
 _MANIFEST_NAMES: tuple[str, ...] = (
     "pyproject.toml",

@@ -1,35 +1,11 @@
 # build-time git interaction: shells out to git, degrades to None on any failure
 """Commit-anchored delta detection via ``git`` subprocess.
 
-The pure-filesystem helpers in ``pipeline/io/git.py`` are intentionally
-subprocess-free and stay that way. This module is the *build-lifecycle*
-counterpart: it shells out to ``git`` to learn the current HEAD and the
-set of paths that changed since a recorded anchor commit. It lives under
-``context/build/`` because it's consumed only by the build lifecycle
-(``runner``, ``incremental``, the reconcile report) and never by
-``pipeline`` or ``analysis``; ``subprocess`` is stdlib, so this respects
-the §2 layering table without inventing a ``runtime/`` layer for a single
-non-cross-cutting helper.
-
-Everything here **degrades gracefully**: when ``git`` is absent, the
-directory isn't a repo, or the anchor commit is unknown, the functions
-return ``None`` / empty rather than raising. These results gate the
-non-destructive rebuild path and must never crash the command they guard.
-
-The delta covers committed history **and** the working tree, including
-untracked files:
-
-- ``git diff --name-status --no-renames <since>`` reports tracked
-  additions / modifications / deletions from ``<since>`` through the
-  working tree (so uncommitted edits are included). ``--no-renames``
-  keeps every line single-status (``A``/``M``/``D``) so a rename never
-  appears as the unparsed ``R100 old new`` form.
-- ``git status --porcelain -uall`` contributes the ``??`` (untracked)
-  files that ``git diff`` never sees. ``-uall`` lists files inside a new
-  directory individually rather than collapsing to a bare ``dir/``.
-
-The two sources cover disjoint sets (diff = tracked, ``??`` = untracked),
-so there is no double-count when they are merged.
+Subprocess lives here, not in the deliberately subprocess-free ``pipeline/io/git.py``.
+Nothing here raises: a missing git, non-repo or unknown anchor yields ``None`` (or
+``False``), because these results gate the non-destructive rebuild and must never crash
+the command they guard. :func:`changed_paths` merges tracked changes (``git diff``) with
+untracked files (``git status``); the two sets are disjoint, so nothing double-counts.
 """
 
 from __future__ import annotations
@@ -69,12 +45,9 @@ def head_commit(root: Path) -> str | None:
 def working_tree_dirty(root: Path) -> bool | None:
     """True when the working tree has uncommitted changes OUTSIDE ``.context/``.
 
-    ``reconcile-stamp`` uses this to warn that source the council just
-    reconciled is still uncommitted — the stamp anchors to HEAD, so any
-    uncommitted source re-surfaces as drift on the next reconcile. ``.context/``
-    churn is excluded (reconcile always writes there, so it would always read
-    dirty otherwise). Returns ``None`` when git is absent or ``root`` isn't a
-    repo. Never raises.
+    ``reconcile-stamp`` warns with it: the stamp anchors to HEAD, so uncommitted source
+    re-surfaces as drift next reconcile. ``.context/`` is excluded because reconcile
+    always writes there. ``None`` when git is absent or ``root`` isn't a repo. Never raises.
     """
     out = _run_git(root, "-c", "core.quotePath=false", "status", "--porcelain", "-uall")
     if out is None:
@@ -124,9 +97,7 @@ def is_ancestor_of_head(root: Path, sha: str) -> bool | None:
         return None
     if head_commit(root) is None:
         return None
-    # `merge-base --is-ancestor A B` exits 0 when A is an ancestor of B,
-    # 1 when not, and >1 on error — `_run_git` maps any non-zero to None,
-    # so probe success/failure directly via a second call we can read.
+    # `_run_git` maps every non-zero exit to None, but exit 1 here means "not an ancestor".
     return _is_ancestor_exit(root, sha)
 
 
@@ -158,27 +129,14 @@ def _is_ancestor_exit(root: Path, sha: str) -> bool | None:
 def commits_since(root: Path, anchor: str | None) -> int | None:
     """Return ``git rev-list --count <anchor>..HEAD`` for ``root``, or ``None``.
 
-    The number of commits that landed on HEAD since ``anchor`` — the
-    commit-count throttle the GC sweep anchors on (mirroring how reconcile
-    anchors on ``meta.indexed_commit``). When ``anchor`` *is* HEAD the count
-    is ``0`` (not ``None``): a genuine "nothing since" answer.
-
-    ``None`` — the signal goes safely dark — when:
-
-    - ``anchor`` is ``None`` (no anchor recorded yet);
-    - git is absent or ``root`` isn't a repo;
-    - HEAD is unborn (a fresh ``git init`` with no commits); or
-    - ``anchor`` is unknown to the repo (a history rewrite orphaned it).
-
-    The unknown-sha case is validated up front via ``commit_exists`` rather
-    than relying on ``rev-list``'s exit code, so a non-repo and a missing
-    object both collapse to ``None`` here. Never raises.
+    The commit-count throttle the GC sweep anchors on; ``0`` when ``anchor`` is HEAD.
+    ``None`` (the signal goes safely dark) when ``anchor`` is ``None``, git is absent,
+    ``root`` isn't a repo, HEAD is unborn, or ``anchor`` is unknown to the repo (checked
+    via :func:`commit_exists` up front, not ``rev-list``'s exit code). Never raises.
     """
     if anchor is None:
         return None
-    # An anchor the repo doesn't know (gc'd / rewritten history) — or no repo
-    # at all — can't be counted against; `commit_exists` is True only when the
-    # object resolves to a commit in a reachable repo.
+    # An unknown anchor (gc'd / rewritten history) or no repo: nothing to count against.
     if commit_exists(root, anchor) is not True:
         return None
     # An unborn HEAD has no commit to count up to.
@@ -199,11 +157,10 @@ def commits_since(root: Path, anchor: str | None) -> int | None:
 def changed_paths(root: Path, since: str) -> ChangedPaths | None:
     """Paths changed between ``since`` and HEAD, including the working tree.
 
-    Composes ``git diff --name-status --no-renames <since>`` (tracked
-    changes through the working tree) with the ``??`` lines of
-    ``git status --porcelain -uall`` (untracked files). Returns ``None``
-    when git is absent, ``root`` isn't a repo, or ``since`` is unknown to
-    the repo (e.g. an anchor commit that was never fetched). Never raises.
+    Composes ``git diff --name-status --no-renames <since>`` (tracked changes through the
+    working tree; ``--no-renames`` keeps every line ``A``/``M``/``D``) with the ``??``
+    lines of ``git status --porcelain -uall`` (untracked files, listed one by one).
+    ``None`` when git is absent, ``root`` isn't a repo, or ``since`` is unknown. Never raises.
     """
     if not since:
         return None
@@ -237,8 +194,7 @@ def changed_paths(root: Path, since: str) -> ChangedPaths | None:
             modified.add(path)
         elif status == "D":
             removed.add(path)
-        # Any other status (copies, type-changes) is ignored — the spec's
-        # classification only cares about added / modified / removed.
+        # Other statuses (copies, type-changes) are ignored.
 
     status_out = _run_git(
         root, "-c", "core.quotePath=false", "status", "--porcelain", "-uall"

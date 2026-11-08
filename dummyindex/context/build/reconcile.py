@@ -1,32 +1,11 @@
-# read-only commit-diff → feature-ownership mapping; never writes, never decides
-"""Reconcile report — detect drift between the indexed commit and HEAD.
+# commit-diff → feature-ownership drift report (read-only); stamp_reconciled is the one write
+"""Reconcile report: detect drift between the indexed commit and HEAD.
 
-This is the deterministic *detection* half of the commit-anchored update
-(the council/LLM owns placement decisions — see the spec). Given a built
-``.context/`` and the repo root, it:
-
-1. reads ``meta.indexed_commit`` (the commit the index was reconciled
-   against),
-2. asks ``git_delta.changed_paths`` for added / modified / removed paths
-   since that commit (working tree included),
-3. maps each changed-or-removed path to the feature(s) that own it (each
-   ``features/<id>/feature.json`` lists its ``files``).
-
-The detection half (``compute_reconcile_report``) **never writes** anything
-and **never decides taxonomy** — it only reports. When there is no anchor
-commit, no git, or no features, it returns an empty report rather than
-raising.
-
-``stamp_reconciled`` is the one deliberate write: the transactional boundary
-the council calls *after* it has placed every unassigned file and enriched
-every placed/drifted feature. It advances ``meta.indexed_commit`` to HEAD and
-re-stamps ``cache/manifest.json``, so the anchor and drift fingerprints
-advance as one consistent "docs describe this state" pair (Model B) —
-nothing else (besides a fresh ingest) moves either.
-It **refuses** (unless forced) while any un-reconciled work remains
-(unassigned files or features awaiting enrichment), because advancing past
-them would silently forget them — the same data-loss class this redesign
-closed, one layer up.
+:func:`compute_reconcile_report` diffs ``meta.indexed_commit`` against HEAD and the
+working tree, mapping each changed path to the features that list it. It never writes
+or decides taxonomy (the council places files); with no anchor or git it reports only
+pending markers. :func:`stamp_reconciled` is the one write: it advances the anchor and
+drift manifest together, refusing while un-reconciled work would be silently forgotten.
 """
 
 from __future__ import annotations
@@ -63,13 +42,10 @@ from dummyindex.pipeline.io.detect import detect
 class AnchorStatus(str, Enum):
     """How the recorded anchor (``meta.indexed_commit``) relates to the repo.
 
-    - ``NONE`` — no anchor recorded (pre-anchor / non-git build).
-    - ``OK`` — the anchor exists and is an ancestor of HEAD.
-    - ``MISSING_FROM_REPO`` — the anchor SHA is unknown to the repo: history
-      was rewritten (rebase/squash) or the commit was never fetched. The delta
-      cannot be computed, so the report must NOT read as clean.
-    - ``NOT_ANCESTOR`` — the anchor exists but isn't an ancestor of HEAD, so a
-      diff against it may attribute other branches' work as drift.
+    ``NONE``: no anchor recorded, or no git to check it. ``OK``: an ancestor of HEAD.
+    ``MISSING_FROM_REPO``: unknown SHA (rebased/squashed or never fetched); the delta
+    can't be computed, so the report must NOT read as clean. ``NOT_ANCESTOR``: not in
+    HEAD's history, so a diff may count other branches' work as drift.
     """
 
     NONE = "none"
@@ -82,21 +58,11 @@ class AnchorStatus(str, Enum):
 class ReconcileReport:
     """Detection-only summary of how the working tree drifted from the index.
 
-    - ``drifted_features``: feature ids that own at least one changed or
-      removed file (sorted, de-duplicated).
-    - ``removed_files``: repo-relative paths that were deleted since the
-      anchor commit.
-    - ``unassigned_new_files``: added paths owned by no feature — the
-      council decides where (if anywhere) they belong.
-    - ``awaiting_enrichment``: feature ids carrying a ``.pending-enrichment``
-      marker — placed by a reconcile op (``scaffold_feature`` /
-      ``assign_files``) but not yet (re-)enriched by the council. Surfaced
-      independently of git so the ``reconcile-stamp`` guard can see them.
-    - ``indexed_commit``: the anchor commit read from meta (``None`` when
-      the index has none, e.g. a non-git build).
-    - ``anchor_status``: how that anchor relates to the repo (see
-      ``AnchorStatus``). ``MISSING_FROM_REPO`` is the rebase/squash orphan: the
-      delta can't be computed, so the report must not read as clean.
+    ``drifted_features`` own a changed or removed file; ``removed_files`` were deleted
+    since the anchor; ``unassigned_new_files`` are added paths no feature owns (the
+    council places them); ``awaiting_enrichment`` carry a ``.pending-enrichment`` marker,
+    read independently of git so the stamp guard sees them. ``indexed_commit`` is the
+    anchor (``None`` when meta has none); ``anchor_status`` is its :class:`AnchorStatus`.
     """
 
     drifted_features: tuple[str, ...] = ()
@@ -264,29 +230,13 @@ def _awaiting_enrichment(context_dir: Path) -> tuple[str, ...]:
 
 @dataclass(frozen=True)
 class StampResult:
-    """Outcome of advancing the reconcile anchor (``stamp_reconciled``).
+    """Outcome of :func:`stamp_reconciled`; ``report`` is the report it decided from.
 
-    - ``stamped_commit``: the sha written to ``meta.indexed_commit``, or
-      ``None`` when nothing was stamped (refused, off-git, or no meta).
-    - ``refused``: blocked by un-reconciled work and ``force`` was not set.
-    - ``off_git``: no HEAD to anchor to (non-git repo or unborn HEAD) — a
-      graceful no-op, not an error (the model falls back to hash-manifest).
-    - ``dirty_source``: uncommitted changes outside ``.context/`` exist — a
-      warning, since that source re-surfaces as drift next reconcile.
-    - ``bootstrapped``: the pre-stamp anchor was ``None`` and this call started
-      commit-anchored tracking — staleness predating the stamp won't appear in
-      commit-anchored signals (the caller prints an honest notice).
-    - ``invalid_to``: an explicit ``--to <sha>`` named a commit unknown to the
-      repo — nothing was written.
-    - ``report``: the reconcile report this decision was made from (always
-      present, so the caller can print the blockers it refused / forced past).
-
-    Cache side effect: a **successful** stamp (``stamped_commit`` set) also
-    writes ``cache/doc-basis.json`` (gitignored) — the per-feature blob-sha
-    snapshot of exactly the bytes the docs now describe, which the drift
-    scanner uses to classify mtime noise as suppressed. Every refusing /
-    no-op outcome — ``refused``, ``off_git``, ``invalid_to``, or missing /
-    unreadable meta — writes nothing, basis included.
+    ``stamped_commit``: the sha written, else ``None``. ``refused``: blocked by
+    un-reconciled work or an orphaned anchor. ``off_git``: no HEAD (a no-op, not an
+    error). ``dirty_source``: uncommitted source outside ``.context/`` will re-surface as
+    drift. ``bootstrapped``: no prior anchor, so older staleness won't show. ``invalid_to``:
+    ``--to`` named an unknown commit. Refusals and no-ops write nothing.
     """
 
     report: ReconcileReport
@@ -305,31 +255,13 @@ def stamp_reconciled(
     force: bool = False,
     to_commit: str | None = None,
 ) -> StampResult:
-    """Advance ``meta.indexed_commit`` — the reconcile boundary.
+    """Advance ``meta.indexed_commit`` to HEAD, or re-baseline to a validated ``to_commit``.
 
-    Without ``to_commit`` the anchor advances to HEAD. With ``to_commit`` it
-    re-baselines to that explicit (validated) commit — the sanctioned recovery
-    for an orphaned anchor after a rebase/squash, closing the hand-edit-meta
-    hole. On success this also re-stamps ``cache/manifest.json`` so the drift
-    oracle's fingerprints describe the tree the docs now describe; see the
-    comment at the write site.
-
-    Refuses (returns ``refused=True``, writes nothing) while the report shows
-    **unassigned new files** or **features awaiting enrichment**, unless
-    ``force=True``. Deliberately does **not** block on ``drifted_features``:
-    re-enriching a drifted feature doesn't clear its drift — only the stamp
-    does — so blocking on drift could never advance. It also refuses to advance
-    from an **orphaned anchor** (``anchor_broken``) without an explicit
-    ``--to`` re-baseline or ``--force``, since a blind advance to HEAD would
-    paper over rewritten history. Off-git is a no-op.
-
-    Note: the only guard is the report computed from the very anchor this call
-    rewrites — once advanced past unreconciled commits, later reports read
-    clean. There is no second source of truth to validate against; the
-    orphaned-anchor refusal + ``--to`` re-baseline are the structural backstop.
-
-    On success it also writes ``cache/doc-basis.json`` (see
-    :func:`_write_doc_basis`); every refusal / no-op path leaves it untouched.
+    Unless ``force``, refuses while unassigned files or features awaiting enrichment remain,
+    or, absent ``to_commit``, while the anchor is orphaned. Drifted features never block:
+    only the stamp clears drift. The only guard is the report from the anchor it rewrites;
+    once advanced, later reports read clean. Off-git is a no-op. Success also writes
+    ``cache/manifest.json`` and ``cache/doc-basis.json``; a refusal or no-op writes nothing.
     """
     root = root.resolve()
     report = compute_reconcile_report(context_dir, root)
@@ -361,16 +293,10 @@ def stamp_reconciled(
     write_meta(meta_path, meta.with_updates(indexed_commit=target))
     _write_doc_basis(context_dir, root)
 
-    # cache/manifest.json means "bytes the docs describe", so it advances
-    # with the anchor, not with a refresh. drift.py:_content_unchanged reads
-    # it to filter mtime rows a git op minted; stamping it on the refresh
-    # path instead would erase the very edit that triggered the rebuild.
-    # manifest_files is derived the same way runner.build_all derives its
-    # set (detect's code files + collect_doc_paths' doc paths, which include
-    # hidden doc dirs detect prunes) so the two writers agree. Containment
-    # mirrors runner: a read-only FS or full disk must warn, not abort a
-    # stamp whose anchor already advanced — hence the derivation is guarded
-    # too.
+    # cache/manifest.json means "bytes the docs describe", so it advances with the anchor,
+    # not on refresh: drift.py:_content_unchanged uses it to filter git-minted mtime rows,
+    # and a refresh-time stamp would erase the edit that triggered the rebuild. Same file
+    # set as runner.build_all; any failure warns, never aborts a stamp already written.
     try:
         detection = detect(scan_root(root))
         raw_code = (detection.get("files", {}) or {}).get("code", []) or []
@@ -416,13 +342,10 @@ def blob_sha(data: bytes) -> str:
 def _write_doc_basis(context_dir: Path, root: Path) -> None:
     """Snapshot every feature-owned file's blob sha into ``doc-basis.json``.
 
-    Content: ``{"basis_version": 1, "features": {<feature_id>: {<rel_path>:
-    <blob_sha>}}}`` computed from the working tree at stamp time — the
-    "docs describe *this* byte state" record. Reuses the manifest writer's
-    containment pattern (resolve under root, silently skip outside/missing).
-    Best-effort by design: an I/O failure here leaves the file absent/stale
-    and the drift scanner falls back conservatively (manifest → mtime); it
-    must never fail an already-stamped boundary.
+    Shape: ``{"basis_version": 1, "features": {<id>: {<rel_path>: <blob_sha>}}}`` from
+    the working tree at stamp time; files outside root or unreadable are skipped.
+    Best-effort: on I/O failure the drift scanner falls back (manifest, then mtime);
+    it must never fail an already-stamped boundary.
     """
     try:
         feature_map = _feature_file_shas(context_dir, root)
@@ -506,11 +429,9 @@ def _is_context_path(path: str) -> bool:
     return path == ".context" or path.startswith(".context/")
 
 
-# dummyindex's own install + equip footprint lives under these directory names.
-# The feature taxonomy can never own agent/skill/command wiring, so these trees
-# and host-instruction files at any repository depth are excluded from the
-# reconcile delta and drift report (a tool's own generated files must never
-# read as un-reconciled user work).
+# dummyindex's own install + equip footprint. The taxonomy can never own agent/skill/
+# command wiring, so these trees and host-instruction files at any depth are excluded
+# from the reconcile delta and drift report.
 _TOOL_DIR_NAMES: frozenset[str] = frozenset(
     {".claude", ".agents", ".codex", ".claude-design"}
 )
@@ -544,13 +465,9 @@ def _is_tool_path(
 def is_non_source_path(path: str, *, project_root: Path | None = None) -> bool:
     """True when ``path`` is dummyindex's own footprint, not user source.
 
-    The canonical, shared non-source predicate: a path is non-source when it
-    lives under the index (``.context``) **or** the tool footprint
-    (``.claude`` / ``.agents`` / ``.codex`` / ``.claude-design`` plus Codex
-    instruction files). Composes :func:`_is_context_path` and
-    :func:`_is_tool_path` so the reconcile delta, drift report, and the Stop
-    gate all agree on what "not feature-ownable work" means — editing only the
-    index or host wiring is never a session that drifted code.
+    The shared predicate: under ``.context`` or the tool footprint (:func:`_is_tool_path`).
+    The reconcile delta, drift report and Stop gate share it, so editing only the index
+    or host wiring never counts as drifted code.
     """
     return _is_context_path(path) or _is_tool_path(path, project_root=project_root)
 

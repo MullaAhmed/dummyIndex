@@ -1,16 +1,10 @@
 """Wire marketplaces + plugins into ``.claude/settings.json``.
 
-Sibling of :mod:`.claude_settings` (and reuses its ``load_settings`` /
-``write_settings``): native plugin state lives under two top-level keys —
-``extraKnownMarketplaces`` (a marketplace the project wants available) and
-``enabledPlugins`` (``"<plugin>@<marketplace>": true``). Same preserve-or-refuse
-+ atomic-write discipline: we never overwrite a settings.json we cannot
-round-trip (a malformed file raises :class:`MalformedSettingsError`).
-
-Read side: :func:`list_marketplaces` / :func:`list_known_marketplaces` expose
-the marketplaces Claude Code already knows (settings declarations + the native
-``~/.claude/plugins/known_marketplaces.json`` registry) so discovery can
-resolve them instead of erroring "not found in known marketplaces".
+State lives under ``extraKnownMarketplaces`` and ``enabledPlugins``
+(``"<plugin>@<marketplace>": true``). Writes reuse :mod:`.claude_settings`'
+preserve-or-refuse + atomic write: we never overwrite a settings.json we cannot
+round-trip. The ``list_*`` readers expose marketplaces Claude Code already knows
+(settings + native ``known_marketplaces.json``) so discovery can resolve them.
 """
 
 from __future__ import annotations
@@ -42,10 +36,9 @@ class DeclaredMarketplace:
 def list_marketplaces(settings_path: Path) -> tuple[DeclaredMarketplace, ...]:
     """``extraKnownMarketplaces`` entries declared in one settings file.
 
-    Read-side and deliberately tolerant: an absent or malformed settings file
-    (or an entry without a github repo) yields no declarations rather than an
-    error — discovery enrichment must never fail because a settings file the
-    user owns is broken (the write path still preserves-or-refuses).
+    Tolerant: an absent or malformed file, or an entry without a github repo,
+    yields no declarations, since discovery must never fail on a broken user file
+    (the write path still preserves-or-refuses).
     """
     try:
         settings = load_settings(settings_path)

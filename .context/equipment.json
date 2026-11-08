@@ -4,7 +4,7 @@
     {
       "kind": "agent",
       "name": "python-implementer",
-      "path": ".claude/agents/python-implementer.md",
+      "path": ".context/equipment/python-implementer.md",
       "source": "generated",
       "capabilities": [
         "implement"
@@ -19,16 +19,45 @@
       ],
       "subagent_type": "python-implementer",
       "version": "1.0.0",
-      "origin_hash": "sha256:e1d0cacf9ace7ff31cdfbf010a3ebc96df989c3a6a231b8d1d0b8551df449284",
+      "origin_hash": "sha256:3372f222faa84c4871bffe5df78d95a3fb1f9f7b2886e0c7cf6b9e2e00f76c8c",
       "marketplace": null,
       "origin_repo": null,
       "origin_ref": null,
-      "mechanism": null
+      "mechanism": null,
+      "capability_id": "dummyindex/implementer-agent",
+      "package_version": "4c2eb544028b",
+      "package_source": "dummyindex/skills/equip/templates/implementer-agent.md.tmpl",
+      "package_sha256": "4c2eb544028bf46ced29abd3c36fec5afd0487f254bd38ee8acf4ca6fb91953c",
+      "required_tools": [
+        "pytest",
+        "ruff"
+      ],
+      "triggers": [
+        "implement"
+      ],
+      "project_binding": {
+        "project": "dummyindex",
+        "stack": "python",
+        "frameworks": [],
+        "conventions": [
+          ".context/conventions/coding-practices.md",
+          ".context/conventions/data-access.md",
+          ".context/conventions/folder-organization.md",
+          ".context/conventions/naming.md",
+          ".context/conventions/testing.md"
+        ],
+        "commands": {
+          "test_command": "uv run pytest -q",
+          "lint_command": "uv run ruff check .",
+          "typecheck_command": null,
+          "format_command": "uv run ruff format <changed-paths>"
+        }
+      }
     },
     {
       "kind": "agent",
       "name": "python-tester",
-      "path": ".claude/agents/python-tester.md",
+      "path": ".context/equipment/python-tester.md",
       "source": "generated",
       "capabilities": [
         "test"
@@ -43,16 +72,45 @@
       ],
       "subagent_type": "python-tester",
       "version": "1.0.0",
-      "origin_hash": "sha256:f5dd31192ba9de02dc98ee162b9e07652d125f81b23783ed0a4a01ee1f931c2f",
+      "origin_hash": "sha256:de14fbe89edc0a27c1b2ad6589fb89fe896aa5b5615f8b335ba23796890404a6",
       "marketplace": null,
       "origin_repo": null,
       "origin_ref": null,
-      "mechanism": null
+      "mechanism": null,
+      "capability_id": "dummyindex/tester-agent",
+      "package_version": "66fa9256e90f",
+      "package_source": "dummyindex/skills/equip/templates/tester-agent.md.tmpl",
+      "package_sha256": "66fa9256e90ff796e99940ce07c55af27e58ff7a0dd7c67b1e3aa15e3f6a4e09",
+      "required_tools": [
+        "pytest",
+        "ruff"
+      ],
+      "triggers": [
+        "test"
+      ],
+      "project_binding": {
+        "project": "dummyindex",
+        "stack": "python",
+        "frameworks": [],
+        "conventions": [
+          ".context/conventions/coding-practices.md",
+          ".context/conventions/data-access.md",
+          ".context/conventions/folder-organization.md",
+          ".context/conventions/naming.md",
+          ".context/conventions/testing.md"
+        ],
+        "commands": {
+          "test_command": "uv run pytest -q",
+          "lint_command": "uv run ruff check .",
+          "typecheck_command": null,
+          "format_command": "uv run ruff format <changed-paths>"
+        }
+      }
     },
     {
       "kind": "agent",
       "name": "dummyindex-reviewer",
-      "path": ".claude/agents/dummyindex-reviewer.md",
+      "path": ".context/equipment/dummyindex-reviewer.md",
       "source": "generated",
       "capabilities": [
         "review"
@@ -67,16 +125,45 @@
       ],
       "subagent_type": "dummyindex-reviewer",
       "version": "1.0.0",
-      "origin_hash": "sha256:9e60e1414a722bc2499dab9a449559cb3f62b561ad5f49e865f003628efafcbd",
+      "origin_hash": "sha256:024d9f3b46cf4fcd4650f5c4d522d87391186a284d99655469454a485dd7a406",
       "marketplace": null,
       "origin_repo": null,
       "origin_ref": null,
-      "mechanism": null
+      "mechanism": null,
+      "capability_id": "dummyindex/reviewer-agent",
+      "package_version": "e5fe3096f0ef",
+      "package_source": "dummyindex/skills/equip/templates/reviewer-agent.md.tmpl",
+      "package_sha256": "e5fe3096f0ef668f5b4c74ca5cb264320956df0bcf34dcc3cff1d2b73f773caf",
+      "required_tools": [
+        "pytest",
+        "ruff"
+      ],
+      "triggers": [
+        "review"
+      ],
+      "project_binding": {
+        "project": "dummyindex",
+        "stack": "python",
+        "frameworks": [],
+        "conventions": [
+          ".context/conventions/coding-practices.md",
+          ".context/conventions/data-access.md",
+          ".context/conventions/folder-organization.md",
+          ".context/conventions/naming.md",
+          ".context/conventions/testing.md"
+        ],
+        "commands": {
+          "test_command": "uv run pytest -q",
+          "lint_command": "uv run ruff check .",
+          "typecheck_command": null,
+          "format_command": "uv run ruff format <changed-paths>"
+        }
+      }
     },
     {
       "kind": "skill",
       "name": "dummyindex-verify",
-      "path": ".claude/skills/dummyindex-verify/SKILL.md",
+      "path": ".context/equipment/dummyindex-verify.md",
       "source": "generated",
       "capabilities": [
         "test",
@@ -92,16 +179,46 @@
       ],
       "subagent_type": null,
       "version": "1.0.0",
-      "origin_hash": "sha256:880f12b9e9980bfee8f850ec1a8ba42ce33dce241c39119fa68338ffd9b609db",
+      "origin_hash": "sha256:e7afe8741f0c6a9ebb9ead17a6aa1e80c8729216d318e7f3893c3fb1d5c73a5f",
       "marketplace": null,
       "origin_repo": null,
       "origin_ref": null,
-      "mechanism": null
+      "mechanism": null,
+      "capability_id": "dummyindex/verify-skill",
+      "package_version": "5a31d811c9a9",
+      "package_source": "dummyindex/skills/equip/templates/verify-skill.md.tmpl",
+      "package_sha256": "5a31d811c9a9e82f37ef45759ee2838ab5349c8c8f8d92bd46bf8e9602935722",
+      "required_tools": [
+        "pytest",
+        "ruff"
+      ],
+      "triggers": [
+        "test",
+        "verify"
+      ],
+      "project_binding": {
+        "project": "dummyindex",
+        "stack": "python",
+        "frameworks": [],
+        "conventions": [
+          ".context/conventions/coding-practices.md",
+          ".context/conventions/data-access.md",
+          ".context/conventions/folder-organization.md",
+          ".context/conventions/naming.md",
+          ".context/conventions/testing.md"
+        ],
+        "commands": {
+          "test_command": "uv run pytest -q",
+          "lint_command": "uv run ruff check .",
+          "typecheck_command": null,
+          "format_command": "uv run ruff format <changed-paths>"
+        }
+      }
     },
     {
       "kind": "agent",
       "name": "dummyindex-security-specialist",
-      "path": ".claude/agents/dummyindex-security-specialist.md",
+      "path": ".context/equipment/dummyindex-security-specialist.md",
       "source": "generated",
       "capabilities": [
         "security"
@@ -116,7 +233,7 @@
       ],
       "subagent_type": "dummyindex-security-specialist",
       "version": "1.0.0",
-      "origin_hash": "sha256:c5035fb4d34044eff214d1269efb86cebf9664ae64ae35aa94fc4d1765191b7e",
+      "origin_hash": "sha256:c77c8e7b0787b3a69b5f9fec0e224b9f21aeb0830c368dece41199f4c9bc291c",
       "marketplace": null,
       "origin_repo": null,
       "origin_ref": null,
@@ -125,12 +242,41 @@
         "## Ground yourself first (mandatory, before judging or editing)",
         "**Tenant isolation.**",
         "Never assert \"secure\" without the evidence to back it."
-      ]
+      ],
+      "capability_id": "dummyindex/security-specialist-agent",
+      "package_version": "7e47ba5b395f",
+      "package_source": "dummyindex/skills/equip/templates/security-specialist-agent.md.tmpl",
+      "package_sha256": "7e47ba5b395f63018eb9a702776d22cdff31c8416c03942cde3b0fb0a5d19385",
+      "required_tools": [
+        "pytest",
+        "ruff"
+      ],
+      "triggers": [
+        "security"
+      ],
+      "project_binding": {
+        "project": "dummyindex",
+        "stack": "python",
+        "frameworks": [],
+        "conventions": [
+          ".context/conventions/coding-practices.md",
+          ".context/conventions/data-access.md",
+          ".context/conventions/folder-organization.md",
+          ".context/conventions/naming.md",
+          ".context/conventions/testing.md"
+        ],
+        "commands": {
+          "test_command": "uv run pytest -q",
+          "lint_command": "uv run ruff check .",
+          "typecheck_command": null,
+          "format_command": "uv run ruff format <changed-paths>"
+        }
+      }
     },
     {
       "kind": "agent",
       "name": "dummyindex-docs-specialist",
-      "path": ".claude/agents/dummyindex-docs-specialist.md",
+      "path": ".context/equipment/dummyindex-docs-specialist.md",
       "source": "generated",
       "capabilities": [
         "docs"
@@ -147,7 +293,7 @@
       ],
       "subagent_type": "dummyindex-docs-specialist",
       "version": "1.0.0",
-      "origin_hash": "sha256:3b943bc90e08f78356849650c531d52f4f9f421d34c55fb05c6bcad5609b878e",
+      "origin_hash": "sha256:cf31265cda78abce98ed970a797d6ec895cbeb8b43adba49851a26e3bc1a15c5",
       "marketplace": null,
       "origin_repo": null,
       "origin_ref": null,
@@ -156,12 +302,41 @@
         "## Ground yourself first (mandatory, before writing a word)",
         "every claim is one you could verify by reading the source",
         "No aspirational or speculative documentation"
-      ]
+      ],
+      "capability_id": "dummyindex/docs-specialist-agent",
+      "package_version": "8bfc8fe9446c",
+      "package_source": "dummyindex/skills/equip/templates/docs-specialist-agent.md.tmpl",
+      "package_sha256": "8bfc8fe9446c14f0a7b2dbc8d0a1cc762255ed4f6041a8e9bd1306c19d089be8",
+      "required_tools": [
+        "pytest",
+        "ruff"
+      ],
+      "triggers": [
+        "docs"
+      ],
+      "project_binding": {
+        "project": "dummyindex",
+        "stack": "python",
+        "frameworks": [],
+        "conventions": [
+          ".context/conventions/coding-practices.md",
+          ".context/conventions/data-access.md",
+          ".context/conventions/folder-organization.md",
+          ".context/conventions/naming.md",
+          ".context/conventions/testing.md"
+        ],
+        "commands": {
+          "test_command": "uv run pytest -q",
+          "lint_command": "uv run ruff check .",
+          "typecheck_command": null,
+          "format_command": "uv run ruff format <changed-paths>"
+        }
+      }
     },
     {
       "kind": "agent",
       "name": "dummyindex-db-specialist",
-      "path": ".claude/agents/dummyindex-db-specialist.md",
+      "path": ".context/equipment/dummyindex-db-specialist.md",
       "source": "generated",
       "capabilities": [
         "database"
@@ -176,16 +351,50 @@
       ],
       "subagent_type": "dummyindex-db-specialist",
       "version": "1.0.0",
-      "origin_hash": "sha256:a7f81ac6b71e50b6089bc76686ceefd6c5c7c4e06840cb4593461b46ea6384c5",
+      "origin_hash": "sha256:6c239bbbcf6f3567adc63f56381076ff3ec94995b2b2b05f06f2394445e9dfb3",
       "marketplace": null,
       "origin_repo": null,
       "origin_ref": null,
-      "mechanism": null
+      "mechanism": null,
+      "invariants": [
+        "## Ground yourself first (mandatory, before any edit)",
+        "Additive/expand-then-contract by default",
+        "Stay inside the planned scope."
+      ],
+      "capability_id": "dummyindex/db-specialist-agent",
+      "package_version": "d4e7845bead1",
+      "package_source": "dummyindex/skills/equip/templates/db-specialist-agent.md.tmpl",
+      "package_sha256": "d4e7845bead1e92f22d6c94f28648f3068ba2f5e71f5829e7da5ccd8094ced37",
+      "required_tools": [
+        "pytest",
+        "ruff"
+      ],
+      "triggers": [
+        "database"
+      ],
+      "project_binding": {
+        "project": "dummyindex",
+        "stack": "python",
+        "frameworks": [],
+        "conventions": [
+          ".context/conventions/coding-practices.md",
+          ".context/conventions/data-access.md",
+          ".context/conventions/folder-organization.md",
+          ".context/conventions/naming.md",
+          ".context/conventions/testing.md"
+        ],
+        "commands": {
+          "test_command": "uv run pytest -q",
+          "lint_command": "uv run ruff check .",
+          "typecheck_command": null,
+          "format_command": "uv run ruff format <changed-paths>"
+        }
+      }
     },
     {
       "kind": "agent",
       "name": "dummyindex-search-specialist",
-      "path": ".claude/agents/dummyindex-search-specialist.md",
+      "path": ".context/equipment/dummyindex-search-specialist.md",
       "source": "generated",
       "capabilities": [
         "search"
@@ -200,16 +409,50 @@
       ],
       "subagent_type": "dummyindex-search-specialist",
       "version": "1.0.0",
-      "origin_hash": "sha256:6c348506d20d8a526992b25a189d3446ec1bd96dc40d36738474cc7c4107b6a7",
+      "origin_hash": "sha256:943be127f2c39da82eaa1edd4c2839a9880894fa3616d99ad3e46d515128488b",
       "marketplace": null,
       "origin_repo": null,
       "origin_ref": null,
-      "mechanism": null
+      "mechanism": null,
+      "invariants": [
+        "## Ground yourself first (mandatory, before any edit)",
+        "Keep indexing idempotent and",
+        "Stay inside the planned scope; a new retrieval backend gets its own plan."
+      ],
+      "capability_id": "dummyindex/search-specialist-agent",
+      "package_version": "2e5ed7c9f4a2",
+      "package_source": "dummyindex/skills/equip/templates/search-specialist-agent.md.tmpl",
+      "package_sha256": "2e5ed7c9f4a202f4eb07dd7e93df325a674b9b80f774a0d2c3ab9574e72257b7",
+      "required_tools": [
+        "pytest",
+        "ruff"
+      ],
+      "triggers": [
+        "search"
+      ],
+      "project_binding": {
+        "project": "dummyindex",
+        "stack": "python",
+        "frameworks": [],
+        "conventions": [
+          ".context/conventions/coding-practices.md",
+          ".context/conventions/data-access.md",
+          ".context/conventions/folder-organization.md",
+          ".context/conventions/naming.md",
+          ".context/conventions/testing.md"
+        ],
+        "commands": {
+          "test_command": "uv run pytest -q",
+          "lint_command": "uv run ruff check .",
+          "typecheck_command": null,
+          "format_command": "uv run ruff format <changed-paths>"
+        }
+      }
     },
     {
       "kind": "agent",
       "name": "dummyindex-performance-specialist",
-      "path": ".claude/agents/dummyindex-performance-specialist.md",
+      "path": ".context/equipment/dummyindex-performance-specialist.md",
       "source": "generated",
       "capabilities": [
         "performance"
@@ -224,7 +467,7 @@
       ],
       "subagent_type": "dummyindex-performance-specialist",
       "version": "1.0.0",
-      "origin_hash": "sha256:dbdf9b01ca2abb7318cbae7de0c7db5ea4b73ed654cef59356c6869f1c1f00b8",
+      "origin_hash": "sha256:06ecc8c85f9a3142a1603d2841c26894e93cbb2d00acafba1b0c2d1af172ebc2",
       "marketplace": null,
       "origin_repo": null,
       "origin_ref": null,
@@ -233,7 +476,36 @@
         "## Ground yourself first (mandatory, before any change)",
         "**Measure first.**",
         "Correctness first: never change observable behavior to win a benchmark."
-      ]
+      ],
+      "capability_id": "dummyindex/performance-specialist-agent",
+      "package_version": "4a3327a4e12a",
+      "package_source": "dummyindex/skills/equip/templates/performance-specialist-agent.md.tmpl",
+      "package_sha256": "4a3327a4e12a5f6616447bdfcbd206bde72efcb8a68bef1237e4bf64de45d005",
+      "required_tools": [
+        "pytest",
+        "ruff"
+      ],
+      "triggers": [
+        "performance"
+      ],
+      "project_binding": {
+        "project": "dummyindex",
+        "stack": "python",
+        "frameworks": [],
+        "conventions": [
+          ".context/conventions/coding-practices.md",
+          ".context/conventions/data-access.md",
+          ".context/conventions/folder-organization.md",
+          ".context/conventions/naming.md",
+          ".context/conventions/testing.md"
+        ],
+        "commands": {
+          "test_command": "uv run pytest -q",
+          "lint_command": "uv run ruff check .",
+          "typecheck_command": null,
+          "format_command": "uv run ruff format <changed-paths>"
+        }
+      }
     },
     {
       "kind": "hook",

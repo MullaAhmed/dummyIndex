@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
+import os
+import time
+from pathlib import Path, PurePosixPath
 
 import pytest
 
@@ -11,10 +13,41 @@ from dummyindex.export import storage
 from dummyindex.export.storage import (
     GraphStorageError,
     read_graph_payload,
+    shard_names,
     write_graph_payload,
 )
 
 pytestmark = pytest.mark.unit
+
+_AGED = 3600  # Seconds; comfortably past storage.SHARD_GRACE_SECONDS.
+
+
+def _age(directory: Path) -> None:
+    """Backdate every regular, unlinked entry so the prune grace has expired."""
+    old = time.time() - _AGED
+    for entry in directory.iterdir():
+        if entry.is_file() and not entry.is_symlink():
+            os.utime(entry, (old, old))
+
+
+def _link_dir(link: Path, target: Path) -> None:
+    """Create a directory symlink, or a junction where only those are allowed."""
+    try:
+        link.symlink_to(target, target_is_directory=True)
+        return
+    except OSError:
+        if os.name != "nt":
+            pytest.skip("symlink creation unavailable on this host")
+    import _winapi  # Windows-only; junctions need no symlink privilege.
+
+    _winapi.CreateJunction(str(target), str(link))
+
+
+def _seed(parts: Path, *indices: int) -> list[Path]:
+    seeded = [parts / f"{i:064x}.json" for i in indices]
+    for orphan in seeded:
+        orphan.write_bytes(b'{"orphan":true}\n')
+    return seeded
 
 
 @pytest.mark.parametrize(
@@ -105,9 +138,9 @@ def test_committed_shards_survive_autocrlf_checkout(tmp_path):
     assert read_graph_payload(path) == payload
 
 
-def _write_sharded(tmp_path: Path) -> tuple[Path, dict, dict]:
+def _write_sharded(tmp_path: Path, count: int = 60) -> tuple[Path, dict, dict]:
     path = tmp_path / "symbol-graph.json"
-    payload = _payload()
+    payload = _payload(count)
     write_graph_payload(payload, path, max_file_bytes=4096)
     manifest = json.loads(path.read_bytes())
     assert manifest["format"] == "dummyindex-symbol-graph"
@@ -256,7 +289,11 @@ def test_failed_manifest_publish_keeps_previous_graph_readable(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     path, original, _ = _write_sharded(tmp_path)
+    parts = tmp_path / "symbol-graph.parts"
+    orphans = _seed(parts, 1, 2, 3)
+    _age(parts)
     before = path.read_bytes()
+    existing = set(os.listdir(parts))
     changed = _payload(80)
     publish = storage._atomic_write
 
@@ -270,18 +307,164 @@ def test_failed_manifest_publish_keeps_previous_graph_readable(
         write_graph_payload(changed, path, max_file_bytes=4096)
     assert path.read_bytes() == before
     assert read_graph_payload(path) == original
+    # A failed publish prunes nothing: aged orphans and old shards all remain.
+    assert all(orphan.exists() for orphan in orphans)
+    assert existing <= set(os.listdir(parts))
 
 
-def test_reader_holding_previous_manifest_can_finish_after_publication(
+def test_superseded_manifest_fails_closed_after_publication(
     tmp_path: Path,
 ) -> None:
-    path, original, _ = _write_sharded(tmp_path)
+    path, _, _ = _write_sharded(tmp_path)
     previous = tmp_path / "previous-manifest.json"
     previous.write_bytes(path.read_bytes())
+    _age(tmp_path / "symbol-graph.parts")
     changed = _payload(80)
     write_graph_payload(changed, path, max_file_bytes=4096)
     assert read_graph_payload(path) == changed
-    assert read_graph_payload(previous) == original
+    with pytest.raises(GraphStorageError, match="rebuild --changed"):
+        read_graph_payload(previous)
+
+
+def test_three_publishes_retain_only_the_current_generation(tmp_path: Path) -> None:
+    path = tmp_path / "symbol-graph.json"
+    parts = tmp_path / "symbol-graph.parts"
+    generations: list[frozenset[str]] = []
+    for count in (60, 80, 100):
+        if parts.exists():
+            _age(parts)
+        payload = _payload(count)
+        write_graph_payload(payload, path, max_file_bytes=4096)
+        generations.append(shard_names(path))
+    assert set(os.listdir(parts)) == shard_names(path) == generations[-1]
+    retired = generations[0] - generations[-1]
+    assert retired, "fixture must retire some first-generation shards"
+    assert not any((parts / name).exists() for name in retired)
+    assert read_graph_payload(path) == payload
+
+
+def test_aged_orphans_are_pruned_and_young_ones_survive(tmp_path: Path) -> None:
+    path, _, _ = _write_sharded(tmp_path)
+    parts = tmp_path / "symbol-graph.parts"
+    orphans = _seed(parts, *range(5))
+    _age(parts)
+    (young,) = _seed(parts, 99)
+    changed = _payload(80)
+    write_graph_payload(changed, path, max_file_bytes=4096)
+    assert not any(orphan.exists() for orphan in orphans)
+    assert young.exists()
+    assert read_graph_payload(path) == changed
+
+
+def test_plain_publish_after_sharded_removes_the_parts_directory(
+    tmp_path: Path,
+) -> None:
+    path, _, _ = _write_sharded(tmp_path)
+    _age(tmp_path / "symbol-graph.parts")
+    small = _payload(2)
+    write_graph_payload(small, path, max_file_bytes=4096)
+    assert "format" not in json.loads(path.read_bytes())
+    assert not (tmp_path / "symbol-graph.parts").exists()
+    assert read_graph_payload(path) == small
+
+
+@pytest.mark.parametrize("link_kind", ["symlink", "junction"])
+def test_prune_never_deletes_foreign_names_nonfiles_or_links(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, link_kind: str
+) -> None:
+    path, _, _ = _write_sharded(tmp_path)
+    parts = tmp_path / "symbol-graph.parts"
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    target = outside / "target.json"
+    target.write_bytes(b"outside bytes")
+    link = parts / f"{7:064x}.json"
+    if link_kind == "symlink":
+        try:
+            link.symlink_to(target)
+        except OSError:
+            pytest.skip("symlink creation unavailable on this host")
+    elif os.name == "nt":
+        _link_dir(link, outside)
+    else:
+        pytest.skip("junctions are Windows-only")
+    foreign = [parts / "notes.txt", parts / ".x.tmp"]
+    for file in foreign:
+        file.write_bytes(b"keep")
+    directory = parts / f"{8:064x}.json"
+    directory.mkdir()
+    _age(parts)
+    # Link mtimes cannot be backdated portably; make every entry count as aged.
+    monkeypatch.setattr(storage, "SHARD_GRACE_SECONDS", -_AGED)
+    changed = _payload(80)
+    write_graph_payload(changed, path, max_file_bytes=4096)
+    assert all(file.read_bytes() == b"keep" for file in foreign)
+    assert directory.is_dir()
+    assert os.path.lexists(link)
+    assert target.read_bytes() == b"outside bytes"
+    assert sorted(p.name for p in outside.iterdir()) == ["target.json"]
+    assert read_graph_payload(path) == changed
+
+
+def test_unlink_failure_warns_and_publication_still_succeeds(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path, _, _ = _write_sharded(tmp_path)
+    parts = tmp_path / "symbol-graph.parts"
+    stuck, other = _seed(parts, 1, 2)
+    _age(parts)
+    real_unlink = os.unlink
+
+    def unlink(target, *args, **kwargs):
+        # Fail only the one seeded shard; temp-file cleanup keeps working.
+        if os.path.basename(os.fspath(target)) == stuck.name:
+            raise PermissionError("shard locked by another process")
+        return real_unlink(target, *args, **kwargs)
+
+    monkeypatch.setattr(os, "unlink", unlink)
+    changed = _payload(80)
+    with pytest.warns(UserWarning, match="shard locked") as caught:
+        write_graph_payload(changed, path, max_file_bytes=4096)
+    assert len([w for w in caught if issubclass(w.category, UserWarning)]) == 1
+    assert stuck.exists() and not other.exists()
+    assert read_graph_payload(path) == changed
+
+
+def test_missing_shard_names_the_rebuild_command(tmp_path: Path) -> None:
+    path, _, manifest = _write_sharded(tmp_path)
+    (tmp_path / manifest["shards"][0]["path"]).unlink()
+    with pytest.raises(GraphStorageError, match="rebuild --changed"):
+        read_graph_payload(path)
+
+
+@pytest.mark.parametrize("damage", [b"corrupt", b"x" * 5000])
+def test_preexisting_shard_with_wrong_bytes_is_rewritten(
+    tmp_path: Path, damage: bytes
+) -> None:
+    path, payload, manifest = _write_sharded(tmp_path)
+    shard = tmp_path / manifest["shards"][0]["path"]
+    expected = shard.read_bytes()
+    shard.write_bytes(damage)
+    write_graph_payload(payload, path, max_file_bytes=4096)
+    assert shard.read_bytes() == expected
+    assert read_graph_payload(path) == payload
+
+
+def test_shard_names_reads_only_manifest_references(tmp_path: Path) -> None:
+    assert shard_names(tmp_path / "missing.json") == frozenset()
+    path, _, manifest = _write_sharded(tmp_path / "sharded")
+    assert shard_names(path) == {
+        PurePosixPath(d["path"]).name for d in manifest["shards"]
+    }
+    plain = tmp_path / "plain" / "graph.json"
+    write_graph_payload(_payload(1), plain)
+    assert shard_names(plain) == frozenset()
+    garbage = tmp_path / "garbage.json"
+    garbage.write_bytes(b"not json")
+    assert shard_names(garbage) == frozenset()
+    oversized = tmp_path / "oversized.json"
+    oversized.write_bytes(b" " * (storage.DEFAULT_MAX_FILE_BYTES + 1))
+    assert shard_names(oversized) == frozenset()
 
 
 def test_conflicting_hyperedge_copies_are_not_silently_discarded(
@@ -319,13 +502,15 @@ def test_linked_shard_directory_is_rejected_without_touching_target(
     outside.mkdir()
     directory = tmp_path / "features"
     directory.mkdir()
-    try:
-        (directory / "symbol-graph.parts").symlink_to(outside, target_is_directory=True)
-    except OSError:
-        pytest.skip("symlink creation unavailable on this host")
+    _link_dir(directory / "symbol-graph.parts", outside)
     with pytest.raises(GraphStorageError, match="symlink"):
         write_graph_payload(_payload(), directory / "graph.json", max_file_bytes=4096)
     assert list(outside.iterdir()) == []
+    # A plain publish skips pruning a linked parts directory entirely.
+    (aged,) = _seed(outside, 3)
+    _age(outside)
+    write_graph_payload(_payload(1), directory / "graph.json")
+    assert [p.name for p in outside.iterdir()] == [aged.name]
 
 
 def test_linked_graph_file_is_never_followed(tmp_path: Path) -> None:

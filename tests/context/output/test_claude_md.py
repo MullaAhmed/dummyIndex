@@ -39,9 +39,7 @@ def _root(tmp_path: Path) -> Path:
     return tmp_path / "CLAUDE.md"
 
 
-# --------------------------------------------------------------------------
 # Branch: root has a managed block + user residue → consolidate into canonical
-# --------------------------------------------------------------------------
 @pytest.mark.unit
 def test_root_block_plus_residue_consolidates(tmp_path: Path) -> None:
     root = _root(tmp_path)
@@ -58,9 +56,7 @@ def test_root_block_plus_residue_consolidates(tmp_path: Path) -> None:
     assert _block_count(text) == 1  # exactly ONE fresh managed block
 
 
-# --------------------------------------------------------------------------
 # Branch: root has ONLY a managed block (whitespace residue) → one block
-# --------------------------------------------------------------------------
 @pytest.mark.unit
 def test_root_block_only_whitespace_residue(tmp_path: Path) -> None:
     root = _root(tmp_path)
@@ -76,9 +72,7 @@ def test_root_block_only_whitespace_residue(tmp_path: Path) -> None:
     assert "legacy body" not in text
 
 
-# --------------------------------------------------------------------------
 # Branch: root is plain user content, no block → consolidated, text preserved
-# --------------------------------------------------------------------------
 @pytest.mark.unit
 def test_root_plain_user_content_no_block(tmp_path: Path) -> None:
     root = _root(tmp_path)
@@ -95,9 +89,7 @@ def test_root_plain_user_content_no_block(tmp_path: Path) -> None:
     assert _block_count(text) == 1
 
 
-# --------------------------------------------------------------------------
 # Branch: pre-existing canonical (user + block) AND a root file → merge, no dup
-# --------------------------------------------------------------------------
 @pytest.mark.unit
 def test_merge_existing_canonical_and_root_no_duplication(tmp_path: Path) -> None:
     canonical = _canonical(tmp_path)
@@ -121,9 +113,7 @@ def test_merge_existing_canonical_and_root_no_duplication(tmp_path: Path) -> Non
     assert _block_count(text) == 1
 
 
-# --------------------------------------------------------------------------
 # Branch: idempotent second run → noop, byte-identical canonical
-# --------------------------------------------------------------------------
 @pytest.mark.unit
 def test_idempotent_second_run_is_noop(tmp_path: Path) -> None:
     root = _root(tmp_path)
@@ -139,9 +129,7 @@ def test_idempotent_second_run_is_noop(tmp_path: Path) -> None:
     assert canonical.read_text(encoding="utf-8") == after_first  # byte-identical
 
 
-# --------------------------------------------------------------------------
 # Branch: inode/symlink — root and canonical are the same file
-# --------------------------------------------------------------------------
 @pytest.mark.unit
 def test_inode_shared_file_not_consolidated_or_deleted(tmp_path: Path) -> None:
     canonical = _canonical(tmp_path)
@@ -164,9 +152,7 @@ def test_inode_shared_file_not_consolidated_or_deleted(tmp_path: Path) -> None:
     assert _block_count(text) == 1
 
 
-# --------------------------------------------------------------------------
 # Branch: unbalanced markers in ROOT → no raise, degrades to NOOP, root intact
-# --------------------------------------------------------------------------
 @pytest.mark.unit
 def test_unbalanced_markers_in_root_degrades_to_noop(tmp_path: Path) -> None:
     root = _root(tmp_path)
@@ -181,9 +167,7 @@ def test_unbalanced_markers_in_root_degrades_to_noop(tmp_path: Path) -> None:
     assert not _canonical(tmp_path).exists()  # nothing written
 
 
-# --------------------------------------------------------------------------
 # Branch: unbalanced markers in CANONICAL → no raise, degrades to NOOP
-# --------------------------------------------------------------------------
 @pytest.mark.unit
 def test_unbalanced_markers_in_canonical_degrades_to_noop(tmp_path: Path) -> None:
     canonical = _canonical(tmp_path)
@@ -199,9 +183,7 @@ def test_unbalanced_markers_in_canonical_degrades_to_noop(tmp_path: Path) -> Non
     assert root.exists()  # root left untouched on degraded canonical
 
 
-# --------------------------------------------------------------------------
 # Branch: DUPLICATE (balanced) blocks → strip all, emit exactly one
-# --------------------------------------------------------------------------
 @pytest.mark.unit
 def test_duplicate_balanced_blocks_collapse_to_one(tmp_path: Path) -> None:
     root = _root(tmp_path)
@@ -282,9 +264,7 @@ def test_reconcile_refuses_out_of_project_guidance_symlink(
     assert outside_guidance.read_text(encoding="utf-8") == "# Outside rules\n"
 
 
-# --------------------------------------------------------------------------
 # Branch: user prose literally quotes the marker substrings mid-line
-# --------------------------------------------------------------------------
 @pytest.mark.unit
 def test_prose_quoting_markers_preserved_and_idempotent(tmp_path: Path) -> None:
     root = _root(tmp_path)
@@ -306,9 +286,7 @@ def test_prose_quoting_markers_preserved_and_idempotent(tmp_path: Path) -> None:
     assert canonical.read_text(encoding="utf-8") == after_first
 
 
-# --------------------------------------------------------------------------
 # Branch: OSError reading the root (root is a directory) → warning, no crash
-# --------------------------------------------------------------------------
 @pytest.mark.unit
 def test_unreadable_root_degrades_to_warning(tmp_path: Path) -> None:
     # Make the root path a directory so read_text raises OSError portably.
@@ -323,9 +301,7 @@ def test_unreadable_root_degrades_to_warning(tmp_path: Path) -> None:
     assert not _canonical(tmp_path).exists()
 
 
-# --------------------------------------------------------------------------
 # Branch: injected canonical write failure → root intact, non-fatal warning
-# --------------------------------------------------------------------------
 @pytest.mark.unit
 def test_injected_write_failure_leaves_root_intact(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch

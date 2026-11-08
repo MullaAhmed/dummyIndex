@@ -1,22 +1,9 @@
-"""Path-based classifier: is a ``.md`` path a stray planning doc, and where does
-it belong?
+"""Path-based classifier: is a ``.md`` a stray planning doc, and where does it belong?
 
-The single source of truth for "this markdown is an internal planning artifact
-that leaked outside ``.context/``." Pure and filesystem-free — it reasons only
-over the repo-relative *path shape*, so it is cheap enough for the PreToolUse
-write-guard hot path and exhaustively unit-testable from constructed paths.
-
-Two public entry points:
-
-- ``classify_doc_path(repo_root, path) -> DocClassification`` — verdict for one
-  path (location-gated heuristics + slug derivation + spec/plan role).
-- ``group_strays(repo_root, paths) -> tuple[StrayGroup, ...]`` — pairs
-  ``<stem>-design.md`` with ``<stem>.md`` under one slug, disambiguates
-  same-slug collisions across directories, and reports them.
-
-Classification is *conservative* and *location-gated*: a planning-shaped
-filename (``*-design.md`` / ``YYYY-MM-DD-<name>.md``) is a stray only when it
-lives under ``docs/`` — ``src/widget-design.md`` is never a stray.
+Pure and filesystem-free (repo-relative path shape only), so it is cheap enough
+for the PreToolUse write-guard hot path. Conservative and location-gated: a
+planning-shaped filename (``*-design.md`` / ``YYYY-MM-DD-<name>.md``) or planning
+dir segment marks a stray only under ``docs/`` — ``src/widget-design.md`` never is.
 """
 
 from __future__ import annotations
@@ -53,9 +40,7 @@ _DATE_PREFIX = re.compile(r"^\d{4}-\d{2}-\d{2}-.+")
 def classify_doc_path(repo_root: Path | str, path: Path | str) -> DocClassification:
     """Classify a single path. Raises ``DocPathError`` if it escapes ``repo_root``.
 
-    See the module docstring for the gate order. The function performs **no**
-    I/O — it operates lexically on the repo-relative path components, so callers
-    can classify a path that does not exist on disk.
+    Lexical only, **no** I/O, so a path that does not exist on disk can be classified.
     """
     rel_posix = _rel_posix(repo_root, path)
     rel = Path(rel_posix)
@@ -122,12 +107,10 @@ def group_strays(
 ) -> tuple[StrayGroup, ...]:
     """Pair + group placeable strays under collision-disambiguated slugs.
 
-    Classifies each path, keeps only *placeable* planning docs (planning + a
-    non-``None`` slug — unslug-able strays are dropped here for the caller to
-    surface separately), buckets them by ``(directory, pairing_stem)`` so a spec
-    and its plan merge, then walks the buckets in deterministic sorted order
-    disambiguating same-base-slug collisions across directories (``<slug>`` then
-    ``<slug>-2`` …) and flagging each suffixed group.
+    Keeps only planning docs with a slug (unslug-able strays are dropped for the
+    caller to surface), buckets them by ``(directory, pairing_stem)`` so a spec and
+    its plan merge, then walks buckets in sorted order, suffixing same-slug
+    collisions across directories (``<slug>-2`` …) and flagging each suffixed group.
     """
     buckets: dict[tuple[str, str], list[DocClassification]] = {}
     for raw in paths:
@@ -168,7 +151,7 @@ def group_strays(
     return tuple(groups)
 
 
-# ----- helpers --------------------------------------------------------------
+# --- helpers
 
 
 def _rel_posix(repo_root: Path | str, path: Path | str) -> str:
@@ -206,12 +189,10 @@ def _is_dated(stem: str) -> bool:
 def _derive_slug(pairing_stem: str) -> str | None:
     """``slugify(stem)`` then ``validate_slug``; ``None`` when unslug-able.
 
-    ``slugify`` always returns a charset-safe value, falling back to the generic
-    ``"audit"`` sentinel for content-free input — which would silently collapse
-    every symbol-only filename onto one slug. We treat a stem with no
-    alphanumeric content as *unslug-able* (return ``None``) so the caller can
-    skip + report it instead of minting a meaningless home. ``validate_slug`` is
-    still applied defensively; a raise (it never propagates) also yields ``None``.
+    ``slugify`` maps content-free input to the generic ``"audit"`` sentinel, which
+    would collapse every symbol-only filename onto one slug, so a stem with no
+    alphanumerics is *unslug-able* for the caller to skip + report. A defensive
+    ``validate_slug`` raise never propagates; it also yields ``None``.
     """
     if not _ALNUM.search(pairing_stem.lower()):
         return None

@@ -1,20 +1,10 @@
 """Remove ONE manifest entry — the surgical sibling of :func:`status.uninstall`.
 
-`uninstall` is all-or-nothing and `reset` refuses anything not lifecycle-
-managed, so a single adopted/marketplace record had no sanctioned removal path
-(users hand-edited the tool-owned equipment.json). Policy by source:
-
-- **INSTALLED** (adopted, no file of ours): drop the record only.
-- **MARKETPLACE**: drop the record and un-wire settings — disable the plugin
-  key and drop the marketplace entry *unless another manifest item still
-  references it* (or the caller passes ``keep_wiring=True``).
-- **GENERATED / VENDORED file-backed**: refuse unless ``delete_file=True``
-  (never-destructive by default; ``reset``/``uninstall`` are the file paths).
-- A record-only hook item drops its record; the settings hook entry itself is
-  left in place (``uninstall`` removes it by sentinel).
-
-Raises :class:`RemoveError` for an unknown name, a refused file-backed item,
-or a malformed settings file (we never half-remove: record kept on refusal).
+INSTALLED drops the record only; MARKETPLACE also disables the plugin key and
+drops its marketplace unless another item uses it (or ``keep_wiring=True``).
+File-backed GENERATED/VENDORED items are refused unless ``delete_file=True``. A
+hook item leaves its settings entry for ``uninstall``. Raises :class:`RemoveError`
+for an unknown name, a refused file or malformed settings; never half-removes.
 """
 
 from __future__ import annotations

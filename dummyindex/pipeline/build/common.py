@@ -14,8 +14,8 @@ from pathlib import Path
 # .dummyindexignore / .gitignore style patterns.
 _STRUCTURE_IGNORE_FILES = (".codeindexignore", ".dummyindexignore")
 
-# Directories always skipped, even without any ignore file. Kept in sync with
-# pipeline.io.detect._SKIP_DIRS so the two pipelines agree on obvious junk.
+# Directories always skipped, even without any ignore file. Overlaps but does
+# not equal pipeline.io.detect._SKIP_DIRS (each set has entries the other lacks).
 _STRUCTURE_SKIP_DIRS = frozenset(
     {
         ".context",  # dummyindex's own output; skip self-generated content
@@ -60,7 +60,7 @@ def _rel_path(source_file: str, root_abs: Path) -> str:
 
     Source paths reach this function in several shapes: absolute (from tree-sitter
     extraction before relativization), cwd-relative (from ``collect_files``), or
-    root-relative (after watch.py's relativize step). Try each in turn and take
+    root-relative (already relativized). Try each in turn and take
     the first that lands inside ``root_abs``. Fall back to the raw string as a
     last resort so the node still gets placed somewhere deterministic.
     """

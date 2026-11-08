@@ -22,12 +22,9 @@ class DocConfidence(str, Enum):
     MEDIUM = "medium"
     LOW = "low"
 
-    # Render as the value ("low"), never the enum repr ("DocConfidence.LOW").
-    # Python 3.11 changed Enum.__format__ to follow __str__, so a bare
-    # `class X(str, Enum)` stringifies to the repr under f-strings on 3.11+
-    # (it gave the value on <=3.10). The catalog stores these members directly
-    # in DocEntry.confidence and renders them into source-docs/INDEX.md, so we
-    # pin str/format to the str value on every interpreter.
+    # Render as the value ("low"), never the repr ("DocConfidence.LOW"): 3.11 made
+    # Enum.__format__ follow __str__, so a bare (str, Enum) f-strings to the repr
+    # there (the value on <=3.10). The catalog renders these into source-docs/INDEX.md.
     __str__ = str.__str__
 
 
@@ -74,14 +71,10 @@ class ScanEdgeKind(str, Enum):
 class ScanEvidence(str, Enum):
     """Where a scan node's claim comes from.
 
-    ``EXTRACTED`` — kept verbatim from the deterministic seed; a rebuild
-    could reproduce it. ``INFERRED`` — added or reshaped by the authoring
-    council stage; judgment no re-extraction can recover.
-
-    Deliberately not `pipeline.enums.ConfidenceLevel`: that enum grades
-    whole artifacts, carries a third member (``AMBIGUOUS``) the scan wire
-    format forbids, and does not pin ``__str__`` — the per-node field is a
-    closed two-value alphabet.
+    ``EXTRACTED``: verbatim from the deterministic seed (a rebuild reproduces it).
+    ``INFERRED``: added or reshaped by the authoring council; not re-extractable.
+    Not `pipeline.enums.ConfidenceLevel`: that grades whole artifacts, has an
+    ``AMBIGUOUS`` member the scan wire format forbids, and doesn't pin ``__str__``.
     """
 
     EXTRACTED = "EXTRACTED"

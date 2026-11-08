@@ -1,17 +1,10 @@
 """Plan and apply LLM enrichment for `.context/tree.json` abstracts.
 
-`build_plan` walks tree.json, finds nodes whose `confidence` is still
-`EXTRACTED` (the deterministic-stub default), and emits a structured
-JSON the Claude session running the `/dummyindex` skill can use as a
-work-list. Nodes are ordered top-down (project → directories → files →
-in-file symbols) and grouped into per-file batches so the skill can
-write enriched abstracts back to `tree.json` one file at a time —
-partial progress survives an interrupted session.
-
-`apply_updates` merges a `{node_id: new_abstract}` mapping back into
-`tree.json` and bumps each touched node's `confidence` from
-`EXTRACTED` → `INFERRED`. Idempotent: re-applying the same updates is
-a no-op once the abstracts already match.
+`build_plan` lists nodes still `EXTRACTED` (the deterministic stub) or labelled
+`source-stale`, top-down in per-file batches, so the `/dummyindex` skill writes
+abstracts back one file at a time and partial progress survives an interruption.
+`apply_updates` merges `{node_id: new_abstract}` back, sets `confidence` to
+`INFERRED` and drops `source-stale`; re-applying matching updates is a no-op.
 """
 
 from __future__ import annotations
@@ -136,9 +129,7 @@ def build_plan(
             by_file.setdefault(node["node_id"], []).append(node["node_id"])
             file_titles[node["node_id"]] = node.get("title", node["node_id"])
         elif current_file is not None:
-            # Find the file's node_id by matching path. We carry the file
-            # path as current_file; the file node was visited earlier in the
-            # pre-order walk and recorded in by_file under its node_id.
+            # In-file symbol: join its file node's batch (found by path).
             file_nid = _file_id_for_path(tree["root"], current_file)
             if file_nid:
                 by_file.setdefault(file_nid, []).append(node["node_id"])
@@ -227,7 +218,7 @@ def apply_updates(context_dir: Path, updates: dict[str, str]) -> ApplyResult:
     return ApplyResult(updated=tuple(sorted(updated)), unknown=unknown)
 
 
-# ----- internals -------------------------------------------------------------
+# --- internals
 
 
 def _walk(

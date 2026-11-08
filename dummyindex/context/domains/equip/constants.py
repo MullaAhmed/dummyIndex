@@ -8,25 +8,17 @@ from __future__ import annotations
 
 from .enums import Capability
 
-# v4: EquipmentKind gained PLUGIN (native marketplace installs were recorded as
-# kind "agent" before). Older manifests still load tolerantly; older CLIs
-# reading a v4 manifest with a "plugin" item raise — the bump documents that.
+# v4 added EquipmentKind.PLUGIN. Older manifests still load; an older CLI reading
+# a v4 manifest with a "plugin" item raises, which the bump documents.
 SCHEMA_VERSION = 4
 
-# Sentinel embedded in equip's PostToolUse format-hook command string, so
-# install/refresh/uninstall can recognise our settings.json entry among the
-# user's other hooks. Distinct from the managed session hooks'
-# ``DUMMYINDEX_AUTO_REFRESH`` sentinel so the two coexist and uninstall
-# independently.
+# Sentinel in equip's PostToolUse format-hook command, so install/refresh/uninstall
+# can find our settings.json entry among the user's hooks. Distinct from the session
+# hooks' ``DUMMYINDEX_AUTO_REFRESH`` so the two coexist and uninstall independently.
 EQUIP_SENTINEL = "DUMMYINDEX_EQUIP"
 
-# Shared capability vocabulary. One keyword table maps free-text tokens (found
-# in an agent file stem, or harvested from a proposal's plan/checklist) to a
-# canonical capability. Used by adoption (infer a project agent's coverage from
-# its stem) and proposal scoping (extract needed capabilities). First match in
-# iteration order wins per capability; a stem/text can yield several.
-#
-# capability -> the substring tokens that imply it.
+# Adoption's keyword table: capability -> lowercase substrings of a project agent's
+# file stem that imply it (generate/adopt.py). A stem can yield several.
 _CAPABILITY_TOKENS: tuple[tuple[str, tuple[str, ...]], ...] = (
     (Capability.DATABASE, ("database", "db", "data", "migration", "sql")),
     (Capability.SECURITY, ("security", "auth", "secret")),
@@ -38,19 +30,10 @@ _CAPABILITY_TOKENS: tuple[tuple[str, tuple[str, ...]], ...] = (
     (Capability.IMPLEMENT, ("implement", "build", "feature")),
 )
 
-# Per-proposal capability scoping (spec §6). A DELIBERATELY NARROWER table than
-# ``_CAPABILITY_TOKENS``: only the *specialist* capabilities a proposal can ask
-# equip to cover (by generating a template-backed specialist, or — when no
-# template exists — adopting one). The broad test/review/implement tokens are
-# excluded on purpose — those words appear in essentially every plan.md, and
-# including them would pull in a specialist on every proposal.
-#
-# The security row carries the tenant-isolation vocabulary (``rls`` / ``tenant``
-# / ``isolation`` / ``rbac``) so a migration plan whose criticals say "enforce
-# RLS" or "tenant isolation" — without the literal word "security" — still
-# surfaces the security specialist. (Whole-word "security" already catches
-# "row-level security" / "get_advisors security", and the "auth" prefix catches
-# authorization/authentication.) capability -> the tokens that imply it.
+# Per-proposal scoping (spec §6): specialist capabilities only. test/review/implement
+# are left out on purpose: nearly every plan.md uses those words. Security carries the
+# tenant-isolation words so "enforce RLS" without "security" still finds the specialist.
+# Matched as a whole word or word prefix (generate/proposal.py).
 _PROPOSAL_CAPABILITY_TOKENS: tuple[tuple[str, tuple[str, ...]], ...] = (
     (Capability.DATABASE, ("database", "migration", "sql")),
     (
@@ -71,14 +54,10 @@ _PROPOSAL_CAPABILITY_TOKENS: tuple[tuple[str, tuple[str, ...]], ...] = (
 # render. Greppable so refresh/uninstall recognise (and never clobber) it.
 VENDORED_SENTINEL = "<!-- dummyindex:installed -->"
 
-# Capability inference for *discovered* plugins: free-text tokens (plugin name,
-# description, keywords, category) -> a canonical Capability. Broader than the
-# proposal table — discovery WANTS implement/test/review hits because the user
-# explicitly asked to find tools. First match in iteration order wins per
-# capability; one plugin can yield several. capability -> the tokens that imply
-# it. Tokens are matched as WHOLE WORDS (plugins/discover.py), so the bare
-# 'auth' row carries the spelled-out forms too; 'audit' lives in REVIEW (a
-# "design audit toolkit" is a review tool, not a security one — evidence 27).
+# Discovered-plugin inference (name/description/keywords/category). Broader than the
+# proposal table: the user asked to find tools, so implement/test/review hits count.
+# Whole word or plural only, bar the optimi/profil stems (plugins/discover.py), so
+# 'auth' spells out its long forms; 'audit' is REVIEW (a design audit is not security).
 _PLUGIN_CAPABILITY_TOKENS: tuple[tuple[str, tuple[str, ...]], ...] = (
     (Capability.DATABASE, ("database", "db", "sql", "postgres", "migration", "orm")),
     (
