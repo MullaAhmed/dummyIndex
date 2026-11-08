@@ -105,5 +105,7 @@ def clear_acks(context_dir: Path) -> int:
 
 
 def _write(context_dir: Path, acks: list[dict]) -> None:
-    payload = json.dumps({"schema_version": ACKS_SCHEMA_VERSION, "acks": acks}, indent=2)
+    payload = json.dumps(
+        {"schema_version": ACKS_SCHEMA_VERSION, "acks": acks}, indent=2
+    )
     write_text_atomic(acks_path(context_dir), payload + "\n")

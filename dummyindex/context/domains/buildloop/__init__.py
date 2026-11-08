@@ -33,6 +33,7 @@ Public surface (kept stable for ``context/cli/*`` and tests):
 - Mapping: ``map_task_to_equipment``, ``dispatch_mode``
 - Routing: ``parse_route_flags``, ``resolve_routing``
 """
+
 from __future__ import annotations
 
 from .checklist import counts, flip_item, next_wave, parse_checklist, skip_item

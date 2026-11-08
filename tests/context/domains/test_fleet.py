@@ -264,8 +264,13 @@ def test_estimate_run_composes_build_plan_and_active_stages(tmp_path: Path) -> N
     estimates = estimate_run(context_dir, ("auth",), "standard")
 
     plan = build_plan(context_dir)
-    assert estimates["stages"] == ((1, "specify"), (2, "plan"), (3, "critique"),
-                                  (4, "flow"), (5, "tree-enrich"))
+    assert estimates["stages"] == (
+        (1, "specify"),
+        (2, "plan"),
+        (3, "critique"),
+        (4, "flow"),
+        (5, "tree-enrich"),
+    )
     assert len(plan.nodes) >= 3  # reuse, not duplication: same walk is readable
     item = estimates["features"][0]
     assert item["feature_id"] == "auth"

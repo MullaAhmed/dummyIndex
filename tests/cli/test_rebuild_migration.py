@@ -127,7 +127,7 @@ def test_rebuild_leaves_codex_fallback_doc_alone(
     codex_home.mkdir()
     trust_key = json.dumps(str(target.resolve()))
     (codex_home / "config.toml").write_text(
-        "project_doc_fallback_filenames = [\"CLAUDE.md\"]\n"
+        'project_doc_fallback_filenames = ["CLAUDE.md"]\n'
         f"[projects.{trust_key}]\n"
         'trust_level = "trusted"\n',
         encoding="utf-8",
