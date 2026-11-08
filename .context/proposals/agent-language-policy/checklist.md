@@ -4,13 +4,13 @@
 
 ## Wave 1 — independent foundations
 
-- [ ] Style lint module, `BudgetGroup.STYLE`, STYLE ratchet branch, tests (`dummyindex/context/domains/docbudget/{style,enums,constants,ratchet,__init__}.py`, `tests/context/domains/docbudget/test_style.py`)
-- [ ] `cjk_share` module and threshold tests (`dummyindex/context/domains/docguard/language.py`, `tests/context/domains/docguard/test_language.py`)
-- [ ] Policy constants, canary rows and hash, three restatement regions, repo `AGENTS.md` re-render (`dummyindex/context/output/bootstrap.py`, `tests/cli/test_cli_doc_sync_policy_canary.py`, `dummyindex/skills/skill.md`, `docs/COMMANDS.md`, `docs/guide/07-cli.md`, `AGENTS.md`)
-- [ ] `ensure_caveman_manual`, call in `wire_default_plugins`, tests, repo `.caveman.json` (`dummyindex/context/default_plugins.py`, `tests/context/test_default_plugins.py`, `.caveman.json`)
-- [ ] HOW_TO_USE template compression and sync (`dummyindex/context/output/instructions.py`, `tests/context/output/test_instructions.py`, `.context/HOW_TO_USE.md`)
-- [ ] Measurement spec authored and key-checked, not run (`.context/proposals/agent-language-policy/experiment.json`)
-- [ ] PreToolUse matcher widen, docstring, matcher tests (`dummyindex/context/hooks.py`, `tests/context/test_hooks.py`)
+- [x] Style lint module, `BudgetGroup.STYLE`, STYLE ratchet branch, tests (`dummyindex/context/domains/docbudget/{style,enums,constants,ratchet,__init__}.py`, `tests/context/domains/docbudget/test_style.py`)
+- [x] `cjk_share` module and threshold tests (`dummyindex/context/domains/docguard/language.py`, `tests/context/domains/docguard/test_language.py`)
+- [x] Policy constants, canary rows and hash, three restatement regions, repo `AGENTS.md` re-render (`dummyindex/context/output/bootstrap.py`, `tests/cli/test_cli_doc_sync_policy_canary.py`, `dummyindex/skills/skill.md`, `docs/COMMANDS.md`, `docs/guide/07-cli.md`, `AGENTS.md`)
+- [x] `ensure_caveman_manual`, call in `wire_default_plugins`, tests, repo `.caveman.json` (`dummyindex/context/default_plugins.py`, `tests/context/test_default_plugins.py`, `.caveman.json`)
+- [x] HOW_TO_USE template compression and sync (`dummyindex/context/output/instructions.py`, `tests/context/output/test_instructions.py`, `.context/HOW_TO_USE.md`)
+- [x] Measurement spec authored and key-checked, not run (`.context/proposals/agent-language-policy/experiment.json`)
+- [x] PreToolUse matcher widen, docstring, matcher tests (`dummyindex/context/hooks.py`, `tests/context/test_hooks.py`)
 
 ## Wave 2 — CLI and guard
 
