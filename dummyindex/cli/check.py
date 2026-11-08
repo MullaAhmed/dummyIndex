@@ -13,6 +13,7 @@ from __future__ import annotations
 import shutil
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from .common import (
     parse_path_and_root,
@@ -21,6 +22,11 @@ from .common import (
     resolve_doc_paths,
 )
 from .rebuild import run as run_rebuild
+
+if TYPE_CHECKING:
+    from dummyindex.context.domains.docbudget import BudgetGroup
+
+_Groups = tuple[tuple["BudgetGroup", str], ...]
 
 
 def run(args: list[str]) -> int:
@@ -34,6 +40,7 @@ def run(args: list[str]) -> int:
     quiet = False
     versions = False
     budget = False
+    style = False
     update_ratchet = False
     refs = False
     leftover: list[str] = []
@@ -46,6 +53,8 @@ def run(args: list[str]) -> int:
             versions = True
         elif a == "--budget":
             budget = True
+        elif a == "--style":
+            style = True
         elif a == "--update-ratchet":
             update_ratchet = True
         elif a == "--refs":
@@ -58,15 +67,24 @@ def run(args: list[str]) -> int:
 
     out_root = resolve_context_root(scope, explicit_root=explicit_root)
 
-    if update_ratchet and not budget:
-        print("error: --update-ratchet requires --budget", file=sys.stderr)
+    if update_ratchet and not (budget or style):
+        print("error: --update-ratchet requires --budget or --style", file=sys.stderr)
         return 2
     if versions:
         return _run_version_check(out_root, quiet=quiet)
-    if budget or refs:
+    if budget or style or refs:
         rc = 0
         if budget:
-            rc = _run_budget_check(out_root, update=update_ratchet)
+            rc = _run_ratchet_check(
+                out_root, _budget_groups(), update=update_ratchet, flag="--budget"
+            )
+        if style:
+            rc = max(
+                rc,
+                _run_ratchet_check(
+                    out_root, _style_groups(), update=update_ratchet, flag="--style"
+                ),
+            )
         if refs:
             rc = max(rc, _run_refs_check(out_root))
         return rc
@@ -145,54 +163,100 @@ def run(args: list[str]) -> int:
     return rc
 
 
-# ----- doc budget (--budget) and disposable citations (--refs) ---------------
+# ----- ratchets (--budget, --style), disposable citations (--refs) -----------
 
 
-def _run_budget_check(root: Path, *, update: bool) -> int:
-    """Delegate to docbudget for both groups. rc 1 on growth or refusal."""
-    from dummyindex.context.domains.docbudget import (
-        BudgetGroup,
-        read_ratchet,
-        update_ratchet,
-        write_ratchet,
-    )
-    from dummyindex.context.domains.docbudget import (
-        check as budget_check,
-    )
+def _budget_groups() -> _Groups:
+    from dummyindex.context.domains.docbudget import BudgetGroup
     from dummyindex.context.domains.docbudget.constants import (
         CONTEXT_RATCHET_REL,
         SKILLS_RATCHET_REL,
     )
 
-    rc = 0
-    for group, rel in (
+    return (
         (BudgetGroup.CONTEXT, CONTEXT_RATCHET_REL),
         (BudgetGroup.SKILLS, SKILLS_RATCHET_REL),
-    ):
+    )
+
+
+def _style_groups() -> _Groups:
+    from dummyindex.context.domains.docbudget import BudgetGroup
+    from dummyindex.context.domains.docbudget.constants import STYLE_RATCHET_REL
+
+    return ((BudgetGroup.STYLE, STYLE_RATCHET_REL),)
+
+
+def _print_style_details(root: Path, rel: str) -> None:
+    from dummyindex.context.domains.docbudget import lint_text
+
+    for v in lint_text((root / rel).read_text(encoding="utf-8")):
+        print(f"{rel}:{v.line}: {v.rule}: {v.excerpt}")
+
+
+def _run_ratchet_check(
+    root: Path,
+    groups: _Groups,
+    *,
+    update: bool,
+    flag: str,
+) -> int:
+    """Check or update each (group, ratchet) pair. rc 1 on growth or refusal."""
+    from dummyindex.context.domains.docbudget import (
+        BudgetGroup,
+        read_ratchet,
+        write_ratchet,
+    )
+    from dummyindex.context.domains.docbudget import (
+        check as budget_check,
+    )
+    from dummyindex.context.domains.docbudget import (
+        scan as budget_scan,
+    )
+    from dummyindex.context.domains.docbudget import (
+        update_ratchet as run_update,
+    )
+
+    rc = 0
+    checked = False
+    for group, rel in groups:
+        is_style = group is BudgetGroup.STYLE
+        unit = "violations" if is_style else "words"
         ratchet_path = root / rel
+        if is_style and not update and not ratchet_path.is_file():
+            for path, count in budget_scan(root, group).items():
+                if count:
+                    _print_style_details(root, path)
+            print(
+                "no style ratchet; seed it with: "
+                "dummyindex context check --style --update-ratchet"
+            )
+            continue
         try:
             ratchet = read_ratchet(ratchet_path)
         except ValueError as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 2
         if update:
-            result = update_ratchet(root, ratchet, group)
+            result = run_update(root, ratchet, group)
             write_ratchet(ratchet_path, result.ratchet)
             print(
                 f"{rel}: {len(result.ratchet)} entries, {len(result.lowered)} lowered"
             )
             for v in result.refused:
-                print(f"  refused: {v.path} grew {v.recorded} -> {v.words} words")
+                print(f"  refused: {v.path} grew {v.recorded} -> {v.words} {unit}")
                 rc = 1
             continue
+        checked = True
         for v in budget_check(root, ratchet, group):
             if v.recorded is None:
-                print(f"over budget: {v.path} {v.words} words (ceiling {v.limit})")
+                print(f"over budget: {v.path} {v.words} {unit} (ceiling {v.limit})")
             else:
-                print(f"grew: {v.path} {v.words} words (recorded {v.recorded})")
+                print(f"grew: {v.path} {v.words} {unit} (recorded {v.recorded})")
+            if is_style:
+                _print_style_details(root, v.path)
             rc = 1
-    if rc == 0 and not update:
-        print("context check --budget: ok")
+    if rc == 0 and checked and not update:
+        print(f"context check {flag}: ok")
     return rc
 
 
