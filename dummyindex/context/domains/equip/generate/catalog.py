@@ -1,4 +1,4 @@
-"""The policy core: decide what equip generates, adopts, and wires.
+"""The policy core: decide what equip generates, adopts, and wires (spec §3 + §6).
 
 :func:`build_catalog` is a pure function over a :class:`StackProfile`, the repo's
 convention docs, a :class:`PreflightReport`, and (optionally) the capabilities a

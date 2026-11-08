@@ -1,17 +1,10 @@
-"""Tests for the narrow Python dispatch-idiom resolver (item A4).
+"""Tests for the narrow Python dispatch-idiom resolver.
 
-Fixtures model this repo's own idioms so the callers-of / dead-code blind
-spot provably closes:
-
-- ``cli/__init__.py``'s enum-keyed dispatch dict
-  (``{ContextSubcommand.SCAN_CHECK: scan.run}``) — the handler function must
-  gain an incoming ``calls`` edge from the mapping's enclosing scope;
-- ``cli/rebuild.py``-style function-body ``from X import Y`` — the enclosing
-  function's module must gain an ``imports_from`` edge (previously only
-  module-level imports were seen).
-
-Precision over recall: only references that match a known extracted symbol
-resolve; ambiguous or unbound references produce no edge.
+Fixtures model this repo's idioms: an enum-keyed dispatch dict
+(``{ContextSubcommand.SCAN_CHECK: scan.run}``) gives the handler an incoming
+``calls`` edge from the dict's scope, and a function-body ``from X import Y``
+gives the module an ``imports_from`` edge. Precision over recall: only known
+extracted symbols resolve; ambiguous or unbound references produce no edge.
 """
 
 from __future__ import annotations
@@ -51,7 +44,7 @@ def _imports_from(result, source):
     ]
 
 
-# --- (1) enum-keyed dispatch dict → calls edges --------------------------------
+# --- (1) enum-keyed dispatch dict → calls edges
 
 
 @pytest.mark.unit
@@ -268,7 +261,7 @@ def test_aliased_import_resolves_to_actual_module_stem(tmp_path):
     assert edge["source"] == "main_py"
 
 
-# --- (2) function-body `from X import Y` → imports_from ------------------------
+# --- (2) function-body `from X import Y` → imports_from
 
 
 @pytest.mark.unit
@@ -331,7 +324,7 @@ def test_module_level_import_stays_extracted_and_undoubled(tmp_path):
     assert edge["confidence"] == ConfidenceLevel.EXTRACTED
 
 
-# --- determinism ----------------------------------------------------------------
+# --- determinism
 
 
 @pytest.mark.unit

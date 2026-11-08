@@ -72,7 +72,16 @@ The gate emits a Stop `{"decision":"block", …}` at most once per session. It f
 
 Block-once uses `stop_hook_active` plus a persisted per-session memo (`reconcile_gate.py:223-264`). `.context/config.json` with `"auto_council": false` opts a root out (`reconcile_gate.py:39-52`). Submodule indexes are covered (`discover_context_roots`, `reconcile_gate.py:55-73`). A present but unreadable transcript yields the conservative advisory block, not a hard allow (`render_advisory_block`, `reconcile_gate.py:196-220`). A headless run with no session id hard-allows.
 
-### Skill-compliance feedback (wired at ef038c0)
+Survivors are then **partitioned by ownership** (`partition_session_drift`,
+`reconcile_scope.py:13-78`, owned by `maintenance`): only drift attributable to
+the main-thread `edited_paths` stays blocking — each path belongs to its deepest
+context root, and a drifted/awaiting feature counts only when an edited path is
+in its `feature.json` `files` — then `_gate_relevant` is re-applied
+(`reconcile_gate.py:359-371`). Nothing owned → `systemMessage` listing at most 8
+roots (`unrelated_summary`, `reconcile_scope.py:81-98`), memo not marked
+(`reconcile_gate.py:372-377`). Owned → memo marked, `render_block` (lone session
+root) or `render_multi_block`, the unrelated summary appended to `reason`
+(`:378-388`).
 
 Two verbs turn "the user keeps telling me to use skill X" into a policy line on every later prompt.
 
@@ -123,27 +132,28 @@ Nothing reads `failure-patterns.md`. `render_session_start` surfaces NOW/RECENT/
 
 ### Transcript reader
 
-- `resolve_session_id() -> str | None` (`memory/transcript.py:52-54`)
-- `find_main_transcript(*, session_id: str | None, cwd: Path) -> Path | None` (`memory/transcript.py:67-85`)
-- `read_session_signal(main_transcript: Path) -> SessionSignal` (`memory/transcript.py:137-175`)
+- `resolve_session_id() -> str | None` (`memory/transcript.py:43-45`)
+- `find_main_transcript(*, session_id: str | None, cwd: Path) -> Path | None` (`memory/transcript.py:58-76`)
+- `read_session_signal(main_transcript: Path) -> SessionSignal` — `edited_paths` from the main transcript only; subagent edits are counted, not listed (`memory/transcript.py:88-161`)
 
 ### Drift & gate
 
-- `compute_drift(project_root: Path) -> DriftReport` (`drift.py:152-265`; internals `_read_doc_basis` `:489-521`, `_drop_acked_rows` `:524-555`, `_content_unchanged` `:558-572`, `_manifest_shas` `:472-486`)
-- `render_drift_summary(report: DriftReport) -> str` (`drift.py:268-306`; mtime section renderer `_render_mtime_section` `:325-372`)
-- `compute_badge(report: DriftReport) -> str` — labeled split `[ctx: E edited · A anchored]` (`drift.py:116-149`)
-- `read_acks(context_dir) -> list[dict]` / `append_ack(...) -> dict` / `clear_acks(context_dir) -> int` / `acks_path(context_dir) -> Path` (`domains/drift_acks.py:38-104`)
-- `stamp_reconciled(context_dir, root, *, force=False, to_commit=None)` — on success re-stamps the manifest **and** writes `cache/doc-basis.json` (`build/reconcile.py:265-358`; `blob_sha` `:369-377`, `_write_doc_basis` `:380-399`)
-- `decide_block(*, root, main_transcript, stop_hook_active, session_id="") -> str | None` (`reconcile_gate.py:342-399`)
-- `render_block(report: DriftReport) -> str` (`reconcile_gate.py:83-131`) / `render_multi_block(stale, *, base) -> str` (`171-193`) / `render_advisory_block(stale, *, base) -> str` (`196-220`)
-- `discover_context_roots(root: Path) -> tuple[Path, ...]` (`reconcile_gate.py:55-73`)
-- `auto_council_enabled(root: Path) -> bool` (`reconcile_gate.py:39-52`)
+- `compute_drift(project_root: Path) -> DriftReport` (`drift.py:115-220`; internals `_read_doc_basis` `:433-463`, `_drop_acked_rows` `:466-495`, `_content_unchanged` `:498-510`, `_manifest_shas` `:417-430`)
+- `render_drift_summary(report: DriftReport) -> str` (`drift.py:223-258`; mtime section renderer `_render_mtime_section` `:275-318`)
+- `compute_badge(report: DriftReport) -> str` — labeled split `[ctx: E edited · A anchored]` (`drift.py:86-112`)
+- `read_acks(context_dir) -> list[dict]` / `append_ack(...) -> dict` / `clear_acks(context_dir) -> int` / `acks_path(context_dir) -> Path` (`domains/drift_acks.py:24-90`)
+- `stamp_reconciled(context_dir, root, *, force=False, to_commit=None)` — on success re-stamps the manifest **and** writes `cache/doc-basis.json` (`dummyindex/context/build/reconcile.py:251-320`; `blob_sha` `:331-339`, `_write_doc_basis` `:342-361`)
+- `decide_block(*, root, main_transcript, stop_hook_active, session_id="") -> str | None` — block JSON, `systemMessage` JSON, or `None` (`reconcile_gate.py:307-388`)
+- `render_block(report: DriftReport) -> str` (`reconcile_gate.py:74-116`) / `render_multi_block(stale, *, base) -> str` (`156-178`)
+- `discover_context_roots(root: Path) -> tuple[Path, ...]` (`reconcile_gate.py:48-64`)
+- `auto_council_enabled(root: Path) -> bool` (`reconcile_gate.py:32-45`)
+- Upstream, `maintenance`-owned: `partition_session_drift(stale, edited_paths, *, base, context_roots) -> (owned, unrelated)` / `unrelated_summary(stale, *, base) -> str` (`reconcile_scope.py:13-98`)
 
 ### Miner — skill feedback
 
-- `refresh_skill_feedback(context_dir: Path, *, config_override: Path | None = None) -> tuple[RecurringSkillCorrection, ...]` (`miner/pipeline.py:140-152`)
-- `scan_skill_feedback(repo_root: Path, *, config_dirs: tuple[Path, ...]) -> tuple[RecurringSkillCorrection, ...]` (`miner/pipeline.py:112-137`)
-- `parse_skill_directive_events(path: Path, *, repo_root: Path, fallback_prefix: tuple[int, ...]) -> tuple[SkillDirectiveEvent, ...]` (`miner/scan.py:262-297`)
+- `refresh_skill_feedback(context_dir: Path, *, config_override: Path | None = None) -> tuple[RecurringSkillCorrection, ...]` (`miner/pipeline.py:128-140`)
+- `scan_skill_feedback(repo_root: Path, *, config_dirs: tuple[Path, ...]) -> tuple[RecurringSkillCorrection, ...]` (`miner/pipeline.py:100-125`)
+- `parse_skill_directive_events(path: Path, *, repo_root: Path, fallback_prefix: tuple[int, ...]) -> tuple[SkillDirectiveEvent, ...]` (`miner/scan.py:244-279`)
 - `extract_skill_directives(text: str) -> tuple[SkillDirective, ...]` (`miner/corrections.py:132-188`)
 - `directive_events(text, *, event_uuid, timestamp, session_id, occurred_at, fallback_order) -> tuple[SkillDirectiveEvent, ...]` (`miner/corrections.py:212-238`)
 - `stable_event_key(*, event_uuid: str | None, timestamp: str, session_id: str, text: str) -> str` (`miner/corrections.py:191-209`)
@@ -153,27 +163,28 @@ Nothing reads `failure-patterns.md`. `render_session_start` surfaces NOW/RECENT/
 - `read_skill_feedback(context_dir: Path) -> tuple[RecurringSkillCorrection, ...]` (`miner/feedback.py:136-200`)
 - `render_skill_feedback(cached, *, current: Iterable[SkillDirective] = ()) -> str` (`miner/feedback.py:203-247`)
 - `skill_feedback_cache_path(context_dir: Path) -> Path` (`miner/feedback.py:40-42`)
-- `resolve_claude_config_dir(*, override=None) -> Path` / `resolve_claude_config_dirs(*, override=None) -> tuple[Path, ...]` / `resolve_transcript_store(*, override=None) -> Path` (`miner/resolve.py:25-67`)
+- `resolve_claude_config_dir(*, override=None) -> Path` / `resolve_claude_config_dirs(*, override=None) -> tuple[Path, ...]` / `resolve_transcript_store(*, override=None) -> Path` (`miner/resolve.py:18-60`)
 
 ### Miner — failure patterns (no non-test caller)
 
-- `scan_transcript_store(store_dir: Path, *, repo_root: Path | None = None, min_occurrences: int = 3) -> MinerReport` (`miner/pipeline.py:40-80`)
-- `mine_and_feed(context_dir: Path, *, store_override=None, min_occurrences=3, all_projects=False) -> MinerReport` (`miner/pipeline.py:83-109`)
-- `parse_transcript(path: Path) -> tuple[ToolCallRecord, ...]` (`miner/scan.py:140-190`)
-- `canonical_signature(tool_name: str, input_data: Mapping[str, Any]) -> str` (`miner/signatures.py:68-99`)
-- `detect_repeated_signatures(records_by_session, *, min_occurrences=3) -> tuple[RepeatedSignature, ...]` (`miner/signatures.py:113-165`)
-- `render_report(report: MinerReport, *, repo_root: Path) -> str` / `write_report(context_dir, report, *, repo_root) -> Path` (`miner/render.py:43-87`)
-- `project_dir_name(repo_root: Path) -> str` / `sanitize_signature(signature: str, *, repo_root: Path) -> str` (`miner/scope.py:41-71`)
+- `scan_transcript_store(store_dir: Path, *, repo_root: Path | None = None, min_occurrences: int = 3) -> MinerReport` (`miner/pipeline.py:35-72`)
+- `mine_and_feed(context_dir: Path, *, store_override=None, min_occurrences=3, all_projects=False) -> MinerReport` (`miner/pipeline.py:75-97`)
+- `parse_transcript(path: Path) -> tuple[ToolCallRecord, ...]` (`miner/scan.py:124-172`)
+- `canonical_signature(tool_name: str, input_data: Mapping[str, Any]) -> str` (`miner/signatures.py:47-70`)
+- `detect_repeated_signatures(records_by_session, *, min_occurrences=3) -> tuple[RepeatedSignature, ...]` (`miner/signatures.py:84-134`)
+- `render_report(report: MinerReport, *, repo_root: Path) -> str` / `write_report(context_dir, report, *, repo_root) -> Path` (`miner/render.py:28-72`)
+- `project_dir_name(repo_root: Path) -> str` / `sanitize_signature(signature: str, *, repo_root: Path) -> str` (`miner/scope.py:28-73`)
 
 ### Shared I/O
 
-- `write_text_atomic(path: Path, text: str) -> None` — byte-faithful by contract (`atomic_io.py:37-47`)
-- `normalize_eof_newline(path: Path) -> bool` (`atomic_io.py:50-67`)
+- `write_text_atomic(path: Path, text: str) -> None` — byte-faithful by contract (`atomic_io.py:70-79`)
+- `normalize_eof_newline(path: Path) -> bool` (`atomic_io.py:82-98`)
+- `is_link(path: Path) -> bool` — fail-closed symlink/reparse-point check via `os.lstat` (`atomic_io.py:16-34`); no caller in this feature, consumed by `build/upgrade.py`
 
 ### CLI helpers
 
-- `read_hook_stdin() -> dict[str, object]` — `{}` at a TTY or on malformed JSON (`cli/memory.py:26-42`)
-- `resolve_transcript(hook: dict[str, object], root: Path) -> tuple[str, Path | None]` (`cli/memory.py:45-56`)
+- `read_hook_stdin() -> dict[str, object]` — `{}` at a TTY or on malformed JSON (`cli/memory.py:20-36`)
+- `resolve_transcript(hook: dict[str, object], root: Path) -> tuple[str, Path | None]` (`cli/memory.py:39-50`)
 
 ### Frozen carriers
 

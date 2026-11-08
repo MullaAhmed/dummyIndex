@@ -56,8 +56,8 @@ The skill dispatches the authors and calls `enrich-apply`. The domain never sees
 CLI entry points come from the `context` dispatcher.
 It maps `ContextSubcommand.ENRICH_PLAN` to `enrich.run_plan` and `ENRICH_APPLY` to `enrich.run_apply` (`dummyindex/cli/__init__.py:100-101`):
 
-- `run_plan(args: list[str]) -> int` (`dummyindex/cli/enrich.py:12-57`).
-- `run_apply(args: list[str]) -> int` (`dummyindex/cli/enrich.py:60-129`).
+- `run_plan(args: list[str]) -> int` (`dummyindex/cli/enrich.py:12-51`).
+- `run_apply(args: list[str]) -> int` (`dummyindex/cli/enrich.py:54-123`).
 
 Public domain functions (`dummyindex/context/domains/enrich.py`):
 
@@ -93,7 +93,7 @@ Plan, then apply. The `/dummyindex` session authors the JSON between the two ste
 ```
 $ dummyindex context enrich-plan
 context enrich-plan: wrote .context/cache/_enrich_plan.json
-  total nodes: 612  stubs: 488  by_kind: {'file': 41, 'symbol': 444, 'dir': 3}
+  total nodes: 612  stubs: 488  by_kind: {'project': 1, 'dir': 3, 'file': 41, 'function': 380, 'class': 24, 'method': 39}
   batches: 42
 
 $ dummyindex context enrich-apply --from-json /tmp/abstracts.json

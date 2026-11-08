@@ -1,20 +1,10 @@
 """Deterministic graph artifacts: personalized PageRank + community roll-up.
 
-Runs right after `features/symbol-graph.json` is written (wired in
-`build.graph.build_graph`) and derives two committed artifacts from the
-same in-memory graph:
-
-- ``features/seed-rank.json`` — the ranked shortlist the scan seed
-  consumes (`domains/features/scan/rank.py`). Personalized PageRank
-  seeded on entry-point symbols and non-test files, with test files
-  down-weighted: the bakeoff showed test nodes dominate the raw degree
-  signal, and a seed ranked by test plumbing is a seed nobody wants.
-- ``features/graph-communities.json`` — one card per community
-  (`domains/features/communities.py`), owning feature read from the
-  on-disk taxonomy when one exists.
-
-Both are EXTRACTED backbone: `rebuild --changed` regenerates them freely
-and neither ever touches the curated `features/graph.json`.
+`build.graph.build_graph` calls this after writing `features/symbol-graph.json`.
+``features/seed-rank.json`` is the scan seed's shortlist (`domains/features/scan/rank.py`):
+PageRank weighted toward entry points, test files down-weighted since test nodes dominate
+raw degree. ``features/graph-communities.json`` has one card per community, owner read from
+the on-disk taxonomy. Both are EXTRACTED backbone; neither touches `features/graph.json`.
 """
 
 from __future__ import annotations
@@ -66,14 +56,11 @@ _TEST_DIR_NAMES = frozenset({"tests", "test", "__tests__", "testing"})
 def compute_symbol_rank(g: nx.Graph) -> dict[str, float]:
     """Personalized PageRank over the symbol graph. Empty graph → `{}`.
 
-    Pure-Python power iteration, NOT `networkx.pagerank`: NetworkX 3.x
-    delegates that to scipy, which dummyindex does not depend on — and the
-    same GATE reasoning that pinned committed communities to always-Louvain
-    applies here: an optional numeric backend whose presence varies per
-    machine must never decide committed bytes. Semantics match
-    `nx.pagerank(g, alpha, personalization, weight=None)` on an undirected
-    graph; a run that hasn't converged after the iteration cap returns the
-    last (still deterministic) iterate rather than raising.
+    Pure-Python power iteration, NOT `networkx.pagerank`: NetworkX 3.x delegates to
+    scipy, which dummyindex doesn't depend on, and a backend whose presence varies per
+    machine must never decide committed bytes (why communities are always-Louvain).
+    Matches `nx.pagerank(g, alpha, personalization, weight=None)` on an undirected graph;
+    an unconverged run returns the last (still deterministic) iterate instead of raising.
     """
     if g.number_of_nodes() == 0:
         return {}
@@ -184,7 +171,7 @@ def write_graph_artifacts(
     return tuple(written)
 
 
-# ----- pagerank inputs -------------------------------------------------------
+# --- pagerank inputs
 
 
 def _personalization(g: nx.Graph) -> dict[str, float]:
@@ -234,7 +221,7 @@ def _is_test_path(path: str) -> bool:
     )
 
 
-# ----- roll-up inputs --------------------------------------------------------
+# --- roll-up inputs
 
 
 def _rationales(g: nx.Graph) -> dict[str, str]:
@@ -321,7 +308,7 @@ def _feature_members(feature_json: Path) -> tuple[str, ...]:
     return tuple(m for m in members if isinstance(m, str))
 
 
-# ----- plumbing --------------------------------------------------------------
+# --- plumbing
 
 
 def _indexed_root(features_dir: Path) -> Path:

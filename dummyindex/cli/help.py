@@ -1,12 +1,9 @@
 """Help text for `dummyindex context <subcommand>`.
 
-``USAGE`` is the canonical hand-maintained reference block. The dispatcher
-(``cli/__init__.py``) intercepts ``-h``/``--help`` anywhere in a subcommand's
-args and prints ``usage_for(sub)`` — the slice of ``USAGE`` describing exactly
-that subcommand — *before* any leftover-arg check or side effect runs. The
-slice is derived from the block's own layout (a subcommand line is indented two
-spaces and starts with the subcommand token; its continuation lines are more
-deeply indented), so help can never drift from the reference text.
+``USAGE`` is the canonical hand-maintained reference. On ``-h``/``--help`` the
+dispatcher prints ``usage_for(sub)``, that subcommand's slice of ``USAGE``, derived from
+the block's own layout (a two-space-indented line starting with the subcommand token,
+plus its deeper continuation lines), so help can never drift from the reference.
 """
 
 from __future__ import annotations

@@ -34,9 +34,8 @@ def vendored_item(
 ) -> EquipmentItem:
     """Build the manifest item for a vendored agent/skill.
 
-    ``origin_hash`` is taken over the *stamped* content so the hash-baselined
-    lifecycle (refresh/reset/uninstall) classifies it identically to a generated
-    item.
+    ``origin_hash`` is taken over the *stamped* content so status and uninstall
+    classify it by hash exactly like a generated item.
     """
     stamped = stamp_vendored(content)
     return EquipmentItem(

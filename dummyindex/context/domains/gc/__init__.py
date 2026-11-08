@@ -13,12 +13,7 @@ Public surface (the CLI + skill import target):
 - ``recommend`` — pure pre-council hint per candidate (``Recommendation`` + reason)
 - ``GcError``, ``GcPathError``, ``GcTargetError`` — typed errors
 - ``DEFAULT_COMMIT_THRESHOLD``, ``ARCHIVE_SENTINEL``, ``GC_STATE_REL``,
-  ``GC_MEMO_REL``, ``PROPOSALS_REL``, ``AUDITS_REL`` — layout constants
-- ``enumerate_candidates``, ``classify`` — candidate discovery + signal tags
-- ``read_gc_anchor``, ``write_gc_anchor``, ``gc_commits_since``,
-  ``anchor_orphaned``, ``should_signal``, ``stamp_gc`` — anchor + throttle
-- ``scan`` — the read-only ``gc status`` composer (enumerate + classify + throttle)
-- ``delete_workspace`` — the bounded destructive op
+  ``GC_MEMO_REL``, ``PROPOSALS_REL``, ``AUDITS_REL`` layout constants.
 """
 
 from __future__ import annotations

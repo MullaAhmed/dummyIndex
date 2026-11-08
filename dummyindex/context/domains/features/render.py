@@ -174,18 +174,9 @@ def _graph_view(
 ) -> dict[str, Any]:
     """The deterministic seed for `features/graph.json` (schema v2).
 
-    Thin wrapper over :func:`scan.seed_scan` — the shape lives there; this
-    exists so `builder` and `indexes` have one call site to write, and so
-    the name the rest of the package already imports keeps working.
-
-    v1 of this function denormalized the whole extraction into the viewer
-    payload: folder → file → class → function → method → feature → flow. On
-    this repo that was 4,083 nodes and 8,062 edges, which is a complete and
-    completely unreadable answer to "how does this work?". Per-symbol
-    navigation did not disappear with it — `map/symbols.json` and
-    `features/symbol-graph.json` still carry every symbol and every call
-    edge, and they are what agents actually query. What is gone is the
-    pretense that dumping them into a force layout was a *map*.
+    Thin wrapper over :func:`scan.seed_scan` (the shape lives there) giving
+    `builder` and `indexes` one call site. Per-symbol navigation lives in
+    `map/symbols.json` and `features/symbol-graph.json`, not here.
     """
     return seed_scan(
         features,

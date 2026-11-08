@@ -3,7 +3,7 @@
   "communities": [
     {
       "slug": "audit-panel-auditerror",
-      "size": 113,
+      "size": 112,
       "feature": "audit-panel",
       "summary": "Base class for every audit-domain error.",
       "members": [
@@ -208,8 +208,20 @@
       "slug": "build-loop-buildlooperror",
       "size": 228,
       "feature": "build-loop",
-      "summary": "Raised when checklist parsing / flipping or task\u2192equipment mapping     can't sa",
+      "summary": "An evolve operation could not safely complete.",
       "members": [
+        {
+          "id": "evolve_gate_evolveerror",
+          "label": "EvolveError",
+          "score": 0.00410779,
+          "path": "dummyindex/context/domains/evolve_gate.py:40"
+        },
+        {
+          "id": "enums_candidatekind",
+          "label": "CandidateKind",
+          "score": 0.00174586,
+          "path": "dummyindex/context/domains/gc/enums.py:23"
+        },
         {
           "id": "errors_buildlooperror",
           "label": "BuildLoopError",
@@ -479,7 +491,7 @@
       "slug": "council-dev-pick-py",
       "size": 61,
       "feature": "council",
-      "summary": "Stack-aware author picker for the v0.14 council.  Given a feature's file list",
+      "summary": "Stack-aware author picker for the council.  Given a feature's file list and th",
       "members": [
         {
           "id": "dummyindex_context_domains_dev_pick_py",
@@ -1042,7 +1054,7 @@
       "slug": "equip-malformedsettingserror",
       "size": 551,
       "feature": "equip",
-      "summary": "Raised when ``.claude/settings.json`` exists but isn't valid JSON.      We ref",
+      "summary": "Raised when ``.claude/settings.json`` exists but isn't a valid JSON object.",
       "members": [
         {
           "id": "claude_settings_malformedsettingserror",
@@ -1306,6 +1318,36 @@
           "label": "evolve_gate.py",
           "score": 0.00083976,
           "path": "dummyindex/context/domains/evolve_gate.py:1"
+        },
+        {
+          "id": "living_rules_sha256",
+          "label": "sha256()",
+          "score": 0.00074248,
+          "path": "dummyindex/context/domains/living_rules.py:21"
+        },
+        {
+          "id": "evolve_experiments_run_experiment",
+          "label": "run_experiment()",
+          "score": 0.00071799,
+          "path": "dummyindex/context/domains/evolve_experiments.py:368"
+        },
+        {
+          "id": "evolve_gate_safe_file",
+          "label": "safe_file()",
+          "score": 0.00067932,
+          "path": "dummyindex/context/domains/evolve_gate.py:80"
+        },
+        {
+          "id": "dummyindex_cli_evolve_py",
+          "label": "evolve.py",
+          "score": 0.00056386,
+          "path": "dummyindex/cli/evolve.py:1"
+        },
+        {
+          "id": "evolve_validate_candidate",
+          "label": "validate_candidate()",
+          "score": 0.00046614,
+          "path": "dummyindex/context/domains/evolve.py:689"
         }
       ]
     },
@@ -1449,7 +1491,7 @@
       "slug": "extraction-pipeline-resolve-git-dir",
       "size": 53,
       "feature": "extraction-pipeline",
-      "summary": "Return the actual git dir for ``root``, or ``None`` if there isn't one.      -",
+      "summary": "Return the actual git dir for ``root``, or ``None`` if there isn't one.      A",
       "members": [
         {
           "id": "git_resolve_git_dir",
@@ -1533,6 +1575,11 @@
           "label": "Feature",
           "score": 0.00159114,
           "path": "dummyindex/context/domains/features/models.py:62"
+        },
+        {
+          "id": "enum",
+          "label": "Enum",
+          "score": 0.00169378
         },
         {
           "id": "errors_featurerenameerror",
@@ -1744,7 +1791,7 @@
       "slug": "fleet-fleetrun-py",
       "size": 92,
       "feature": "fleet",
-      "summary": "Fleet-run domain: checkpointed multi-proposal execution state.  A fleet run co",
+      "summary": "Fleet-run domain: checkpointed multi-proposal execution state.  Host orchestra",
       "members": [
         {
           "id": "dummyindex_context_domains_fleetrun_py",
@@ -1999,6 +2046,12 @@
           "path": "dummyindex/context/domains/graph_query/enums.py:33"
         },
         {
+          "id": "storage_write_graph_payload",
+          "label": "write_graph_payload()",
+          "score": 0.00045452,
+          "path": "dummyindex/export/storage.py:332"
+        },
+        {
           "id": "tests_context_domains_test_graph_query_py",
           "label": "test_graph_query.py",
           "score": 0.00038631,
@@ -2016,7 +2069,7 @@
       "slug": "index-lifecycle-build-all",
       "size": 338,
       "feature": "index-lifecycle",
-      "summary": "Run the full .context/ build and write every artifact atomically.      Args:",
+      "summary": "Run the full .context/ build and write every artifact atomically.      ``scope",
       "members": [
         {
           "id": "runner_build_all",
@@ -2084,7 +2137,7 @@
       "slug": "index-lifecycle-filesmap",
       "size": 243,
       "feature": "index-lifecycle",
-      "summary": "Build .context/tree.json \u2014 PageIndex-style hierarchical reasoning tree.  Proje",
+      "summary": "Detection-only summary of how the working tree drifted from the index.      ``",
       "members": [
         {
           "id": "maps_filesmap",
@@ -2261,6 +2314,74 @@
           "label": "__init__.py",
           "score": 1.88e-06,
           "path": "tests/__init__.py:1"
+        }
+      ]
+    },
+    {
+      "slug": "install-surface-hookstatus",
+      "size": 74,
+      "feature": "install-surface",
+      "summary": "Tests for the managed Claude Code hook set and the `hooks` CLI verb.  The reti",
+      "members": [
+        {
+          "id": "hooks_hookstatus",
+          "label": "HookStatus",
+          "score": 0.00038912,
+          "path": "dummyindex/context/hooks.py:363"
+        },
+        {
+          "id": "tests_context_test_hooks_py",
+          "label": "test_hooks.py",
+          "score": 0.00036534,
+          "path": "tests/context/test_hooks.py:1"
+        },
+        {
+          "id": "test_hooks_init_git_repo",
+          "label": "_init_git_repo()",
+          "score": 0.00023072,
+          "path": "tests/context/test_hooks.py:61"
+        },
+        {
+          "id": "test_hooks_write_settings",
+          "label": "_write_settings()",
+          "score": 8.694e-05,
+          "path": "tests/context/test_hooks.py:67"
+        },
+        {
+          "id": "test_hooks_test_statusline_left_alone_when_global_sets_status_line",
+          "label": "test_statusline_left_alone_when_global_sets_status_line()",
+          "score": 3.908e-05,
+          "path": "tests/context/test_hooks.py:694"
+        },
+        {
+          "id": "test_hooks_test_local_install_present_detects_sentinel",
+          "label": "test_local_install_present_detects_sentinel()",
+          "score": 3.877e-05,
+          "path": "tests/context/test_hooks.py:1295"
+        },
+        {
+          "id": "test_hooks_test_statusline_left_alone_when_local_sets_status_line",
+          "label": "test_statusline_left_alone_when_local_sets_status_line()",
+          "score": 3.448e-05,
+          "path": "tests/context/test_hooks.py:675"
+        },
+        {
+          "id": "test_hooks_test_statusline_malformed_global_does_not_block_local_user_value",
+          "label": "test_statusline_malformed_global_does_not_block_local_user_value()",
+          "score": 3.448e-05,
+          "path": "tests/context/test_hooks.py:789"
+        },
+        {
+          "id": "test_hooks_test_statusline_preserves_other_settings_keys",
+          "label": "test_statusline_preserves_other_settings_keys()",
+          "score": 3.448e-05,
+          "path": "tests/context/test_hooks.py:752"
+        },
+        {
+          "id": "test_hooks_test_install_refreshed_line_printed",
+          "label": "test_install_refreshed_line_printed()",
+          "score": 3.375e-05,
+          "path": "tests/context/test_hooks.py:236"
         }
       ]
     },
@@ -2539,7 +2660,7 @@
       "slug": "managed-doc-homes-dockind",
       "size": 176,
       "feature": "managed-doc-homes",
-      "summary": "Which managed home a planning doc belongs to.      ``PROPOSAL`` routes to ``.c",
+      "summary": "Which managed home a planning doc belongs to (``NONE``: not a planning doc).",
       "members": [
         {
           "id": "enums_dockind",
@@ -2975,7 +3096,7 @@
       "slug": "session-memory-driftreport",
       "size": 172,
       "feature": "session-memory",
-      "summary": "Result of a drift scan.      ``rows`` is the mtime signal (stale per-feature d",
+      "summary": "Result of a drift scan.      ``rows``: renderable mtime rows (basis-matched fi",
       "members": [
         {
           "id": "drift_driftreport",
@@ -3235,7 +3356,7 @@
       "slug": "tree-enrich-str",
       "size": 696,
       "feature": "tree-enrich",
-      "summary": "CLI: equip discover + install (fake runner \u2014 no live network).  The fake runne",
+      "summary": "Tests for `dummyindex context equip` \u2014 templates-first toolkit rendering.",
       "members": [
         {
           "id": "str",
@@ -3253,6 +3374,12 @@
           "label": "test_equip_discover_cli.py",
           "score": 0.00041711,
           "path": "tests/context/domains/equip/test_equip_discover_cli.py:1"
+        },
+        {
+          "id": "council_councillogerror",
+          "label": "CouncilLogError",
+          "score": 0.00044368,
+          "path": "dummyindex/context/domains/council.py:56"
         },
         {
           "id": "dummyindex_context_domains_enrich_py",
@@ -3302,7 +3429,7 @@
       "slug": "tree-enrich-test-packaging-hygiene-py",
       "size": 4,
       "feature": "tree-enrich",
-      "summary": "Repo/packaging hygiene guards for the dummyindex source checkout.  Two classes",
+      "summary": "Repo/packaging hygiene guards for the dummyindex source checkout.  1. Packagin",
       "members": [
         {
           "id": "tests_test_packaging_hygiene_py",

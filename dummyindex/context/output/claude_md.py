@@ -1,15 +1,10 @@
 """Single-seam CLAUDE.md reconciliation.
 
-Folds a pre-existing root ``<root>/CLAUDE.md`` (a legacy managed block, plain
-hand-written user content, or both) and any existing canonical
-``<root>/.claude/CLAUDE.md`` into ONE canonical ``.claude/CLAUDE.md`` carrying
-exactly one fresh managed block, then deletes the root file. The unified
-"fold → single canonical file" behavior the audit found missing from every
-real build path.
-
-Domain helper, not a CLI: it returns a frozen :class:`ClaudeMdReconcileResult`
-and never prints. The CLI prints from the result. Idempotent and safe to run
-repeatedly — a second run on unchanged input is a ``noop``.
+Folds a root ``<root>/CLAUDE.md`` (legacy managed block, hand-written content, or
+both) and any existing ``<root>/.claude/CLAUDE.md`` into ONE canonical
+``.claude/CLAUDE.md`` with exactly one fresh managed block, then deletes the root
+file. Returns a frozen :class:`ClaudeMdReconcileResult` and never prints.
+Idempotent: a second run on unchanged input is a ``noop``.
 """
 
 from __future__ import annotations
@@ -33,13 +28,10 @@ from dummyindex.context.output.bootstrap import (
 class ClaudeMdAction(str, Enum):
     """What :func:`reconcile_claude_md` did to the CLAUDE.md layout.
 
-    - ``CREATED``: no canonical file existed; one was written fresh.
-    - ``CONSOLIDATED``: a root ``CLAUDE.md`` was folded into the canonical file
-      and removed.
-    - ``UPDATED``: the canonical file's managed block was refreshed (no root
-      file to fold, or an inode-shared single file left intact).
-    - ``NOOP``: nothing changed — a second run on unchanged input, or a
-      non-fatal degraded outcome that left the tree untouched.
+    ``CREATED`` wrote a fresh canonical file; ``CONSOLIDATED`` folded a root
+    ``CLAUDE.md`` in and deleted it (a failed delete is a warning); ``UPDATED``
+    refreshed the canonical block (no root to fold, or an inode-shared single
+    file); ``NOOP`` changed nothing (unchanged input, or a degraded outcome).
     """
 
     CREATED = "created"
@@ -47,9 +39,8 @@ class ClaudeMdAction(str, Enum):
     UPDATED = "updated"
     NOOP = "noop"
 
-    # Render as the value ("noop"), never the enum repr. Python 3.11 follows
-    # __str__ in f-strings; pin to the str value on every interpreter so the
-    # CLI prints "consolidated", not "ClaudeMdAction.CONSOLIDATED".
+    # Python 3.11 f-strings follow __str__; pin it so every interpreter prints
+    # "consolidated", never "ClaudeMdAction.CONSOLIDATED".
     __str__ = str.__str__
 
 
@@ -57,12 +48,10 @@ class ClaudeMdAction(str, Enum):
 class ClaudeMdReconcileResult:
     """Outcome of :func:`reconcile_claude_md`.
 
-    - ``action``: the closed-alphabet outcome (see :class:`ClaudeMdAction`).
-    - ``root_path``: the root ``<root>/CLAUDE.md`` that was considered.
-    - ``canonical_path``: the canonical ``<root>/.claude/CLAUDE.md``.
-    - ``message``: a human-readable, CLI-printable summary.
-    - ``warnings``: non-fatal degradations (unreadable root, failed write,
-      failed delete, unbalanced markers) — empty on the clean paths.
+    ``root_path`` / ``canonical_path`` are ``<root>/CLAUDE.md`` and
+    ``<root>/.claude/CLAUDE.md``; ``message`` is CLI-printable; ``warnings`` lists
+    non-fatal degradations (unreadable root, failed write or delete, unbalanced
+    markers) and is empty on the clean paths.
     """
 
     action: ClaudeMdAction
@@ -75,11 +64,9 @@ class ClaudeMdReconcileResult:
 def _user_residue(text: str, *, path: Path) -> str:
     """Validate marker order, then strip every complete managed block.
 
-    Sequential duplicate blocks are a repairable legacy state and are all
-    removed before one fresh block is emitted. Reversed, nested, interleaved,
-    or dangling marker lines raise before reconciliation writes anything.
-    Quoted markers in prose remain inert because the shared parser recognizes
-    standalone marker lines only.
+    Sequential duplicates (a repairable legacy state) are all removed; reversed,
+    nested, interleaved or dangling markers raise before anything is written. Only
+    standalone marker lines count, so markers quoted in prose stay inert.
     """
     spans = _managed_block_spans(
         text,
@@ -96,14 +83,10 @@ def _user_residue(text: str, *, path: Path) -> str:
 def reconcile_claude_md(out_root: Path) -> ClaudeMdReconcileResult:
     """Fold root + canonical CLAUDE.md into one canonical managed file.
 
-    Reads ``<out_root>/CLAUDE.md`` (root) and ``<out_root>/.claude/CLAUDE.md``
-    (canonical), folds the root's user residue and the canonical's user content
-    above a single fresh managed block, writes the canonical atomically, then
-    deletes the root file — only after the write succeeds.
-
-    Never raises for expected filesystem or marker conditions: an unreadable
-    root, a failed canonical write, a failed delete, or malformed markers each
-    degrade to a non-fatal result with a warning, leaving the root file
+    Both files' user content goes above a single fresh managed block; the
+    canonical is written atomically and the root deleted only after that write
+    succeeds. Never raises for expected filesystem or marker conditions: each
+    degrades to a non-fatal result with a warning, leaving the root file
     untouched unless the canonical write already succeeded.
     """
     root_path = out_root / "CLAUDE.md"
@@ -187,12 +170,10 @@ def reconcile_claude_md(out_root: Path) -> ClaudeMdReconcileResult:
                 warnings=(str(exc),),
             )
 
-    # R4 — idempotent merge: skip folding only when the root residue was ALREADY
-    # folded (a failed-delete + rerun would otherwise double it). Match the exact
-    # folded form — the residue is equal to, or the trailing appended segment of,
-    # the canonical residue — NOT a loose substring, so a root note that merely
-    # coincides with a fragment of canonical (e.g. "kind" inside "kindness") is
-    # never silently dropped on delete (the "user content never lost" invariant).
+    # R4 — idempotent merge: skip folding only if the root residue was ALREADY
+    # folded (a failed-delete rerun would double it). Match the exact folded form
+    # (equal, or the trailing appended segment), NOT a substring, so a root "kind"
+    # inside canonical "kindness" is never dropped (user-content-never-lost invariant).
     already_folded = root_residue == canonical_residue or canonical_residue.endswith(
         f"\n\n{root_residue}"
     )

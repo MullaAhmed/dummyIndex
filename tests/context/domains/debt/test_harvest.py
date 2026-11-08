@@ -18,7 +18,7 @@ from dummyindex.context.domains.debt import (
     harvest_debt,
 )
 
-# ----- model shape ----------------------------------------------------------
+# --- model shape
 
 
 @pytest.mark.unit
@@ -63,7 +63,7 @@ def test_empty_ledger_tallies_zero() -> None:
     assert ledger.to_dict() == {"total": 0, "no_trigger_count": 0, "rows": []}
 
 
-# ----- harvest fixtures -----------------------------------------------------
+# --- harvest fixtures
 
 
 def _write(root: Path, rel: str, body: str) -> None:

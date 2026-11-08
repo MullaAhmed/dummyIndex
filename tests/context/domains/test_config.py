@@ -1,7 +1,5 @@
-"""Tests for v0.14 onboarding config (`.context/config.json`).
-
-Covers the domain round-trip (read/write/from_dict validation) and the two
-CLI handlers (`onboard` + `config show`).
+"""Tests for the onboarding config (`.context/config.json`): domain round-trip
+(read/write/from_dict validation) and the `onboard` + `config show` handlers.
 """
 
 from __future__ import annotations
@@ -51,9 +49,7 @@ def _context_dir(tmp_path: Path) -> Path:
     return ctx
 
 
-# ---------------------------------------------------------------------------
 # Domain
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.unit
@@ -147,8 +143,7 @@ def test_from_dict_rejects_unknown_enum(field: str, value: str) -> None:
 @pytest.mark.unit
 def test_legacy_opus_model_value_migrates_in_memory() -> None:
     """A config written before the opus rename (`opus-4.7`) still loads, with
-    the value normalised to the current `opus` — the opus choice is
-    preserved, mirroring the v1->v2 schema migration."""
+    the value normalised to the current `opus`."""
     payload = default_config().to_dict()
     payload["model"] = "opus-4.7"
     cfg = Config.from_dict(payload)
@@ -174,9 +169,8 @@ def test_every_legacy_model_value_maps_to_a_current_choice(
     """Each version-pinned model label normalises to a *current* member in one hop.
 
     The map is looked up once (never chained), so an entry pointing at another
-    legacy value would raise instead of migrating. Pins the whole map: every
-    generation-pinned label ever persisted resolves to its generation-less
-    family, so a config written by any prior release still loads."""
+    legacy value would raise. Pins the whole map, so any prior release's config
+    still loads."""
     payload = default_config().to_dict()
     payload["model"] = legacy
     cfg = Config.from_dict(payload)
@@ -188,9 +182,8 @@ def test_every_legacy_model_value_maps_to_a_current_choice(
 def test_legacy_model_value_alone_marks_a_current_schema_config_stale(
     tmp_path: Path,
 ) -> None:
-    """A v4 config whose only staleness is a version-pinned model label is still
-    rewritten in place — the schema check alone would let it sit on `sonnet-4.6`
-    forever."""
+    """A current-schema config whose only staleness is a version-pinned model
+    label is still rewritten in place; a schema check alone would miss it."""
     from dummyindex.context.domains.config import migrate_config_in_place
 
     ctx = _context_dir(tmp_path)
@@ -227,8 +220,7 @@ def test_legacy_opus_model_value_reads_from_disk(tmp_path: Path) -> None:
 @pytest.mark.unit
 def test_migrate_config_rewrites_stale_v1_in_place(tmp_path: Path) -> None:
     """A loadable-but-stale config (v1 schema + legacy opus value) is migrated
-    on disk: schema bumped, value normalised, all user choices preserved. The
-    helper reports that it migrated."""
+    on disk: schema bumped, value normalised, user choices preserved."""
     from dummyindex.context.domains.config import migrate_config_in_place
 
     ctx = _context_dir(tmp_path)
@@ -534,9 +526,7 @@ def test_to_dict_serialises_enums_as_plain_strings() -> None:
     assert "ScopeKind" not in wire
 
 
-# ---------------------------------------------------------------------------
 # CLI: onboard
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.integration
@@ -892,9 +882,7 @@ def test_onboard_subdir_without_scope_path_returns_2(
     assert not (ctx / "config.json").exists()
 
 
-# ---------------------------------------------------------------------------
 # CLI: config show
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.integration
@@ -930,9 +918,7 @@ def test_config_unknown_action_returns_2(
     assert "unknown config sub-action" in capsys.readouterr().err
 
 
-# ---------------------------------------------------------------------------
 # v2: wired
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.unit
@@ -996,9 +982,7 @@ def test_wired_defaults_empty_when_absent() -> None:
     assert Config.from_dict(payload).wired == ()
 
 
-# ---------------------------------------------------------------------------
 # v2: command_depths
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.unit
@@ -1053,9 +1037,7 @@ def test_command_depths_invalid_depth_value_rejected() -> None:
     assert "light" in str(exc.value) and "deep" in str(exc.value)
 
 
-# ---------------------------------------------------------------------------
 # v4: default-plugin state, schema migration, and dummyindex_version
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.unit
@@ -1329,9 +1311,7 @@ def test_current_config_round_trips_byte_stable(tmp_path: Path) -> None:
     assert first == second
 
 
-# ---------------------------------------------------------------------------
 # v3: doc-guard fields + cheap tolerant accessor
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.unit
@@ -1532,9 +1512,7 @@ def test_doc_guard_accessor_never_builds_full_config(
     assert read_doc_guard_settings(ctx) == (True, ("docs/specs/**",))
 
 
-# ---------------------------------------------------------------------------
 # v2: resolve_depth precedence
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.unit
@@ -1587,9 +1565,7 @@ def test_resolve_depth_invalid_flag_raises(tmp_path: Path) -> None:
     assert "light" in str(exc.value) and "deep" in str(exc.value)
 
 
-# ---------------------------------------------------------------------------
 # v2: audit's resolve_mode is a thin wrapper that delegates to resolve_depth
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.unit
@@ -1614,9 +1590,7 @@ def test_audit_resolve_mode_delegates_to_resolve_depth(
     assert resolve_mode(ctx, flag) == expected
 
 
-# ---------------------------------------------------------------------------
 # v5: build.auto_recouncil policy + v4→v5 read-migration
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.unit

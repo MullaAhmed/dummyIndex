@@ -20,7 +20,7 @@ Claude Code and Codex skills that index any codebase into a navigable .context/ 
 
 ## Existing documentation
 
-_81 doc(s) catalogued from this repo (plus 0 external root(s)). See `source-docs/INDEX.md` for the full table — including per-doc confidence and broken-reference detail._
+_84 doc(s) catalogued from this repo (plus 0 external root(s)). See `source-docs/INDEX.md` for the full table — including per-doc confidence and broken-reference detail._
 
 **Advisory:** docs drift faster than code. The catalog grades each doc against the current AST extraction:
 

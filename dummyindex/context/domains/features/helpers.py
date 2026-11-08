@@ -85,12 +85,12 @@ def _rmtree(path: Path) -> None:
     _sh.rmtree(path)
 
 
-# ----- flow tracing ---------------------------------------------------------
+# --- path / range helpers
 def _rel(p: Any, root_abs: Path | None) -> str | None:
     """Coerce a `source_file` value to a repo-relative POSIX path.
 
-    Returns the raw value if it doesn't look like a string or if it's
-    already outside `root_abs`. None if not a string.
+    None for a non-string or empty value; the raw value when `root_abs` is
+    None or the path lies outside it.
     """
     if not isinstance(p, str) or not p:
         return None
@@ -132,23 +132,17 @@ def _unique_paths(paths: Iterable[Any]) -> tuple[str, ...]:
     return tuple(sorted(out))
 
 
-# ----- writers --------------------------------------------------------------
+# --- writers
 
 
 def _project_name(context_dir: Path, root: Path | None = None) -> str:
-    """Human name for `project.name` in the scan.
+    """Human name for `project.name` in the scan: the repo root's dir name.
 
-    The repo root's directory name is the only name available without
-    guessing — there is no package manifest dummyindex can rely on across
-    the languages it indexes. The authoring stage overrides it with whatever
-    the project actually calls itself.
-
-    Which root, though, has to be the *same* root on both paths. Scaffolding
-    is handed one; a rebuild is only handed `features/`, and assuming the
-    context dir's parent is wrong the moment someone indexes with `--root`
-    pointing elsewhere — the project would quietly get renamed by a refresh.
-    So the rebuild path reads the root that ingest recorded in `meta.json`,
-    which is written after scaffolding but well before any rebuild.
+    No cross-language manifest exists, so the dir name is the only unguessed
+    name; the authoring stage overrides it. Both paths must use the same root:
+    scaffolding is handed one, while a rebuild reads the root ingest recorded in
+    `meta.json` — assuming the context dir's parent would silently rename the
+    project on refresh whenever `--root` pointed elsewhere.
     """
     base = root if root is not None else _indexed_root(context_dir)
     return base.name or base.resolve().name or "project"
@@ -182,7 +176,7 @@ def _write_text(path: Path, body: str) -> None:
     tmp.replace(path)
 
 
-# ----- markdown / json templates --------------------------------------------
+# --- docs-link ranking
 
 
 def _primary_reason_kind(reason: str) -> str:

@@ -49,14 +49,11 @@ _FILE_DESCRIPTIONS: dict[str, str] = {
 def refresh_index_md(context_dir: Path) -> tuple[str, ...]:
     """Rebuild ``<context_dir>/INDEX.md`` from what's actually on disk.
 
-    Walks the folder, collects every file path relative to ``context_dir``,
-    excludes the managed cache + .gitignore + temp files + INDEX.md itself,
-    and regenerates the index. Use after the `/dummyindex` (Claude) or
-    ``$dummyindex`` (Codex) skill renames
-    feature folders — the original INDEX.md was written at ingest time and
-    its `features/community-N/...` paths will no longer match disk.
-
-    Returns the sorted list of relative paths the new INDEX.md covers.
+    Covers every file under ``context_dir`` except ``cache/``, ``.gitignore``,
+    ``*.tmp`` and INDEX.md itself. Run it after the ``/dummyindex`` (Claude) or
+    ``$dummyindex`` (Codex) skill renames feature folders, since the ingest-time
+    ``features/community-N/...`` paths no longer match disk. Returns the sorted
+    relative paths the new INDEX.md covers.
     """
     context_dir = context_dir.resolve()
     rels: list[str] = []
@@ -306,7 +303,7 @@ def write_project_md(path: Path, content: str) -> None:
     _atomic_write(path, content)
 
 
-# --- Manifest helpers --------------------------------------------------------
+# --- Manifest helpers
 
 
 def _read_pyproject(root: Path) -> dict | None:

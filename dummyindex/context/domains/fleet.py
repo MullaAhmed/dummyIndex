@@ -1,31 +1,10 @@
 """Fleet run state — durable, resumable work units for context maintenance.
 
-A *maintain run* is one assembled maintenance loop over a set of features:
-the reconcile report's work list, expanded into per-feature stage checklists
-(the council stages from ``council_batch.active_stages``), checkpointed so any
-killed session resumes from ``state.json`` — never from transcripts.
-
-Layout (mirrors the committed ``gc/state.json`` precedent):
-
-    .context/fleet/maintain-<ts>/RUN.md      human-readable run manifest
-    .context/fleet/maintain-<ts>/state.json  live, atomically-written state
-
-The ``maintain-`` prefix is load-bearing: ``.context/fleet/`` is shared with
-the fleet-runner proposal's ``run-*`` dirs, and every discovery helper here
-scopes itself to ``maintain-*`` so it never picks up another proposal's runs.
-Everything under ``fleet/`` is **committed** — it is the durable cross-session
-memory of a maintenance run; nothing lands under ``cache/``.
-
-Frontier semantics are reused, not reinvented: ``next_unit`` returns the
-earliest incomplete unit in the same stage-major order
-``council_batch.next_batch`` uses (earliest active stage first, then feature
-order within that stage), so a resumed run interleaves exactly like a fresh
-one. All writes go through ``write_text_atomic``; a corrupt or unreadable
-``state.json`` raises :class:`FleetRunError` rather than silently reading as
-empty — an empty-looking state would re-dispatch already-done units, which is
-precisely the failure resume exists to prevent. Discovery
-(:func:`find_newest_run`) stays tolerant instead, mirroring
-``drift._manifest_shas``.
+A *maintain run* turns the reconcile work list into per-feature council-stage
+checklists under committed ``.context/fleet/maintain-<ts>/`` (``RUN.md`` + atomic
+``state.json``); a killed session resumes from state, never transcripts. The
+``maintain-`` prefix is load-bearing: fleet-runner's ``run-*`` dirs share ``fleet/``.
+A corrupt state raises :class:`FleetRunError` (empty would re-dispatch done units).
 """
 
 from __future__ import annotations
@@ -240,9 +219,8 @@ def load_run(run_dir: Path) -> FleetRun:
     """Load + validate ``state.json`` from ``run_dir``.
 
     Raises :class:`FleetRunError` on absence or malformed JSON: unlike the
-    tolerant discovery scan, a direct load that came back empty would make
-    ``next_unit`` re-dispatch done units — the exact failure this module
-    exists to prevent.
+    tolerant discovery scan, an empty load would make ``next_unit`` re-dispatch
+    done units.
     """
     path = run_dir / STATE_REL
     try:
@@ -409,7 +387,7 @@ def run_status(run: FleetRun, *, now: _dt.datetime | None = None) -> dict[str, A
     }
 
 
-# ----- estimator -------------------------------------------------------------
+# --- estimator
 
 
 def estimate_run(
@@ -419,14 +397,11 @@ def estimate_run(
 ) -> dict[str, Any]:
     """Deterministic pre-flight estimate for a would-be run.
 
-    Composes two existing counters instead of duplicating them: stub-node
-    counts per feature come from a single ``enrich.build_plan`` walk (nodes
-    attributed via each feature's owned files), and the stage list comes from
-    ``council_batch.active_stages`` with critique expanded by its roster the
-    way ``next_batch`` expands dispatch units. Every number here is labelled
-    ``estimate:`` at print sites — none is a wall-clock promise. A missing or
-    unreadable ``tree.json`` estimates zero nodes rather than raising (the
-    stage/unit math stays usable).
+    Stub-node counts per feature come from one ``enrich.build_plan`` walk (matched
+    by owned files); stages come from ``council_batch.active_stages``, with
+    critique expanded per critic as ``next_batch`` does. Print sites label every
+    number ``estimate:`` — never a wall-clock promise. A missing or unreadable
+    ``tree.json`` estimates zero nodes instead of raising.
     """
     from dummyindex.context.domains.council_batch import (
         CRITIC_ROSTER,
@@ -503,7 +478,7 @@ def render_run_md(run: FleetRun) -> str:
     return "\n".join(lines)
 
 
-# ----- helpers ---------------------------------------------------------------
+# --- helpers
 
 
 def _utcnow(now: _dt.datetime | None) -> _dt.datetime:

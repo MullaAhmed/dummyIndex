@@ -1,0 +1,24 @@
+{
+  "budget": {
+    "candidates": 1,
+    "reflection_rounds": 1,
+    "target_files": 1
+  },
+  "candidate": 0,
+  "cue": "Review accepted closeout knowledge for one narrow convention update",
+  "event_id": "closeout:audit:upgrade-path-for-existing-repos-on-older-dummyindex-versions:6ff11bd64d849a1a2166dc45a921d26fc6ce9af75aebba248a980e3824feed4c",
+  "evidence": {
+    ".context/gc/closeouts/audit-upgrade-path-for-existing-repos-on-older-dummyindex-versions.json": "6ff11bd64d849a1a2166dc45a921d26fc6ce9af75aebba248a980e3824feed4c"
+  },
+  "expected_sha256": "",
+  "identity": "96524d4a98fb0a88d8225b3a95b71eda4e0b52bb3052a171df765d161ad9580a",
+  "lesson": "",
+  "origin": "closeout",
+  "replacement": "",
+  "rule_id": "tree-node-stub-contract",
+  "run": "learning-0b8ce7d2c87d70a7833d",
+  "schema_version": 1,
+  "state": "prepared",
+  "target": "",
+  "verified": false
+}

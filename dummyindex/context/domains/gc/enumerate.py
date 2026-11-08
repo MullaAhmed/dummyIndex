@@ -1,22 +1,10 @@
 """Enumerate the generated-doc workspaces the hygiene sweep may retire.
 
-``enumerate_candidates`` walks only the *immediate* children of
-``proposals_root`` and ``audits_root`` and returns one frozen :class:`Candidate`
-per generated-doc workspace dir. It is pure structure + git facts — it assigns
-no verdict and computes no ``signals`` (the sibling ``classify`` step fills those
-later; this module never imports it). The sentinel rules:
-
-- Every entry whose name starts with ``_`` is a sentinel *container* and is
-  skipped (covers ``_archive``, future ``_doc_backups``-style scratch). Dot-dirs
-  are skipped too.
-- The single exception is ``_archive``: the sweep descends one level and surfaces
-  each of *its* child dirs as an :class:`CandidateKind.ARCHIVED` candidate.
-
-``session-memory`` lives at ``.context/session-memory`` — *not* under
-``proposals/`` or ``audits/`` — so it is never reached by this walk and needs no
-special-casing (it self-rolls; GC never touches it).
-
-No ``print`` — this is domain logic; the CLI prints.
+Walks only the immediate children of ``proposals_root`` and ``audits_root``,
+returning one :class:`Candidate` per workspace dir with structure and git facts
+only (no verdict; ``classify`` fills ``signals``). ``_``-prefixed sentinel
+containers and dot-dirs are skipped, except that ``_archive``'s children surface
+as :class:`CandidateKind.ARCHIVED`. GC never reaches ``.context/session-memory``.
 """
 
 from __future__ import annotations
@@ -40,13 +28,8 @@ def enumerate_candidates(
 ) -> tuple[Candidate, ...]:
     """Return every generated-doc workspace under ``proposals/`` + ``audits/``.
 
-    Walks the immediate children of ``proposals_root(context_dir)`` and
-    ``audits_root(context_dir)`` only. Skips ``_``-prefixed sentinel containers
-    and dot-dirs, with the lone exception of ``_archive`` — whose children are
-    surfaced as :class:`CandidateKind.ARCHIVED`. Candidates are returned sorted
-    by ``(kind, slug)`` for a deterministic report. ``today`` (defaulting to
-    :func:`date.today`) is the reference point for ``age_days`` and is accepted
-    so tests can pin it.
+    Sorted by ``(kind, slug)`` for a deterministic report. ``today`` (default
+    :func:`date.today`) is the ``age_days`` reference, injectable for tests.
     """
     reference = today or date.today()
     repo_root = context_dir.parent
@@ -180,9 +163,8 @@ def _is_tracked(repo_root: Path, rel: str) -> bool:
     rel_to_repo = f".context/{rel}"
     out = _run_git(repo_root, "ls-files", "--error-unmatch", rel_to_repo)
     if out is None:
-        # Distinguish "git missing" (→ tracked) from "tracked but ls-files
-        # returned no stdout". `_run_git` collapses a non-zero exit (untracked)
-        # to None too, so re-probe whether git itself is reachable.
+        # None means git is missing, no repo, or the path is untracked; re-probe
+        # to tell off-git (tracked) from untracked.
         if _run_git(repo_root, "rev-parse", "--git-dir") is None:
             return True  # off-git: never look unrecoverable.
         return False  # in a repo, but the path is untracked.
@@ -213,10 +195,8 @@ def _age_days(repo_root: Path, rel: str, today: date) -> int | None:
 def _run_git(repo_root: Path, *args: str) -> str | None:
     """Run ``git -C <repo_root> <args>`` → stdout, or ``None`` on any failure.
 
-    Mirrors ``build/git_delta.py:_run_git``: a missing executable or a non-zero
-    exit collapses to ``None`` (never ``CalledProcessError``). Kept local so
-    ``enumerate`` owns its own minimal git probe rather than coupling to the
-    build-lifecycle module.
+    Mirrors ``build/git_delta.py:_run_git`` (never ``CalledProcessError``) but
+    stays local so ``enumerate`` doesn't couple to the build-lifecycle module.
     """
     try:
         completed = subprocess.run(

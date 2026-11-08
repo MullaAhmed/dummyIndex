@@ -1,30 +1,10 @@
 """Fleet-run domain: checkpointed multi-proposal execution state.
 
-A fleet run coordinates SEVERAL proposals ("units") executed in parallel by
-host-side orchestrators, each in its own worktree. The deterministic CLI owns
-everything that must survive a crash:
-
-- ``init_run`` scaffolds ``.context/fleet/run-<id>/`` with a human-readable
-  ``RUN-MANIFEST.md`` (written FIRST) and machine state ``state.json``
-  (written LAST) — both atomic, both **committed** (the ``gc/state.json``
-  precedent for committing run artifacts).
-- ``load_run`` reads a run back and fails LOUD on anything corrupt. Unlike
-  ``gc/anchor.py``'s tolerate-to-``None`` precedent this is deliberate:
-  fleet state is the single recovery path for an overnight run, so silently
-  degrading would strand it. The raised error carries repair instructions.
-- ``next_units`` is the dispatch frontier: up to ``max_parallel`` pending
-  units, earliest-priority first, never two whose member-path sets intersect
-  (disjointness frozen at init into each unit's ``paths[]``), gated/blocked
-  skipped until answered — the anti-stall rule. At/over budget cap every
-  response is a ``BUDGET-HALT`` envelope carrying exact resume steps.
-- ``checkpoint`` / ``add_spend`` mutate through a read-modify-write loop
-  serialized by an exclusive lock file (atomic replace alone is
-  last-writer-wins), so concurrent checkpoint/spend never loses increments.
-- ``merge_order`` projects landing order with disjointness rationale.
-
-No LLM in-process; no ``print`` here — the CLI prints. Tracker-agnostic:
-intake entries carry ``{ticket, title, paths[]}``; host-only metadata
-(``repo_hint``, ``size``, …) is ignored by this module.
+Host orchestrators run several proposals ("units") in parallel worktrees; this
+CLI owns what must survive a crash, under committed ``.context/fleet/run-<id>/``
+(``RUN-MANIFEST.md`` + ``state.json``, both atomic). State is an overnight run's
+only recovery path, so corrupt state fails LOUD with repair steps, and mutations
+are lock-serialized read-modify-writes. No LLM or ``print``; tracker-agnostic.
 """
 
 from __future__ import annotations
@@ -105,7 +85,7 @@ class FleetLockError(FleetError):
     """Another writer held the run's RMW lock past the retry budget."""
 
 
-# ----- models ---------------------------------------------------------------
+# --- models
 
 
 @dataclasses.dataclass(frozen=True)
@@ -207,7 +187,7 @@ class MergeEntry:
     reason: str
 
 
-# ----- paths ----------------------------------------------------------------
+# --- paths
 
 
 def fleet_root(context_dir: Path) -> Path:
@@ -265,7 +245,7 @@ def _repair_note(detail: str) -> str:
     )
 
 
-# ----- serialization --------------------------------------------------------
+# --- serialization
 
 
 def _unit_dict(unit: FleetUnit) -> dict:
@@ -474,16 +454,14 @@ def state_from_dict(payload: object, run_dir: Path) -> FleetRunState:
     )
 
 
-# ----- load / save ----------------------------------------------------------
+# --- load / save
 
 
 def load_run(run_dir: Path) -> FleetRunState:
     """Read a run back; fail loud on anything short of a complete, valid run.
 
-    Init ordering contract: RUN-MANIFEST.md is written first, state.json
-    last — so a dir holding a state.json but no manifest is a torn init.
-    Loud errors, never tolerant ``None``s: this state is the only recovery
-    path an overnight run has.
+    RUN-MANIFEST.md is written first and state.json last, so a state.json with
+    no manifest is a torn init. Errors are loud, never tolerant ``None``s.
     """
     if not run_dir.is_dir():
         raise FleetStateCorruptError(
@@ -511,7 +489,7 @@ def write_state(run_dir: Path, state: FleetRunState) -> None:
     write_text_atomic(run_dir / STATE_NAME, text)
 
 
-# ----- read-modify-write ----------------------------------------------------
+# --- read-modify-write
 
 
 def _acquire_lock(run_dir: Path) -> Path:
@@ -544,12 +522,10 @@ def mutate_run(
 ) -> FleetRunState:
     """Serialized read-modify-write of ``state.json``.
 
-    The atomic replace underneath is last-writer-wins, so bare concurrent
-    checkpoint/spend calls could silently drop increments. The exclusive
-    ``.lock`` file makes the whole read→mutate→write span single-file, and
-    every successful mutation bumps the monotonic ``revision`` counter.
-    Raises :class:`FleetLockError` past the retry budget rather than
-    writing blind.
+    The atomic replace underneath is last-writer-wins, so the exclusive ``.lock``
+    file serializes the whole read→mutate→write span (concurrent checkpoint/spend
+    never drops an increment). Each mutation bumps the monotonic ``revision``.
+    Raises :class:`FleetLockError` past the retry budget rather than writing blind.
     """
     lock = _acquire_lock(run_dir)
     try:
@@ -561,7 +537,7 @@ def mutate_run(
         lock.unlink(missing_ok=True)
 
 
-# ----- init -----------------------------------------------------------------
+# --- init
 
 
 def _validate_slug(slug: str) -> str:
@@ -723,14 +699,11 @@ def init_run(
 ) -> tuple[FleetRunState, list[str]]:
     """Scaffold ``.context/fleet/run-<id>/`` and go live.
 
-    Writes ``RUN-MANIFEST.md`` FIRST and ``state.json`` LAST — the ordering
-    :func:`load_run` enforces. Per-unit ``paths[]`` freeze here; later plan
-    edits never mutate a running fleet. Returns ``(state, warnings)`` where
-    warnings record conservative-serial units (no frozen paths).
-
-    Refuses: zero-unit runs, duplicate slugs, non-positive budgets,
-    ``max_parallel < 1``, branch templates without ``{id}``/``{slug}``, and
-    a re-init over an already-live run id.
+    Writes ``RUN-MANIFEST.md`` FIRST and ``state.json`` LAST (the order
+    :func:`load_run` enforces) and freezes per-unit ``paths[]``. Returns ``(state,
+    warnings)``; warnings name conservative-serial units (no frozen paths).
+    Refuses zero-unit runs, duplicate slugs, non-positive budgets, ``max_parallel
+    < 1``, bad branch templates, and a re-init over an existing run dir.
     """
     checked = validate_unit_specs(specs)
     if not (budget_usd > 0):
@@ -785,7 +758,7 @@ def init_run(
     return state, warnings
 
 
-# ----- dispatch frontier ----------------------------------------------------
+# --- dispatch frontier
 
 
 _IN_FLIGHT = frozenset(
@@ -834,13 +807,11 @@ def _halt_resume(state: FleetRunState) -> tuple[str, ...]:
 def next_units(state: FleetRunState) -> NextEnvelope:
     """The dispatch frontier: priority order, parallel cap, file-disjointness.
 
-    - candidates are PENDING units in stored (priority) order; sort key
-      ``(priority, unit_id)`` with stable tie traversal;
-    - a candidate is taken only when its frozen ``paths[]`` are disjoint
-      from every already-taken unit's (empty sets conflict with everything);
-    - gated / blocked / in-flight units are skipped with reasons — gated
-      forever until answered by a later checkpoint (anti-stall);
-    - at/over budget cap: a ``BUDGET-HALT`` envelope with resume steps.
+    PENDING units, in stored (priority) order and up to ``max_parallel``, are
+    taken only when their frozen ``paths[]`` are disjoint from every taken unit's
+    (an empty set conflicts with everything). Gated, blocked and in-flight units
+    are skipped with reasons — gated until a checkpoint answers it (anti-stall).
+    At/over the budget cap the envelope is ``BUDGET-HALT`` with resume steps.
     """
     if budget_halted(state):
         return NextEnvelope(
@@ -853,8 +824,7 @@ def next_units(state: FleetRunState) -> NextEnvelope:
     chosen: list[FleetUnit] = []
     taken_paths: list[tuple[str, ...]] = []
     skipped: list[tuple[str, str]] = []
-    # Deterministic traversal: sort key (priority, unit_id) where priority is
-    # the unit's init order (its index in the stored tuple).
+    # Priority is init order (index in the stored tuple); unit_id breaks ties.
     priority = {u.id: i for i, u in enumerate(state.units)}
     # In-flight units hold their paths and a parallel slot until they land.
     in_flight = [u for u in state.units if u.status in _IN_FLIGHT]
@@ -894,7 +864,7 @@ def next_units(state: FleetRunState) -> NextEnvelope:
     )
 
 
-# ----- mutations (each revision-bumped through mutate_run) ------------------
+# --- mutations (each revision-bumped through mutate_run)
 
 
 def _replace_unit(state: FleetRunState, updated: FleetUnit) -> FleetRunState:
@@ -915,15 +885,11 @@ def checkpoint(
 ) -> FleetRunState:
     """Advance one unit; ``--gate`` parks it as ``gated`` (the anti-stall rule).
 
-    Gate semantics:
-    - a non-empty ``gate`` question forces status to ``gated`` and records
-      the question — `next` skips the unit until answered;
-    - checkpointing an already-gated unit with an explicit ``status`` and no
-      new question ANSWERS the gate: question clears, status lands;
-    - a note-only / wave-only checkpoint is allowed for progress.
-
-    Every call is a locked read-modify-write: concurrent checkpoint/spend
-    never loses an increment.
+    A non-empty ``gate`` forces ``gated`` and records the question (`next` skips
+    the unit). An explicit ``status`` on a gated unit with no new question ANSWERS
+    it: the question clears and the status lands. Note-/wave-only checkpoints
+    record progress, but a gated unit refuses one without ``status``. Every call
+    is a locked read-modify-write, so no concurrent increment is lost.
     """
     if gate is not None and not gate.strip():
         raise FleetUnitError(
@@ -1008,7 +974,7 @@ def add_spend(
     return mutate_run(run_dir, apply)
 
 
-# ----- merge order ----------------------------------------------------------
+# --- merge order
 
 
 def merge_order(state: FleetRunState) -> tuple[MergeEntry, ...]:
@@ -1051,7 +1017,7 @@ def merge_order(state: FleetRunState) -> tuple[MergeEntry, ...]:
     return tuple(entries)
 
 
-# ----- RUN-MANIFEST.md rendering --------------------------------------------
+# --- RUN-MANIFEST.md rendering
 
 _MAGIC_WORDS = (
     ("DONE", "unit complete, verified in the foreground, ready to merge"),

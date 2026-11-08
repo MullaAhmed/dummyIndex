@@ -1,25 +1,10 @@
 """Narrow Python dispatch-idiom resolver (post-pass over per-file results).
 
-Closes two callers-of / dead-code blind spots that every reference tool in
-the 2026-07 bakeoff shared (proposal `graph-consumption-upgrade`, item A4):
-
-- **Enum-keyed dispatch dicts** — ``{ContextSubcommand.SCAN_CHECK: scan.run}``
-  now yields a ``calls`` edge from the mapping's enclosing scope (file,
-  class, or function node) to the referenced handler symbol.
-- **Function-body imports** — ``from X import Y`` inside a function body now
-  yields an ``imports_from`` edge attributed to the enclosing function's
-  module (previously only module-level imports were seen).
-
-Precision over recall: a dict value resolves only when it matches a known
-extracted symbol AND (for ``module.attr`` values) the binding's *actual*
-imported module stem — not the bound object name — is what keys the
-lookup, so an alias only ever resolves against its real target module. A
-``(stem, name)`` claimed by more than one source file is ambiguous and
-skipped — no guessing across packages. A bare identifier or object name
-shadowed by a function parameter or a local binding in its enclosing scope
-resolves to nothing, never to a coincidentally-named module-level symbol.
-New edges carry the existing indirect-edge grade: ``INFERRED`` with a
-``confidence_score`` below the implicit 1.0 of explicit EXTRACTED calls.
+Adds INFERRED edges for enum-keyed dispatch dicts (``{Cmd.X: mod.run}`` → a
+``calls`` edge from the enclosing scope to the handler) and function-body
+``from X import Y`` (an ``imports_from`` edge). Precision over recall:
+``module.attr`` values resolve only via the binding's real module stem; ambiguous
+``(stem, name)`` keys and names shadowed by a parameter or local never resolve.
 """
 
 from __future__ import annotations
@@ -119,21 +104,11 @@ def _collect_bindings(
 ) -> tuple[frozenset[str], dict[str, str], dict[str, str]]:
     """Collect names bound by imports anywhere in the file.
 
-    Returns ``(bound_names, from_import_stems, module_stems)``: every
-    import-bound name (module objects and from-imported symbols alike),
-    plus name → source module stem for plain ``from X import name``
-    bindings. A name from-imported from two different modules is dropped
-    as ambiguous. Aliased from-imports bind the alias but resolve no stem
-    (the lookup name would differ from the extracted symbol's name).
-
-    ``module_stems`` maps every import-bound OBJECT name usable as
-    ``name.attr`` to the *actual* imported module's stem — ``import x``,
-    ``import x as y``, ``from pkg import x``, and ``from pkg import x as y``
-    all populate it, keyed by the bound name and valued by the real target
-    stem (which differs from the bound name only when an alias is used).
-    A bound name whose ``module.attr`` target stem is claimed ambiguously
-    by more than one import is dropped — precision over recall, same
-    pattern as ``from_stems``.
+    Returns ``(bound_names, from_stems, module_stems)``: every import-bound name;
+    plain (unaliased) ``from X import name`` → ``X``'s stem; and each object name
+    usable as ``name.attr`` (plain or aliased ``import`` / ``from`` binding) → its
+    real module stem. A name imported from two different stems is dropped from
+    that map as ambiguous.
     """
     bound: set[str] = set()
     from_stems: dict[str, str] = {}

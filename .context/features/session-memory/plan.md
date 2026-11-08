@@ -12,10 +12,10 @@ Three nested contexts share the folder. They are separable, and that separation 
 
 **B — the miner subpackage** (`memory/miner/`). It is a second bounded context nested in A's folder. It has its own `enums.py`, `models.py`, and resolution port (`resolve.py:44-67`). Its coupling to A is one import in each direction, and no more. A re-exports four miner symbols (`memory/__init__.py:18-23`). The miner reaches back exactly twice: `atomic_io` (`feedback.py:10`, `render.py:29`) and `store.memory_dir` (`render.py:30`). Two pipelines of the same shape (resolve → scan → group → write) sit side by side:
 
-| Pipeline | Entry | Wired? | Modules |
+| Pipeline | Entry | Wired? | Own modules |
 |---|---|---|---|
-| Skill-compliance feedback | `pipeline.scan_skill_feedback` / `refresh_skill_feedback` (`miner/pipeline.py:112-152`) | **yes** — SessionStart + UserPromptSubmit | `corrections.py` (grammar, 293 lines, largest in the feature), `feedback.py` (cache + projection), `scan.parse_skill_directive_events` (`miner/scan.py:262-297`) |
-| Failure / loop patterns | `pipeline.scan_transcript_store` / `mine_and_feed` (`miner/pipeline.py:40-109`) | **no** — tests only | `signatures.py` (canonicalize + group), `render.py` (writes `failure-patterns.md`), `scan.parse_transcript` (`miner/scan.py:140-190`) |
+| Skill-compliance feedback | `scan_skill_feedback` / `refresh_skill_feedback` (`pipeline.py:100-140`) | **yes** — `mine`, `prompt-context` | `corrections.py`, `feedback.py`, `scan.parse_skill_directive_events` (`scan.py:244-279`) |
+| Failure / loop patterns | `scan_transcript_store` / `mine_and_feed` (`pipeline.py:35-97`) | **no** — tests only | `signatures.py`, `render.py`, `scan.parse_transcript` (`scan.py:124-172`) |
 
 Shared by both: `resolve.py` (config-dir and store resolution, honoring `CLAUDE_CONFIG_DIR`), `scan.discover_project_dirs`, and `scope.py` (scoping and redaction). The **wired** half touches nothing in A except `atomic_io`. The single `..store` edge (`render.py:30`) belongs entirely to the **unwired** half. Cutting the failure-pattern pipeline would leave the miner fully decoupled from the tier store.
 
@@ -27,11 +27,11 @@ Shared by both: `resolve.py` (config-dir and store resolution, honoring `CLAUDE_
 
 | Hook event | Command | `hooks.py` |
 |---|---|---|
-| SessionStart | `plan-update`, `memory session-start`, `gc signal`, `memory mine` | `147-198` |
-| UserPromptSubmit | turn reminder, `memory prompt-context` | `120-145` |
-| Stop | `memory nudge`, `reconcile-gate` | `200-227` |
-| PreCompact | `memory breadcrumb` | `229-243` |
-| PreToolUse (`Write`) | `guard-doc-write` (shared hook-stdin adapter consumer) | `245-267` |
+| SessionStart | `plan-update`, `memory session-start`, `gc signal`, `memory mine` | `104-153` |
+| UserPromptSubmit | turn reminder, `memory prompt-context` | `77-102` |
+| Stop | `memory nudge`, `reconcile-gate` | `155-182` |
+| PreCompact | `memory breadcrumb` | `184-198` |
+| PreToolUse (`Write`) | `guard-doc-write` (consumes `read_hook_stdin`) | `200-220` |
 
 `plan-update` also serves two non-hook surfaces. The statusline badge cache it writes is echoed verbatim by `dummyindex context statusline` (`cli/statusline.py:37-66`) and by the shipped `statusline.sh` and `statusline.ps1` wrappers. Its new `--json` envelope (`plan_update.py:70-71,103-114`) serves scripts that must act per row, not read prose. `drift-ack` has no hook. It is an operator verb.
 
@@ -54,13 +54,13 @@ No relational store. Persistence splits into two classes with different rules, a
 
 **Committed markdown, user-owned** — `.context/session-memory/`, one H1 plus zero or more `## …` sections per file (`parse.py:24-49`):
 
-| File | Written by | Rolled by |
+| File | Written by | Rolled |
 |---|---|---|
 | `now.md` | agent handoffs + `(auto-breadcrumb)` entries (`breadcrumb.py:43-54`) | dated < today → `recent.md` |
 | `recent.md` | roll only | dated < today−7 → `archive.md` |
 | `archive.md` | roll only | terminal |
-| `core-memories.md` | agent (promoted durable facts) | never rolled; emitted whole (`emit.py:42,51-52`) |
-| `failure-patterns.md` | `miner/render.write_report:83` — full overwrite | never rolled; **nothing reads it** |
+| `core-memories.md` | agent | never; emitted whole (`emit.py:42,51-52`) |
+| `failure-patterns.md` | `miner/render.write_report` (`:68-72`), full overwrite | never; **nothing reads it** |
 
 `failure-patterns.md` is deliberately not a `MemoryTier` member. Adding it would make `ensure_memory_store` stub it, which implies a lifecycle it does not have (`miner/render.py:11-17`). That exclusion lets `roll_tiers` and `render_session_start` iterate the enum and stay correct.
 

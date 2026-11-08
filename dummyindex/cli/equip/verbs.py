@@ -67,7 +67,7 @@ def _print_refresh_report(report: RefreshReport, *, dry_run: bool) -> None:
             print(f"  ⚠ broken     {name}")
 
 
-# ----- verb: status ---------------------------------------------------------
+# --- verb: status
 
 
 def run_status(rest: list[str]) -> int:
@@ -109,7 +109,7 @@ def run_status(rest: list[str]) -> int:
     return 0
 
 
-# ----- verb: refresh --------------------------------------------------------
+# --- verb: refresh
 
 
 def run_refresh(rest: list[str]) -> int:
@@ -137,7 +137,7 @@ def run_refresh(rest: list[str]) -> int:
     return 0
 
 
-# ----- verb: reset ----------------------------------------------------------
+# --- verb: reset
 
 
 def run_reset(rest: list[str]) -> int:
@@ -181,7 +181,7 @@ def run_reset(rest: list[str]) -> int:
     return 0
 
 
-# ----- verb: remove -----------------------------------------------------------
+# --- verb: remove
 
 
 def run_remove(rest: list[str]) -> int:
@@ -231,7 +231,7 @@ def run_remove(rest: list[str]) -> int:
     return 0
 
 
-# ----- verb: uninstall ------------------------------------------------------
+# --- verb: uninstall
 
 
 def run_uninstall(rest: list[str]) -> int:
@@ -261,7 +261,7 @@ def run_uninstall(rest: list[str]) -> int:
     return 0
 
 
-# ----- verb: patch ----------------------------------------------------------
+# --- verb: patch
 
 
 def run_patch(rest: list[str]) -> int:
@@ -332,4 +332,4 @@ def _read_patch_file(path: Path) -> tuple[str, str, str | None]:
     return old, new, None
 
 
-# ----- shared render path ---------------------------------------------------
+# --- shared render path

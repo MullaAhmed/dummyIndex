@@ -26,16 +26,6 @@
         "evidence": "EXTRACTED"
       },
       {
-        "id": "audit-panel",
-        "label": "Audit panel & onboarding",
-        "kind": "service",
-        "sub": "16 files",
-        "detail": "The `context/domains/audit/` adversarial audit-panel domain (catalog, workspace, personas, log) together with the `cli/onboard.py` onboarding flow and config domain it shares.",
-        "sourceRef": "dummyindex/cli/onboard.py",
-        "symbolRef": "config_configerror",
-        "evidence": "EXTRACTED"
-      },
-      {
         "id": "feature-taxonomy",
         "label": "Feature taxonomy engine",
         "kind": "service",
@@ -46,6 +36,16 @@
         "evidence": "EXTRACTED"
       },
       {
+        "id": "audit-panel",
+        "label": "Audit panel & onboarding",
+        "kind": "service",
+        "sub": "16 files",
+        "detail": "The `context/domains/audit/` adversarial audit-panel domain (catalog, workspace, personas, log) together with the `cli/onboard.py` onboarding flow and config domain it shares.",
+        "sourceRef": "dummyindex/cli/onboard.py",
+        "symbolRef": "config_configerror",
+        "evidence": "EXTRACTED"
+      },
+      {
         "id": "session-memory",
         "label": "Session memory & drift sign\u2026",
         "kind": "service",
@@ -53,6 +53,16 @@
         "detail": "The `context/domains/memory/` handoff store (now/recent/archive roll, breadcrumb, nudge, transcript parsing) together with the drift + reconcile-gate SessionStart signal it feeds.",
         "sourceRef": "dummyindex/cli/memory.py",
         "symbolRef": "enums_confidencelevel",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "install-surface",
+        "label": "Install surface",
+        "kind": "service",
+        "sub": "34 files",
+        "detail": "The `installer/` package (args, install, uninstall, common) plus default-plugin enable/install, equipment refresh, and the managed Claude hook set it wires at install time.",
+        "sourceRef": "dummyindex/__main__.py",
+        "symbolRef": "default_plugins_wiredentry",
         "evidence": "EXTRACTED"
       },
       {
@@ -89,7 +99,7 @@
         "id": "index-lifecycle",
         "label": "Index lifecycle and coverage",
         "kind": "service",
-        "sub": "38 files",
+        "sub": "50 files",
         "detail": "Build and refresh portable, scoped navigation while preserving authored context and explicit reconciliation.",
         "sourceRef": "dummyindex/context/build/__init__.py",
         "symbolRef": "runner_build_all",
@@ -186,13 +196,13 @@
         "evidence": "EXTRACTED"
       },
       {
-        "id": "fleet",
-        "label": "Fleet orchestration",
+        "id": "graph-query",
+        "label": "Symbol-graph query verbs",
         "kind": "service",
-        "sub": "6 files",
-        "detail": "Plan and execute bounded work across explicit repository targets.",
-        "sourceRef": "dummyindex/cli/fleet.py",
-        "symbolRef": "fleetrun_fleetstatecorrupterror",
+        "sub": "12 files",
+        "detail": "The context/domains/graph_query/ package + cli/graph.py: bounded, file:line-cited query verbs (callers-of, callees-of, impact, path, neighbors, dead-code, community) over features/symbol-graph.json,\u2026",
+        "sourceRef": "dummyindex/cli/graph.py",
+        "symbolRef": "models_symbolgraph",
         "evidence": "EXTRACTED"
       },
       {
@@ -203,6 +213,16 @@
         "detail": "Deterministic plumbing for the commit-throttled hygiene sweep: enumerate generated-doc candidates (proposals/audits/orphans), gather objective signals, throttle a SessionStart nudge against a committ\u2026",
         "sourceRef": "dummyindex/cli/gc.py",
         "symbolRef": "enums_candidatekind",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "fleet",
+        "label": "Fleet orchestration",
+        "kind": "service",
+        "sub": "6 files",
+        "detail": "Plan and execute bounded work across explicit repository targets.",
+        "sourceRef": "dummyindex/cli/fleet.py",
+        "symbolRef": "fleetrun_fleetstatecorrupterror",
         "evidence": "EXTRACTED"
       },
       {
@@ -429,13 +449,18 @@
         "kind": "calls"
       },
       {
+        "from": "session-memory",
+        "to": "index-lifecycle",
+        "kind": "calls"
+      },
+      {
         "from": "cli-dispatch",
         "to": "equip",
         "kind": "calls"
       },
       {
-        "from": "index-lifecycle",
-        "to": "cli-dispatch",
+        "from": "install-surface",
+        "to": "index-lifecycle",
         "kind": "calls"
       },
       {
@@ -469,8 +494,8 @@
         "kind": "calls"
       },
       {
-        "from": "install-surface",
-        "to": "index-lifecycle",
+        "from": "council",
+        "to": "cli-dispatch",
         "kind": "calls"
       },
       {
@@ -1039,6 +1064,11 @@
         "kind": "calls"
       },
       {
+        "from": "gc",
+        "to": "index-lifecycle",
+        "kind": "calls"
+      },
+      {
         "from": "graph-query",
         "to": "extraction-pipeline",
         "kind": "calls"
@@ -1061,6 +1091,11 @@
       {
         "from": "proposals",
         "to": "audit-panel",
+        "kind": "calls"
+      },
+      {
+        "from": "proposals",
+        "to": "index-lifecycle",
         "kind": "calls"
       },
       {

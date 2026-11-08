@@ -225,13 +225,12 @@ def test_discover_includes_github_search_results(monkeypatch, tmp_path, capsys):
     assert "untrusted" in out
 
 
-# ----- --repo: install/discover from an explicitly named marketplace ---------
+# --- --repo: install/discover from an explicitly named marketplace
 
 
 def test_install_explicit_repo_installs_undiscoverable_plugin(monkeypatch, tmp_path):
-    # canvas-mp is fetchable via `gh api` but `gh search` never returns it, so a
-    # bare `equip install` would fail. --repo names it directly. Untrusted ->
-    # --yes required.
+    # canvas-mp is fetchable via `gh api` but `gh search` never returns it, so
+    # --repo names it directly. Untrusted -> --yes required.
     _install_fake_runner(monkeypatch)
     rc = run_equip(
         [
@@ -343,9 +342,8 @@ def test_discover_explicit_repo_surfaces_undiscoverable_plugin(
 
 
 def test_explicit_repo_fetch_failure_warns(monkeypatch, tmp_path, capsys):
-    # A repo the user named explicitly but whose marketplace.json can't be read
-    # (absent / private / transient gh API error) must warn — not be silently
-    # dropped into a generic "not found" (the canvas-to-code failure mode).
+    # An explicit repo whose marketplace.json can't be read (absent / private /
+    # gh API error) must warn, not be silently dropped into a generic "not found".
     _install_fake_runner(monkeypatch)
     rc = run_equip(
         ["discover", "canvas", "--repo", "ghost/missing", "--root", str(tmp_path)]
@@ -357,9 +355,8 @@ def test_explicit_repo_fetch_failure_warns(monkeypatch, tmp_path, capsys):
 
 
 def test_install_explicit_repo_rejects_reserved_name(monkeypatch, tmp_path):
-    # An explicit repo cannot ride a reserved seed identity: it claims the
-    # official marketplace name from a non-official repo, so it is dropped and
-    # the target is never found.
+    # An explicit non-official repo claiming the reserved official marketplace
+    # name is dropped, so the target is never found.
     evil = {
         "name": "claude-plugins-official",
         "plugins": [
@@ -613,13 +610,10 @@ def test_install_approval_error_precedes_usage_gate_even_with_doc(
     assert rc == 1
 
 
-# ----- P0: resolve marketplaces Claude Code already knows --------------------
+# --- resolve marketplaces Claude Code already knows
 #
-# REGRESSION (audit 2026-06-13, C4-P0): `install canvas-to-code@canvas-to-code-
-# marketplace` failed "not found in known marketplaces" even though the
-# marketplace was declared in the very settings.json install writes to, present
-# in ~/.claude/plugins/known_marketplaces.json, and cloned on disk. The
-# candidate universe must include locally-declared marketplaces.
+# The candidate universe must include locally-declared marketplaces (settings.json,
+# ~/.claude/plugins/known_marketplaces.json, on-disk clones), not only gh search.
 
 _LOCAL_MKT = {
     "name": "canvas-to-code-marketplace",
@@ -774,14 +768,12 @@ def test_discover_surfaces_declared_marketplace_plugins(monkeypatch, tmp_path, c
     assert "canvas-to-code@canvas-to-code-marketplace" in out
 
 
-# ----- P0: the plugin's semver must never become the marketplace git ref -----
+# --- the plugin's semver must never become the marketplace git ref
 
 
 def test_install_never_writes_plugin_version_as_marketplace_ref(monkeypatch, tmp_path):
-    # REGRESSION (audit C4-P0): install wrote the PLUGIN's listing semver as the
-    # MARKETPLACE repo's git ref ({source: {repo, ref: "3.5.0"}}). The repo has
-    # no such tag, so Claude Code's native fetch of the marketplace failed —
-    # breaking every plugin from that marketplace.
+    # The marketplace repo has no tag named after a plugin's semver, so writing
+    # it as the source ref breaks Claude Code's native fetch of the marketplace.
     _install_fake_runner(monkeypatch)
     rc = run_equip(
         [
@@ -800,7 +792,7 @@ def test_install_never_writes_plugin_version_as_marketplace_ref(monkeypatch, tmp
 
 def test_install_records_plugin_kind_and_catalog_version(monkeypatch, tmp_path):
     # The manifest entry is a PLUGIN (not a dispatchable agent) and carries the
-    # catalog version; origin_ref no longer mis-records the semver.
+    # catalog version; origin_ref stays None rather than holding the semver.
     _install_fake_runner(monkeypatch)
     rc = run_equip(
         [
@@ -822,8 +814,7 @@ def test_install_records_plugin_kind_and_catalog_version(monkeypatch, tmp_path):
 
 
 def test_install_rewire_repairs_stale_semver_ref(monkeypatch, tmp_path):
-    # A repo poisoned by the old bug carries ref="3.5.0"; re-installing the same
-    # target rewrites the marketplace entry WITHOUT the bogus ref.
+    # A stale ref="3.5.0" entry is rewritten WITHOUT the ref on re-install.
     _install_fake_runner(monkeypatch)
     settings_path = tmp_path / ".claude" / "settings.json"
     settings_path.parent.mkdir(parents=True)
@@ -859,12 +850,12 @@ def test_install_rewire_repairs_stale_semver_ref(monkeypatch, tmp_path):
     assert "ref" not in source
 
 
-# ----- --repo dead-ends fixed (audit C4-P1) ----------------------------------
+# --- --repo dead ends
 
 
 def test_discover_repo_without_query_lists_its_plugins(monkeypatch, tmp_path, capsys):
-    # REGRESSION: `discover --repo X` with no query printed "no matching
-    # plugins found" and advised adding the --repo flag that was just used.
+    # `discover --repo X` with no query lists X's plugins and does not advise the
+    # --repo flag the user already passed.
     _install_fake_runner(monkeypatch)
     rc = run_equip(
         ["discover", "--repo", "lowprofile/canvas-mp", "--root", str(tmp_path)]
@@ -927,7 +918,7 @@ def test_discover_explicit_repo_wins_name_collision_over_search(
     assert "squatter" not in out
 
 
-# ----- trust gate: prior approval from existing settings (audit C4-P1) -------
+# --- trust gate: prior approval from existing settings
 
 
 def test_install_already_enabled_target_skips_yes_gate(monkeypatch, tmp_path, capsys):
@@ -977,7 +968,7 @@ def test_install_new_untrusted_target_still_requires_yes(monkeypatch, tmp_path):
     assert rc == 1
 
 
-# ----- post-install verification (audit C4-P1) --------------------------------
+# --- post-install verification
 
 
 def test_install_prints_restart_and_verify_guidance(monkeypatch, tmp_path, capsys):
@@ -1054,7 +1045,7 @@ def test_verify_requires_target_rc2(monkeypatch, tmp_path):
     assert run_equip(["verify"]) == 2
 
 
-# ----- --capabilities override (audit C4-P1) ----------------------------------
+# --- --capabilities override
 
 
 def test_install_capabilities_override_recorded_exactly(monkeypatch, tmp_path):
@@ -1095,25 +1086,22 @@ def test_install_unknown_capability_rc2(monkeypatch, tmp_path, capsys):
     assert "blockchain" in capsys.readouterr().err
 
 
-# ----- equip install write-back to config.wired (config-depth-wired-ux) -------
+# --- equip install write-back to config.wired
 #
-# `equip install` is the declared-intent writer: alongside the equipment.json
-# MARKETPLACE record, it upserts a matching WiredEntry into the committed
-# config.json keyed on <plugin>@<marketplace>. The two ledgers must agree on that
-# key (config.wired = intent; equipment.json = render manifest) and not diverge.
+# Install upserts a WiredEntry (intent) into committed config.json beside the
+# equipment.json record (render manifest); both key on <plugin>@<marketplace>.
 
 
 def _seed_committed_config(root):
-    """Write a fresh committed config.json under ``root/.context`` and return it."""
+    """Write a fresh committed config.json under ``root/.context``."""
     context_dir = root / ".context"
     context_dir.mkdir(parents=True, exist_ok=True)
     write_config(context_dir, default_config())
 
 
 def test_install_upserts_wired_and_agrees_with_manifest(monkeypatch, tmp_path):
-    # Project scope, committed config present: the install records both the
-    # equipment.json MARKETPLACE item AND a matching config.wired entry, and the
-    # two agree on the <plugin>@<marketplace> key (they don't diverge).
+    # Project scope with a committed config: install records the equipment.json
+    # item AND a config.wired entry under the same <plugin>@<marketplace> key.
     _install_fake_runner(monkeypatch)
     _seed_committed_config(tmp_path)
     rc = run_equip(
@@ -1139,13 +1127,11 @@ def test_install_upserts_wired_and_agrees_with_manifest(monkeypatch, tmp_path):
     manifest = json.loads((tmp_path / ".context" / "equipment.json").read_text())
     names = {i["name"] for i in manifest["items"]}
     assert "pg-tuner@claude-plugins-official" in names
-    # The shared key keeps the two ledgers reconcilable — they agree, not diverge.
     assert entry.target in names
 
 
 def test_install_reinstall_upserts_no_duplicate_wired(monkeypatch, tmp_path):
-    # Re-installing the same target upserts (replace-by-key), never appends a
-    # duplicate config.wired entry.
+    # Re-install replaces by key; it never appends a duplicate config.wired entry.
     _install_fake_runner(monkeypatch)
     _seed_committed_config(tmp_path)
     args = [
@@ -1165,9 +1151,8 @@ def test_install_reinstall_upserts_no_duplicate_wired(monkeypatch, tmp_path):
 
 
 def test_install_user_scope_writes_no_config_and_does_not_raise(monkeypatch, tmp_path):
-    # --scope user (personal ~/.claude) is never written back to a repo config —
-    # and with no committed config.json present, the write-back is skipped and
-    # nothing is created.
+    # --scope user (personal ~/.claude) is never written back to a repo config,
+    # so no config.json is created.
     home = tmp_path / "home"
     _install_fake_runner(monkeypatch, home=home)
     root = tmp_path / "proj"
@@ -1190,9 +1175,8 @@ def test_install_user_scope_writes_no_config_and_does_not_raise(monkeypatch, tmp
 def test_install_absent_config_skips_write_back_with_warning(
     monkeypatch, tmp_path, capsys
 ):
-    # Project scope but NO committed config.json: the install succeeds, records
-    # the manifest, and skips the wired write-back with a warning — it never
-    # materialises a seeded config as a side effect.
+    # No committed config.json: install succeeds and records the manifest, but
+    # skips the wired write-back with a warning instead of seeding a config.
     _install_fake_runner(monkeypatch)
     rc = run_equip(
         [
@@ -1207,7 +1191,6 @@ def test_install_absent_config_skips_write_back_with_warning(
     assert not (tmp_path / ".context" / "config.json").exists()
     err = capsys.readouterr().err
     assert "config.wired" in err
-    # The manifest record is still intact.
     manifest = json.loads((tmp_path / ".context" / "equipment.json").read_text())
     assert any(
         i["name"] == "pg-tuner@claude-plugins-official" for i in manifest["items"]
@@ -1217,9 +1200,8 @@ def test_install_absent_config_skips_write_back_with_warning(
 def test_install_write_config_failure_warned_and_continues(
     monkeypatch, tmp_path, capsys
 ):
-    # An injected write_config failure is warned-and-continued: the install rc is
-    # unchanged (0) and the equipment.json manifest record is intact — the
-    # exception never escapes run_install.
+    # A write_config failure is warned and swallowed: rc stays 0 and the
+    # equipment.json record is intact.
     _install_fake_runner(monkeypatch)
     _seed_committed_config(tmp_path)
 
@@ -1245,7 +1227,7 @@ def test_install_write_config_failure_warned_and_continues(
     )
 
 
-# ----- _needed_caps gap-awareness (T1b) -------------------------------------
+# --- _needed_caps gap-awareness
 
 
 def _write_manifest(tmp_path: Path, caps: list[str]) -> None:
@@ -1271,8 +1253,7 @@ def _write_manifest(tmp_path: Path, caps: list[str]) -> None:
 
 
 def test_needed_caps_excludes_capabilities_already_covered(monkeypatch, tmp_path):
-    # The old stub returned ("test","implement") off the stack regardless of the
-    # manifest. Now a fully-equipped repo reports NO gap.
+    # Capabilities already in the manifest are not gaps: fully equipped -> none.
     monkeypatch.setattr(
         "dummyindex.cli.equip.discover.detect_stack",
         lambda _ctx: StackProfile(
@@ -1310,7 +1291,7 @@ def test_needed_caps_degrades_on_unreadable_manifest(monkeypatch, tmp_path, caps
     assert "unreadable" in capsys.readouterr().err
 
 
-# ----- Wave 3: vendor install of collection skills (auto-vendor-skills) ------
+# --- vendor install of collection skills
 
 _SHA = "d" * 40
 

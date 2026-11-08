@@ -116,16 +116,11 @@ def is_project_instruction_path(
 ) -> bool:
     """Whether ``path`` can be a Codex instruction candidate in this project.
 
-    Codex joins every configured relative candidate to each directory between
-    the project root and the launch directory. This standalone CLI cannot know
-    the latter, so a repository path is conservatively treated as guidance when
-    its component suffix matches a candidate. Nested candidates are compared as
-    paths, not by basename (``docs/RULES.md`` must not hide every ``RULES.md``).
-
-    Absolute paths outside ``project_root`` retain basename matching for the
-    standard/single-component candidates. That preserves the existing policy of
-    not ingesting an explicitly supplied external ``AGENTS.md`` while ensuring
-    a nested project fallback cannot accidentally suppress an unrelated file.
+    The launch directory Codex probes up to is unknowable here, so a repo path counts
+    when its trailing components match a candidate. Nested candidates compare as
+    paths, not basenames (``docs/RULES.md`` must not hide every ``RULES.md``). An
+    absolute path outside ``project_root`` matches single-component candidates by
+    basename only, so an external ``AGENTS.md`` is still not ingested.
     """
     candidates = tuple(
         project_instruction_paths(project_root)
@@ -146,13 +141,10 @@ def is_project_instruction_path(
 def _config_layers(project_root: Path | None) -> tuple[dict, ...]:
     """Load the discoverable Codex config layers in precedence order.
 
-    Runtime ``-c`` overrides, selected profiles, and the launch directory's
-    nested project layers belong to the Codex process and are not observable by
-    this standalone CLI. The platform system layer, persistent user layer, its
-    persisted project-trust table, and the repository-root project layer that
-    governs the root guidance target are observable. Match Codex's trust
-    boundary: a project layer is loaded only when the resolved root has an
-    explicit ``trust_level = "trusted"`` entry in the user config.
+    Order: system, user, then the repo-root ``.codex/config.toml``. Runtime ``-c``
+    overrides, profiles and nested launch-directory layers aren't observable here.
+    Matching Codex's trust boundary, the project layer loads only when the user
+    config marks the resolved root ``trust_level = "trusted"``.
     """
     loaded: list[dict] = []
     system_payload = _load_config(_system_config_path())
@@ -184,10 +176,8 @@ def _config_layers(project_root: Path | None) -> tuple[dict, ...]:
 def _system_config_path() -> Path:
     """Return Codex's platform system-config location.
 
-    Codex uses ``/etc/codex/config.toml`` on Unix (including macOS) and the
-    ``OpenAI\\Codex`` folder under Windows' ProgramData known folder. Python's
-    ``PROGRAMDATA`` environment value is the portable spelling of that Windows
-    known folder; use Codex's own fallback when it is unavailable.
+    ``/etc/codex/config.toml`` on Unix (incl. macOS); on Windows,
+    ``OpenAI\\Codex`` under ``PROGRAMDATA``, else Codex's own fallback.
     """
     if os.name == "nt":
         program_data = os.environ.get("PROGRAMDATA") or r"C:\ProgramData"

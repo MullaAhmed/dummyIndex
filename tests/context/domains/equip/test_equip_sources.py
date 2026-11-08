@@ -104,7 +104,7 @@ def test_search_github_empty_on_failure():
     assert result.degraded is True  # nothing answered — not a stable result
 
 
-# ----- determinism (audit 2026-06-13, C4-P2): same query, same result --------
+# --- determinism: same query, same result
 
 
 def test_search_github_sorts_and_dedupes_deterministically():
@@ -144,7 +144,7 @@ def test_search_github_fallback_is_flagged_degraded():
     assert result.reason  # carries the why for the CLI warning
 
 
-# ----- Wave 2: pinned-ref enumeration + fetch (auto-vendor-skills) -----------
+# --- pinned-ref enumeration + fetch
 
 from dummyindex.context.domains.equip import (  # noqa: E402
     SkillRef,

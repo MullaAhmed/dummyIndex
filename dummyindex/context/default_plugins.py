@@ -1,20 +1,10 @@
 """Wire dummyindex's default Claude Code plugins into a repo at init time.
 
-When dummyindex first initialises a project (``install`` auto-init, or
-``ingest`` / ``context init``), it enables a small, reviewed set of default
-plugins in the project's ``.claude/settings.json`` so a fresh dummyindex repo
-is "batteries included". Third-party defaults track their upstream's latest
-default branch — Claude Code materialises marketplaces with ``git clone
---branch <ref>``, which accepts branch/tag names but never a commit SHA, so a
-pin cannot be expressed here. The reviewed blast radius is still disclosed
-before callers mutate settings or invoke Claude Code.
-
-Base-layer module: it reuses :func:`context.claude_plugins.enable_plugin` and
-:func:`context.claude_settings.load_settings` and imports nothing from ``cli/``,
-``installer/``, or ``context/domains/`` — callers depend on it, never the
-reverse. Like :class:`context.hooks.HookResult`, :func:`wire_default_plugins`
-reports problems in its result and never raises, so a malformed or unwritable
-``settings.json`` cannot fail an otherwise-successful init.
+Init enables a small, reviewed plugin set in the project's ``.claude/settings.json``.
+Third-party defaults track their upstream's default branch (no commit pin; see
+:func:`_is_legacy_sha_pin`). Base layer: imports nothing from ``cli/``,
+``installer/`` or ``context/domains/``. :func:`wire_default_plugins` reports problems
+in its result and never raises, so a bad ``settings.json`` cannot fail init.
 """
 
 from __future__ import annotations
@@ -43,18 +33,8 @@ class WiredKind(str, Enum):
 class WiredClass(str, Enum):
     """How a declared :class:`WiredEntry` classifies against actual presence.
 
-    The single vocabulary shared by every surface that classifies ``wired``
-    (the headless reconciler's reporting, read-only ``status``, the interactive
-    ``wire`` command) so they can never drift on what "satisfied / acted /
-    needs-user" means:
-
-    - ``SATISFIED`` — a ``kind=plugin`` entry already decided in the committed
-      ``settings.json`` (enabled or explicitly disabled) → left untouched.
-    - ``ACTED`` — a ``kind=plugin`` entry declared but absent → a real run wires
-      it (``enable_plugin`` + best-effort install).
-    - ``NEEDS_USER`` — an entry no unattended run can resolve: every
-      ``kind=skill`` entry (no skill-enable primitive) or a plugin ``target``
-      with no ``<plugin>@<marketplace>`` shape.
+    The satisfied / acted / needs-user vocabulary; the rule lives in
+    :func:`classify_wired_entry`.
     """
 
     SATISFIED = "satisfied"
@@ -66,13 +46,9 @@ class WiredClass(str, Enum):
 class WiredEntry:
     """One declared plugin/skill the repo wants present, optionally version-pinned.
 
-    The user-facing source of truth for what should be wired (committed in
-    ``config.wired``). ``target`` is ``<plugin>@<marketplace>`` for a plugin or a
-    bare skill name; ``version`` is a *descriptive* pin (recorded/surfaced, never
-    enforced as an install ref) or ``None``. Mirrors
-    :class:`context.domains.equip.models.EquipmentItem`'s hand-written
-    ``to_dict``/``from_dict`` style; validation lives at the ``from_dict``
-    boundary.
+    Committed in ``config.wired``. ``target`` is ``<plugin>@<marketplace>`` or a bare
+    skill name; ``version`` is a descriptive pin (surfaced, never enforced as an
+    install ref) or ``None``. Validation lives in :meth:`from_dict`.
     """
 
     kind: WiredKind
@@ -122,12 +98,10 @@ SKIP_INSTALL_ENV = "DUMMYINDEX_SKIP_PLUGIN_INSTALL"
 class DefaultPlugin:
     """One plugin dummyindex enables by default, identified by marketplace.
 
-    ``repo`` is the ``owner/name`` GitHub slug of the marketplace, needed only
-    for *non-official* marketplaces. Third-party records track the upstream's
-    latest default branch — Claude Code cannot clone a commit SHA, so there is
-    deliberately no pin field. ``surfaces`` and ``runs_code`` record the
-    reviewed blast radius; they are disclosure metadata, never a substitute for
-    equip's approval gate for arbitrary third-party sources.
+    ``repo`` (``owner/name``) is needed only for non-official marketplaces; there is
+    deliberately no pin field. ``surfaces`` / ``runs_code`` disclose the reviewed
+    blast radius; they never substitute for equip's approval gate for arbitrary
+    third-party sources.
     """
 
     plugin: str
@@ -242,10 +216,9 @@ def _plugin_to_wired(plugin: DefaultPlugin) -> WiredEntry:
 def default_wired() -> tuple[WiredEntry, ...]:
     """The seed ``wired`` set — :data:`DEFAULT_PLUGINS` as :class:`WiredEntry`s.
 
-    The default declaration moves from code-as-law to config-as-declaration:
-    Claude/both-host ``default_config()`` baselines seed ``config.wired`` from
-    this (Codex-only has no Claude plugins), and the v1→v2 read migration uses
-    it for ``wire_superpowers: true``.
+    Claude/both-host ``default_config()`` seeds ``config.wired`` from this (Codex-only
+    has no Claude plugins); the v1→v2 read migration uses it for
+    ``wire_superpowers: true``.
     """
     return tuple(_plugin_to_wired(p) for p in DEFAULT_PLUGINS)
 
@@ -254,27 +227,11 @@ def default_wired() -> tuple[WiredEntry, ...]:
 class PluginWireResult:
     """Outcome of :func:`wire_default_plugins`. Carries errors, never raises.
 
-    The reconciler classifies each declared :class:`WiredEntry` against the
-    project ``settings.json`` *presence* into one of three buckets, mirrored by
-    the spec's satisfied / acted / needs-user vocabulary:
-
-    - ``already`` — **satisfied**: a ``kind=plugin`` entry the repo already
-      decided (present in a project settings file, enabled or explicitly
-      disabled) → left untouched.
-    - ``enabled`` — **acted**: a ``kind=plugin`` entry declared but absent →
-      ``enable_plugin`` wrote ``true`` into the project settings.
-    - ``needs_user`` — **needs-user**: ``(target, reason)`` for an entry the
-      reconciler can't act on unattended — every ``kind=skill`` entry (no
-      skill-enable primitive exists; skills are declared + surfaced, never
-      auto-wired here) and any plugin install that the best-effort
-      materialisation reported as failed.
-    - ``skipped`` — targets not attempted because wiring was disabled
-      (empty ``wired`` / ``--no-superpowers``).
-    - ``errors`` — ``(target, message)`` for a settings file we couldn't write.
-
-    ``WiredEntry.version`` is recorded/surfaced only; it NEVER drives a
-    re-wire — ``settings.json`` has no installed-version field, so the
-    reconciler synthesises no "stale" verdict from it.
+    - ``already`` (satisfied): plugin already ``true`` or ``false`` in project settings.
+    - ``enabled`` (acted): declared but absent; ``true`` was written.
+    - ``needs_user``: ``(target, reason)``: skills, bad targets, marketplace conflicts.
+    - ``skipped``: wiring disabled. ``errors``: ``(target, message)`` for settings I/O.
+    ``WiredEntry.version`` never drives a re-wire: settings has no version field.
     """
 
     enabled: tuple[str, ...] = ()
@@ -320,14 +277,11 @@ def describe_wire_result(
 
 
 def _already_decided(project_root: Path, target: str) -> bool:
-    """True if the repo already has a decision for ``target``.
+    """True if ``enabledPlugins`` holds ``target`` (``true`` or ``false``).
 
-    The ``enabledPlugins`` key is *present* (``true`` OR explicitly ``false``)
-    in the project ``settings.json`` or ``settings.local.json``. User
-    ``~/.claude/settings.json`` is intentionally NOT consulted: the committed
-    project settings file is the team-wide artefact and must not depend on the
-    current developer's personal global config. A malformed/unreadable file
-    counts as "no decision".
+    Checks the project ``settings.json`` and ``settings.local.json`` only: the
+    committed project file is team-wide and must not depend on one developer's
+    ``~/.claude/settings.json``. A malformed/unreadable file counts as "no decision".
     """
     for rel in ("settings.json", "settings.local.json"):
         path = project_root / ".claude" / rel
@@ -382,11 +336,11 @@ def _expected_source(plugin: DefaultPlugin) -> dict[str, str]:
 def _is_legacy_sha_pin(source: object, plugin: DefaultPlugin) -> bool:
     """Whether ``source`` is exactly a dummyindex <= 0.33.x SHA pin of ``plugin``.
 
-    Healable means the ONLY difference from the canonical unpinned shape is a
-    ``ref`` holding a full lowercase 40-char commit SHA — the shape old
-    dummyindex wrote and Claude Code's ``git clone --branch <ref>`` can never
-    clone. A branch/tag ref (clonable, so a deliberate user choice) or any
-    other extra key is NOT healable and keeps the preserve-or-refuse contract.
+    Claude Code materialises marketplaces with ``git clone --branch <ref>``, which
+    takes a branch/tag but never a commit SHA, so defaults cannot be pinned. Healable
+    means the only difference from the unpinned shape is a ``ref`` holding a full
+    lowercase 40-char SHA. A branch/tag ref (a deliberate user choice) or any extra
+    key is not healable and keeps the preserve-or-refuse contract.
     """
     if not isinstance(source, dict) or set(source) != {"source", "repo", "ref"}:
         return False
@@ -404,13 +358,10 @@ def _declare_marketplace(
 ) -> tuple[bool, str | None]:
     """Declare an unpinned marketplace without overwriting a name conflict.
 
-    A declaration that is exactly a dummyindex <= 0.33.x commit-SHA pin of the
-    same reviewed repo is *healed* to the unpinned shape rather than treated as
-    a conflict: Claude Code's ``git clone --branch <ref>`` materialisation can
-    never clone a commit SHA, so left in place the stale pin fails at every
-    session start. Anything else that differs — another repo, a non-github
-    shape, a deliberate branch/tag ref, extra keys — is a conflict and is left
-    unchanged.
+    Returns ``(ready, conflict_reason)``. A legacy SHA pin of the same repo
+    (:func:`_is_legacy_sha_pin`) is healed to the unpinned shape, since left in
+    place it fails at every session start. Any other difference (repo, shape,
+    branch/tag ref, extra keys) is a conflict and is left unchanged.
     """
     if plugin.repo is None:
         return True, None
@@ -441,12 +392,10 @@ def _declare_marketplace(
 def _marketplace_matches(settings_path: Path, plugin: DefaultPlugin) -> bool:
     """Whether the reviewed marketplace declaration is ready for install.
 
-    Ready means the canonical unpinned declaration is present, or the one
-    healable legacy shape (a <= 0.33.x commit-SHA pin of the same repo) that
-    the wiring pass rewrites and the eager install's own
-    ``claude plugin marketplace add <repo>`` re-declares unpinned anyway. A
-    declaration that differs any other way is a user decision — not ready, so
-    the install never overwrites it via the Claude CLI.
+    Ready means the canonical unpinned declaration, or the healable legacy SHA pin
+    (the install's own ``claude plugin marketplace add <repo>`` re-declares it
+    unpinned). Any other difference is a user decision: not ready, so the install
+    never overwrites it via the Claude CLI.
     """
     if plugin.repo is None:
         return True
@@ -462,11 +411,9 @@ def _marketplace_matches(settings_path: Path, plugin: DefaultPlugin) -> bool:
 def _split_target(target: str) -> tuple[str, str] | None:
     """Split a plugin ``target`` into ``(plugin, marketplace)``.
 
-    A plugin ``target`` is ``<plugin>@<marketplace>`` (see
-    :meth:`DefaultPlugin.target`). Split on the *last* ``@`` so a plugin name
-    that contains one is tolerated. Returns ``None`` if the shape is invalid
-    (no ``@``, or an empty half) so the caller can classify it needs-user
-    rather than mis-wire it.
+    Splits on the last ``@`` so a plugin name containing one is tolerated. Returns
+    ``None`` for an invalid shape (no ``@``, or an empty half) so the caller can
+    classify it needs-user instead of mis-wiring it.
     """
     plugin, sep, marketplace = target.rpartition("@")
     if not sep or not plugin or not marketplace:
@@ -479,17 +426,10 @@ def classify_wired_entry(
 ) -> WiredClass:
     """Classify one declared ``entry`` against presence only — pure, no I/O.
 
-    ``is_present(target)`` reports whether the project ``settings.json`` already
-    has a decision for that plugin target (the caller passes
-    :func:`_already_decided` bound to a root, or a fake in tests). This is the
-    ONE place the satisfied / acted / needs-user rule lives, so the reconciler,
-    read-only ``status`` and the interactive ``wire`` command can never drift:
-
-    - ``kind=skill`` → :attr:`WiredClass.NEEDS_USER` (no skill-enable primitive).
-    - a plugin ``target`` with no ``<plugin>@<marketplace>`` shape →
-      :attr:`WiredClass.NEEDS_USER` (can't be mis-wired).
-    - a ``kind=plugin`` already decided → :attr:`WiredClass.SATISFIED`.
-    - a ``kind=plugin`` declared but absent → :attr:`WiredClass.ACTED`.
+    ``is_present(target)`` says whether project settings already decide it (e.g.
+    :func:`_already_decided` bound to a root). Used by ``status`` and ``wire``:
+    a skill (no skill-enable primitive) or a non-``<plugin>@<marketplace>`` target
+    is ``NEEDS_USER``; a decided plugin is ``SATISFIED``; an absent one ``ACTED``.
     """
     if entry.kind is WiredKind.SKILL or _split_target(entry.target) is None:
         return WiredClass.NEEDS_USER
@@ -589,21 +529,10 @@ def wire_default_plugins(
     )
 
 
-# ---------------------------------------------------------------------------
-# Materialisation — actually install the bits, not just declare them.
-#
-# `wire_default_plugins` writes the shared *declaration* (``enabledPlugins`` in
-# the committed settings.json). That declaration travels via git, but the
-# plugin's *bits* do not: the marketplace clone and the install registration
-# live under ``~/.claude/plugins/`` — per-machine, never shared. So a teammate
-# who clones the repo has the intent but not the plugin until Claude Code
-# installs it. `install_default_plugins` closes that gap at ``dummyindex
-# install`` time by shelling out to the ``claude`` CLI. Best-effort, mirroring
-# the subprocess-behind-a-Runner-seam precedent in
-# ``context/domains/equip/plugins/sources.py``: fixed argv, no shell, never
-# raises; a missing ``claude`` degrades to "deferred" (Claude Code installs it
-# on next session) rather than an error.
-# ---------------------------------------------------------------------------
+# Materialisation. The ``enabledPlugins`` declaration travels via git; the plugin
+# bits (marketplace clone, install registration) live per machine under
+# ``~/.claude/plugins/``. Best-effort ``claude`` CLI shell-out: fixed argv, no shell,
+# never raises; a missing ``claude`` degrades to "deferred" (installed next session).
 
 
 @dataclass(frozen=True)
@@ -644,12 +573,10 @@ def default_runner(argv: list[str], cwd: Path) -> RunResult:
 class PluginInstallResult:
     """Outcome of :func:`install_default_plugins`. Carries errors, never raises.
 
-    - ``installed`` — targets materialised via ``claude plugin install``.
-    - ``deferred`` — targets left to Claude Code (``claude`` CLI unavailable);
-      the wired declaration still makes Claude Code install them on next session.
-    - ``skipped`` — targets not attempted because wiring was disabled.
-    - ``errors`` — ``(target, message)`` for a marketplace-add/install that the
-      CLI rejected.
+    - ``installed``: materialised via ``claude plugin install``.
+    - ``deferred``: left to Claude Code's next session (no CLI, or skip env set).
+    - ``skipped``: not attempted (disabled, not enabled, or marketplace not ready).
+    - ``errors``: ``(target, message)`` for a settings read error or CLI rejection.
     """
 
     installed: tuple[str, ...] = ()
@@ -717,21 +644,11 @@ def install_default_plugins(
 ) -> PluginInstallResult:
     """Materialise selected, effectively-enabled defaults via the Claude CLI.
 
-    ``wired`` is the target-aware declaration set. When provided, only reviewed
-    defaults present in it and effectively ``true`` after project/local
-    precedence are eligible. ``None`` preserves the legacy all-defaults direct
-    call; installer/init pass their selected set.
-
-    ``enabled=False`` installs nothing (selected targets land in ``skipped``). When
-    the ``claude`` CLI is unavailable — or :data:`SKIP_INSTALL_ENV` is set on the
-    production path — every target lands in ``deferred`` (the wired declaration
-    still lets Claude Code install on next session). Each install is idempotent
-    (a no-op if already present) and best-effort: a CLI rejection is recorded in
-    ``errors``, never raised.
-
-    ``runner`` defaults to :func:`default_runner` (real subprocess). Injecting a
-    runner is the test seam and also bypasses :data:`SKIP_INSTALL_ENV`, so unit
-    tests exercise the install logic regardless of the ambient env guard.
+    With ``wired``, only declared defaults effectively ``true`` (project/local
+    precedence) are eligible; ``None`` takes every default not disabled. A target
+    whose marketplace isn't ready is skipped; ``enabled=False`` skips all. With no
+    ``claude`` CLI, or :data:`SKIP_INSTALL_ENV` set and no injected ``runner`` (the
+    test seam), eligible targets are ``deferred``. CLI rejections go to ``errors``.
     """
     if wired is None:
         selected = DEFAULT_PLUGINS
@@ -800,9 +717,8 @@ def describe_install_result(
 ) -> tuple[tuple[str, ...], tuple[str, ...]]:
     """Render an install ``result`` into ``(stdout_lines, stderr_lines)``.
 
-    ``result.skipped`` is intentionally NOT rendered: the opt-out is already
-    announced by :func:`describe_wire_result`, which shares the same ``enabled``
-    gate — rendering it here too would double-print every opted-out target.
+    ``result.skipped`` is not rendered: :func:`describe_wire_result` already
+    announces the opt-out, so rendering it here would double-print it.
     """
     info: list[str] = []
     warn: list[str] = []

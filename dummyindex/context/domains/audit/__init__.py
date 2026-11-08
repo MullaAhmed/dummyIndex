@@ -1,29 +1,10 @@
-"""On-demand argue-and-audit panel: scaffold + log surface.
+"""On-demand argue-and-audit panel: scaffold + log surface (deterministic plumbing).
 
-``dummyindex context audit start --describe "..."`` turns a free-text request
-into a ``.context/audits/<slug>/`` workspace (``audit.json`` + ``description.md``
-+ ``catalog.json`` + ``findings/``). The ``/dummyindex-audit`` skill then picks a
-task-relevant panel from the catalog, runs a rebuttal loop (capped at
-``MAX_REBUTTAL_ROUNDS``, stopping early on agreement), and writes ``report.md``.
-
-This package is deterministic plumbing only — the auditing itself is the agents,
-orchestrated by the skill markdown. There is no audit "computation" here.
-
-Public surface (the CLI + test import target):
-
-- ``AuditConfig``, ``PersonaCard``, ``AuditStart``, ``RosterAgent`` — frozen
-  dataclasses
-- ``LogEntry`` — one debate-log row
-- ``LogStatus``, ``MAX_REBUTTAL_ROUNDS``, ``SCHEMA_VERSION``
-- ``AUDITS_REL``, ``audit_dir``, ``audits_root``, ``ensure_audit``, ``read_audit``,
-  ``report_written``, ``resolve_model``, ``resolve_mode``, ``slugify``,
-  ``validate_slug``
-- ``default_personas_dir``, ``load_catalog``, ``parse_persona``,
-  ``collect_roster``, ``resolve_catalog`` (persona → installed-roster resolution)
-- ``append_log``, ``read_log``, ``is_round_complete``, ``completed_rounds``,
-  ``latest_status``
-- ``AuditError``, ``AuditSlugError``, ``AuditExistsError``, ``AuditNotFoundError``,
-  ``ModelRequiredError``, ``AuditLogError``
+``context audit start --describe "..."`` turns a request into a
+``.context/audits/<slug>/`` workspace (``audit.json``, ``description.md``,
+``catalog.json``, ``findings/``). The ``/dummyindex-audit`` skill's agents then pick
+a panel, run a rebuttal loop (capped at ``MAX_REBUTTAL_ROUNDS``, stopping early on
+agreement) and write ``report.md``. ``__all__`` is the CLI + test import surface.
 """
 
 from __future__ import annotations

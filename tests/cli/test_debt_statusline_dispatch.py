@@ -1,16 +1,9 @@
-"""Wave-4 registration: ``debt`` + ``statusline`` are wired into the dispatcher.
+"""``debt`` + ``statusline`` are wired into the context dispatcher.
 
-The command *bodies* (``cli/debt.py`` / ``cli/statusline.py``) are covered by
-``test_debt_cli.py`` / ``test_statusline.py``, which invoke ``run`` directly
-because the subcommands were not registered until this wave. These tests pin the
-*wiring* this task adds — and nothing more:
-
-- the ``_HANDLERS`` table maps ``ContextSubcommand.DEBT`` / ``STATUSLINE`` to the
-  exact ``run`` callables (mirroring ``ContextSubcommand.QUERY: query.run``);
-- ``dispatch([...])`` routes to those handlers with the post-subcommand argv
-  (the same ``rest`` shape every other subcommand receives);
-- both new subcommands answer ``--help`` (the shared read-only help contract);
-- a real end-to-end ``dispatch`` of each subcommand returns 0.
+Bodies are covered by ``test_debt_cli.py`` / ``test_statusline.py``. These pin
+the wiring only: ``_HANDLERS`` maps ``ContextSubcommand.DEBT`` / ``STATUSLINE``
+to the exact ``run`` callables, ``dispatch`` passes them the post-subcommand
+argv, both answer ``--help``, and a real ``dispatch`` of each returns 0.
 """
 
 from __future__ import annotations

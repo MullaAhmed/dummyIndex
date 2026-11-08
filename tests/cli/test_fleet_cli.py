@@ -41,7 +41,7 @@ def _out(capsys: pytest.CaptureFixture[str]) -> str:
     return capsys.readouterr().out
 
 
-# ----- init -----------------------------------------------------------------
+# --- init
 
 
 @pytest.mark.integration
@@ -133,7 +133,7 @@ def test_unknown_verb_and_bare_invocation_are_usage_errors(
     assert "unknown fleet verb 'teleport'" in capsys.readouterr().err
 
 
-# ----- lifecycle to done ----------------------------------------------------
+# --- lifecycle to done
 
 
 @pytest.mark.integration
@@ -290,7 +290,7 @@ def test_anti_stall_every_unit_gated_yields_valid_empty_envelope_exit_0(
     assert [u["id"] for u in payload["units"]] == ["u01"]
 
 
-# ----- budget breaker over the CLI ------------------------------------------
+# --- budget breaker over the CLI
 
 
 @pytest.mark.integration
@@ -346,7 +346,7 @@ def test_budget_halt_envelope_exits_zero_and_resume_via_spend_adjust(
     assert payload["halt"] is False and len(payload["units"]) == 2
 
 
-# ----- run discovery --------------------------------------------------------
+# --- run discovery
 
 
 @pytest.mark.integration

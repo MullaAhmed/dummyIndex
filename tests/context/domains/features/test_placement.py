@@ -1,14 +1,8 @@
-"""Tests for the atomic placement ops (`scaffold_feature` / `assign_files`)
-and their `dummyindex context scaffold-feature / assign-files` CLI front-ends.
+"""Tests for the atomic placement ops (`scaffold_feature` / `assign_files`) and CLI.
 
-These are the Phase-2 ops the council uses to fold net-new files into the
-curated taxonomy WITHOUT re-clustering. They mirror the existing atomic-op
-pattern in `context/domains/features/ops.py` (validate-everything-before-
-write, tmp-rename atomicity, hand-maintained INDEX.json + regenerated
-INDEX.md/graph).
-
-Unlike the `_GRAPH`-based scaffold tests, these ops read real files on
-disk and a real `map/symbols.json`, so each fixture writes both.
+The council uses these to fold net-new files into the curated taxonomy WITHOUT
+re-clustering: validate everything before writing, tmp-rename atomicity. They
+read real files and a real `map/symbols.json`, so each fixture writes both.
 """
 
 from __future__ import annotations
@@ -35,7 +29,7 @@ from tests.paths import SAMPLE_REPO
 _FIXTURE = SAMPLE_REPO
 
 
-# ----- fixtures -------------------------------------------------------------
+# --- fixtures
 
 
 def _repo_with_symbols(tmp_path: Path) -> tuple[Path, Path]:
@@ -106,7 +100,7 @@ def _repo_with_symbols(tmp_path: Path) -> tuple[Path, Path]:
     return repo_root, features_dir
 
 
-# ----- scaffold_feature -----------------------------------------------------
+# --- scaffold_feature
 
 
 @pytest.mark.unit
@@ -351,7 +345,7 @@ def test_scaffold_feature_rejects_file_outside_repo(tmp_path: Path) -> None:
         )
 
 
-# ----- assign_files ---------------------------------------------------------
+# --- assign_files
 
 
 def _seeded_feature(tmp_path: Path) -> tuple[Path, Path]:
@@ -478,9 +472,7 @@ def test_assign_files_rejects_missing_file(tmp_path: Path) -> None:
 
 @pytest.mark.unit
 def test_assign_files_rejects_file_outside_repo(tmp_path: Path) -> None:
-    # Symmetry with scaffold_feature: assign_files shares _normalize_files, so an
-    # outside-repo path must be rejected here too (guards against a future
-    # divergence that takes assign_files off the shared helper).
+    # Like scaffold_feature, assign_files must reject an outside-repo path.
     repo_root, features_dir = _seeded_feature(tmp_path)
     outside = tmp_path / "outside.py"
     outside.write_text("x = 1\n", encoding="utf-8")
@@ -493,7 +485,7 @@ def test_assign_files_rejects_file_outside_repo(tmp_path: Path) -> None:
         )
 
 
-# ----- unassign_files (subtractive placement) -------------------------------
+# --- unassign_files (subtractive placement)
 
 
 def _feature_with_two_files(tmp_path: Path) -> tuple[Path, Path]:
@@ -588,7 +580,7 @@ def test_unassign_files_errors_on_missing_feature(tmp_path: Path) -> None:
         )
 
 
-# ----- remove_feature (delete a dead feature) -------------------------------
+# --- remove_feature (delete a dead feature)
 
 
 @pytest.mark.unit
@@ -726,7 +718,7 @@ def test_cli_features_remove_refuses_then_forces(
     assert not (target / ".context" / "features" / "dead").exists()
 
 
-# ----- pending-enrichment marker --------------------------------------------
+# --- pending-enrichment marker
 
 
 @pytest.mark.unit
@@ -751,10 +743,9 @@ def test_scaffold_feature_drops_pending_marker(tmp_path: Path) -> None:
 def test_assign_files_drops_pending_marker(tmp_path: Path) -> None:
     """Assigning files to an existing feature re-flags it for enrichment.
 
-    Added files don't show as drift (drift is modified/removed only) and the
-    feature is no longer unassigned (it now owns them), so without this marker
-    a place-then-restart would let the stamp advance past an un-re-enriched
-    feature. The marker is the bridge.
+    Added files are not drift (drift is modified/removed only) and are no longer
+    unassigned, so without the marker a place-then-restart would let the stamp
+    advance past an un-re-enriched feature.
     """
     repo_root, features_dir = _repo_with_symbols(tmp_path)
     scaffold_feature(
@@ -809,7 +800,7 @@ def test_clear_pending_enrichment_errors_on_missing_feature(
         clear_pending_enrichment(features_dir, "does-not-exist")
 
 
-# ----- CLI front-ends -------------------------------------------------------
+# --- CLI front-ends
 
 
 def _ingested(tmp_path: Path, name: str) -> Path:

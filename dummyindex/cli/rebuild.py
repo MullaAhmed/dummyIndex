@@ -15,6 +15,7 @@ from .common import (
 
 if TYPE_CHECKING:
     from dummyindex.context.build.incremental import IncrementalResult
+    from dummyindex.context.build.upgrade import LayoutMigration
 
 
 def _fold_legacy_claude_md(out_root: Path) -> None:
@@ -98,14 +99,15 @@ def _run(args: list[str]) -> int:
             if result.build_result
             else "rebuild ran"
         )
+        if result.build_result is not None:
+            _print_migration(result.build_result.migration)
         _fold_legacy_claude_md(out_root)
         return 0
 
-    # Bare `rebuild` (no --changed / --full) is a full re-cluster. On a
-    # curated index that DISCARDS the council taxonomy + enrichment, so we
-    # REFUSE rather than auto-route — refusing is safer for scripts and hooks
-    # that may invoke `rebuild` expecting a cheap refresh. `--full` is the
-    # explicit escape hatch; `--changed` takes the non-destructive path.
+    # Bare `rebuild` is a full re-cluster, which on a curated index DISCARDS the
+    # council taxonomy + enrichment, so REFUSE rather than auto-route (scripts and
+    # hooks may expect a cheap refresh). `--full` is the explicit escape hatch;
+    # `--changed` is the non-destructive path.
     if not full:
         from dummyindex.context.build import is_enriched_index
 
@@ -128,8 +130,19 @@ def _run(args: list[str]) -> int:
     )
     print(f"context rebuild: wrote {len(result.written)} files to {result.context_dir}")
     print(f"  files: {result.file_count}  symbols: {result.symbol_count}")
+    _print_migration(result.migration)
     _fold_legacy_claude_md(out_root)
     return 0
+
+
+def _print_migration(
+    migration: LayoutMigration, failed: tuple[tuple[str, str], ...] = ()
+) -> None:
+    """Print the context-layout migration + required-artefact failures."""
+    from dummyindex.context.build.upgrade import format_migration_report
+
+    for line in format_migration_report(migration, failed, prefix="  "):
+        print(line)
 
 
 def _print_enriched_summary(result: IncrementalResult) -> None:
@@ -140,6 +153,8 @@ def _print_enriched_summary(result: IncrementalResult) -> None:
         f"context rebuild: enriched index preserved; refreshed {written} "
         "deterministic artefact(s) (no re-cluster)."
     )
+    if refresh is not None:
+        _print_migration(refresh.migration, refresh.failed)
     if result.index_desync:
         print(
             "  warning: features/INDEX.json does not list the curated feature "

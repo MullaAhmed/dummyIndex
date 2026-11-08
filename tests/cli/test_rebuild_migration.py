@@ -1,13 +1,9 @@
-"""`context rebuild` legacy-root-CLAUDE.md folding (install-claude-md-migration).
+"""`context rebuild` folds a dangling legacy root CLAUDE.md on every success exit.
 
-Every successful rebuild exit — ``--changed`` rebuilt / enriched-preserved /
-skipped, and the bare full rebuild — must fold a dangling legacy root
-``CLAUDE.md`` under :func:`has_foldable_legacy_claude_md`, without ever
-creating Claude guidance for a tree that has none.
-
-The root file is seeded strictly AFTER the index build: ``init`` runs
-``build_all(bootstrap=True)``, which would otherwise consume the seed instead
-of the code under test.
+``--changed`` (rebuilt / enriched-preserved / skipped) and the bare full rebuild
+all fold under :func:`has_foldable_legacy_claude_md`, never creating Claude
+guidance for a tree that has none. The root file is seeded AFTER the index
+build because ``init`` runs ``build_all(bootstrap=True)``, which would consume it.
 """
 
 from __future__ import annotations

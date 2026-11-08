@@ -1,31 +1,10 @@
-"""`build --next` / `--next-wave` handlers — the dispatch-frontier verbs.
+"""`build --next` / `--next-wave` handlers: the dispatch-frontier verbs (wire-only).
 
-Split out of ``cli/build_loop.py`` (which keeps arg parsing + the
-``--check``/``--status`` verbs) to hold the dispatcher under the CLI
-file-size guideline. Same wire-only discipline: parse nothing, call the
-``buildloop`` domain, print. Both verbs share one JSON schema contract:
-every payload carries ``complete`` (bool) and, when work remains, the
-equipment mapping per item plus the shared ``grounding`` + ``equipped``
-signals. Each item entry also carries ``dispatch`` (``subagent`` |
-``main-session``), the structural ``gate``/``via`` markers, a conductor
-``instruction`` for main-session items (a GATE is a human decision, never
-dispatched; a ``— via <tool>`` tag is a binding directive, never
-substituted), and an ``upgrade_note`` — set when the mapper reclassified
-a via tag against the agent pool, ``None`` otherwise. Payloads also carry
-the resolved model ``routing`` map (proposal data + ``--route``
-override; see ``buildloop.routing``). The ``group`` key on
-``--next-wave`` is the item's **opaque 0-based group id** from
-``parse_checklist`` — not the ``N`` in the ``## Wave N`` heading text.
-
-Only Task-dispatchable equipment entries (kind ``agent``) join the mapping
-pool: skills/hooks/command plugins are execution adapters the via-tag
-mechanism routes, never ``subagent_type`` targets. Via tags naming agents
-fan out instead of serializing: an explicit ``— via agent:<name>`` or a
-bare name exactly matching a pool entry upgrades the item to a subagent
-unit — pinned to that entry when it carries a ``subagent_type``
-(capability scoring bypassed). Unknown agent names and untyped legacy
-matches fail safe as main-session items carrying a warning
-``upgrade_note``, never a late Task-tool failure.
+Every payload carries ``complete``; while work remains each item entry has its equipment
+mapping, ``dispatch`` (``subagent`` | ``main-session``), ``gate``/``via``, ``instruction``
+and ``upgrade_note``, beside the shared ``grounding``, ``equipped`` and ``routing``.
+``--next-wave``'s ``group`` is the opaque 0-based id from ``parse_checklist``, not the
+``N`` in ``## Wave N``.
 """
 
 from __future__ import annotations
@@ -57,19 +36,14 @@ from dummyindex.context.domains.equip.enums import Dimension
 # CLI/skill-layer render of that fallback.
 _FALLBACK_AGENT = "general-purpose"
 
-# A completed build added new code, so a bare `rebuild --changed` would leave
-# those files *unassigned* — the deterministic backbone refreshes but no feature
-# claims them. The genuine loop-closer is the reconcile procedure: fold the new
-# code into the taxonomy (place + enrich), then advance the anchor. `reconcile`
-# is the read-only entry that shows what to fold; the installed dummyindex
-# skill carries the procedure the session runs from there.
+# A finished build added code that `rebuild --changed` would leave unassigned to any
+# feature, so the loop closes with the skill's reconcile procedure (place + enrich,
+# then advance the anchor). `reconcile` is its read-only entry point.
 RECONCILE_HINT = "dummyindex context reconcile"
 
-# Printed to stderr (human `--next`/`--next-wave`) when the repo has no usable
-# equipment manifest — absent, empty, or unparseable, which all collapse to [].
-# This is the *not-equipped* signal — distinct from a per-item fallback on an
-# equipped repo (where general-purpose is the correct, silent outcome). Worded
-# to not assert absence, since a present-but-corrupt file also lands here.
+# Printed to stderr by human `--next`/`--next-wave` when equipment.json is absent, empty
+# or unparseable (all collapse to []). Distinct from the silent per-item fallback on an
+# equipped repo; worded not to assert absence, since a corrupt file lands here too.
 _NOT_EQUIPPED_WARNING = (
     "⚠ no usable .context/equipment.json. Continue with native subagents; "
     "`dummyindex context equip apply` prepares shared project capabilities."
@@ -136,9 +110,8 @@ def _find_pool_entry(pool: list[dict], name: str) -> dict | None:
 def _load_manifest(context_dir: Path) -> list[dict]:
     """Read ``.context/equipment.json`` → its ``items`` list.
 
-    Tolerates absence (returns ``[]`` → everything falls back). Accepts
-    either a top-level list or an object with an ``items`` array, matching
-    Slice B's manifest shape loosely so a schema tweak doesn't break us.
+    Absent or unparseable → ``[]`` (everything falls back). Accepts a top-level
+    list or an object with an ``items`` array.
     """
     path = context_dir / EQUIPMENT_REL
     if not path.is_file():
@@ -159,19 +132,11 @@ def _load_manifest(context_dir: Path) -> list[dict]:
 def _dispatchable(manifest: list[dict]) -> list[dict]:
     """Restrict the mapping pool to Task-dispatchable entries.
 
-    Skills/hooks/command plugins (``kind != "agent"``) are execution
-    adapters, not ``subagent_type`` targets — a single incidental token must
-    never let them win the agent match. A missing ``kind`` is treated as
-    ``agent`` (legacy manifests predate the field). Among agent entries,
-    prefer the ones that actually name a ``subagent_type``; when none does
-    (legacy manifest), keep the agent pool so capability matching still
-    works — the entry-level honesty flag reports the downgrade.
-
-    Marketplace/vendored plugins are excluded by SOURCE as well as kind:
-    schema-v3 manifests recorded plugins as ``kind=agent`` (the v4 PLUGIN kind
-    is newer), so a plugin name could otherwise leak into the dispatch pool and
-    be launched as a bogus ``subagent_type``. This mirrors the audit roster's
-    guard (``audit/catalog.py``) so both manifest consumers agree.
+    Skills/hooks/command plugins (``kind != "agent"``) are execution adapters and must
+    never win the agent match; a missing ``kind`` counts as ``agent`` (legacy). Prefer
+    entries naming a ``subagent_type``, else keep every agent (``fallback`` reports it).
+    Marketplace/vendored plugins are also excluded by source, since schema-v3 manifests
+    recorded them as ``kind=agent``; this mirrors ``audit/catalog.py``.
     """
     agent_kind = EquipmentKind.AGENT.value
     plugin_sources = {EquipmentSource.MARKETPLACE.value, EquipmentSource.VENDORED.value}
@@ -248,13 +213,10 @@ def _entry_for(
 ) -> dict[str, Any]:
     """Map one checklist item to its dispatch entry (shared by both verbs).
 
-    ``pool`` is the dispatchable subset of the manifest (see
-    ``_dispatchable``). GATE items are always main-session. Via tags are
-    three-way: an explicit ``agent:<name>`` or a bare name matching a pool
-    entry fans out as a pinned subagent unit; unknown agent names and
-    untyped legacy matches degrade to main-session with a warning
-    ``upgrade_note``; any other tag binds the conductor's own tool/skill.
-    Plain items go through capability scoring.
+    GATE items are main-session. An ``agent:<name>`` tag, or a bare name matching a
+    typed pool entry, becomes a pinned subagent unit; unknown agent names and untyped
+    bare-name matches stay main-session with an ``upgrade_note``; any other tag binds the
+    conductor's own tool. Plain items go through capability scoring.
     """
     from dummyindex.context.domains.buildloop import map_task_to_equipment
 
@@ -328,24 +290,17 @@ def _entry_for(
     entry = {
         **base,
         "agent": choice.equipment_name if not choice.fallback else _FALLBACK_AGENT,
-        # The dispatch target the build skill launches via the Task tool. The
-        # equipment item names it (subagent_type); when it didn't, or nothing
-        # matched, fall back to the general-purpose agent — and report that
-        # downgrade honestly: a match without a subagent_type is a fallback,
-        # never a confident equipped match.
+        # The Task-tool target. A match without a subagent_type, or no match, falls
+        # back to general-purpose and is reported as `fallback`, never as equipped.
         "subagent_type": choice.subagent_type or _FALLBACK_AGENT,
         "role_path": (selected.get("path") or None) if selected else None,
         "fallback": fallback,
         "instruction": None,
         "upgrade_note": None,
     }
-    # Missing-capability signal: when NOTHING in the manifest matched
-    # (``choice.fallback`` — not merely a matched agent that lacks a
-    # subagent_type) AND the item text implies a *specialist* capability
-    # (security/db/perf/docs/search/frontend), name it so the conductor can run
-    # `equip discover <cap>` and — on explicit user approval — vendor a skill that
-    # fills the gap (discovery auto, install gated). Absent when a specialist is
-    # already equipped or none is implied; purely additive to the entry.
+    # Missing-capability signal: only when nothing matched (not a matched agent lacking
+    # a subagent_type) and the text implies a specialist (security/db/perf/docs/...), so
+    # the conductor can run `equip discover <cap>` and vendor a skill on user approval.
     if choice.fallback:
         missing = capabilities_from_text(item.text)
         if missing:
@@ -451,10 +406,8 @@ def do_next(
         return 2
 
     manifest = _load_manifest(context_dir)
-    # Boundary signal, not a mapping signal: the repo is "equipped" iff an
-    # equipment.json exists and parsed to a manifest with >=1 item. This is
-    # distinct from per-item `fallback` (this item matched no specialist).
-    # Empty or corrupt JSON parses to [] → not equipped → build should warn.
+    # Repo-level signal, distinct from per-item `fallback`: "equipped" iff equipment.json
+    # parsed to >=1 item. Empty or corrupt JSON yields [] and build warns.
     equipped = bool(manifest)
     grounding = _grounding_paths(proposal_dir, context_dir)
     entry = _entry_for(pending, _dispatchable(manifest), grounding)

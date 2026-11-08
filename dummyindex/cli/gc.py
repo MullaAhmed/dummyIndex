@@ -1,4 +1,4 @@
-"""`dummyindex context gc <verb>` — the context-hygiene GC CLI (wire-only).
+"""`dummyindex context gc <verb>`: the context-hygiene GC CLI (wire-only).
 
 Sub-dispatches the first positional verb (``status|delete|closeout|stamp|signal``)
 the same way ``cli/audit.py`` dispatches ``start|show``: parse this command's own
@@ -281,7 +281,7 @@ def _gc_signal(args: list[str]) -> int:
     return 0
 
 
-# ----- status rendering -----------------------------------------------------
+# --- status rendering
 
 
 def _status_payload(report: object) -> dict:
@@ -341,7 +341,7 @@ def _print_status(report: object) -> None:
         )
 
 
-# ----- helpers --------------------------------------------------------------
+# --- helpers
 
 
 def _recommendation_counts(candidates: Iterable[Any]) -> dict[str, int]:

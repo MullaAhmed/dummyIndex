@@ -1,11 +1,9 @@
 """Stdlib-only reader for the current Claude Code session transcript.
 
-The memory domain needs coarse signals from the live session (output-token
-volume, whether subagents ran, turn count) to decide whether to nudge a
-handoff. It reads the same JSONL transcripts as `dummyindex usage`, but stays
-stdlib-only so the `context` layer never imports the `usage` domain
-(CONVENTIONS §2 layering). These numbers are a heuristic gate, so this does
-NOT replicate usage's cross-transcript dedup — a per-file sum is sufficient.
+Coarse signals (output tokens, subagents, turns) decide whether to nudge a
+handoff. Same JSONL as `dummyindex usage`, but `context` never imports `usage`
+(CONVENTIONS §2 layering), and a per-file sum replaces its cross-transcript
+dedup: these numbers are only a heuristic gate.
 """
 
 from __future__ import annotations
@@ -28,18 +26,11 @@ _EDIT_TOOL_NAMES: frozenset[str] = frozenset({"Edit", "Write", "NotebookEdit"})
 class SessionSignal:
     """Coarse signals about the current session, read from its transcript.
 
-    ``edited_paths`` are the file paths of every Write/Edit/NotebookEdit
-    tool_use in the session — the gate uses them to tell whether THIS session
-    plausibly caused source drift (vs inheriting it). Defaulted to ``()`` so a
-    pre-attribution ``SessionSignal(...)`` construction stays valid.
-
-    ``subagent_file_count`` is the count of subagent transcript files (the
-    handoff-nudge heuristic in ``nudge.is_significant``). ``subagent_edit_count``
-    is the count of Edit/Write/NotebookEdit tool-uses found *inside* those
-    subagent transcripts — the source-drift signal the gate keys on, so a
-    read-only research fan-out (subagent files but no edits) doesn't trip a
-    spurious block. Defaulted to ``0`` so a pre-attribution construction stays
-    valid.
+    ``edited_paths``: deduplicated Write/Edit/NotebookEdit paths from the main
+    transcript, telling whether THIS session plausibly caused source drift.
+    ``subagent_file_count`` feeds ``nudge.is_significant``; ``subagent_edit_count``
+    counts edits inside subagent transcripts, so a read-only fan-out doesn't trip
+    the drift gate. Defaults keep pre-attribution constructions valid.
     """
 
     output_tokens: int
@@ -97,16 +88,11 @@ def _subagent_file_count(main_transcript: Path) -> int:
 def _subagent_edit_count(main_transcript: Path) -> int:
     """Count Edit/Write/NotebookEdit tool-uses across every subagent transcript.
 
-    A ``/dummyindex-build``-style run does its edits *inside* subagents
-    (``<transcript>/subagents/agent-*.jsonl``), whose assistant envelopes are
-    structurally identical to the main transcript — a top-level ``{"type":
-    "assistant", "message": {"content": [...]}}`` with the same ``tool_use``
-    blocks — so the edits are parsed with the very same :func:`_edited_paths_in`
-    helper. Counting *edits* (not the bare presence of subagent files) lets a
-    read-only research fan-out pass without tripping the source-drift gate.
-
-    Best-effort: a missing dir, an unreadable file, or a partial line yields
-    whatever was counted so far.
+    A ``/dummyindex-build`` run edits inside subagents
+    (``<transcript>/subagents/agent-*.jsonl``), whose assistant rows match the
+    main transcript's shape, so :func:`_edited_paths_in` parses them. Counting
+    edits, not files, lets a read-only fan-out pass the source-drift gate.
+    Best-effort: bad lines and unreadable files are skipped.
     """
     d = _subagent_dir(main_transcript)
     if not d.is_dir():

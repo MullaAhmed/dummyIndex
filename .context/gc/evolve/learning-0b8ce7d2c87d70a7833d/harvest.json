@@ -1,0 +1,11 @@
+{
+  "items": [
+    {
+      "citation": ".context/gc/closeouts/audit-upgrade-path-for-existing-repos-on-older-dummyindex-versions.json",
+      "kind": "accepted_learning",
+      "source": "closeout:audit:upgrade-path-for-existing-repos-on-older-dummyindex-versions:6ff11bd64d849a1a2166dc45a921d26fc6ce9af75aebba248a980e3824feed4c",
+      "summary": "Review accepted closeout knowledge for one narrow convention update"
+    }
+  ],
+  "since": null
+}

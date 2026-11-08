@@ -1,19 +1,10 @@
 """Behaviour for the `features/graph.html` scan viewer.
 
-Zero dependencies, on purpose. The previous viewer pulled D3 from a CDN and
-`fetch()`ed `graph.json`, which meant it only worked online *and* only when
-served — opening the file printed an error telling you to go start a web
-server. A scan is something you glance at; anything that stands between the
-double-click and the map defeats it. So: no CDN, no fetch, no build step.
-The data is inlined into the document and the layout is ~40 lines of
-arithmetic instead of a physics simulation.
-
-Deterministic layout beats force-directed here for the same reason the
-artifact is capped at 60 nodes: a curated map has an intended reading
-order, and a simulation destroys it by scattering the nodes differently on
-every load. Nodes flow left to right through four tiers — what triggers
-work, what runs it, what it can call, what it stores or reaches out to —
-and `group` stacks related nodes into a labelled column within its tier.
+Zero dependencies — no CDN, fetch or build step — so the map opens offline on a
+double-click. Layout is deterministic arithmetic, not a force simulation: a curated
+map has an intended reading order that a per-load scatter would destroy. Nodes flow
+left to right through four tiers (trigger → logic → capability → data), and `group`
+stacks related nodes into a labelled column within its tier.
 """
 
 from __future__ import annotations

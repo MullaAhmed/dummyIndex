@@ -8,21 +8,14 @@ from __future__ import annotations
 
 SCHEMA_VERSION = 1
 
-# `features/graph.json` has its own lineage. v1 was a denormalized dump of the
-# whole extraction (folder → file → class → method → feature → flow): on a
-# mid-size repo that is ~4k nodes / ~8k edges — complete, and unreadable. v2 is
-# the *curated scan*: a small map a teammate can hold in their head, seeded
-# deterministically from features/flows and then rewritten by the authoring
-# council stage (`skills/council/58-codebase-scan.md`). Bumped independently of
-# SCHEMA_VERSION so feature.json / flow.json / INDEX.json stay on v1.
+# `features/graph.json` (the curated scan, a small readable map seeded from
+# features/flows and rewritten by `skills/council/58-codebase-scan.md`) is
+# versioned independently so feature.json / flow.json / INDEX.json stay on v1.
 SCAN_SCHEMA_VERSION = 2
 
-# Caps. These are the whole point of the artifact — a map that cannot exceed
-# them is a map that stays readable. The seed enforces them by construction;
-# `scan.validate` enforces them on the model-authored rewrite. Doubled from
-# 60/120 by the graph-consumption upgrade (proposal A3): the ranked seed aims
-# at 40-80 nodes, and the hard cap leaves the council headroom to promote the
-# AI surface without cutting the business logic.
+# Caps keep the map readable: the seed meets them by construction and
+# `scan.validate` enforces them on the model rewrite. The seed aims at 40-80
+# nodes; the cap leaves the council headroom to promote the AI surface.
 MAX_SCAN_NODES = 120
 MAX_SCAN_EDGES = 240
 MAX_TOP_MODELS = 3
@@ -36,9 +29,8 @@ MAX_NODE_SUB = 40
 MAX_EDGE_LABEL = 24
 MAX_NODE_DETAIL = 200
 MAX_NODE_SOURCE_REF = 120
-# A `symbolRef` is a `features/symbol-graph.json` node id (or, once the
-# community roll-up lands, a `graph-communities.json` community id) — same
-# budget as a source ref.
+# A `symbolRef` is a `features/symbol-graph.json` node id or a
+# `graph-communities.json` community slug — same budget as a source ref.
 MAX_NODE_SYMBOL_REF = 120
 MAX_NODE_GROUP = 24
 MAX_PROJECT_NAME = 48
@@ -65,27 +57,13 @@ _MERGE_END = "<!-- dummyindex:merged:end -->"
 # Maximum docs.md entries per feature.
 _FEATURE_DOCS_TOP_N = 10
 
-# Sentinel file the placement ops (`scaffold_feature` / `assign_files`) drop
-# into a feature folder to flag "placed during a reconcile, still owes council
-# (re-)enrichment". The reconcile report surfaces these as
-# `awaiting_enrichment`; `reconcile-stamp` refuses to advance the anchor while
-# any remain (overridable with --force); `mark-enriched` clears one.
-#
-# Tracked (NOT gitignored) so it survives a session restart — restart-safe
-# reconcile is the whole point: a feature scaffolded then abandoned mid-pass
-# must still be visible as "needs enrichment" in the next session. It can't be
-# inferred from confidence (a scaffold output is non-`community-*` + EXTRACTED,
-# which a renamed-then-skipped trivial feature is NOT — rename flips to
-# INFERRED — but the signal is indirect and would drift if rename semantics
-# changed). An explicit marker is unambiguous and self-documenting.
+# Sentinel from `scaffold_feature`/`assign_files`: placed in a reconcile, still owes
+# council enrichment. Reported as `awaiting_enrichment`, blocks `reconcile-stamp`
+# (unless --force), cleared by `mark-enriched`. Tracked so an abandoned pass stays
+# visible next session; explicit because confidence is too indirect a signal.
 PENDING_ENRICHMENT_MARKER = ".pending-enrichment"
 
-# Section names `merge_feature` will accept for `--as-section`. Anything
-# outside this set is rejected to prevent ad-hoc audit files (e.g. the
-# `noise-absorbed.md` pattern observed in prior consolidation passes,
-# where 21 parser-artifact features were glued into unrelated parents
-# under an invented section name that no reader ever looked at).
-#
-# Extending the set is a deliberate spec change — update
-# `dummyindex/skills/council/18-filter-trivial.md` at the same time.
+# Section names `merge_feature` accepts for `--as-section`; anything else is
+# rejected so merges can't invent ad-hoc section files nobody reads. Extending
+# it is a spec change — update `dummyindex/skills/council/18-filter-trivial.md`.
 _VALID_MERGE_SECTIONS = frozenset({"supporting"})

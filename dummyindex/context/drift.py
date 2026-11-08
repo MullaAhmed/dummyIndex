@@ -1,26 +1,10 @@
-"""Drift detection — the SessionStart "refresh" signal.
+"""Drift detection — the SessionStart "refresh" signal behind ``context plan-update``.
 
-This is the engine behind ``dummyindex context plan-update``: the
-SessionStart hook prints the result to stdout, Claude Code appends it
-to the running session's system prompt, and the agent decides what to
-reconcile.
-
-Two complementary signals, *augmented* — neither replaces the other:
-
-1. **mtime drift** (always on) — source files whose mtime is newer than
-   the ``.context/features/<id>/`` docs describing them. Heuristic-decay:
-   as soon as the agent edits ``features/<id>/plan.md`` its mtime updates
-   and the signal goes quiet for that feature. No explicit stamp needed —
-   file mtimes are the stamp. This is what keeps per-feature prose honest
-   without forcing a council pass on every one-doc edit.
-2. **commit-anchored signals** (when the index has an anchor) — the two
-   things mtime structurally *cannot* see: ``unassigned_new_files`` (added
-   files owned by no feature) and ``awaiting_enrichment`` (features a
-   reconcile placed but didn't enrich). These come from the reconcile
-   report (``meta.indexed_commit``..HEAD); off-git, ``unassigned`` is empty
-   (it needs a git diff) but ``awaiting_enrichment`` still works (it scans
-   committed markers). They clear only on ``reconcile-stamp``, so they nudge
-   the session toward the reconcile procedure rather than a one-off doc edit.
+1. mtime drift (always on): source newer than its ``features/<id>/`` docs. Editing a
+   feature doc quiets it, so prose stays honest without a council pass per edit.
+2. Commit-anchored signals from the reconcile report, which mtime cannot see:
+   unassigned new files (git only) and committed-modification features clear on
+   ``reconcile-stamp``; awaiting-enrichment markers clear on ``mark-enriched``.
 """
 
 from __future__ import annotations
@@ -42,10 +26,8 @@ from dummyindex.context.build.reconcile import (
 from dummyindex.context.domains.drift_acks import read_acks
 from dummyindex.pipeline.io.detect import detect
 
-# Feature docs whose mtime is compared against the source mtime. If any
-# of them is newer than the source, the feature is considered "fresh"
-# for that file. We check the union (max mtime) — the agent may have
-# updated security.md but not architecture.md; either counts.
+# Feature docs compared against source mtime. The newest one counts (the agent
+# may update security.md but not architecture.md), including legacy names.
 _FEATURE_DOC_NAMES: tuple[str, ...] = (
     "spec.md",
     "plan.md",
@@ -71,23 +53,11 @@ class DriftRow:
 class DriftReport:
     """Result of a drift scan.
 
-    ``rows`` is the mtime signal (stale per-feature docs) — always the
-    *renderable* rows: files whose bytes match their doc-basis snapshot are
-    suppressed (history-moved noise) and acked rows are dismissed, so neither
-    appears here. ``unassigned_new_files`` and ``awaiting_enrichment`` are the
-    commit-anchored signals (empty off-git for the former).
-    ``drifted_features`` is the commit-anchored signal mtime structurally
-    cannot see on an anchored repo: features owning files that were modified
-    and committed since the index was reconciled (clears only on
-    ``reconcile-stamp``). All four default empty, so a pre-augment
-    ``DriftReport(rows=...)`` keeps comparing equal.
-
-    The two counters are informational, never rendered as drift:
-    ``suppressed_count`` counts distinct source files whose current blob sha
-    equals their doc-basis entry (the stamp declared the docs fresh at those
-    bytes — an mtime newer than the docs is then a git-op artefact), and
-    ``acked_count`` counts rows dropped by a still-valid
-    ``context drift-ack`` dismissal. Both default 0 for back-compat.
+    ``rows``: renderable mtime rows (basis-matched files suppressed, acked rows
+    dropped). Commit-anchored: ``unassigned_new_files`` (empty off-git),
+    ``awaiting_enrichment``, ``drifted_features`` (features whose files were
+    committed since reconcile). Counters, never drift: ``suppressed_count`` (distinct
+    files whose blob sha equals their doc-basis entry), ``acked_count`` (``drift-ack``).
     """
 
     rows: tuple[DriftRow, ...]
@@ -116,18 +86,11 @@ class DriftReport:
 def compute_badge(report: DriftReport) -> str:
     """Map a ``DriftReport`` to a short statusline badge string.
 
-    Pure: no filesystem I/O, no side effects — it only renders the report's
-    drift state. The badge cache is written at the CLI boundary, not here.
-
-    Returns ``"[ctx ✓]"`` when the report shows no drift, otherwise a
-    **labeled** count so users can act on what they see instead of one
-    undifferentiated number: ``[ctx: E edited · A anchored]`` where ``E`` is
-    the distinct edited source files and ``A`` is the anchored items — the
-    unassigned new files plus awaiting-enrichment features plus committed-
-    modification features. ``drifted_features`` is de-duplicated against the
-    mtime ``by_feature()`` keys so a feature already named by an mtime row
-    isn't counted twice. Zero segments are omitted; only-anchored renders as
-    ``[ctx: N anchored]``, only-edited as ``[ctx: N edited]``.
+    Pure; the CLI boundary writes the badge cache. No drift → ``"[ctx ✓]"``; else a
+    labeled count ``[ctx: E edited · A anchored]``: ``E`` = distinct edited source
+    files, ``A`` = unassigned new files + awaiting-enrichment features +
+    ``drifted_features`` not already named by an mtime row. Zero segments are
+    omitted (``[ctx: N edited]``, ``[ctx: N anchored]``).
     """
     if not report.has_drift:
         return "[ctx ✓]"
@@ -152,16 +115,11 @@ def compute_badge(report: DriftReport) -> str:
 def compute_drift(project_root: Path) -> DriftReport:
     """Scan ``project_root`` for source files newer than their feature docs.
 
-    Per-row basis classification runs before the mtime heuristic: when
-    ``cache/doc-basis.json`` (written by ``reconcile-stamp``) has an entry for
-    a (feature, file) pair, the sha decides — equal means the history merely
-    moved under the index (suppressed, never rendered); different is a real
-    edit since the docs were declared fresh. The fallback chain is basis →
-    manifest sha → legacy mtime-only; absent both, the conservative direction
-    wins and the row stays. Still-valid ``drift-ack`` entries drop their rows
-    last. Returns an empty report when ``.context/features/`` is missing,
-    when no source file is mapped to a feature, or when every feature
-    doc is at least as recent as its members' source files.
+    Per (feature, file): a ``cache/doc-basis.json`` sha decides first (equal: git
+    history moved under the index, suppressed; different: real edit), then the
+    manifest sha, then mtime alone; unreadable bytes fall through (report on doubt).
+    Valid ``drift-ack`` entries drop rows last. ``rows`` is empty when ``features/``
+    is missing, no file maps to a feature, or no source is newer than its docs.
     """
     project_root = project_root.resolve()
     context_dir = project_root / ".context"
@@ -169,8 +127,8 @@ def compute_drift(project_root: Path) -> DriftReport:
     if not features_dir.is_dir():
         return DriftReport(rows=())
 
-    # Commit-anchored signals (empty off-git / no-anchor; awaiting still works
-    # off-git since it scans committed markers, not a diff). Computed once.
+    # Commit-anchored signals, computed once (awaiting works off-git: it scans
+    # markers, not a diff).
     reconcile = compute_reconcile_report(context_dir, project_root)
 
     file_to_features = _build_file_feature_map(features_dir)
@@ -189,10 +147,7 @@ def compute_drift(project_root: Path) -> DriftReport:
         for raw in files_dict.get(ftype, []) or []:
             source_paths.append(Path(raw))
 
-    # Content truth, tiered: a doc-basis entry (stamp-time blob sha) decides
-    # for its (feature, file) pair; otherwise the manifest sha256 cross-check
-    # applies; absent both, legacy mtime-only behaviour stands. Absent or
-    # unreadable caches degrade to empty maps → conservative report.
+    # Absent or unreadable caches degrade to empty maps → conservative report.
     manifest_shas = _manifest_shas(context_dir)
     doc_basis = _read_doc_basis(context_dir)
     ack_entries = read_acks(context_dir)
@@ -268,13 +223,10 @@ def compute_drift(project_root: Path) -> DriftReport:
 def render_drift_summary(report: DriftReport) -> str:
     """Build the markdown body the SessionStart hook prints to stdout.
 
-    Empty when ``report`` has no drift — caller should suppress output.
-    Renders up to four sections: stale per-feature docs (mtime), net-new
-    unplaced files, features awaiting enrichment, and features with committed
-    modifications (the latter three from the commit anchor). Compact — one
-    entry per line — so it stays cheap in tokens. ``drifted_features`` is
-    de-duplicated against the mtime ``by_feature()`` keys so a feature already
-    named by the mtime section isn't printed again.
+    Empty when ``report`` has no drift (caller suppresses output). Up to four
+    compact sections: mtime-edited docs, unplaced new files, awaiting enrichment,
+    committed modifications. A drifted feature already named by the mtime section
+    isn't repeated.
     """
     if not report.has_drift:
         return ""
@@ -309,10 +261,8 @@ def render_drift_summary(report: DriftReport) -> str:
 def _collapse_blank_runs(lines: list[str]) -> list[str]:
     """Collapse any run of ≥2 blank lines to one.
 
-    The header and each section contribute their own spacing, so a
-    signals-only report (no mtime section between the header and the first
-    subheader) would otherwise emit two consecutive blanks. Collapsing keeps
-    the raw markdown the agent reads tidy regardless of which sections fire.
+    Sections add their own spacing, so a report without the mtime section would
+    otherwise emit two consecutive blanks after the header.
     """
     out: list[str] = []
     for line in lines:
@@ -325,20 +275,16 @@ def _collapse_blank_runs(lines: list[str]) -> list[str]:
 def _render_mtime_section(report: DriftReport) -> list[str]:
     """The edited-since-docs section (mtime signal, heuristic-decay).
 
-    The rows are the *edited* class only — basis-matched noise was already
-    suppressed at scan time, so this section opens with its own header
-    (``### Edited since docs``) and, when suppression fired, a one-line note
-    saying how many files were held back.
+    Rows are the edited class only (basis-matched noise was suppressed at scan
+    time); a one-line note counts suppressed files when any were held back.
     """
     grouped = report.by_feature()
     feature_count = len(grouped)
     # Count distinct files, not (feature, file) rows — a file owned by several
     # features contributes one row each and would otherwise inflate the count.
     file_count = len({r.rel_path for r in report.rows})
-    # The doc list below is intentionally forward-only (v0.14 names). A
-    # pre-reshape `.context/` whose legacy docs (architecture.md, …) are still
-    # on disk is detected by `_FEATURE_DOC_NAMES` above; the nudge just points
-    # at the names the session should be writing now.
+    # The nudge names only current docs; legacy ones (architecture.md, …) still
+    # count toward freshness via `_FEATURE_DOC_NAMES`.
     lines = [
         "### Edited since docs",
         "",
@@ -455,9 +401,8 @@ def _iter_feature_files(payload: dict) -> Iterable[str]:
 def _newest_doc_mtime(feature_dir: Path) -> float:
     """Return the max mtime across the feature's prose docs.
 
-    Returns 0 when the feature folder has no scaffolded docs yet — in
-    that state every source change is drift, which is the correct
-    signal: the feature hasn't been authored.
+    Returns 0 when no docs are scaffolded yet, so every source change is drift:
+    the feature hasn't been authored.
     """
     newest = 0.0
     for name in _FEATURE_DOC_NAMES:
@@ -472,10 +417,9 @@ def _newest_doc_mtime(feature_dir: Path) -> float:
 def _manifest_shas(context_dir: Path) -> dict[str, str]:
     """Repo-relative path → sha256 from ``cache/manifest.json``.
 
-    Empty when the manifest is absent or unreadable — the cross-check then
-    becomes a no-op (legacy mtime-only behaviour), never a crash. The manifest
-    is the only content-true staleness oracle; the commit anchor tracks
-    reconciliation and mtime is a heuristic nudge.
+    Empty when the manifest is absent or unreadable, so the cross-check is a no-op
+    (mtime only), never a crash. The manifest is the only content-true staleness
+    oracle; the commit anchor tracks reconciliation and mtime is a nudge.
     """
     try:
         manifest = read_manifest(context_dir)
@@ -489,11 +433,9 @@ def _manifest_shas(context_dir: Path) -> dict[str, str]:
 def _read_doc_basis(context_dir: Path) -> dict[str, dict[str, str]]:
     """Feature id → {rel_path: blob sha} from ``cache/doc-basis.json``.
 
-    Mirrors :func:`_manifest_shas`' corrupt tolerance: absent file, bad JSON,
-    wrong shape, or a ``basis_version`` this build doesn't speak all degrade
-    to ``{}`` — the basis tier switches off and classification falls back to
-    manifest → mtime, never a crash. Only written by ``reconcile-stamp``, so
-    its absence simply means "no stamp since the feature existed".
+    An absent file, bad JSON, wrong shape or unknown ``basis_version`` degrades to
+    ``{}`` (classification falls back to manifest → mtime), never a crash. Only
+    ``reconcile-stamp`` writes it, so absence means "no stamp yet".
     """
     path = context_dir / DOC_BASIS_REL
     if not path.exists():
@@ -528,12 +470,10 @@ def _drop_acked_rows(
 ) -> tuple[list[DriftRow], int]:
     """Drop rows covered by a still-valid ack; return (kept rows, dropped count).
 
-    An ack matches a row when the feature id matches, the entry's ``path`` is
-    unset (feature-wide) or equals the row's path, and the file's current sha
-    still equals ``acked_sha`` — any edit changes the sha and auto-expires the
-    dismissal. On-git acks carry git blob shas, off-git ones content sha256;
-    ``sha_resolver`` maps a repo-relative path to the tuple of current shas in
-    both flavors (empty when the file is unreadable → never suppress).
+    An ack matches on feature id, ``path`` (unset = feature-wide) and a current sha
+    equal to ``acked_sha``, so any edit expires it. Acks carry git blob shas on-git,
+    content sha256 off-git; ``sha_resolver(rel)`` returns both, or ``()`` for an
+    unreadable file (never suppressed).
     """
     if not rows or not ack_entries:
         return rows, 0
@@ -558,10 +498,8 @@ def _drop_acked_rows(
 def _content_unchanged(src: Path, manifest_sha: str | None) -> bool:
     """True when ``src``'s current sha256 matches its manifest entry.
 
-    A match means the bytes are identical to the last build — an mtime newer
-    than the docs is then a git-operation artefact, not real drift. Returns
-    ``False`` (keep the row) when there's no manifest entry or the file can't
-    be hashed, so the conservative direction (report) wins on any doubt.
+    A match means an mtime newer than the docs is a git-operation artefact. No
+    manifest entry or an unhashable file returns ``False``: on doubt, report.
     """
     if not manifest_sha:
         return False

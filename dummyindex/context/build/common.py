@@ -1,8 +1,7 @@
 """Shared build-lifecycle helpers used by ``runner`` and ``enriched_refresh``.
 
-These are private-to-package (``_``-prefixed) helpers extracted so the
-non-destructive refresh path (``enriched_refresh``) can reuse them without
-reaching into ``runner``'s private surface. Both modules import from here.
+They live here so the non-destructive refresh can reuse them without reaching into
+``runner``'s private surface.
 """
 
 from __future__ import annotations
@@ -84,16 +83,10 @@ def collect_doc_paths(
 ) -> list[Path]:
     """Gather every doc path the catalog should consider.
 
-    Sources, in order:
-
-    1. Files classified as DOCUMENT or PAPER by ``detect`` (covers
-       in-repo markdown, html, txt, pdf, and converted office sidecars).
-    2. Default in-repo doc locations missed by detection's hidden-dir
-       pruning (e.g. ``.changeset``, hidden ADR folders) — picked up via
-       ``discover_default_doc_paths``.
-    3. Any ``extra_doc_roots`` passed via ``--docs``, walked for doc-like
-       extensions.
-
+    Sources: files ``detect`` classed as DOCUMENT or PAPER; default in-repo doc locations
+    that detection's hidden-dir pruning misses (e.g. ``.changeset``, via
+    ``discover_default_doc_paths``); and ``extra_doc_roots`` (``--docs``), walked for
+    doc-like extensions. Project instruction files are dropped from every source.
     Returns absolute, deduplicated, sorted paths.
     """
     paths: dict[str, Path] = {}
@@ -151,14 +144,11 @@ def newest_mtime(paths: list[Path]) -> float | None:
 def normalize_written_eof_newlines(
     context_dir: Path, rel_paths: Sequence[str]
 ) -> tuple[str, ...]:
-    """Post-write hygiene pass: every artifact a build wrote must end with
-    exactly one newline (pre-commit's ``end-of-file-fixer`` contract).
+    """Post-write hygiene: every artifact a build wrote ends with exactly one newline.
 
-    Domain writers own their *content*; the build boundary owns byte-level
-    hygiene, so a writer outside this package can never re-introduce a
-    lint-failing artifact into the committed tree. Skips paths that don't
-    exist (a writer may have failed non-fatally) and binary/empty files
-    (handled inside :func:`normalize_eof_newline`). Returns the rel paths
+    That is pre-commit's ``end-of-file-fixer`` contract; the build boundary owns it so a
+    writer elsewhere can never commit a lint-failing artifact. Skips missing paths (a
+    writer may have failed non-fatally) and binary/empty files. Returns the rel paths
     that were rewritten.
     """
     fixed: list[str] = []
@@ -175,12 +165,10 @@ def normalize_written_eof_newlines(
 def cache_dir_override(target: Path) -> Iterator[None]:
     """Point ``pipeline.io.cache.cache_dir()`` at ``target`` for the block.
 
-    Routes through the **trusted in-process** channel
-    (:func:`set_trusted_cache_dir`), NOT the ambient ``DUMMYINDEX_CACHE_DIR``
-    env var. ``cache_dir()`` confines the env var to the repo root and would
-    silently reject an out-of-repo value; this internal override targets the
-    in-repo ``.context/cache/`` and must be honored unconditionally, so it does
-    not flow through that confinement path (and never mutates the user's env).
+    Uses the **trusted** in-process channel (:func:`set_trusted_cache_dir`), NOT the
+    ``DUMMYINDEX_CACHE_DIR`` env var: ``cache_dir()`` confines that env var to the repo
+    root and silently rejects an out-of-repo value, while this internal override must be
+    honored unconditionally. It never mutates the user's env.
     """
     saved = cache_module._TRUSTED_CACHE_DIR
     cache_module.set_trusted_cache_dir(target.resolve())

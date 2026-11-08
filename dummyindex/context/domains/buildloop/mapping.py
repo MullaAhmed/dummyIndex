@@ -1,37 +1,10 @@
 """Map one checklist item to the best-fit equipment item.
 
-Deterministic keyword overlap, no LLM. A capability is a single abstract
-word (``implement``, ``test``, ``review``) — but a real implementation task
-describes *what* to build and never says "implement". So we expand each
-capability through a **lexicon** of trigger keywords (keyed off the
-:class:`Capability` enum, the single-source alphabet) before scoring.
-
-For a checklist item's text we tokenise it, then for every equipment item we
-score how many of its lexicon-expanded ``capabilities`` tokens (plus its raw
-``name`` tokens) appear in the item text.
-
-Selection is **item-kind aware**: the stack implementer is the default owner
-of checklist work. A specialist (non-implement-capable entry) only wins with
-a real margin — its score must reach ``_SPECIALIST_MIN_SCORE`` *and* beat
-the best implement-capable entry's score — so a single incidental token
-("review-ready", "comment added") never re-routes implementation work. The
-item's **leading token is its verb**: when it belongs to a specialist's
-capability lexicon ("Review …", "Test …") that specialist gets a +1 kind
-bonus, which is how genuinely review-/test-kind items reach their
-specialist even at low overlap. Ties go to the implementer; among
-specialists, manifest order breaks ties (stable).
-
-When nothing scores, we don't immediately fall back: if the manifest carries
-an implement-capable item, the work *is* implementation, so we route there
-(``fallback=False``). Only when the manifest is empty — or has items but no
-implement-capable one — do we return a fallback ``Choice`` (``equipment_name
-=None`` / ``fallback=True``), which the caller renders as ``general-purpose``.
-
-The equipment manifest is parsed by the CLI (boundary IO) and passed in as
-a sequence of plain dicts shaped like Slice B's ``equipment.json`` items
-(``{"name": ..., "capabilities": [...]}``). The CLI also pre-filters the
-pool to Task-dispatchable entries (kind ``agent``); this module never
-touches the filesystem.
+Deterministic keyword overlap, no LLM. Real tasks say what to build, never
+"implement", so each capability expands through a lexicon of trigger words; an
+entry scores the overlap of those words and its name tokens with the item text
+(selection rules: ``map_task_to_equipment``). The CLI passes in the parsed,
+``agent``-only ``equipment.json`` entries; this module never touches the filesystem.
 """
 
 from __future__ import annotations
@@ -50,16 +23,10 @@ _TOKEN_RE = re.compile(r"[a-z0-9]+")
 # incidental token is noise, not a routing signal.
 _SPECIALIST_MIN_SCORE = 2
 
-# Trigger keywords per capability, keyed off the `Capability` enum so the
-# capability alphabet stays single-source (the equip domain owns it). Each set
-# expands one abstract capability word into the concrete verbs/nouns a real
-# checklist item uses to describe that kind of work. Matching is EXACT per
-# token — there is NO stemmer — so include the inflected forms tasks actually
-# write (`build` AND `builds`/`constructs`/`registers`), not just the stem.
-# Keep generic words (`copy`, `polish`, `tone`) OUT — they'd defeat the
-# honest-fallback path. (`comment` was dropped from DOCS: it fires on code
-# items — "comment added (reads.py:42)" — far more than on docs work.)
-# Stdlib-only, deterministic.
+# Trigger keywords per capability, keyed off the equip-owned `Capability` enum.
+# Matching is EXACT per token (no stemmer), so list the inflected forms tasks
+# write (`build`, `builds`). Keep generic words (`copy`, `polish`, `tone`, and
+# `comment`, which fires on code items) OUT: they defeat the honest fallback.
 _CAPABILITY_LEXICON: Mapping[Capability, frozenset[str]] = {
     Capability.IMPLEMENT: frozenset(
         {
@@ -319,10 +286,8 @@ def _score(
     """Token overlap (capability lexicon + raw name tokens), plus a +1 kind
     bonus when the item's leading verb belongs to this entry's lexicon.
 
-    The bonus is only granted to specialists (``kind_bonus=True``): it exists
-    to let a genuinely review-/test-kind item ("Review …", "Test …") reach
-    its specialist — the implementer is the default owner and granting it the
-    bonus would only raise the specialists' bar.
+    Only specialists get the bonus (``kind_bonus=True``): the implementer is the
+    default owner, and boosting it would only raise the specialists' bar.
     """
     keywords = _capability_keywords(entry)
     match_toks = set(keywords)
@@ -367,17 +332,11 @@ def map_task_to_equipment(
 ) -> Choice:
     """Pick the equipment item whose capabilities best match ``item_text``.
 
-    Returns a ``Choice``. Scoring expands each item's capabilities through the
-    capability lexicon (plus its name tokens) and counts the overlap with the
-    item text; the item's leading verb adds a +1 kind bonus to entries whose
-    lexicon contains it. The best implement-capable entry is the default
-    owner: a specialist only wins by scoring >= ``_SPECIALIST_MIN_SCORE``
-    *and* strictly outscoring it (ties go to the implementer; specialist ties
-    break on manifest order). Without any implement-capable entry the highest
-    positive scorer wins; only an empty/never-matching specialist-only
-    manifest yields a fallback choice (``equipment_name=None``,
-    ``fallback=True``). ``grounding`` is threaded through verbatim — the CLI
-    supplies the proposal's spec/plan/conventions paths.
+    The best implement-capable entry wins, even at score 0, unless a specialist
+    scores >= ``_SPECIALIST_MIN_SCORE`` and strictly more (ties go to the
+    implementer; equal specialists keep manifest order). With no implementer the
+    best positive scorer wins, else a fallback ``Choice`` (``equipment_name=None``,
+    ``fallback=True``). ``grounding`` is passed through verbatim.
     """
     item_toks = _tokens(item_text)
     leading = _leading_token(item_text)

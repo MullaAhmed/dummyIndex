@@ -1,29 +1,10 @@
 """`dummyindex install` — copy the skill tree + auto-init the project.
 
-Extracted from ``dummyindex/__main__.py`` (and, in a later wave, split out of
-a single ``install.py`` module) so the entrypoint stays a thin dispatcher.
-Split by concern:
-
-- ``orchestrate.py``    — the `install()` function itself
-- ``family_write.py``   — the unconditional real-tree write path for one
-  skill family (`_install_skill_family`, `_symlinked_skill_install_directory`)
-- ``link_dispatch.py``  — the AUTO/LINK/COPY link-mode dispatch helpers
-  `install()` calls into (stamp comparison, sibling backfill, report lines)
-- ``project_init.py``   — the auto-init / project-init helpers (`.context/`
-  build, Claude/Codex guidance, hooks, default-plugins)
-
-Public surface (kept stable for ``installer/__init__.py``, ``repair.py``, and
-tests — every name below is imported by at least one of those):
-
-``run_link_install`` is re-exported here (not merely used internally) for a
-second reason beyond the usual public surface: `orchestrate.py`'s `install()`
-calls it through this very module object (``import
-dummyindex.installer.install as _install_pkg`` + ``_install_pkg.
-run_link_install(...)``), not as a bare name, so a test that monkeypatches
-``dummyindex.installer.install.run_link_install`` observes the patch. See
-`orchestrate.py`'s module docstring for the full explanation. The same
-applies to `_install_project_hooks`, called the same way from
-`project_init.py`.
+Modules: ``orchestrate`` (`install()`), ``family_write`` (one family's real-tree
+write), ``link_dispatch`` (AUTO/LINK/COPY helpers and report lines),
+``project_init`` (``.context/`` build, guidance, hooks, default plugins).
+`run_link_install` and `_install_project_hooks` are called through this package
+object, so tests that monkeypatch either name here see the patch.
 """
 
 from __future__ import annotations

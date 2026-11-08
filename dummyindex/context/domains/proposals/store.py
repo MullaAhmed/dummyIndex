@@ -1,13 +1,9 @@
 """Read/write the on-disk ``.context/proposals/<slug>/`` artifact.
 
-Four template files are scaffolded by ``ensure_proposal``:
-
-- ``proposal.json``  — the structured head (``Proposal.to_dict``).
-- ``spec.md``        — intent / contracts / **Acceptance** checklist.
-- ``plan.md``        — ordered tasks naming file paths.
-- ``checklist.md``   — flat ``- [ ]`` list derived from plan + acceptance.
-
-All writes are atomic (tmp + ``replace``). No ``print`` here — the CLI prints.
+``ensure_proposal`` scaffolds ``proposal.json`` (``Proposal.to_dict``), ``spec.md``
+(intent / contracts / **Acceptance**), ``plan.md`` (ordered tasks naming paths) and
+``checklist.md`` (a flat ``- [ ]`` list derived from plan + acceptance). All writes
+are atomic (tmp + ``replace``). No ``print`` here; the CLI prints.
 """
 
 from __future__ import annotations
@@ -31,13 +27,10 @@ _CONSISTENCY_END = "<!-- dummyindex:consistency:end -->"
 
 _SLUG_OK_CHARS = frozenset("abcdefghijklmnopqrstuvwxyz0123456789-_")
 
-# Names of the four scaffolded files, in the order they're created.
-# proposal.json additionally carries an OPTIONAL "routing" object —
-# {"implementer": "<model>", "auditor": "<model>", "decisions": "<model>"}
-# with each value a ModelChoice family alias (see
-# buildloop/routing.py). It is written only on request
-# (`context propose --route k=v` → :func:`set_routing`) and absent by
-# default: absent key = unrouted, never silently defaulted.
+# The four scaffolded files, in creation order. proposal.json may also carry an
+# OPTIONAL "routing" object (implementer/auditor/decisions -> a ModelChoice family
+# alias, see buildloop/routing.py), written only by `context propose --route k=v`
+# (:func:`set_routing`). Absent means unrouted, never silently defaulted.
 _TEMPLATE_FILES = ("proposal.json", "spec.md", "plan.md", "checklist.md")
 
 
@@ -76,7 +69,7 @@ def ensure_proposal(
 ) -> tuple[str, ...]:
     """Create ``.context/proposals/<slug>/`` plus the four template files.
 
-    Returns the repo-relative POSIX paths of the files written. Raises
+    Returns the ``.context``-relative POSIX paths of the files written. Raises
     ``ProposalExistsError`` if the directory exists and ``force`` is False,
     and ``ProposalSlugError`` for an unsafe slug.
     """
@@ -116,19 +109,11 @@ def write_proposal_json(
 ) -> str:
     """Create ``.context/proposals/<slug>/`` and write **only** ``proposal.json``.
 
-    A narrow writer for the doc-migration path. Unlike :func:`ensure_proposal`
-    it does **not** scaffold the template ``spec.md`` / ``plan.md`` /
-    ``checklist.md`` siblings — those would collide with the stray markdown the
-    migration subsequently relocates onto ``spec.md`` / ``plan.md`` (a ``git
-    mv`` onto an existing template file would fail) and an unchecked template
-    ``checklist.md`` would read as in-flight to the hygiene GC. The structured
-    head is written at the given terminal ``status`` (e.g. ``ProposalStatus.DONE``).
-
-    Byte-format is identical to :func:`ensure_proposal`'s ``proposal.json``
-    (``json.dumps(..., indent=2)`` + a trailing ``\\n`` via
-    :func:`write_text_atomic`), so a migrated proposal round-trips through
-    :func:`read_proposal`. Returns the repo-relative POSIX path written. Raises
-    ``ProposalSlugError`` for an unsafe slug.
+    For doc migration: template siblings would block the ``git mv`` of stray
+    markdown onto ``spec.md`` / ``plan.md``, and an unchecked ``checklist.md``
+    would read as in-flight to the hygiene GC. Writes ``status`` in
+    :func:`ensure_proposal`'s byte format (round-trips via :func:`read_proposal`).
+    Returns the ``.context``-relative path; raises ``ProposalSlugError``.
     """
     safe_slug = validate_slug(slug)
     target = proposal_dir(context_dir, safe_slug)
@@ -151,11 +136,10 @@ def read_proposal(context_dir: Path, slug: str) -> Proposal:
 def set_routing(context_dir: Path, slug: str, routing: dict[str, str]) -> None:
     """Record the optional ``routing`` block in ``proposal.json`` (atomic).
 
-    A raw-JSON merge, not a :class:`Proposal` round-trip: the dataclass
-    head has no routing field, so rewriting through it would silently drop
-    the key on the next ``apply_consistency``. Called after scaffolding by
-    ``context propose --route k=v``; values are validated upstream by
-    ``buildloop.routing.parse_route_flags``. An empty dict removes the key.
+    A raw-JSON merge: :class:`Proposal` has no routing field, so a round-trip
+    through it (as in ``apply_consistency``) drops the key; the CLI calls this
+    last. Values are validated upstream by ``buildloop.routing.parse_route_flags``.
+    An empty dict removes the key.
     """
     target = proposal_dir(context_dir, slug) / "proposal.json"
     payload = json.loads(target.read_text(encoding="utf-8"))
@@ -198,7 +182,7 @@ def apply_consistency(context_dir: Path, slug: str, hits: ConsistencyHits) -> Pr
     return updated
 
 
-# ----- templates ------------------------------------------------------------
+# --- templates
 
 
 def _spec_template(title: str) -> str:
@@ -237,7 +221,7 @@ def _checklist_template(title: str) -> str:
     )
 
 
-# ----- consistency block injection ------------------------------------------
+# --- consistency block injection
 
 
 def _consistency_block(hits: ConsistencyHits) -> str:

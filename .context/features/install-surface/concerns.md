@@ -1,4 +1,4 @@
-# Install surface concerns
+## Data integrity
 
 - Ambiguous legacy files stay preserved. A stale stamp or familiar heading cannot prove stock bytes. Operators review survivors; never force ownership.
 - Edited canonical guidance is user content. Updates keep it and may leave a family incomplete. Source warnings stay visible even when CLI and stamp versions match.

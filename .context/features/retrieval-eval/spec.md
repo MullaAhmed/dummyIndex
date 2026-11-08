@@ -23,6 +23,6 @@ The main gate evaluates positive fixtures with `query(..., top_k=3)`, prints MRR
   (`tests/eval/test_retrieval_eval.py:89-109`, `:133-150`).
   Stable expectations concern this frozen index, not live cluster IDs after rebuilds.
 
-## Examples and evidence limits
+## Examples
 
 The committed positive fixture `how does make_app build an App instance` targets `community-0` and `app.py`. The gate checks its rank and cited path. The off-topic Kubernetes fixture must return no matches. `tests/eval/BASELINE.md` is historical rationale for the gate floors, not a new run. These metrics do not establish agent-quality improvement. The model-dependent behavior gate has separate scope and evidence.

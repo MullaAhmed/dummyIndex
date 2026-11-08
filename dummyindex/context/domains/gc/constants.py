@@ -1,11 +1,8 @@
 """Package-private constants for the context-hygiene GC domain.
 
-Tunables and fixed rel-paths that are not closed-alphabet enums. The
-generated-doc roots are *reused* from the domains that own them
-(``proposals``/``audit``) rather than re-declaring the string literals —
-there must be a single source of truth for "where proposals/audits live".
-They are re-exported here under the same names so this module stays
-self-describing as the GC layout reference.
+Tunables and fixed rel-paths that are not enums. The generated-doc roots are
+re-exported from their owning domains (``proposals``/``audit``), so "where
+proposals/audits live" has a single source of truth.
 """
 
 from __future__ import annotations
@@ -35,13 +32,11 @@ DEFAULT_COMMIT_THRESHOLD = 10
 ARCHIVE_SENTINEL = "_archive"
 
 # Committed GC anchor, relative to ``.context/``: holds ONLY the commit sha the
-# last sweep stamped (``{"anchor": sha}``). A new committed ``.context/``
-# artifact; lives apart from reconcile's ``meta.indexed_commit``.
+# last sweep stamped (``{"anchor": sha}``), apart from ``meta.indexed_commit``.
 GC_STATE_REL = "gc/state.json"
 
 # Gitignored per-session fire-once memo, relative to ``.context/``: keyed by
 # session id so a SessionStart nudge is emitted at most once per session.
-# Distinct from the committed anchor above.
 GC_MEMO_REL = "cache/gc-nudge-state.json"
 
 # Proposal/audit older than this many days is recommended for review.

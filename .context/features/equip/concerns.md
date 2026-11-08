@@ -1,7 +1,3 @@
-# Project equipment toolkit — concerns
-
-`confidence: INFERRED`
-
 ## Data integrity
 
 - `dummyindex/context/domains/equip/lifecycle/evolve.py:61-70`, `dummyindex/context/domains/equip/lifecycle/library.py:191-216`, `dummyindex/cli/equip/dispatch.py:607`, `dummyindex/cli/equip/dispatch.py:719` — body written before manifest persist. Manifest-write failure leaves body against old baseline; `status` reads it as user-owned. Inspect both files before retry; exact-once patch text may be stale.

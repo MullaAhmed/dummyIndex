@@ -1,11 +1,9 @@
 """Unit tests for ``domains/docguard/classify.py`` (pure, filesystem-free).
 
 ``classify_doc_path`` / ``group_strays`` reason only over the repo-relative path
-*shape* — these tests build path objects under a synthetic root and never touch
-disk, so every test is ``@pytest.mark.unit``. The matrix mirrors the spec's
-Acceptance: the labelled fixture rows, the location-gate negative controls, the
-managed-location exclusion, slug derivation (awkward + unslug-able), and the
-``(directory, stem)`` pairing / collision behaviour.
+*shape*, so these tests never touch disk. Covers the labelled fixture rows,
+location-gate negative controls, the managed-location exclusion, slug derivation
+(awkward + unslug-able), and ``(directory, stem)`` pairing / collisions.
 """
 
 from __future__ import annotations
@@ -31,7 +29,7 @@ def _classify(rel: str):
     return classify_doc_path(ROOT, ROOT / rel)
 
 
-# ----- labelled fixture matrix (planning rows) ------------------------------
+# --- labelled fixture matrix (planning rows)
 
 
 @pytest.mark.unit
@@ -74,7 +72,7 @@ def test_docs_internal_audits_report_is_audit() -> None:
     assert dc.suggested_home == ".context/audits/2026-06-08-auth-report"
 
 
-# ----- negative controls ----------------------------------------------------
+# --- negative controls
 
 
 @pytest.mark.unit
@@ -120,7 +118,7 @@ def test_non_markdown_is_none() -> None:
     assert dc.kind is DocKind.NONE
 
 
-# ----- managed location -----------------------------------------------------
+# --- managed location
 
 
 @pytest.mark.unit
@@ -138,7 +136,7 @@ def test_context_audit_is_managed() -> None:
     assert dc.in_managed_location is True
 
 
-# ----- containment / errors -------------------------------------------------
+# --- containment / errors
 
 
 @pytest.mark.unit
@@ -147,7 +145,7 @@ def test_path_outside_repo_raises_doc_path_error() -> None:
         classify_doc_path(ROOT, Path("/elsewhere/docs/specs/x-design.md"))
 
 
-# ----- slug derivation ------------------------------------------------------
+# --- slug derivation
 
 
 @pytest.mark.unit
@@ -171,7 +169,7 @@ def test_unsluggable_filename_is_planning_but_has_no_slug() -> None:
     assert dc.suggested_home is None
 
 
-# ----- pairing / grouping ---------------------------------------------------
+# --- pairing / grouping
 
 
 @pytest.mark.unit

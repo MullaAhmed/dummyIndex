@@ -1,27 +1,9 @@
 """Canonicalize tool calls to a signature, then group repeats into patterns.
 
-**The bash/shell-only gate, and why it is extended differently here.**
-headroom's ``loops.py`` strips pagination fragments (``| head -50``) and
-collapses bare integers only for ``tc.name.lower() in ("bash", "shell")``
-(``loops.py:97``), because that normalization is regex surgery on an opaque
-shell-command *string* — safe only where the tool's whole input is free text
-whose pagination syntax is a handful of known shell idioms. Blindly applying
-the same regex to e.g. an ``Edit`` call's ``old_string``/``new_string`` would
-risk collapsing a bare integer that is part of the *content being edited*,
-silently merging two unrelated edits into one "loop".
-
-dummyindex's tools pass **structured JSON inputs**, not opaque strings, so the
-generalization here is schema-aware field-dropping instead of string regex:
-a structured call's signature drops the named pagination fields
-(``offset``, ``limit``, ``head_limit``) — the fields Read/Grep-shaped tools
-use to widen a previous, too-narrow fetch — and keeps every other field
-**verbatim**: not integer-collapsed, not case-folded, not whitespace-folded.
-That handles the extension the spec's callout asks for ("a dummyindex miner
-over Read/Grep/Edit calls would need that gate extended") for every tool
-uniformly, without the bash-only string-regex risk, because the schema says
-which fields are pagination rather than a regex guessing from text.
-Bash/shell keeps the string-regex treatment — its command really is opaque
-text — written independently below rather than copied.
+Like headroom's bash-only gate, only shell commands (opaque text) get regex
+folding: pagination idioms stripped, bare integers collapsed. Structured JSON
+inputs just drop the named pagination fields and keep the rest verbatim, since
+folding them would merge unrelated calls (an integer inside an ``Edit`` string).
 
 **Attribution.** The two-level grouping and the measured-waste idea come from
 headroom (Apache-2.0); see this package's ``__init__.py`` for the full notice
@@ -40,13 +22,10 @@ from .models import RepeatedSignature, ToolCallRecord
 
 _SHELL_TOOL_NAMES = frozenset({"bash", "shell"})
 
-# Structured-input fields that only ever widen/narrow a previous fetch —
-# dropped from the signature so a re-run with a bigger window still groups
-# with the original. Deliberately narrow: an audit found that including the
-# bare names ``n`` and ``count`` silently merged genuinely different calls on
-# unknown/MCP tools, where those names are usually semantic (a query's result
-# count, a mint quantity) rather than a fetch window. Only the three names
-# whose pagination meaning is unambiguous across this tool surface are here.
+# Structured-input fields that only widen/narrow a previous fetch, dropped so a
+# re-run with a bigger window groups with the original. Deliberately narrow:
+# ``n``/``count`` are often semantic on MCP tools (a result count, a quantity),
+# and including them merged genuinely different calls.
 _PAGINATION_FIELDS = frozenset({"offset", "limit", "head_limit"})
 
 # Shell-only pagination idioms. Same technique as headroom's `_PAGINATION_RE`,
@@ -68,19 +47,11 @@ _WHITESPACE_RUN_RE = re.compile(r"\s+")
 def canonical_signature(tool_name: str, input_data: Mapping[str, Any]) -> str:
     """A signature stable across re-fetch/retry variants of the same call.
 
-    Two branches, and the asymmetry is deliberate. A shell command is opaque
-    free text, so it gets the lossy treatment: pagination idioms stripped,
-    bare integers collapsed, whitespace folded, case folded. A structured
-    input is not free text, so it gets none of that — only the named
-    pagination fields are dropped, and the remaining JSON is serialized with
-    sorted keys, which is already deterministic without folding anything.
-
-    An audit caught the earlier version folding case and whitespace across the
-    *whole* serialized JSON, which merged calls that genuinely differ: two
-    Read calls whose paths differ only in case, an Edit whose ``old_string``
-    differs only in spacing, ``git checkout <sha>`` against two shas. It also
-    emitted lower-cased paths that do not exist on a case-sensitive
-    filesystem. Structured fields are now preserved byte-for-byte.
+    Shell commands get the lossy treatment: pagination stripped, bare integers
+    collapsed, whitespace and case folded. Structured inputs only drop the
+    pagination fields and serialize with sorted keys, otherwise byte-for-byte:
+    folding them would merge calls differing only in case or spacing (and emit
+    lower-cased paths that don't exist on case-sensitive filesystems).
     """
     lname = tool_name.strip().lower()
     if lname in _SHELL_TOOL_NAMES:
@@ -117,12 +88,10 @@ def detect_repeated_signatures(
 ) -> tuple[RepeatedSignature, ...]:
     """Group records by canonical signature, within each session first.
 
-    A signature must reach ``min_occurrences`` *within one transcript* to
-    count as a pattern at all (a loop is a within-conversation phenomenon),
-    but once it qualifies in any session its occurrences are pooled across
-    every other qualifying session for the same signature — mirroring
-    headroom's ``detect_loops`` two-level grouping (reimplemented, not
-    copied).
+    A signature must reach ``min_occurrences`` within one transcript to count (a
+    loop is a within-conversation phenomenon); qualifying sessions then pool
+    their occurrences. Mirrors headroom's ``detect_loops`` two-level grouping
+    (reimplemented, not copied).
     """
     pooled: dict[tuple[str, str], list[ToolCallRecord]] = {}
     for session_records in records_by_session:

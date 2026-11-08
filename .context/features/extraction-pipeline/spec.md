@@ -148,7 +148,7 @@ Textual references (build-phase consumer of this backbone):
 
 ## Examples
 
-Happy-path trace — index a two-file Python project:
+Index a two-file Python project:
 
 1. `collect_files(Path("proj"))` globs `proj/**/*.py`, skipping dot-dirs and ignore-matched files. It returns `[proj/auth.py, proj/models.py]`, sorted.
 2. `extract([proj/auth.py, proj/models.py])`:

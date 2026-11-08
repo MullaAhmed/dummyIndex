@@ -25,20 +25,8 @@ from ..link import FamilyLinkClassification, FamilyLinkState, LinkInstallResult
 
 
 def _all_claude_families_missing(base: Path) -> bool:
-    """Whether EVERY one of the 8 enumerated Claude-side family slots (main +
-    `_SIBLING_SKILLS`, never a glob) is entirely absent — a genuinely blank
-    slate, matching the bug's own reproduction (a fresh install with nothing
-    pre-existing on the Claude side at all).
-
-    Gates how narrowly the direct-write loop's MISSING-state deferral
-    applies: skipping the whole `_install_skill_family` call is only safe
-    when nothing would be lost by skipping it. If even one sibling already
-    has a real (possibly unproven) directory — e.g. an old <=0.25.0 partial
-    install with a stale `templates/*.tmpl` twin — that existing content
-    still needs `_install_skill_family`'s own repair/purge pass, so a mixed
-    state keeps today's unconditional-write behavior exactly as it was
-    before this fix.
-    """
+    """Whether no Claude-side family slot (main + `_SIBLING_SKILLS`, never a
+    glob) exists, not even as a dangling symlink."""
     claude_skills_root = base / skills_root_rel("claude")
     family_names = ("dummyindex", *(label for _sub_name, label in _SIBLING_SKILLS))
     return all(
@@ -95,10 +83,8 @@ def _link_state_report_line(
 ) -> str:
     """The --copy-mode report line for a family stuck OURS_DANGLING/MATERIALIZED.
 
-    `create_family_links` is the only place that heals either state (dispatched
-    after `execute_repairs`, under AUTO/LINK); under `--copy` nothing heals
-    them this run, so this line is the entire user-facing signal — never the
-    `mkdir(exist_ok=True)` crash this task fixes, always a named remediation.
+    Only `create_family_links` (AUTO/LINK) heals either state, so under
+    ``--copy`` this line, with a named remediation, is the only signal.
     """
     scope_flag = (
         f"--scope project --dir {base}" if scope == "project" else "--scope user"
@@ -126,15 +112,9 @@ def _agents_family_stamp_state(base: Path, family: str = "dummyindex") -> str:
     """ "missing" | "older" | "equal" | "newer" | "unknown" for the main
     ``.agents/skills/<family>`` version stamp vs the installed package.
 
-    Used only by the ``--platform claude`` narrowing (``codex`` not
-    selected): `plan_repairs`/`execute_repairs` never freshen an
-    out-of-scope `.agents` copy this run, so the link dispatch must
-    independently know whether that copy is provably current before linking
-    onto it. Delegates the parse+compare step to `common.py`'s
-    `_compare_stamp` — the same comparator `repair.py` uses for its own
-    staleness check — rather than duplicating the ordering logic locally;
-    only the "missing" (no stamp file at all) state is decided here, since
-    `_compare_stamp` itself only distinguishes older/equal/newer/unknown.
+    For the ``--platform claude`` narrowing: repair never freshens an
+    out-of-scope ``.agents`` copy, so linking onto it first needs proof that it
+    is current. Only "missing" is decided here; the rest is `_compare_stamp`.
     """
     stamp = _read_stamp(base / skills_root_rel("codex") / family / _VERSION_STAMP_NAME)
     if stamp is None:
@@ -147,14 +127,10 @@ def _claude_narrowing_link_gate(
 ) -> bool:
     """Whether ``--platform claude`` (agents not selected) may link this run.
 
-    Returns ``True`` when linking may proceed as requested. Under strict
-    `LinkMode.LINK`, a refusal prints the CLI-facing message and exits 1
-    directly — this function owns both the gate and its message, matching
-    the strict-mode contract: "no `.agents` family to link to" names
-    ``--platform both``; a newer/unknown stamp also names
-    ``--force-downgrade``. Under `LinkMode.AUTO`, a refusal instead returns
-    ``False`` so the caller falls back to copy mode for the Claude side only
-    — exactly today's `--platform claude` behavior, never a hard failure.
+    Returns ``True`` when linking may proceed. Under strict `LinkMode.LINK` a
+    refusal prints the CLI message and exits 1: a missing ``.agents`` family
+    names ``--platform both``; an older, newer or unknown stamp also names
+    ``--force-downgrade``. Under any other mode a refusal returns ``False``.
     """
     stamp_state = _agents_family_stamp_state(base)
     if stamp_state == "equal":
@@ -184,14 +160,9 @@ def _claude_narrowing_link_gate(
 def _print_link_install_result(base: Path, result: LinkInstallResult) -> None:
     """Print one line per family outcome from a `run_link_install` dispatch.
 
-    ``created`` families had nothing real to convert (a fresh link).
-    ``replaced`` families print the acceptance criterion's "migrated ->"
-    line — whether the prior state was a proven real copy (the forced-
-    migration case), a dangling link, a materialized placeholder, or an
-    absolute-but-correct link being normalized, they are all now the
-    canonical relative link, so one consistent label covers every case
-    `LinkResult.replaced` bundles together (its own docstring: "bare family
-    names, ready to print").
+    ``created`` families print "linked". ``replaced`` families (a proven real
+    copy, a dangling link, a materialized placeholder or a normalized link) are
+    all now the canonical relative link, so one "migrated" label covers them.
     """
     for warning in result.warnings:
         print(f"  {warning}", file=sys.stderr)

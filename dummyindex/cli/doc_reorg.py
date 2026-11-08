@@ -1,14 +1,9 @@
-"""`dummyindex context doc-reorg <action>` — gated in-place doc reorganisation.
+"""`dummyindex context doc-reorg <action>`: gated in-place doc reorganisation.
 
-Actions:
-  guard    exit 0 if the tree is clean, 1 otherwise (the reorg's pre-check).
-  list     print the in-repo docs a reorg would consider (--json for a list).
-  backup   snapshot every doc under .context/_doc_backups/<utc>/ (--json).
-  restore  restore a snapshot: `doc-reorg restore --from <backup-dir>`.
-
-The destructive edits are NOT done here — they happen in the running session via
-the Edit tool, so the user confirms each. This command supplies the safety net:
-refuse-on-dirty, backup, and honest restore.
+Actions: ``guard`` (exit 0 clean, 1 otherwise), ``list`` (docs a reorg would consider),
+``backup`` (snapshot under ``.context/_doc_backups/<utc>/``), ``restore --from <dir>``.
+The destructive edits happen in-session via the Edit tool so the user confirms each;
+this supplies the safety net: refuse-on-dirty, backup and honest restore.
 """
 
 from __future__ import annotations
@@ -75,11 +70,9 @@ def run(args: list[str]) -> int:
         return 0
 
     if action is DocReorgAction.BACKUP:
-        # The reorg is no longer opt-in, so the reversibility gate can no longer
-        # depend on the operator remembering to run `guard` first: a snapshot
-        # taken on a dirty tree would capture already-modified docs as
-        # "originals", and a later `restore` would faithfully reproduce that
-        # dirty state instead of the committed baseline. Refuse instead.
+        # Refuse a dirty tree even without a prior `guard`: snapshotting modified
+        # docs as "originals" would make `restore` reproduce that dirty state
+        # instead of the committed baseline.
         try:
             require_clean_tree(root)
         except DirtyTreeError as exc:

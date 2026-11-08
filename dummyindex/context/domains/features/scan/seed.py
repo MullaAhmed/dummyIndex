@@ -1,21 +1,10 @@
-"""Deterministic backbone for `features/graph.json`.
+"""Deterministic backbone for `features/graph.json`, written at ingest.
 
-`scaffold_features` writes this the moment a repo is ingested, long before
-any model has looked at it. It is a real map — every feature is a node,
-every flow entry point is a trigger, every cross-feature file reach is a
-call edge — just an unopinionated one: it knows the shape of the code, not
-what the code is *for*.
-
-Everything here is pure and sorted, so two runs on the same input produce
-byte-identical JSON. The authoring stage
-(`skills/council/58-codebase-scan.md`) rewrites the result into the curated
-scan and flips `confidence` to `INFERRED`, which is what stops a later
-rebuild from overwriting it.
-
-Deliberately absent: any attempt to detect models, tools, or integrations.
-Grepping for `@ai-sdk/openai` would find the import and still not know
-whether it is the product's core loop or a dead experiment. That call is
-judgment; the seed leaves `stats` at zero and the chip rows empty.
+Features become `service` nodes, flow entry points `entry` triggers, and
+cross-feature calls `calls` edges. Pure and sorted (byte-identical per input);
+the council's `58-codebase-scan.md` rewrites it to `INFERRED` so rebuilds keep
+it. Models/tools/integrations are judgment, so they are not detected: `stats`
+stay zero and the chip rows empty.
 """
 
 from __future__ import annotations
@@ -105,22 +94,11 @@ def seed_scan(
 ) -> Scan:
     """Build the deterministic scan seed from extracted features and flows.
 
-    ``rank`` is the personalized-PageRank shortlist from
-    `features/seed-rank.json` (see `rank.load_seed_rank`). When present it
-    drives selection and ordering — features by the summed rank of their
-    members, entries by their entry point's rank — and every emitted node
-    carries `evidence: EXTRACTED` plus, where a member resolves, a
-    `symbolRef` into the symbol graph. When absent (no symbol graph),
-    features fall back to ranking by file count (biggest first,
-    `feature_id` breaking ties) so that when the cap bites, what survives
-    is the part of the codebase someone would actually name first — the
-    pre-rank behaviour, byte for byte.
-
-    ``links`` is the raw node-link edge list from the symbol graph. It is the
-    load-bearing edge signal: flows would be the obvious one, but council
-    stage 4 discards most flows on purpose and a fully enriched repo can have
-    none left, which would leave the seed a field of disconnected boxes.
-    Calls between symbols never go away.
+    ``rank`` (`seed-rank.json`) orders features by summed member rank and
+    entries by entry-point rank, adding `evidence`/`symbolRef`; without it,
+    features rank by file count then `feature_id`. ``links`` (symbol-graph
+    edges) is the load-bearing edge signal: council stage 4 discards most
+    flows, which alone would leave disconnected boxes.
     """
     scores = rank.scores() if rank is not None else None
     ranked = sorted(features, key=_feature_sort_key(scores))

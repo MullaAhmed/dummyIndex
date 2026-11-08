@@ -1,17 +1,10 @@
 """`dummyindex context gc status|delete|closeout|stamp|signal` — the wire-only GC CLI.
 
-These exercise the CLI surface end-to-end through ``dispatch(["gc", ...])``,
-against a synthetic ``.context/`` built under ``tmp_path`` (never this repo's
-mutable contents). The domain logic is unit-tested in
-``tests/context/domains/gc/``; here we pin the *wiring*: verb dispatch, flag
-parsing, exit codes (2 on a guard / usage violation, 0 otherwise), the
-``--json`` payload shape, dry-run vs ``--yes``, and the session-id-driven
-``signal`` throttle.
-
-A real ``git init`` repo under ``tmp_path`` backs the tracked/untracked,
-commit-throttle, and stamp cases — the one place a real ``git`` is needed.
-``--root <tmp_path>`` makes ``context_dir.parent`` the repo root, mirroring the
-real layout the git probes assume.
+Drives ``dispatch(["gc", ...])`` on a synthetic ``tmp_path`` ``.context/``
+(never this repo's) and pins the wiring: verbs, flags, exit codes (2 on a guard
+or usage violation, else 0), the ``--json`` shape, dry-run vs ``--yes``, and the
+``signal`` throttle. A real ``git init`` backs the tracked, throttle and stamp
+cases; ``--root <tmp_path>`` makes ``context_dir.parent`` the repo root.
 """
 
 from __future__ import annotations
@@ -37,7 +30,7 @@ _CHECKLIST_PARTIAL = (
 )
 
 
-# ----- fixture helpers ------------------------------------------------------
+# --- fixture helpers
 
 
 def _git(repo_root: Path, *args: str) -> str:
@@ -762,7 +755,7 @@ def test_stamp_writes_anchor_and_zeroes_commits_since(
     assert payload["commits_since"] == 0
 
 
-# ----- gc signal ------------------------------------------------------------
+# --- gc signal
 
 
 @pytest.mark.integration

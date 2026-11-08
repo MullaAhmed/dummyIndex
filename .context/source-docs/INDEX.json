@@ -4,7 +4,7 @@
   "repo_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base",
   "default_discovery_used": true,
   "extra_doc_roots": [],
-  "doc_count": 81,
+  "doc_count": 84,
   "by_confidence": {
     "high": 20,
     "medium": 24,
@@ -1402,9 +1402,10 @@
       "mtime": 1794085446.1111224,
       "age_delta_seconds": 20341.452458143234,
       "age_bucket": "recent",
-      "referenced_count": 298,
+      "referenced_count": 301,
       "broken_refs": [
         "benchmarks/retrieval/RESULTS.md",
+        "dummyindex_version",
         "features/seed-rank.json",
         "features/graph-communities.json",
         "imports_from",

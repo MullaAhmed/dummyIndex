@@ -169,14 +169,10 @@ def _has_managed_block(claude_md: Path) -> bool:
 def _git_clean(project_root: Path) -> bool | None:
     """True when the working tree has no uncommitted changes.
 
-    Returns None when git isn't available or the command fails — the caller
-    treats an unknown state as "can't promise reversibility".
-
-    Runs with ``GIT_OPTIONAL_LOCKS=0`` so the read-only ``git status`` never
-    takes ``index.lock``: this runs inside Claude Code hooks that may be
-    killed mid-query, and a kill during git's opportunistic index refresh
-    strands the lock (in a submodule, under the superproject's
-    ``.git/modules/<name>/``). Output is identical either way.
+    None (git missing or failing) means "can't promise reversibility".
+    ``GIT_OPTIONAL_LOCKS=0`` keeps the read-only status from ever taking
+    ``index.lock``: this runs in killable Claude Code hooks, and a kill during
+    git's index refresh strands the lock (submodules: ``.git/modules/<name>/``).
     """
     try:
         result = subprocess.run(

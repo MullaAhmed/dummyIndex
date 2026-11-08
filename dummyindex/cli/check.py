@@ -1,11 +1,9 @@
-"""`dummyindex context check` — diff snapshotted manifest against current state.
+"""`dummyindex context check`: diff the snapshotted manifest against current state.
 
-``--versions`` is a separate, detection-only mode: it reports version skew
-across the layers that drift independently (running CLI, the repo's installed
-Claude and Codex skill stamps at repo and user scope, the
-``.context/meta.json`` stamp) plus a PATH-shadowing venv binary. It never
-auto-fixes, never touches the network, and always exits 0 — remediation is the
-host-neutral ``dummyindex-update`` skill.
+``--versions`` is a separate detection-only mode: it reports version skew across the
+running CLI, the Claude and Codex skill stamps at repo and user scope, and the
+``.context/meta.json`` stamp, plus a PATH-shadowing venv binary. It never auto-fixes,
+never touches the network and always exits 0; remediation is ``dummyindex-update``.
 """
 
 from __future__ import annotations
@@ -325,23 +323,11 @@ _HOST_LABEL = {"claude": "Claude skill", "codex": "Codex skill"}
 def _read_skill_stamps(out_root: Path) -> tuple[tuple[str, str | None], ...]:
     """Read every Claude/Codex stamp at repo and user scope independently.
 
-    A thin label-formatting wrapper around the one four-root scanner in
-    ``installer.repair`` — the shared logic lives there now so `--versions`
-    and repair can never drift on what "installed" means. A missing or empty
-    stamp remains ``None`` for that exact layer. Never short-circuit:
-    coexistence is precisely where a stale second host used to be hidden by
-    whichever stamp happened to be checked first.
-
-    The Claude-side row (never the Codex/``.agents`` row, which is the real
-    target) also gets a link-state suffix, reusing ``classify_family_link``
-    rather than reimplementing it: `` (linked)`` when the family dir
-    classifies ``OURS_HEALTHY``/``OURS_DANGLING``, `` (materialized link ...)``
-    plus the `core.symlinks` remediation when it classifies ``MATERIALIZED``
-    — so a coherent-versions report on a linked layout stays
-    self-explanatory (versions agree AND the Claude side is linked, not
-    duplicated). Classification never raises (fails closed to ``FOREIGN``
-    internally); a stray error here still degrades to no suffix, matching
-    every other probe in this module.
+    Wraps ``installer.repair``'s four-root scanner so `--versions` and repair agree
+    on "installed"; a missing or empty stamp stays ``None`` for that layer. Never
+    short-circuit, or a stale second host hides behind the first stamp checked.
+    Claude rows also get a ``classify_family_link`` suffix (`` (linked)``, or
+    `` (materialized link ...)`` with the `core.symlinks` fix); an error means none.
     """
     from dummyindex.installer.link import FamilyLinkState, classify_family_link
     from dummyindex.installer.repair import scan_installed_copies
@@ -473,11 +459,8 @@ def _run_version_check(out_root: Path, *, quiet: bool) -> int:
     elif not quiet:
         coherent = next(iter(distinct), "unknown")
         print(f"context check: dummyindex versions coherent ({coherent}).")
-        # A coherent report must still say when the Claude side is a link
-        # rather than a duplicated copy (or a materialized-file placeholder
-        # needing the core.symlinks fix) — "versions agree" alone would hide
-        # that fact, so surface just the annotated row(s), even though
-        # nothing here is skewed.
+        # "Versions agree" alone would hide that the Claude side is a link (or a
+        # materialized placeholder needing core.symlinks), so print those rows.
         for line in lines:
             if "(linked)" in line or "(materialized link" in line:
                 print(line)

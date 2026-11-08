@@ -1,11 +1,9 @@
 """Unit tests for ``domains/gc/signals.py:classify`` (deterministic tags only).
 
-``classify`` is PURE: it reads only the ``Candidate`` fields plus the workspace
-files under ``context_dir`` — never git, never ``enumerate``. The critical
-correctness case is ``orphan-empty``: a freshly-scaffolded proposal's ``spec.md``
-is *not* byte-equal to ``_spec_template`` (``apply_consistency`` injects a
-``## Consistency`` block), but ``plan.md``/``checklist.md`` are untouched — so
-``orphan-empty`` is decided off those two files, never ``spec.md``.
+``classify`` is PURE: ``Candidate`` fields plus workspace files, never git or
+``enumerate``. ``orphan-empty`` keys off ``plan.md``/``checklist.md`` only,
+never ``spec.md``: ``apply_consistency`` injects a ``## Consistency`` block, so
+a fresh scaffold's spec is never byte-equal to ``_spec_template``.
 """
 
 from __future__ import annotations
@@ -58,18 +56,13 @@ def _proposal_candidate(slug: str, **kwargs: object) -> Candidate:
     )
 
 
-# --- orphan-empty --------------------------------------------------------
+# --- orphan-empty
 
 
 @pytest.mark.unit
 def test_orphan_empty_when_plan_and_checklist_are_raw_templates(tmp_path: Path):
-    """A scaffold whose plan.md+checklist.md are the raw templates is orphan-empty.
-
-    The spec.md carries an injected ``## Consistency`` block (mimicking
-    ``apply_consistency``), so it is NOT byte-equal to the spec template — yet
-    the proposal is still ``orphan-empty`` because the decision keys off
-    plan.md+checklist.md only.
-    """
+    """A scaffold whose plan.md+checklist.md are the raw templates is orphan-empty,
+    even though its spec.md carries an injected ``## Consistency`` block."""
     title = "Some abandoned scaffold"
     context_dir = tmp_path / ".context"
     consistency_injected_spec = (
@@ -124,7 +117,7 @@ def test_orphan_empty_absent_when_checklist_authored(tmp_path: Path):
     assert "orphan-empty" not in signals
 
 
-# --- checklist completion ------------------------------------------------
+# --- checklist completion
 
 
 @pytest.mark.unit
@@ -169,7 +162,7 @@ def test_checklist_complete(tmp_path: Path):
     assert "checklist-partial" not in signals
 
 
-# --- audit report-written ------------------------------------------------
+# --- audit report-written
 
 
 @pytest.mark.unit
@@ -197,7 +190,7 @@ def test_audit_report_absent(tmp_path: Path):
     assert "report-written" not in signals
 
 
-# --- cross-cutting: untracked / age / status ----------------------------
+# --- cross-cutting: untracked / age / status
 
 
 @pytest.mark.unit

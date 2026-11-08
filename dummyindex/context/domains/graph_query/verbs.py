@@ -3,13 +3,8 @@
 Every verb returns a :class:`GraphQueryResult` whose rows are
 deterministically ordered, cited (``path:line``), depth-annotated, and
 truncated to ``limit`` with the pre-truncation ``total`` preserved.
-
-**Dead-code is purely graph-driven** (package docstring, §dead-code): a
-code node is dead iff it has zero incoming edges among
-``DEPENDENCY_RELATIONS``; structural relations never count. The A4
-extractor fix adds ``calls``/``imports_from`` edges for dispatch-dict and
-function-body-import idioms, which automatically removes today's false
-positives — this module needs no change for that.
+**Dead-code is purely graph-driven**: a code node is dead iff it has zero
+incoming ``DEPENDENCY_RELATIONS`` edges; structural relations never count.
 """
 
 from __future__ import annotations
@@ -35,7 +30,7 @@ from .load import node_citation
 from .models import GraphQueryResult, GraphRow, SymbolGraph
 from .resolve import _describe_candidates, resolve_symbol
 
-# ----- row / result helpers -------------------------------------------------
+# --- row / result helpers
 
 
 def _clip_docstring(text: str | None) -> str | None:
@@ -113,7 +108,7 @@ def _result(
     )
 
 
-# ----- verbs ----------------------------------------------------------------
+# --- verbs
 
 
 def callers_of(
@@ -382,7 +377,7 @@ def _location_sort_key(node: dict[str, Any], nid: str) -> tuple[str, int, str]:
 def community(
     graph: SymbolGraph, key: str, *, limit: int = DEFAULT_LIMIT
 ) -> GraphQueryResult:
-    """Members of one Leiden community, ranked by dependency degree.
+    """Members of one graph community, ranked by dependency degree.
 
     ``key`` is a community integer, a slug/name from the (optional)
     ``features/graph-communities.json`` artifact, or any symbol form
@@ -433,12 +428,10 @@ def _resolve_community_key(graph: SymbolGraph, key: str) -> int:
 def _community_from_slug(graph: SymbolGraph, key: str) -> int | None:
     """Look ``key`` up in ``features/graph-communities.json`` when present.
 
-    The artifact is owned by the deterministic builders (proposal item A2)
-    and **deliberately carries no partition integer** — raw Leiden ids
-    renumber between runs, so a card's identity is its slug and its
-    *members*. The int the verbs filter on is recovered here from the
-    first card member that still exists in the loaded graph. Defensively
-    typed so A1 works with or without the artifact.
+    The artifact **deliberately carries no partition integer** (raw partition
+    ids renumber between runs), so a card's identity is its slug and
+    *members*; the int is recovered from the first card member still in the
+    loaded graph. ``None`` when the artifact is absent or unreadable.
     """
     path = graph.context_dir / "features" / COMMUNITIES_ARTIFACT
     if not path.is_file():

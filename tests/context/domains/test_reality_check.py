@@ -162,9 +162,7 @@ def fake_context(tmp_path: Path) -> Path:
     return root
 
 
-# ---------------------------------------------------------------------------
 # Regex extraction
-# ---------------------------------------------------------------------------
 
 
 def test_call_re_extracts_subject_object() -> None:
@@ -205,9 +203,7 @@ def test_extract_claims_dedupes() -> None:
     assert len(claims) == 1
 
 
-# ---------------------------------------------------------------------------
 # End-to-end verification
-# ---------------------------------------------------------------------------
 
 
 def test_verified_call_passes(fake_context: Path) -> None:
@@ -222,17 +218,14 @@ def test_verified_call_passes(fake_context: Path) -> None:
 
 
 def test_reality_check_reads_plan_and_concerns(fake_context: Path) -> None:
-    """v0.14: claims in `plan.md` + `concerns.md` are line-checked. `spec.md`
-    is intent-level and deliberately NOT in the canonical reading set, so any
-    claim it carries must be ignored — guarding against a regression that adds
-    spec.md back to ``_CANONICAL_DOCS``."""
+    """Claims in `plan.md` + `concerns.md` are line-checked; `spec.md` is
+    intent-level and NOT in ``_CANONICAL_DOCS``, so its claims are ignored."""
     feat = fake_context / ".context" / "features" / "community-0"
     (feat / "plan.md").write_text("# plan\n\n`run` calls `helper`.\n", encoding="utf-8")
     (feat / "concerns.md").write_text(
         "# concerns\n\n`run` calls `nonexistent_function`.\n", encoding="utf-8"
     )
-    # A contradicted claim in spec.md must NOT be counted — if it were read,
-    # claims_total would be 3 and contradicted would be 2.
+    # Reading spec.md would make claims_total 3 and contradicted 2.
     (feat / "spec.md").write_text(
         "# spec\n\n`run` calls `another_missing_fn`.\n", encoding="utf-8"
     )
@@ -341,9 +334,7 @@ def test_missing_feature_raises(fake_context: Path) -> None:
         reality_check_feature(fake_context / ".context", "nope-doesnt-exist")
 
 
-# ---------------------------------------------------------------------------
 # CLI plumbing
-# ---------------------------------------------------------------------------
 
 
 def test_cli_reality_check_subcommand(fake_context: Path, capsys) -> None:
@@ -375,9 +366,7 @@ def test_cli_reality_check_requires_feature(fake_context: Path, capsys) -> None:
     assert "feature" in captured.err.lower()
 
 
-# ---------------------------------------------------------------------------
 # file:line resolution — basename disambiguation + on-disk fallback
-# ---------------------------------------------------------------------------
 
 
 def test_basename_citation_resolves_via_feature_files(fake_context: Path) -> None:
@@ -417,7 +406,7 @@ def test_basename_citation_ambiguous_when_not_feature_scoped(
 
 def test_citation_to_on_disk_file_not_in_index_verifies(fake_context: Path) -> None:
     """`package.json:20` exists on disk but not in map/files.json — the claim
-    is about the file, so it verifies (was: contradicted 'file not found')."""
+    is about the file, so it verifies."""
     pkg = fake_context / "package.json"
     pkg.write_text("".join(f'"k{n}": {n},\n' for n in range(36)), encoding="utf-8")
 
@@ -449,9 +438,7 @@ def test_citation_to_genuinely_missing_file_contradicted(fake_context: Path) -> 
     assert "not found" in (report.claims[0].reason or "")
 
 
-# ---------------------------------------------------------------------------
 # calls/uses — stdlib & third-party references are unverifiable, not false
-# ---------------------------------------------------------------------------
 
 
 def test_uses_stdlib_dotted_token_is_ambiguous(fake_context: Path) -> None:
@@ -499,9 +486,7 @@ def test_calls_repo_rooted_dotted_token_missing_leaf_contradicted(
     assert report.contradicted == 1
 
 
-# ---------------------------------------------------------------------------
 # Demote inverse — stash + promote on a clean re-run
-# ---------------------------------------------------------------------------
 
 
 def _report_for(fake_context: Path, text: str):
@@ -692,9 +677,7 @@ def test_cli_demote_reports_all_three_transitions(fake_context: Path, capsys) ->
     assert "unchanged" in (out.out + out.err)
 
 
-# ---------------------------------------------------------------------------
 # Confidence mirror — atomicity, no-match signal, sorted keys
-# ---------------------------------------------------------------------------
 
 
 def test_demote_fault_injection_leaves_both_files_unchanged(
@@ -819,19 +802,8 @@ def test_demote_dumps_both_files_with_sorted_keys(fake_context: Path) -> None:
     assert index_text == json.dumps(index_payload, indent=2, sort_keys=True) + "\n"
 
 
-# ---------------------------------------------------------------------------
 # Trust boundary — path confinement, feature-id injection, meta-root anchoring
-# ---------------------------------------------------------------------------
-#
-# In-repo-symlink policy (documented): confinement resolves the symlink (via
-# ``resolve_under_root`` → ``Path.resolve()``) BEFORE the containment check.
-#   * A symlink whose realpath ESCAPES ``repo_root`` is caught at confinement
-#     and yields a "contradicted / outside the repository root" verdict — the
-#     out-of-tree target is never opened. This is the security-critical case.
-#   * A symlink whose realpath stays IN-root is a legitimate citation target:
-#     it resolves to a real in-tree file and verifies normally (the cited file
-#     genuinely lives in the repo). The ``is_safe_read_target`` read gate still
-#     refuses non-regular files (FIFO / device) and oversize blobs.
+# ``resolve_under_root`` resolves symlinks BEFORE the containment check.
 
 
 def _spy_path_open(monkeypatch):
@@ -863,11 +835,9 @@ def test_out_of_root_citation_never_opens_target(
     fake_context: Path, monkeypatch, citation: str
 ) -> None:
     """An extension-bearing citation resolving OUTSIDE ``repo_root`` is
-    contradicted/ambiguous and the target file is NEVER opened — proven by
-    spying ``pathlib.Path.open`` and asserting it is never called for an
-    out-of-root path. Gates EVERY ``_resolve_cited_path`` return branch."""
-    # Materialise a real out-of-root target so a leak would actually succeed:
-    # the test must fail loudly if the gate is removed, not silently.
+    contradicted/ambiguous and the spied ``Path.open`` never sees the target.
+    Gates EVERY ``_resolve_cited_path`` return branch."""
+    # A real out-of-root target, so a removed gate would actually leak.
     probe = fake_context.parent / "dummyindex_oracle_probe.json"
     if citation.startswith("`/tmp/"):
         citation = f"`{probe.as_posix()[len(probe.drive) :]}:1`"
@@ -899,11 +869,9 @@ def test_out_of_root_citation_never_opens_target(
 def test_extensionless_absolute_path_is_grammar_rejected_not_confinement(
     fake_context: Path,
 ) -> None:
-    """CONTROL — ``/etc/passwd:1`` carries no ``.ext`` before ``:line``, so
-    ``_FILE_LINE_RE`` rejects it BEFORE it reaches the verifier. This is a
-    grammar rejection, NOT a confinement rejection: the claim simply never
-    materialises as a file:line claim. Documented so the extension-bearing
-    proof strings above are not mistaken for the only barrier."""
+    """CONTROL — ``/etc/passwd:1`` has no ``.ext`` before ``:line``, so
+    ``_FILE_LINE_RE`` rejects it before the verifier: a grammar rejection, not
+    confinement. Hence the extension-bearing proof strings above."""
     feat = fake_context / ".context" / "features" / "community-0"
     (feat / "plan.md").write_text("See `/etc/passwd:1`.\n", encoding="utf-8")
     report = reality_check_feature(fake_context / ".context", "community-0")
@@ -925,7 +893,7 @@ def test_in_repo_symlink_escaping_root_is_confined(
     fake_context: Path, monkeypatch
 ) -> None:
     """An in-repo symlink whose realpath escapes ``repo_root`` is caught at
-    confinement and never opened (documented in-repo-symlink policy)."""
+    confinement and never opened — the security-critical case."""
     outside = fake_context.parent / "outside_target.py"
     outside.write_text("secret 1\nsecret 2\n", encoding="utf-8")
     link = fake_context / "leak.py"
@@ -946,9 +914,9 @@ def test_in_repo_symlink_escaping_root_is_confined(
 def test_in_repo_symlink_within_root_verifies(
     fake_context: Path,
 ) -> None:
-    """An in-repo symlink whose target stays IN-root is a legitimate citation:
-    confinement resolves it to a real in-tree file and it verifies. The
-    security boundary only blocks links that ESCAPE the root (covered above)."""
+    """An in-repo symlink whose target stays IN-root verifies; only links that
+    ESCAPE the root are blocked. (``is_safe_read_target`` still refuses
+    non-regular files — FIFO / device — and oversize blobs.)"""
     real = fake_context / "real_target.py"
     real.write_text("a\nb\nc\n", encoding="utf-8")
     link = fake_context / "alias.py"
@@ -973,7 +941,7 @@ def test_legit_in_root_citation_still_verifies(fake_context: Path) -> None:
     assert report.contradicted == 0
 
 
-# ----- feature-id injection at the CLI boundary -----------------------------
+# --- feature-id injection at the CLI boundary
 
 
 @pytest.mark.parametrize(
@@ -1017,22 +985,20 @@ def test_verifier_rejects_feature_id_traversal(fake_context: Path) -> None:
         reality_check_feature(fake_context / ".context", "../../escape")
 
 
-# ----- meta.json root anchoring to the resolved git toplevel ----------------
+# --- meta.json root anchoring to the resolved git toplevel
 
 
 @pytest.fixture
 def nested_git_context(tmp_path: Path) -> Path:
     """A repo with a REAL ``.git`` toplevel whose ``.context/`` lives in a
-    SUBDIRECTORY — so ``context_dir.parent`` is NOT the repo root. This is the
-    nested-``.context/`` case the flat ``fake_context`` cannot exercise.
+    SUBDIRECTORY, so ``context_dir.parent`` is NOT the repo root.
 
     Returns the git toplevel (the trusted anchor).
     """
     toplevel = tmp_path / "monorepo"
     sub = toplevel / "packages" / "svc"
     sub.mkdir(parents=True)
-    # A real git working tree at the toplevel (a .git directory is enough for
-    # is_git_repo / resolve_git_dir).
+    # A .git directory is enough for is_git_repo / resolve_git_dir.
     (toplevel / ".git").mkdir()
     (toplevel / "HEAD_FILE.py").write_text("a\nb\nc\n", encoding="utf-8")
 
@@ -1116,11 +1082,8 @@ def test_meta_root_honored_when_it_is_the_git_toplevel(
 def test_direct_context_root_wins_over_unrelated_outer_git_repo(
     fake_context: Path,
 ) -> None:
-    """A direct ``repo/.context`` remains rooted at ``repo`` even when a
-    broader ancestor is also a Git working tree.
-
-    Temporary-directory runners and nested workspaces can legitimately place
-    an independent context beneath such an ancestor.  The recorded direct
+    """A direct ``repo/.context`` stays rooted at ``repo`` even when an ancestor
+    is also a Git working tree (temp runners, nested workspaces). The direct
     parent is already a confined trusted boundary and must not be widened.
     """
     outer = fake_context.parent
@@ -1143,10 +1106,8 @@ def test_meta_root_at_filesystem_root_falls_back_to_anchor(
     ctx = nested_git_context / "packages" / "svc" / ".context"
     (ctx / "meta.json").write_text(json.dumps({"root": "/"}), encoding="utf-8")
     feat = ctx / "features" / "community-0"
-    # HEAD_FILE.py lives at the real toplevel; with the anchor it still
-    # resolves (the toplevel IS the fallback). A file only reachable from "/"
-    # (e.g. /etc/hostname) must NOT verify — proving root anchored to the
-    # toplevel, not "/".
+    # HEAD_FILE.py (at the toplevel fallback) still resolves; a file only
+    # reachable from "/" must NOT verify.
     (feat / "plan.md").write_text(
         "See `HEAD_FILE.py:2` and `etc/hostname:1`.\n", encoding="utf-8"
     )

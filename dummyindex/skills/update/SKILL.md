@@ -60,7 +60,11 @@ already equals the target and the user did not pass `--force`. A current CLI
 with a stale skill or repo stamp must continue to step 3. When the target is
 `main` and has no comparable release version, continue rather than guessing.
 `--force` reinstalls every selected layer even when versions match (including a
-downgrade to a pinned older ref).
+downgrade to a pinned older ref). For a pinned downgrade, the repo stamp in
+`.context/meta.json` moves backwards only when step 3's install runs with
+`--force-downgrade` (the same flag already gates rewriting a newer-stamped skill
+family). Without it the repo stamp stays at the newer version; report that as
+expected, not as skew.
 
 Resolve `<REF>` to one immutable `<COMMIT>` before installing:
 
@@ -115,7 +119,7 @@ From the repo root, run the **newly installed** CLI's installer with the
 selected values:
 
 ```bash
-dummyindex install --platform <claude|codex|both> --scope <user|project> [--dir <repo>]
+dummyindex install --platform <claude|codex|both> --scope <user|project> [--dir <repo>] [--force-downgrade]
 ```
 
 This re-copies the selected skill family (including this update skill),
@@ -129,6 +133,13 @@ artefacts and advances `.context/meta.json`'s `dummyindex_version` stamp,
 leaving the curated taxonomy untouched.** Only a brand-new or
 deterministic-only index is full-built. If the target is not a git repo,
 `install` skips the per-repo step on its own; that is expected, not an error.
+
+**Context-layout migration.** The same per-repo pass removes retired paths such
+as `.context/equipment-evals/` and superseded graph shards. A non-generated file
+under a retired path is backed up first. This is part of install's deterministic
+`.context/` write, not a separate step. Install prints `removed …`,
+`backed up to .context/_doc_backups/retired/<version>/…` and
+`warning: migration …` lines; surface them in the final report.
 
 **One shared installation.** AUTO reuses the existing family links where
 possible. When Windows cannot create links, Claude gets thin `SKILL.md`
@@ -168,8 +179,23 @@ Run the newly installed CLI's `dummyindex context check --versions` and compare:
   qualification. Inspect every preserved, incomplete or unverified result.
 - Managed project guidance and existing user configuration remain intact.
 
+**A stamp that did not advance is a named failure.** If step 3's output contains
+`version stamp not advanced`, a required artifact failed and the repo stamp kept
+its old version on purpose. Surface the artifact and the error from that line
+(the line reads `warning: <artifact> failed (<error>); version stamp not advanced — …`)
+and its fix: `dummyindex context rebuild --changed` after fixing the cause. Do not
+re-run step 3 in a loop, and do not report the repo layer as moved.
+
 Report the installed immutable commit, version, scope and any preserved source
 mismatch. Never call a partial or customized installation fully coherent merely
 because its version stamps agree. A failed required step stops the update;
 optional native-adapter limitations remain visible. No council or production
-live-test step belongs in this update.
+live-test step belongs in this update. Finish with a compact before→after table:
+
+```
+dummyindex updated: 0.22.0 → 0.23.0
+  CLI package     0.22.0 → 0.23.0  ✓
+  skill family    0.22.0 → 0.23.0  ✓  (<host>, <scope>)
+  this repo       0.22.0 → 0.23.0  ✓  (.context/ backbone refreshed, curated content untouched)
+  context layout  removed N retired file(s), backed up M  (+ any `warning: migration …` verbatim)
+```

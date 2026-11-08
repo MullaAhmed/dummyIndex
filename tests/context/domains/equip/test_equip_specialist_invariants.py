@@ -1,19 +1,10 @@
 """The renderer populates a specialist's ``invariants`` as manifest metadata.
 
-Wave 3, task 13 of the *ponytail-improvements* proposal — the piece that makes
-the Wave-2 invariant canary *real* (without it the canary is a no-op): when a
-generated specialist's :class:`EquipmentItem` is assembled, ``invariants`` is
-set to a few load-bearing convention substrings that are GUARANTEED to appear
-verbatim in that specialist's rendered body.
-
-Two contracts are proven here:
-
-- ``invariants`` is **manifest metadata only** (D4) — assembled the same way
-  ``grounding_docs`` → ``grounded_in`` is, and **never** injected into the
-  rendered bytes, so adding it cannot shift the ``origin_hash`` baseline.
-- the canary round-trip works end to end: render → write to disk → delete ONE
-  invariant substring → :func:`classify_item` reports ``INVARIANT_BROKEN``; a
-  cosmetic edit that keeps every invariant reports ``CUSTOMIZED``.
+``invariants`` are a few convention substrings GUARANTEED verbatim in the
+rendered body (without them the canary is a no-op). They are manifest metadata
+only, never injected into the rendered bytes, so ``origin_hash`` cannot shift.
+Round trip: deleting ONE substring ⇒ ``INVARIANT_BROKEN``; a cosmetic edit that
+keeps them all ⇒ ``CUSTOMIZED``.
 """
 
 from __future__ import annotations
@@ -52,7 +43,7 @@ def _render_specialist(capability: str) -> tuple[EquipmentItem, str]:
     return item, content
 
 
-# ----- invariants are populated + verbatim in the rendered body --------------
+# --- invariants are populated + verbatim in the rendered body
 
 
 @pytest.mark.unit
@@ -69,8 +60,8 @@ def test_rendered_specialist_has_nonempty_invariants(capability: str) -> None:
 def test_every_invariant_is_a_literal_substring_of_the_rendered_body(
     capability: str,
 ) -> None:
-    # The canary only works if each invariant is GUARANTEED present in a pristine
-    # render — so a pristine body must contain every one of them verbatim.
+    # A pristine render must contain every invariant verbatim, or the canary
+    # mis-fires.
     item, content = _render_specialist(capability)
     for inv in item.invariants:
         assert inv in content, (
@@ -88,33 +79,28 @@ def test_invariants_carry_no_template_slot(capability: str) -> None:
         assert "{{" not in inv and "}}" not in inv
 
 
-# ----- invariants are metadata-only: origin_hash is unchanged ----------------
+# --- invariants are metadata-only: origin_hash is unchanged
 
 
 @pytest.mark.unit
 @pytest.mark.parametrize("capability", sorted(SPECIALIST_TEMPLATES))
 def test_invariants_do_not_perturb_origin_hash(capability: str) -> None:
-    # D4: invariants live only in the manifest entry — the origin_hash is the
-    # sha256 of the rendered bytes, which must equal the hash of the content the
-    # renderer produced (invariants never entered those bytes).
+    # Invariants live only in the manifest entry, so origin_hash is the hash of
+    # the rendered body alone.
     item, content = _render_specialist(capability)
     assert item.origin_hash == content_hash(content)
-    # And none of the invariant strings were smuggled into the manifest's hashed
-    # surface: the recorded hash matches the body alone, byte-for-byte.
     assert item.origin_hash and item.origin_hash.startswith("sha256:")
 
 
 @pytest.mark.unit
 def test_core_four_carry_no_invariants() -> None:
-    # Invariants back a *specialist's* convention contract; the core four are
-    # exercised by the Wave-2 canary tests directly. A spec with no registered
-    # invariants (the core four have none here) must stay empty — back-compat,
-    # and so to_dict omits the key (a v3 manifest stays byte-identical, D3).
+    # Only specialists register invariants; the core four stay empty so to_dict
+    # omits the key and their manifest entries are unchanged.
     assert invariants_for(("implement",)) == ()
     assert invariants_for(("test",)) == ()
 
 
-# ----- the canary round-trip (the proof it is not a no-op) -------------------
+# --- the canary round-trip (the proof it is not a no-op)
 
 
 @pytest.mark.integration

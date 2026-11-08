@@ -1,4 +1,3 @@
-# tests/context/domains/test_council_batch_cli.py
 import json
 
 from dummyindex.cli import dispatch

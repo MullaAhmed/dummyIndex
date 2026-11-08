@@ -1,14 +1,9 @@
 """Top-level orchestration: resolve a store, scan it, group, write.
 
-Kept separate from `resolve.py` / `scan.py` / `signatures.py` / `render.py` /
-`scope.py` so each concern stays independently testable (folder-organization
-convention); this module only composes them.
-
-The composition itself carries one rule worth stating plainly: **the default
-scan is scoped to a single repo**. A transcript store spans every project the
-host has ever opened, and the report lands in a git-tracked file, so pooling
-the whole store would publish other repos' paths into this one. Cross-project
-scanning stays available but has to be asked for by name. See `scope.py`.
+The default scan is scoped to one repo: a transcript store spans every project
+the host has opened and the report is git-tracked, so pooling the whole store
+would publish other repos' paths. Cross-project scanning is opt-in. See
+`scope.py`.
 """
 
 from __future__ import annotations
@@ -45,12 +40,9 @@ def scan_transcript_store(
 ) -> MinerReport:
     """Scan transcripts under `store_dir` into a `MinerReport`.
 
-    With `repo_root`, only that repo's own project directory is read — the
-    safe default for anything that gets written down. Without it, the whole
-    store is pooled; that is the explicit, opt-in cross-project mode.
-
-    Deterministic either way: discovery is sorted, parsing is a pure read,
-    and grouping breaks ties on the signature string (see `signatures.py`).
+    With `repo_root`, only that repo's project directory is read (the safe
+    default for anything written down); without it the whole store is pooled.
+    Deterministic: discovery is sorted and grouping breaks ties on the signature.
     """
     if repo_root is None:
         project_dirs = discover_project_dirs(store_dir)
@@ -87,16 +79,12 @@ def mine_and_feed(
     min_occurrences: int = DEFAULT_MIN_OCCURRENCES,
     all_projects: bool = False,
 ) -> MinerReport:
-    """Resolve the transcript store, scan this repo's slice of it, and write
-    the result into `context_dir`'s session-memory store.
+    """Scan this repo's slice of the transcript store and write the report.
 
-    `context_dir` is the repo's `.context/` directory, so its parent is the
-    repo root — that is what scopes the scan and what paths are made relative
-    to. Pass `all_projects=True` to pool the entire host store instead; do
-    that only when the output is *not* going somewhere that gets committed.
-
-    `store_override` overrides the resolved *config* directory (see
-    `resolve.resolve_transcript_store`), not the store path directly.
+    `context_dir` is the repo's `.context/`; its parent is the repo root that
+    scopes the scan and relativizes paths. `all_projects=True` pools the whole
+    host store: use it only when the output is not committed. `store_override`
+    replaces the resolved *config* dir, not the store path.
     """
     repo_root = context_dir.resolve().parent
     store_dir = resolve_transcript_store(override=store_override)

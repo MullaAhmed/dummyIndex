@@ -1,20 +1,9 @@
-"""Harvest technical-debt markers from a repo's Python source.
+"""Harvest technical-debt markers from a repo's Python source (pure, read-only).
 
-``harvest_debt(project_root)`` enumerates **only** Python ``.py`` files (via
-``detect()`` filtered under ``files["code"]``), scans each for ``# TODO:`` /
-``# FIXME:`` / ``# HACK:`` / ``# DEBT:`` markers on *true comment lines*, parses
-the structured ``# DEBT: <ceiling>; upgrade: <trigger>`` form, and returns a
-deterministic :class:`DebtLedger`.
-
-Scope (v1): Python only — these markers are Python ``#``-comment syntax. TS and
-other languages are explicitly out of scope here (the file enumeration inherits
-``detect()``'s ignore/sensitive exclusions by design). The harvester is **pure**:
-read-only over source, no writes; the CLI that renders/persists the ledger is a
-separate module.
-
-Determinism: rows are sorted by ``(rel_path, line)`` and every path is
-repo-relative POSIX (mirroring ``drift._rel_or_none``), so re-running on an
-unchanged tree yields a byte-identical ledger that never leaks a home directory.
+Scans only ``.py`` files in ``detect()``'s ``files["code"]`` (inheriting its
+ignore/sensitive exclusions) for ``# TODO:`` / ``# FIXME:`` / ``# HACK:`` /
+``# DEBT:`` lines, parsing ``# DEBT: <ceiling>; upgrade: <trigger>``. Rows sort by
+``(rel_path, line)`` with repo-relative POSIX paths: byte-identical, no home dir.
 """
 
 from __future__ import annotations
@@ -73,10 +62,9 @@ def _rows_for_file(rel_path: str, text: str) -> list[DebtRow]:
 def _matching_prefix(stripped: str) -> str | None:
     """Return the ``DEBT_PREFIXES`` entry this stripped comment line begins with.
 
-    A marker counts only when the stripped line is a *true comment* — i.e. it
-    starts with the prefix (which itself begins with ``#``). A ``# TODO:`` token
-    living inside a string-continuation line never starts the stripped line, so
-    it is correctly ignored.
+    A marker counts only when the stripped line starts with the prefix (which
+    begins with ``#``), so a mid-line ``# TODO:`` token, e.g. inside a string, is
+    ignored. A string line that itself starts with the prefix is not told apart.
     """
     for prefix in DEBT_PREFIXES:
         if stripped.startswith(prefix):

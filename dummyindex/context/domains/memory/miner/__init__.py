@@ -21,14 +21,7 @@ been rewritten, but the resemblance is structural and close, and the honest
 description is "derived from", not "independent of". dummyindex therefore
 carries a top-level ``NOTICE`` reproducing headroom's attribution line, which
 is what Apache-2.0 asks for and what this proposal's plan named as the
-trigger. Arguing the requirement away on a §4 technicality — as the earlier
-docstring did — was the wrong call twice over: the premise was false, and the
-notice costs nothing.
-
-`headroom/learn/analyzer.py` is explicitly OUT of scope — it is an LLM
-digest-and-parse wrapper with no deterministic analysis path of its own (see
-the proposal's spec, "Explicit SKIPs"). Nothing here calls a model, makes a
-network request, or depends on subprocess-execing a CLI.
+trigger. Nothing here calls a model, makes a network request, or shells out.
 """
 
 from __future__ import annotations

@@ -51,7 +51,7 @@ def _meta(root: Path, **overrides) -> Meta:
     return Meta(**base)
 
 
-# --- HOW_TO_USE.md -----------------------------------------------------------
+# --- HOW_TO_USE.md
 
 
 @pytest.mark.unit
@@ -107,7 +107,7 @@ def test_write_how_to_use_md_atomic(tmp_path: Path) -> None:
     assert not list(out.parent.glob("HOW_TO_USE.md.tmp"))
 
 
-# --- architecture/overview.md ------------------------------------------------
+# --- architecture/overview.md
 
 
 @pytest.mark.unit
@@ -195,7 +195,7 @@ def test_architecture_overview_unknown_dir_no_role_hint(tmp_path: Path) -> None:
     assert "_unknown_" in text
 
 
-# --- playbooks ---------------------------------------------------------------
+# --- playbooks
 
 
 @pytest.mark.unit
@@ -235,7 +235,7 @@ def test_write_playbook_atomic(tmp_path: Path) -> None:
     assert not list(out.parent.glob("*.tmp"))
 
 
-# --- End-to-end via build_all -------------------------------------------------
+# --- End-to-end via build_all
 
 
 @pytest.mark.integration

@@ -39,12 +39,9 @@ def refresh_features_index_md(features_dir: Path) -> Path:
 def rebuild_features_graph(features_dir: Path) -> tuple[Path, Path]:
     """Regenerate ``graph.json`` + ``graph.html`` from disk.
 
-    Walks ``features/<id>/feature.json`` + ``features/<id>/flows/*.json``
-    and re-emits the denormalized viewer payload. Use when the schema
-    changed (e.g. you upgraded dummyindex and want the richer folder
-    hierarchy in the viewer) without forcing a full re-ingest that
-    would clobber LLM-enriched names + summaries.
-
+    Re-seeds the scan from ``features/<id>/feature.json`` + ``flows/*.json``
+    without a re-ingest that would clobber enriched names and summaries; a
+    model-authored scan already on disk is kept. Also refreshes ownership.
     Raises ``FileNotFoundError`` if ``features_dir`` doesn't exist.
     """
     if not features_dir.is_dir():
@@ -149,14 +146,10 @@ def _load_call_links(path: Path) -> tuple[dict[str, Any], ...]:
 def _curated_scan(path: Path) -> dict[str, Any] | None:
     """Return the on-disk scan iff a model authored it, else ``None``.
 
-    Deliberately keyed on `confidence` alone and not on validity. A curated
-    scan that breaks a cap is a scan that needs `dummyindex context
-    scan-check` and a fix — deleting someone's map because a label ran four
-    characters long would be the worse failure by a wide margin.
-
-    Unreadable JSON, a legacy v1 graph (no `confidence` at all), or a
-    payload that isn't an object all fall through to regeneration: those
-    are generated artifacts, and replacing them is the point.
+    Keyed on `confidence` alone, not validity: a curated scan that breaks a
+    cap needs `dummyindex context scan-check` and a fix, never deletion.
+    Unreadable JSON, a legacy v1 graph (no `confidence`) or a non-object
+    payload are generated artifacts and fall through to regeneration.
     """
     if not path.is_file():
         return None
@@ -174,8 +167,7 @@ def _curated_scan(path: Path) -> dict[str, Any] | None:
 def _load_symbols_map(path: Path) -> dict[str, dict[str, Any]] | None:
     """Read `map/symbols.json` into a `{symbol_id: payload}` dict, or None if missing.
 
-    Tolerates an absent file so older `.context/` layouts (pre-symbols-map)
-    fall back to file-level granularity in the viewer.
+    Tolerates an absent file (older, pre-symbols-map `.context/` layouts).
     """
     if not path.is_file():
         return None
@@ -194,15 +186,15 @@ def _load_symbols_map(path: Path) -> dict[str, dict[str, Any]] | None:
     return out
 
 
-# ----- doc → feature linking ------------------------------------------------
+# --- INDEX.md rendering
 
 
 def _index_md_from_index_json(payload: dict[str, Any]) -> str:
     """Re-render features/INDEX.md from the canonical features/INDEX.json.
 
-    Used by ``rename_feature`` so the human-readable index never lags
-    behind the machine-readable one. Falls back to the feature_id when
-    a real `name` hasn't been written yet.
+    Used by the refresh and the rename/merge/remove ops so the human index
+    never lags the machine one. Falls back to the feature_id when a real
+    `name` hasn't been written yet.
     """
     features = payload.get("features", []) or []
     flow_count = int(payload.get("flow_count", 0) or 0)

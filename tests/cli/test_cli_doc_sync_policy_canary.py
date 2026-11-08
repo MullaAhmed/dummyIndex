@@ -21,7 +21,7 @@ from tests.cli.test_cli_doc_sync import _DEFAULT_PLUGIN_DOCS, _DOC_IDS
 from tests.paths import REPO_ROOT
 
 
-# ----- rule-copy canary: invariant phrases tied to ALWAYS_ON_OUTPUT_POLICY --
+# --- rule-copy canary: invariant phrases tied to ALWAYS_ON_OUTPUT_POLICY
 #
 # Ported from ponytail's ``scripts/check-rule-copies.js`` (MIT, © 2026
 # DietrichGebert): its ``INVARIANTS`` fallback for surfaces too long to
@@ -31,28 +31,16 @@ from tests.paths import REPO_ROOT
 # (`docs/COMMANDS.md`, `docs/guide/07-cli.md`, `dummyindex/skills/skill.md`),
 # so this is a canary, not byte equality.
 #
-# SCOPE, STATED PLAINLY (a second adversarial audit failed the prior,
-# whole-file version of this canary — see the proposal's spec, Item 2 Risks):
-# this catches (a) a load-bearing rule's *statement* being dropped from
-# either of a doc's two delimited regions, and (b) a small NAMED set of
-# region-scoped negation/hedge inversions. It is NOT general contradiction
-# detection in free prose — out of reach for a regex canary. A hedge that
-# keeps every pinned phrase intact (e.g. appending "unless brevity requires
-# trimming it") can still slip through; region-scoping bounds a false
-# positive's blast radius to one paragraph, it does not make `inversions`
-# exhaustive.
+# SCOPE: catches (a) a rule's statement dropped from a doc region and (b) a small
+# named set of region-scoped inversions. It is NOT general contradiction
+# detection: a hedge that keeps every pinned phrase (e.g. appending "unless
+# brevity requires trimming it") still passes, and `inversions` is not exhaustive.
 #
-# DISCLOSED COUPLING HOLE (same hedge-limit class as above, not fixed by it):
-# `constant_pattern` and `statement_pattern`/`inversions` are maintained by
-# hand, independently, on opposite sides of the same row. Reword or invert
-# `ALWAYS_ON_OUTPUT_POLICY` while updating only `constant_pattern` and
-# re-pinning `_POLICY_CONSTANT_HASH` below, and every doc's
-# `statement_pattern`/`inversions` can go stale silently — the suite stays
-# green because each side is checked against its own text, never against the
-# other's. Nothing here mechanically ties the two together; a human
-# reviewing the diff to `_POLICY_INVARIANTS` is the actual safeguard, the
-# same hand-maintained-invariant limitation upstream ponytail accepts with
-# its own `INVARIANTS` list.
+# COUPLING HOLE: `constant_pattern` and `statement_pattern`/`inversions` are
+# hand-maintained independently. Reword the constant, update only
+# `constant_pattern` and re-pin `_POLICY_CONSTANT_HASH`, and the doc patterns go
+# stale with the suite green. A human reviewing `_POLICY_INVARIANTS` is the only
+# safeguard.
 #
 # TWO independent, delimited regions per doc — deliberately not one, and
 # deliberately not widened into each other (the self-apply text sits two
@@ -126,6 +114,15 @@ from tests.paths import REPO_ROOT
 # upgraded to `re.search`, rescoped from "whole file" to "one named region".
 @dataclass(frozen=True)
 class _PolicyInvariant:
+    """One policy rule, checked against the constant and one doc region.
+
+    - constant_pattern: regex (not a literal, so glue-word copy-edits stay
+      green) that the whitespace-flattened, lowercased constant must match.
+    - statement_pattern: regex for the rule's content, never its name, in the
+      flattened, lowercased region; None means the region may omit the rule.
+    - inversions: regexes that redden the region even if the statement matches.
+    """
+
     label: str
     constant_pattern: str
     statement_pattern: str | None
@@ -135,35 +132,16 @@ class _PolicyInvariant:
 
 _POLICY_INVARIANTS: tuple[_PolicyInvariant, ...] = (
     _PolicyInvariant(
-        # A prior lookbehind-based approach tried to whitelist the negation
-        # cue immediately before "wait(ing) for ... invocation"
-        # (`(?<!do not )(?<!without )(?<!never )`) and false-positived on
-        # every correct rewording that doesn't put the negation word
-        # *directly* against "wait" — "does not wait", "rather than
-        # waiting", "instead of waiting", "no need to wait", and worst, an
-        # intact statement plus a correct trailing sentence ("There is no
-        # need to wait for an invocation.") all reddened despite saying
-        # nothing wrong. Fixed the way the `selfapply` rows already do it
-        # (they produced zero false positives across eight probes): make
-        # `statement_pattern` a tolerant alternation over every true "does
-        # not wait" shape, and specify `inversions` positively — name the
-        # shapes that actually invert the rule, never a negative lookbehind
-        # over the correct ones. A mutation that drops every accepted
-        # negation shape outright (e.g. bare "waiting for an invocation"
-        # with no negation left anywhere) fails to match `statement_pattern`
-        # at all and reddens via `missing`, same as the `selfapply` rows'
-        # drop-detection — no inversion needed to catch that case.
+        # `inversions` name the shapes that invert the rule, never a negative
+        # lookbehind over correct ones: a lookbehind on the cue before "wait"
+        # reddened correct rewordings ("does not wait", "rather than waiting").
+        # A fully dropped negation fails `statement_pattern` and reddens via `missing`.
         "always-on / never-wait-for-invocation",
         r"always on[,;]?\s*never wait for an invocation",
-        # the rule's STATEMENT, not the policy's NAME. Two families, because
-        # a correct restatement does not always put the negation cue before
-        # the word "wait" — or use "wait" at all. Family A is cue-first
+        # The rule's statement, not the policy's name. Family A is cue-first
         # ("<negation> wait(ing) for ... invocation"); family B is
-        # invocation-first or wait-free. Both were widened after an audit
-        # found four correct rewordings reddening via `missing`, the worst
-        # being the constant's OWN wording ("always on, never wait for an
-        # invocation") — bare `never wait for` was absent while
-        # `never need to wait for` was present.
+        # invocation-first or wait-free. Both accept the known correct
+        # rewordings, including the constant's own "never wait for".
         r"(?:(?:without\s+waiting\s+for"
         r"|do\s+not\s+wait\s+for"
         r"|does\s+not\s+wait\s+for"
@@ -189,38 +167,26 @@ _POLICY_INVARIANTS: tuple[_PolicyInvariant, ...] = (
             # of unconditional — positively specified, no lookbehind.
             r"only\s+(?:after|once|upon|when)\s+(?:an\s+|receiving\s+)?"
             r"(?:explicit\s+)?(?:plugin/skill\s+)?invocation",
-            # additive contradiction: the negated statement can survive
-            # intact elsewhere while a later clause asserts the policy
-            # actually waits before applying — the positive "wait ...
-            # before applying" shape this row's fix adds, mirroring the
-            # `selfapply` row's "reach it on its own" catch below.
+            # additive contradiction: the negated statement survives elsewhere
+            # while a later clause says the policy waits before applying
+            # (mirrors the `selfapply` row's "reach it on its own" catch).
             r"wait\w*\s+(?:for\s+(?:an\s+)?(?:explicit\s+)?"
             r"(?:plugin/skill\s+)?invocation\s+)?before\s+(?:it\s+)?appl\w*",
         ),
     ),
     _PolicyInvariant(
-        # Second, independent region (`test-anchor:policy-selfapply`): the
-        # `i-have-adhd` bullet, wherever it sits in the doc's default-plugins
-        # list. statement_pattern is a tolerant alternation over the true
-        # shapes this fact is stated in ("never makes/made it self-apply",
-        # "cannot self-apply", "nothing about X will make it self-apply",
-        # "never self-applies") — loose enough that a fair paraphrase stays
-        # green, tight enough that dropping the clause outright (no negation
-        # cue left near "self-appl*") already reddens via `missing` before
-        # any dedicated inversion runs. The one dedicated inversion below
-        # catches the shape a bare drop-detection can't: the pinned negated
-        # phrase left intact while a contradicting clause is appended
-        # elsewhere in the same bullet (audit-2's N5).
+        # The `i-have-adhd` bullet (`selfapply` region). statement_pattern
+        # accepts each true shape ("never makes it self-apply", "cannot
+        # self-apply", "nothing about X will make it self-apply"); a dropped
+        # clause reddens via `missing`, an appended contradiction via the inversion.
         "self-contained-even-when-neither-skill-loaded",
         r"self-contained.{0,30}even when neither skill is loaded",
         r"(?:never\s+(?:make[s]?\s+it\s+)?self-appl\w*"
         r"|cannot\s+self-appl\w*"
         r"|nothing\s+about\b.{0,40}will\s+make\s+it\s+self-apply)",
         (
-            # additive contradiction: the negated statement survives intact
-            # but a clause is appended asserting the model reaches the skill
-            # unaided anyway (audit-2's N5: "... but the model is able to
-            # reach it on its own once the plugin is enabled.").
+            # additive contradiction: the negation survives but an appended
+            # clause says the model reaches the skill unaided anyway.
             r"reach\w*\s+it\s+on\s+its\s+own",
         ),
         region="selfapply",
@@ -232,10 +198,8 @@ _POLICY_INVARIANTS: tuple[_PolicyInvariant, ...] = (
         "disable-model-invocation: true",
         r"disable-model-invocation:\s*true",
         (
-            # the key/value survives but its consequence is reversed: the
-            # model is said to reach the skill anyway (audit-2's N6:
-            # "... which the model may still override, so it is reachable
-            # without the user typing /i-have-adhd").
+            # the key/value survives but its consequence is reversed (the
+            # model "may still override" it, so it is "reachable without ...").
             r"may\s+still\s+override",
             r"reachable\s+without\s+the\s+user\s+typing",
         ),
@@ -301,10 +265,8 @@ _POLICY_INVARIANTS: tuple[_PolicyInvariant, ...] = (
             # scope narrowed: the win made conditional ("only where the
             # policy is silent") instead of unconditional.
             r"win\s+only\s+(?:where|if|when)\b",
-            # precedence reversed: policy stated to override the user/
-            # safety yield it is supposed to lose to. Excludes "overrides
-            # nothing" — that is the TRUE, non-inverted claim (the doc
-            # explicitly disclaiming any override), not an inversion.
+            # precedence reversed: the policy overrides the user/safety yield.
+            # "overrides nothing" is the true disclaimer, so it is excluded.
             r"policy\s+overrides\b(?!\s+nothing\b)",
         ),
     ),
@@ -345,14 +307,11 @@ _POLICY_CONSTANT_HASH = "9c2fba5c44d1d133"
 def test_always_on_output_policy_carries_every_load_bearing_invariant() -> None:
     """The constant itself must state each behavior-contract rule inline.
 
-    ``ALWAYS_ON_OUTPUT_POLICY`` is the single source ``agents_md.py`` renders
-    into every managed CLAUDE.md/AGENTS.md block and the three docs below
-    restate in prose. Reverting it to the pre-fix shorthand — "use the
-    combined `caveman`/`i-have-adhd` behavior" without inlining the rules or
-    the `disable-model-invocation` caveat — is exactly the bug that shipped
-    the ADHD half of the policy inert (see
-    `.context/proposals/repo-adoptions-ponytail-headroom/spec.md`, Item 2).
-    This must fail on that revert.
+    ``ALWAYS_ON_OUTPUT_POLICY`` is rendered into every managed CLAUDE.md /
+    AGENTS.md block and restated by the three docs. This must fail on a revert
+    to the shorthand ("use the combined `caveman`/`i-have-adhd` behavior"
+    without the inlined rules or the `disable-model-invocation` caveat) that
+    shipped the ADHD half of the policy inert.
     """
     flat = " ".join(ALWAYS_ON_OUTPUT_POLICY.split()).lower()
     missing = [
@@ -468,18 +427,12 @@ def test_default_plugin_docs_have_one_balanced_policy_region(
     ids=_DOC_IDS,
 )
 def test_default_plugin_docs_restate_policy_invariants(doc_path: Path) -> None:
-    """Every doc's policy regions must not drop or contradict a load-bearing
-    rule while restating it in its own prose.
+    """Every doc's policy regions must not drop or contradict a load-bearing rule.
 
-    SCOPE (see the module comment above the table): this catches a dropped
-    rule statement and a named set of region-scoped inversions, checked
-    against whichever of the two regions each row names. It is not general
-    contradiction detection — a hedge or exception clause that keeps the
-    rule's key phrase intact can still pass. Region-scoping (not whole-file
-    scanning) is what keeps `inversions` from false-positiving on unrelated,
-    correct prose elsewhere in the same doc. A row with
-    `statement_pattern=None` is a rule its region is allowed to omit
-    outright.
+    See SCOPE in the module comment: this catches a dropped statement and the
+    named inversions in each row's region, not general contradiction; a hedge
+    that keeps the key phrase can still pass. Region-scoping keeps `inversions`
+    from false-positiving on correct prose elsewhere in the doc.
     """
     text = doc_path.read_text(encoding="utf-8")
     label = str(doc_path.relative_to(REPO_ROOT))

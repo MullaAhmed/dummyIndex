@@ -1,17 +1,9 @@
 """Auto-init / project-init helpers: the ``.context/`` build + Claude/Codex
 guidance + hooks + default-plugins steps that run after the skill install.
 
-See the package docstring (``install/__init__.py``) for the split rationale.
-
-Module-identity note: `_install_project_hooks` below is called through
-`_install_pkg` (this package's own `__init__.py`), not as a bare name — even
-though both functions live in this very file. `tests/test_install.py`'s
-`installer_module = import_module("dummyindex.installer.install")` +
-`monkeypatch.setattr(installer_module, "_install_project_hooks", ...)` patches
-the PACKAGE's own attribute; a bare-name call resolved via this module's own
-globals would never observe that patch. The self-import is safe despite
-executing while the package is still initializing — see `link/sweep.py`'s
-identical note for the full explanation.
+`_install_project_hooks` is called via `_install_pkg`, even from this file, so a
+test that patches it on the package (`tests/test_install.py`) is seen here. The
+self-import during package init is safe; see `link/sweep.py`.
 """
 
 from __future__ import annotations
@@ -32,15 +24,15 @@ def _auto_init_project(
     no_superpowers: bool = False,
     platform: str = "claude",
     codex_guidance_owner: str = "project",
+    force_downgrade: bool = False,
 ) -> bool:
-    """Run the same flow as `dummyindex context init <project_root>`:
-    build the deterministic backbone into ``.context/``, write the
-    selected host guidance, and Claude integrations when requested.
+    """Run the `dummyindex context init` flow: build ``.context/``, write the
+    selected host guidance, and add Claude integrations when requested.
 
-    Returns True on success, False on any failure (printed to stderr but
-    not raised — the skill install itself already succeeded, and we
-    don't want to make the whole command exit non-zero just because a
-    secondary project-init step hit a snag).
+    ``force_downgrade`` lets the curated refresh lower a newer
+    ``meta.dummyindex_version`` stamp. Both branches print the migration report.
+    Returns False when the imports, refresh or build fail (reported on stderr,
+    never raised: the skill install already succeeded), else True.
     """
     # Preserve the old direct-call seam while carrying one canonical gate
     # through the rest of the orchestration.
@@ -52,6 +44,7 @@ def _auto_init_project(
             refresh_deterministic_artifacts,
         )
         from dummyindex.context.build.runner import build_all
+        from dummyindex.context.build.upgrade import format_migration_report
         from dummyindex.context.hooks import install as install_hooks_fn
         from dummyindex.context.output.agents_md import bootstrap_project_agents_md
         from dummyindex.context.output.claude_md import reconcile_claude_md
@@ -63,14 +56,10 @@ def _auto_init_project(
     use_claude = "claude" in concrete_platforms
     use_codex = "codex" in concrete_platforms
 
-    # NON-DESTRUCTIVE on a curated index. A bare `install` (e.g. the
-    # /dummyindex-update or $dummyindex-update flow) must never re-cluster a
-    # council-enriched
-    # taxonomy into community-N stubs. When `.context/` already exists and is
-    # enriched, take the deterministic refresh path: refresh the enrichment-
-    # free artefacts, advance the version stamp, and still bootstrap CLAUDE.md
-    # + install hooks. A re-cluster requires an explicit `rebuild --full` or a
-    # fresh `ingest`. A deterministic-only or absent index full-builds as before.
+    # Non-destructive on a curated index: a bare `install` (e.g. the update flow)
+    # must never re-cluster an enriched taxonomy into community-N stubs, so it
+    # only refreshes deterministic artefacts. Re-clustering needs `rebuild --full`
+    # or a fresh `ingest`; a deterministic-only or absent index full-builds.
     context_dir = project_root / ".context"
     status = enriched_index_status(context_dir) if context_dir.is_dir() else None
     if status is not None and status.enriched:
@@ -79,6 +68,7 @@ def _auto_init_project(
                 project_root,
                 extra_doc_roots=(),
                 dummyindex_version=PACKAGE_VERSION,
+                allow_downgrade=force_downgrade,
             )
         except Exception as exc:
             print(f"  auto-init skipped: refresh failed ({exc})", file=sys.stderr)
@@ -87,6 +77,8 @@ def _auto_init_project(
             f"  .context/        ->  curated index preserved — refreshed "
             f"{len(refresh.written)} deterministic artefact(s) (no re-cluster)"
         )
+        for line in format_migration_report(refresh.migration, refresh.failed):
+            print(line)
         if status.desync:
             print(
                 "  .context/        ->  warning: features/INDEX.json does not "
@@ -134,6 +126,8 @@ def _auto_init_project(
         f"  .context/        ->  built ({len(result.written)} files, "
         f"{result.file_count} indexed, {result.symbol_count} symbols)"
     )
+    for line in format_migration_report(result.migration):
+        print(line)
     if result.bootstrapped:
         print("  CLAUDE.md (proj) ->  managed block written")
     if use_codex:
@@ -170,14 +164,11 @@ def _auto_init_project(
 def _refresh_equipment_step(project_root: Path) -> None:
     """Refresh equip-generated tools to the just-installed templates.
 
-    When the repo is equipped (``.context/equipment.json`` present), re-render the
-    PRISTINE generated agents / skills / specialists whose fresh render differs
-    under the current dummyindex version and re-baseline them — so a reinstall (the
-    ``/dummyindex-update`` flow) carries the generated toolkit forward, not just the
-    plugin skill family + the deterministic backbone. Hash-baselined and
-    never-clobber: a USER_MODIFIED tool is skipped forever. Best-effort — a failure
-    never fails the install (the primary skill/wiring refresh already succeeded),
-    and a repo with no ``equipment.json`` is a silent no-op.
+    In an equipped repo (``.context/equipment.json``), re-render and re-baseline
+    pristine generated tools whose fresh render differs, so a reinstall carries
+    the toolkit forward. Never-clobber: a USER_MODIFIED tool is always skipped.
+    Best-effort (a failure never fails the install); a silent no-op when the repo
+    is not equipped.
     """
     try:
         from dummyindex.cli.equip.common import fresh_rendered
@@ -266,11 +257,9 @@ def _write_default_config(project_root: Path, *, platform: str = "claude") -> No
 def _migrate_existing_config(project_root: Path) -> bool:
     """Upgrade a loadable-but-stale ``.context/config.json`` in place.
 
-    Run on every repo install so ``/dummyindex-update`` heals configs written
-    before a schema bump or a renamed value, instead of leaving them stale (or,
-    pre-fix, unreadable). Best-effort and value-preserving: the delegate only
-    rewrites a stale config (never a current one), so this is silent on an
-    up-to-date repo and never clobbers user choices.
+    Run on every repo install so an update heals configs written before a
+    schema bump or renamed value. Value-preserving: only a stale config is
+    rewritten, so it is silent on a current repo and never clobbers user choices.
     """
     from dummyindex.context.domains.config import migrate_config_in_place
 
@@ -283,12 +272,10 @@ def _migrate_existing_config(project_root: Path) -> bool:
 def _reconcile_wired_step(project_root: Path) -> bool:
     """Fold equip-installed plugins into ``config.wired`` (heal declared intent).
 
-    Run on every repo install so ``/dummyindex-update`` never drops a plugin the
-    user equipped: a v1→v2 migration reseeds ``wired`` from defaults only, and an
-    older CLI equipped plugins without the ``config.wired`` write-back. The
-    delegate reconciles ``config.wired`` against ``equipment.json`` on the shared
-    ``<plugin>@<marketplace>`` key. Best-effort and idempotent — silent on a repo
-    with nothing to fold, and never fails the install.
+    Run on every repo install so an update never drops an equipped plugin: a
+    v1→v2 migration reseeds ``wired`` from defaults only, and older CLIs equipped
+    without writing ``wired``. Reconciles against ``equipment.json`` on the
+    ``<plugin>@<marketplace>`` key. Idempotent; silent when nothing needs folding.
     """
     from dummyindex.context.domains.config import reconcile_wired_with_equipment
 

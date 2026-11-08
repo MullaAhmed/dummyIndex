@@ -1,11 +1,9 @@
 """`equip` is verb-required — a bare probe must never mutate the repo.
 
-Before this guard, ``_split_verb`` defaulted to ``EquipVerb.APPLY`` whenever
-the first token was not a verb, so bare ``equip`` (a help/discovery probe) ran
-a full apply: it wrote ``.claude/agents/*`` + ``.claude/skills/*`` and created
-``.context/equipment.json`` from nothing. Now the verbless form prints usage
-and exits 2 (the read-only ``--dry-run`` carve-out is kept), and an explicit
-``equip apply`` is required to mutate — and refuses on an un-indexed repo.
+A verbless ``equip`` once defaulted to ``apply`` and wrote ``.claude/agents/*``,
+``.claude/skills/*`` and ``.context/equipment.json``. It now prints usage and
+exits 2 (``--dry-run`` stays read-only); mutating needs an explicit
+``equip apply``, which refuses on an un-indexed repo.
 """
 
 from __future__ import annotations

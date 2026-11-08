@@ -8,13 +8,9 @@ from enum import Enum
 class LoopKind(str, Enum):
     """How a repeated-signature group was classified.
 
-    ``ERROR_REPEAT`` — at least half the repeated calls failed (the same
-    call, retried, kept failing); an even split counts, so this is not
-    strictly a majority. ``OUTPUT_REPEAT`` — the calls mostly
-    succeeded but were re-run anyway (e.g. re-reading a file with a wider
-    window after a narrower read), the same distinction headroom's
-    ``loops.py`` draws between ``error-loop`` and ``rtk-refetch-loop``
-    (renamed here since dummyindex has no RTK-style output truncator).
+    ``ERROR_REPEAT``: at least half the calls failed (an even split counts).
+    ``OUTPUT_REPEAT``: the calls mostly succeeded but were re-run, e.g. a wider
+    re-read. Mirrors headroom's ``error-loop`` / ``rtk-refetch-loop`` split.
     """
 
     ERROR_REPEAT = "error-repeat"
@@ -28,11 +24,8 @@ class SkillDirectiveKind(str, Enum):
     REVOCATION = "revocation"
 
 
-# Minimum repetitions of one canonical signature, within a single transcript,
-# before it counts as a repeated pattern rather than a one-off retry. Mirrors
-# the threshold headroom's `loops.py` settled on (a single retry is normal;
-# three-or-more is a loop), reused here as a plain tuning number rather than
-# copied expression.
+# Repeats of one signature within one transcript before it counts as a pattern:
+# one retry is normal, three or more is a loop (headroom's `loops.py` threshold).
 DEFAULT_MIN_OCCURRENCES = 3
 
 # A single request is ordinary task input; two distinct human events establish

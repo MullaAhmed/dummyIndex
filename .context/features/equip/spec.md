@@ -1,6 +1,6 @@
 # Project equipment toolkit — spec
 
-confidence: INFERRED
+`confidence: INFERRED`
 
 ## Intent
 

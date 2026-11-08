@@ -1,4 +1,4 @@
-"""Tests for the v0.14 stack-aware author picker (`context dev-pick`)."""
+"""Tests for the stack-aware author picker (`context dev-pick`)."""
 
 from __future__ import annotations
 
@@ -15,9 +15,7 @@ def _fs(*tokens: str) -> frozenset[str]:
     return frozenset(tokens)
 
 
-# ---------------------------------------------------------------------------
 # pick_dev — one assertion per branch of the precedence table
-# ---------------------------------------------------------------------------
 
 
 def test_branch1_fastapi_routes() -> None:
@@ -159,9 +157,7 @@ def test_branch8_fallback_generic() -> None:
     assert pick.framework == "generic"
 
 
-# ---------------------------------------------------------------------------
-# Agent-availability fallback chain (PR3)
-# ---------------------------------------------------------------------------
+# Agent-availability fallback chain
 
 
 def test_specialist_fallback_chain() -> None:
@@ -194,9 +190,7 @@ def test_fallback_chain_always_ends_at_general_purpose() -> None:
         assert pick.fallbacks[-1] == "general-purpose"
 
 
-# ---------------------------------------------------------------------------
 # Precedence
-# ---------------------------------------------------------------------------
 
 
 def test_precedence_fastapi_beats_data() -> None:
@@ -220,11 +214,7 @@ def test_precedence_node_beats_frontend() -> None:
 
 
 def test_to_dict_round_trip_serializes_plain_strings() -> None:
-    """Drive a real picker branch, then round-trip through to_dict + json.
-
-    Exercises actual picker output (not a hand-built literal), and proves the
-    StrEnum fields serialize to plain wire strings via json.dumps.
-    """
+    """Real picker output round-trips through to_dict + json as plain strings."""
     pick = pick_dev(feature_files=("src/serve.py",), dep_tokens=_fs("torch"))
     as_dict = pick.to_dict()
     assert as_dict == {
@@ -257,9 +247,7 @@ def test_to_dict_emits_plain_str_not_enum_members() -> None:
     assert str(as_dict["subagent_type"]) == "AI Engineer"
 
 
-# ---------------------------------------------------------------------------
-# Fix #3 — AI-by-path is segment/basename anchored, `pipeline` is not a marker
-# ---------------------------------------------------------------------------
+# AI-by-path is segment/basename anchored, `pipeline` is not a marker
 
 
 def test_pipeline_segment_is_not_ai_without_ml_deps() -> None:
@@ -288,9 +276,7 @@ def test_constrain_substring_does_not_false_positive_ai() -> None:
     assert pick.persona_id == "dev-generic-senior"
 
 
-# ---------------------------------------------------------------------------
-# Fix #4 — data markers models/schema are segment/basename anchored
-# ---------------------------------------------------------------------------
+# Data markers models/schema are segment/basename anchored
 
 
 def test_datamodels_and_schemaless_are_not_data() -> None:
@@ -316,9 +302,7 @@ def test_migrations_segment_is_data() -> None:
     assert pick.persona_id == "dev-data"
 
 
-# ---------------------------------------------------------------------------
 # CLI integration
-# ---------------------------------------------------------------------------
 
 
 def test_cmd_dev_pick_reads_feature_and_manifest(
@@ -364,9 +348,7 @@ def _write_feature(tmp_path: Path, feature_id: str, files: list[str]) -> None:
     )
 
 
-# ---------------------------------------------------------------------------
-# Fix #1 — dotted Maven groupId splits into component tokens -> Spring matches
-# ---------------------------------------------------------------------------
+# Dotted Maven groupId splits into component tokens -> Spring matches
 
 
 def test_cmd_dev_pick_spring_via_dotted_maven_groupid(
@@ -392,9 +374,7 @@ def test_cmd_dev_pick_spring_via_dotted_maven_groupid(
     assert out["framework"] == "Spring Boot"
 
 
-# ---------------------------------------------------------------------------
-# Fix #2 — prose in a description key does not inject framework dep tokens
-# ---------------------------------------------------------------------------
+# Prose in a description key does not inject framework dep tokens
 
 
 def test_cmd_dev_pick_prose_description_does_not_misroute(

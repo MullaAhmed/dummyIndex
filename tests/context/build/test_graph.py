@@ -1,9 +1,7 @@
 """Tests for the knowledge-graph output under .context/features/.
 
-v0.6+: the symbol graph lives at .context/features/symbol-graph.json (it used
-to live at .context/graph/graph.json). The pyvis HTML hairball was dropped;
-the human-facing visualization is .context/features/graph.html (built by
-features.py, not by this module).
+The symbol graph lives at .context/features/symbol-graph.json; the retired
+.context/graph/ folder must not reappear.
 """
 
 from __future__ import annotations
@@ -64,8 +62,7 @@ def test_build_all_writes_the_derived_graph_artifacts(sample_repo: Path) -> None
 
 @pytest.mark.integration
 def test_legacy_graph_folder_is_not_created(sample_repo: Path) -> None:
-    """v0.6: the .context/graph/ folder was retired. Symbol graph is under
-    features/. pyvis HTML hairball is gone entirely."""
+    """The retired .context/graph/ folder is never created."""
     build_all(sample_repo, dummyindex_version="0.0.0-test")
     assert not (sample_repo / ".context" / "graph").exists()
 
@@ -79,8 +76,7 @@ def test_index_md_lists_symbol_graph(sample_repo: Path) -> None:
 
 @pytest.mark.integration
 def test_how_to_use_mentions_features_graph(sample_repo: Path) -> None:
-    """Graph references migrated from CLAUDE.md (now a 3-line pointer) into
-    HOW_TO_USE.md where detailed navigation lives."""
+    """Graph navigation lives in HOW_TO_USE.md, not the CLAUDE.md pointer."""
     build_all(sample_repo, bootstrap=True, dummyindex_version="0.0.0-test")
     how_to_use = (sample_repo / ".context" / "HOW_TO_USE.md").read_text(
         encoding="utf-8"

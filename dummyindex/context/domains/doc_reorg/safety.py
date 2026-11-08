@@ -1,19 +1,10 @@
-"""Safety machinery for the in-place doc reorg.
+"""Safety machinery for the in-place doc reorg: it only makes edits reversible.
 
-Three guarantees before any real doc is edited:
-
-1. **Refuse on a dirty tree.** ``require_clean_tree`` raises unless the working
-   tree is clean (or the caller explicitly opts into ``--allow-dirty``), so git
-   is always an authoritative undo.
-2. **Backup first.** ``backup_docs`` snapshots every in-repo doc under
-   ``.context/_doc_backups/<utc>/`` and records a manifest.
-3. **Honest restore.** ``restore_backup`` recreates the original content and
-   *reports* (does not delete) files the reorg created — point the user at
-   ``git clean`` for those, since the tree was clean to begin with.
-
-The destructive edits themselves are not done here — they happen in the running
-session via the Edit tool (so the user confirms each). This module only makes
-those edits reversible.
+``require_clean_tree`` refuses a dirty tree (unless ``--allow-dirty``) so git
+stays an authoritative undo; ``backup_docs`` snapshots in-repo docs under
+``.context/_doc_backups/<utc>/`` with a manifest; ``restore_backup`` restores
+content and *reports* (does not delete) files the reorg created. The destructive
+edits happen in-session via the Edit tool, so the user confirms each.
 """
 
 from __future__ import annotations

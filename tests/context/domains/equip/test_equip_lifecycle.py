@@ -1,11 +1,9 @@
-"""Tests for the hash-baselined equip lifecycle (spec §7).
+"""Tests for the hash-baselined equip lifecycle.
 
-Origin-hash baselines decide what is safe to evolve: a generated file whose disk
-hash still equals its recorded ``origin_hash`` is PRISTINE (safe to refresh); a
-changed hash is USER_MODIFIED (skipped forever); an absent file is MISSING.
-``refresh`` re-renders only PRISTINE-and-stale items and re-baselines them;
-``reset`` restores one item; ``uninstall`` removes only our pristine files + our
-settings hook + the manifest, leaving user-modified files and user hooks.
+Disk hash == recorded ``origin_hash`` is PRISTINE (safe to refresh); a changed
+hash is USER_MODIFIED (skipped forever); an absent file is MISSING. ``refresh``
+re-renders and re-baselines only PRISTINE-and-stale items; ``reset`` restores
+one; ``uninstall`` removes our pristine files, our hook and the manifest only.
 """
 
 from __future__ import annotations
@@ -39,7 +37,7 @@ from dummyindex.context.domains.equip.lifecycle.status import (
     uninstall,
 )
 
-# ----- fixture helpers ------------------------------------------------------
+# --- fixture helpers
 
 _IMPL_REL = ".claude/agents/python-implementer.md"
 _VERIFY_REL = ".claude/skills/proj-verify/SKILL.md"
@@ -67,7 +65,7 @@ def _item(name: str, rel: str, body: str) -> EquipmentItem:
 
 
 def _equipped_fixture(root: Path) -> EquipmentManifest:
-    """Apply a 2-item toolkit + a settings hook directly (no CLI; Phase 2)."""
+    """Apply a 2-item toolkit + a settings hook directly (no CLI)."""
     write_text_atomic(root / _IMPL_REL, _IMPL_BODY)
     write_text_atomic(root / _VERIFY_REL, _VERIFY_BODY)
     hook_body = {
@@ -103,7 +101,7 @@ def _manifest_item(manifest: EquipmentManifest, name: str) -> EquipmentItem:
     return next(i for i in manifest.items if i.name == name)
 
 
-# ----- classify + refresh ---------------------------------------------------
+# --- classify + refresh
 
 
 @pytest.mark.integration
@@ -161,7 +159,7 @@ def test_refresh_dry_run_writes_nothing(tmp_path: Path) -> None:
     assert "NEW" not in (root / _IMPL_REL).read_text(encoding="utf-8")
 
 
-# ----- reset ----------------------------------------------------------------
+# --- reset
 
 
 @pytest.mark.integration
@@ -177,7 +175,7 @@ def test_reset_rebaselines(tmp_path: Path) -> None:
     assert classify_item(root, item) is ItemState.PRISTINE
 
 
-# ----- uninstall ------------------------------------------------------------
+# --- uninstall
 
 
 @pytest.mark.integration
@@ -230,7 +228,7 @@ def test_uninstall_dry_run_keeps_everything(tmp_path: Path) -> None:
     assert (root / ".context" / EQUIPMENT_REL).exists()
 
 
-# ----- status ---------------------------------------------------------------
+# --- status
 
 
 @pytest.mark.integration
@@ -245,7 +243,7 @@ def test_status_reports_states(tmp_path: Path) -> None:
     assert states["proj-verify"] is ItemState.PRISTINE
 
 
-# ----- evolved-item protection (sanctioned patches survive refresh) ---------
+# --- evolved-item protection (sanctioned patches survive refresh)
 
 
 def test_is_evolved_detects_patch_level() -> None:
@@ -348,9 +346,8 @@ def test_wire_hooks_scrubs_legacy_unsuffixed_sentinel(tmp_path: Path) -> None:
     assert f"{EQUIP_SENTINEL}:PostToolUse" in commands[0]  # the new keying
 
 
-# ----- adopted entries are visible in status (audit 2026-06-13, C2-P2) -------
-# Status used to skip INSTALLED items entirely, so hand-deleting an adopted
-# record produced byte-identical status output — the absence was invisible.
+# --- adopted entries are visible in status
+# INSTALLED items get a status row, so hand-deleting an adopted record is visible.
 
 
 def _adopted_registry_item() -> EquipmentItem:
@@ -444,8 +441,8 @@ def test_status_cli_json_includes_adopted_rows(tmp_path: Path, capsys) -> None:
 def test_status_cli_empty_manifest_message_covers_all_kinds(
     tmp_path: Path, capsys
 ) -> None:
-    # Quick win: the empty message said 'no generated items' even though the
-    # manifest tracks adopted/marketplace/vendored records too.
+    # The manifest tracks adopted/marketplace/vendored records too, so the empty
+    # message must not say 'no generated items'.
     from dummyindex.cli.equip import run as run_equip
     from dummyindex.context.domains.equip import SCHEMA_VERSION, write_manifest
 
@@ -463,10 +460,8 @@ def test_status_cli_empty_manifest_message_covers_all_kinds(
 def test_read_manifest_unknown_enum_raises_equiperror_not_valueerror(
     tmp_path: Path,
 ) -> None:
-    """Forward-compat: a manifest carrying a kind/source this version doesn't
-    know (e.g. written by a newer dummyindex) must surface as EquipError — the
-    error every caller already catches — not a bare ValueError that crashes the
-    audit roster and every equip verb with a raw traceback."""
+    """Forward-compat: an unknown kind/source (e.g. from a newer dummyindex)
+    raises EquipError, which every caller catches, not a bare ValueError."""
     import json
 
     from dummyindex.context.domains.equip import EquipError, read_manifest
