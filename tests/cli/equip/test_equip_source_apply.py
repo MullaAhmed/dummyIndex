@@ -356,7 +356,7 @@ def test_acc_github_search_capped(tmp_path, monkeypatch):
         for a in record
         if a[:2] == ["gh", "api"] and a[2].endswith("/contents/skills")
     } & searched
-    assert listed <= {"o1/r1", "o2/r2", "o3/r3"}
+    assert listed == {"o1/r1", "o2/r2", "o3/r3"}
 
 
 def test_acc_repo_calls_cached_and_fetches_bounded(tmp_path, monkeypatch):
@@ -387,7 +387,7 @@ def test_acc_seed_fetches_bounded_to_five(tmp_path, monkeypatch):
     _install_sourcing_runner(monkeypatch, tmp_path / "home", repos=repos, record=record)
     _direct(_rendered_for(("database",)), tmp_path, io.StringIO())
     fetches = [a for a in record if a[:2] == ["gh", "api"] and "/SKILL.md?ref=" in a[2]]
-    assert len(fetches) <= 5
+    assert len(fetches) == 5
 
 
 def test_acc_gh_missing_degrades(tmp_path, monkeypatch, capsys):
@@ -541,6 +541,7 @@ def test_acc_dry_run_writes_nothing(tmp_path, monkeypatch, capsys):
     for cap in TEMPLATE_CAPS:
         name = f"{project_slug(root)}-{cap}-specialist"
         assert out.count(f"source: {name} candidate") <= 3
+    assert out.count(f"source: {_db(root)} candidate") >= 1
 
 
 def test_acc_json_stdout_parses(tmp_path, monkeypatch, capsys):

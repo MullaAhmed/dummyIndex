@@ -18,7 +18,6 @@ _WORD_RE = re.compile(r"[a-z0-9]+")
 _MAX_BYTES = 64 * 1024
 # Keeps newlines so per-line patterns (pipe-to-shell, iex+iwr) stay line-scoped.
 _HSPACE_RE = re.compile(r"[^\S\n]+")
-_WS_RE = re.compile(r"\s+")
 
 _INJECTION_MARKERS: tuple[str, ...] = (
     "ignore previous instructions",
@@ -32,9 +31,15 @@ _INJECTION_MARKERS: tuple[str, ...] = (
     "<|im_end|>",
     "<|endoftext|>",
 )
+# Markers match with everything but [a-z0-9<|>_] removed, so ignorable code
+# points (soft hyphen, fillers, variation selectors) cannot split them.
+_SQUASH_RE = re.compile(r"[^a-z0-9<|>_]")
+_SQUASHED_MARKERS = tuple(_SQUASH_RE.sub("", m) for m in _INJECTION_MARKERS)
 # Bounded repeats keep scans linear on hostile 64 KiB input (no quadratic backtracking).
 _PIPE_RE = re.compile(
-    r"\b(?:curl|wget)\b[^|\n]{0,400}\|\s{0,8}(?:sudo\s{1,8})?(?:ba|z|da)?sh\b"
+    r"\b(?:curl|wget)\b[^|\n]{0,400}\|\s{0,8}(?:sudo\s{1,8})?"
+    r"(?:(?:ba|z|da)?sh|python3?|node|perl|ruby)\b"
+    r"|\$\(\s{0,8}(?:curl|wget)\b"
 )
 _IEX_RE = re.compile(r"\b(?:iex|invoke-expression)\b")
 _IWR_RE = re.compile(r"\b(?:iwr|irm|invoke-webrequest|invoke-restmethod)\b")
@@ -136,8 +141,8 @@ def scan_body(text: str) -> tuple[str, ...]:
 
     norm = unicodedata.normalize("NFKC", lf(text)).lower()
     lines_norm = _HSPACE_RE.sub(" ", norm)
-    flat = _WS_RE.sub(" ", norm)
-    if any(marker in flat for marker in _INJECTION_MARKERS):
+    squashed = _SQUASH_RE.sub("", norm)
+    if any(marker in squashed for marker in _SQUASHED_MARKERS):
         codes.add("block:injection")
     if _PIPE_RE.search(lines_norm) or any(
         _IEX_RE.search(line) and _IWR_RE.search(line) for line in lines_norm.split("\n")
