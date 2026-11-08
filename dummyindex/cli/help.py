@@ -54,7 +54,7 @@ Subcommands:
                                     project instruction file, or both (default:
                                     claude).
   check [path] [--root DIR] [--docs PATH]... [--auto-refresh] [--quiet]
-        [--versions]
+        [--versions] [--budget] [--style] [--refs] [--update-ratchet]
                                     Drift check: compare current source
                                     hashes to .context/cache/manifest.json.
                                     --auto-refresh triggers rebuild --changed
@@ -63,6 +63,12 @@ Subcommands:
                                     report CLI, repo/user Claude and Codex skill,
                                     and .context stamp skew. It never refreshes
                                     and always exits 0.
+                                    --budget: word-count ratchet for docs.
+                                    --style: style ratchet (sentences over 20
+                                    words, filler words). --refs: list durable
+                                    docs citing proposals/audits.
+                                    --update-ratchet needs --budget or --style;
+                                    it only lowers entries, never raises them.
   plan-update [path] [--root DIR] [--json]
                                     Drift report for the SessionStart hook.
                                     Prints a markdown summary (to stdout) of
@@ -365,7 +371,7 @@ Subcommands:
                                     current|opus|sonnet|haiku|fable) records the
                                     optional model-routing block in proposal.json.
                                     --force overwrites an existing proposal.
-  equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--platform agents|claude|both] [--lesson-file F] [--json]
+  equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--platform agents|claude|both] [--lesson-file F] [--source [--yes]] [--json]
                                     Build loop — render this repo's project-tuned
                                     toolkit. `apply` is EXPLICIT — a bare `equip`
                                     (no verb, no flags) prints this usage and exits
@@ -399,6 +405,20 @@ Subcommands:
                                     Additive + never-clobber: a user file is skipped;
                                     a hand-edited generated file (USER_MODIFIED) is
                                     preserved forever. --dry-run writes nothing.
+                                    --source looks up catalogs before templates for
+                                    each db / security / performance / docs / search
+                                    and procedure specialist: seed marketplaces
+                                    (incl. ECC), then skills.sh (npx --no skills
+                                    find), then GitHub search. A qualified
+                                    skills/<name>/SKILL.md, pinned to a commit sha
+                                    and scanned, becomes the body under a repo
+                                    overlay; no candidate keeps the template.
+                                    Untrusted or warn: candidates need --yes;
+                                    block: findings never adopt. No gh prints
+                                    "source: gh unavailable — templates kept".
+                                    A later apply --source reports
+                                    "needs-reverify (upstream changed)"; re-source
+                                    with equip reset NAME, then apply --source.
   equip add-specialist CAPABILITY [--root DIR] [--dry-run] [--json]
                                     Generate one grounded specialist on demand
                                     (db | security | performance | docs | search) as a
@@ -489,7 +509,7 @@ Subcommands:
   audit-log --slug S --round N --persona P --status STATE [--note "..."] [--root DIR]
                                     Append to audits/<slug>/_debate-log.json (debate
                                     resumption). Status: started|complete|failed|skipped.
-  gc status|delete|stamp|signal [--json] [--root DIR]
+  gc status|delete|closeout|stamp|signal [--json] [--root DIR]
                                     Context-hygiene GC (deterministic plumbing;
                                     `/dummyindex-gc` on Claude or `$dummyindex-gc`
                                     on Codex drives the council + confirmation).
@@ -498,25 +518,41 @@ Subcommands:
                                                 under proposals/ + audits/ with its
                                                 signals, plus the commit-throttle state
                                                 (commits_since / anchor / threshold /
-                                                should_signal / anchor_orphaned). --json
-                                                emits the same payload. Exit 0.
+                                                should_signal / anchor_orphaned). Each
+                                                candidate carries recommendation
+                                                (delete/close/review/keep) + reason.
+                                                --json emits the same payload plus a
+                                                summary of counts per recommendation.
+                                                Exit 0.
                                       delete  --kind proposal|audit (--slug S | --path P)
                                                 [--yes] [--allow-untracked]
                                                 [--force-partial] — remove ONE doc
-                                                workspace. Without --yes it is a dry-run
-                                                (deletes nothing, exit 0); --yes performs
+                                                workspace. Without --yes it is a dry-run:
+                                                it runs the same guards as --yes and
+                                                reports the verdict, deleting nothing
+                                                (guard error exit 2). --yes performs
                                                 the bounded, guarded delete. Refuses a
                                                 sentinel / out-of-charset / escaping
                                                 target (exit 2) and an untracked target
                                                 without --allow-untracked. Never deletes
                                                 source code.
+                                      closeout --kind proposal|audit --slug S
+                                                (--manifest F | --draft) — --draft writes
+                                                a closeout manifest draft to
+                                                .context/cache/gc/closeout-<kind>-<slug>.json
+                                                (never overwrites; fill it, then run
+                                                --manifest F). --manifest applies a filled
+                                                closeout. Exit 2 on error, 1 only for a
+                                                failed learning state.
                                       stamp   [--to SHA] — advance the committed GC
                                                 anchor (.context/gc/state.json) to HEAD
                                                 (or --to). Off-git is a no-op.
                                       signal  - SessionStart throttle probe: prints the
                                                  one-line nudge iff commits_since the
-                                                 anchor >= threshold and it has not already
-                                                 signalled this session. Always exit 0.
+                                                 anchor >= threshold, or the anchor is
+                                                 orphaned (history rewrite), and it has
+                                                 not already signalled this session.
+                                                 Always exit 0.
   maintain plan|begin|next|done|stamp|status [--max-features N] [--all]
         [--run NAME] [--json] [--root DIR]
                                     One-command maintenance loop over committed
@@ -596,6 +632,8 @@ Subcommands:
    | rollback|discard --candidate N --run NAME [--root DIR]
    | evidence [--claude DIR] [--codex DIR] [--state FILE --history FILE]
    | learning (--next | --event ID (--from-file FILE | --no-entry))
+   | attribute (--next | --event ID --verdict V [--item ITEM] [--durable] [--retracts])
+   | probation report|promote|demote [--item ID]...
    | rules|utility [--root DIR]
    | experiment --run NAME --from-file FILE [--root DIR]
                                     Self-improvement loop — evidence -> cited

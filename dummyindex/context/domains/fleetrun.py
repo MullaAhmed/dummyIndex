@@ -761,6 +761,16 @@ def init_run(
 # --- dispatch frontier
 
 
+_IN_FLIGHT = frozenset(
+    s.value
+    for s in (
+        FleetUnitStatus.PLANNING,
+        FleetUnitStatus.BUILDING,
+        FleetUnitStatus.MERGING,
+    )
+)
+
+
 def _paths_conflict(a: tuple[str, ...], b: tuple[str, ...]) -> bool:
     """Conservative disjointness: an empty path set intersects EVERYTHING
     (including another empty set) — unknown overlap means serialize."""
@@ -816,6 +826,9 @@ def next_units(state: FleetRunState) -> NextEnvelope:
     skipped: list[tuple[str, str]] = []
     # Priority is init order (index in the stored tuple); unit_id breaks ties.
     priority = {u.id: i for i, u in enumerate(state.units)}
+    # In-flight units hold their paths and a parallel slot until they land.
+    in_flight = [u for u in state.units if u.status in _IN_FLIGHT]
+    taken_paths.extend(u.paths for u in in_flight)
     for unit in sorted(state.units, key=lambda u: (priority[u.id], u.id)):
         if unit.status == FleetUnitStatus.GATED.value:
             reason = "gated until answered"
@@ -827,9 +840,10 @@ def next_units(state: FleetRunState) -> NextEnvelope:
             skipped.append((unit.id, "blocked"))
             continue
         if unit.status != FleetUnitStatus.PENDING.value:
-            skipped.append((unit.id, f"in-flight ({unit.status})"))
+            label = "in-flight" if unit.status in _IN_FLIGHT else "not pending"
+            skipped.append((unit.id, f"{label} ({unit.status})"))
             continue
-        if len(chosen) >= state.max_parallel:
+        if len(chosen) + len(in_flight) >= state.max_parallel:
             skipped.append((unit.id, "parallel cap reached this round"))
             continue
         if any(_paths_conflict(unit.paths, other) for other in taken_paths):

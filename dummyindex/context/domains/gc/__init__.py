@@ -1,8 +1,17 @@
 """Context-hygiene GC: detect & delete stale/superseded/dead generated docs.
 
-Deterministic plumbing for the ``/dummyindex-gc`` skill, which holds every judgment:
-this package never reasons or deletes on its own. ``__all__`` is the CLI + skill
-surface (enumerate, classify, anchor/throttle, scan, guarded delete), including the
+Deterministic plumbing for the commit-throttled hygiene sweep — enumerate
+generated-doc candidates, gather objective signals, throttle the SessionStart
+nudge against a committed commit anchor, and execute bounded, guarded deletions
+of whole doc workspaces. The LLM council judgment lives in the
+``/dummyindex-gc`` skill; this package never reasons or deletes on its own.
+
+Public surface (the CLI + skill import target):
+
+- ``Disposition``, ``CandidateKind``, ``Recommendation`` — closed alphabets
+- ``Candidate``, ``SweepReport``, ``DeleteResult`` — frozen dataclasses
+- ``recommend`` — pure pre-council hint per candidate (``Recommendation`` + reason)
+- ``GcError``, ``GcPathError``, ``GcTargetError`` — typed errors
 - ``DEFAULT_COMMIT_THRESHOLD``, ``ARCHIVE_SENTINEL``, ``GC_STATE_REL``,
   ``GC_MEMO_REL``, ``PROPOSALS_REL``, ``AUDITS_REL`` layout constants.
 """
@@ -27,9 +36,10 @@ from .constants import (
 )
 from .delete import delete_workspace
 from .enumerate import enumerate_candidates
-from .enums import CandidateKind, Disposition
+from .enums import CandidateKind, Disposition, Recommendation
 from .errors import GcError, GcPathError, GcTargetError
 from .models import Candidate, DeleteResult, SweepReport
+from .recommend import recommend
 from .scan import scan
 from .signals import classify
 
@@ -47,6 +57,7 @@ __all__ = [
     "GcError",
     "GcPathError",
     "GcTargetError",
+    "Recommendation",
     "SweepReport",
     "anchor_orphaned",
     "classify",
@@ -54,6 +65,7 @@ __all__ = [
     "enumerate_candidates",
     "gc_commits_since",
     "read_gc_anchor",
+    "recommend",
     "scan",
     "should_signal",
     "stamp_gc",

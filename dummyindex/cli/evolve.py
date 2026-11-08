@@ -15,10 +15,11 @@ import sys
 from pathlib import Path
 
 from .common import resolve_context_root, usage_error
+from .evolve_probation import run_attribute, run_probation
 
 _EVOLVE_USAGE = (
     "usage: dummyindex context evolve "
-    "harvest|diagnose|apply|promote|rollback|discard|evidence|learning|rules|experiment|utility ..."
+    "harvest|diagnose|apply|promote|rollback|discard|evidence|learning|rules|experiment|utility|attribute|probation ..."
 )
 
 
@@ -40,12 +41,14 @@ def run(args: list[str]) -> int:
         "rules": _evolve_rules,
         "experiment": _evolve_experiment,
         "utility": _evolve_utility,
+        "attribute": run_attribute,
+        "probation": run_probation,
     }
     handler = handlers.get(verb)
     if handler is None:
         print(
             "error: unknown evolve verb "
-            f"{verb!r} (expected harvest|diagnose|apply|promote|rollback|discard|evidence|learning|rules|experiment|utility)",
+            f"{verb!r} (expected harvest|diagnose|apply|promote|rollback|discard|evidence|learning|rules|experiment|utility|attribute|probation)",
             file=sys.stderr,
         )
         return 2

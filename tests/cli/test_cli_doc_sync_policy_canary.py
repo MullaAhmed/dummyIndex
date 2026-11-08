@@ -1,7 +1,10 @@
 """Rule-copy canary: ALWAYS_ON_OUTPUT_POLICY vs its restatements.
 
-A self-contained guard on one constant vs three docs, split by concern out of
-the subcommand doc-sync guards in ``test_cli_doc_sync.py``.
+Split out of ``test_cli_doc_sync.py`` (folder-organization convention: split
+by concern once a module grows past ~600 lines,
+`.context/conventions/coding-practices.md`) — this is a self-contained
+guard on one constant vs three docs, not part of the subcommand doc-sync
+guards in the sibling module.
 """
 
 from __future__ import annotations
@@ -22,9 +25,11 @@ from tests.paths import REPO_ROOT
 #
 # Ported from ponytail's ``scripts/check-rule-copies.js`` (MIT, © 2026
 # DietrichGebert): its ``INVARIANTS`` fallback for surfaces too long to
-# byte-compare. ``ALWAYS_ON_OUTPUT_POLICY`` is the single source that three
-# docs (`docs/COMMANDS.md`, `docs/guide/07-cli.md`, `dummyindex/skills/skill.md`)
-# restate in different prose, so this is a canary, not byte equality.
+# byte-compare. ``ALWAYS_ON_OUTPUT_POLICY``
+# (`dummyindex/context/output/bootstrap.py`) is the single source three
+# shipped docs restate in deliberately different English prose
+# (`docs/COMMANDS.md`, `docs/guide/07-cli.md`, `dummyindex/skills/skill.md`),
+# so this is a canary, not byte equality.
 #
 # SCOPE: catches (a) a rule's statement dropped from a doc region and (b) a small
 # named set of region-scoped inversions. It is NOT general contradiction
@@ -37,15 +42,76 @@ from tests.paths import REPO_ROOT
 # stale with the suite green. A human reviewing `_POLICY_INVARIANTS` is the only
 # safeguard.
 #
-# Each doc has two marker-delimited regions, never widened into each other:
-# whole-file scanning let a hedge slip past while every pinned token stayed put.
-#   - ``test-anchor:policy-restatement``: the output-policy prose restatement.
-#   - ``test-anchor:policy-selfapply``: the `i-have-adhd` bullet. With
-#     `disable-model-invocation: true`, enabling the plugin alone cannot make the
-#     skill self-apply (upstream's opt-in SessionStart hook is inert without a
-#     per-profile flag), so the project policy is the reliable carrier.
-# Markers use `test-anchor:`, never the `dummyindex:*` namespace reserved for
-# tool-parsed managed regions; `render_skill()` strips them from installed skills.
+# TWO independent, delimited regions per doc — deliberately not one, and
+# deliberately not widened into each other (the self-apply text sits two
+# unrelated paragraphs away from the restatement paragraph in every doc;
+# swallowing that gap would reintroduce the whole-file false-positive class
+# the region-scoping was built to kill):
+#
+#   - ``test-anchor:policy-restatement`` — the always-on output-policy prose
+#     restatement (lead-with-outcome, keep-prose-compact, etc.).
+#   - ``test-anchor:policy-selfapply`` — the `i-have-adhd` reviewed-source
+#     bullet: the fact that `disable-model-invocation: true` means installing
+#     and enabling the plugin alone cannot make the skill self-apply. Upstream
+#     now also ships an opt-in SessionStart hook, but it stays inert without a
+#     per-profile flag; dummyindex's project policy remains the reliable
+#     profile-independent carrier. A doc-
+#     level inversion of exactly this fact ("never makes it self-apply" ->
+#     "does make it self-apply") is what the first audit caught and the
+#     first version of this canary's region-scoping let back through — this
+#     second region closes that gap.
+#
+# Each marker pair lives in the `test-anchor:` namespace, deliberately OUTSIDE
+# `dummyindex:*` — this repo reserves `<!-- dummyindex:* -->` for managed,
+# tool-parsed, do-not-hand-edit regions in user-facing files (`dummyindex:begin`
+# /`:end` in `context/output/bootstrap.py`, `dummyindex:begin:codex`/
+# `:end:codex` in `context/output/agents_md.py`,
+# `dummyindex:consistency:begin/end` in `context/domains/proposals/store.py`,
+# `dummyindex:merged:begin/end` in `context/domains/features/constants.py`,
+# `dummyindex:owner*` in `agents_md.py`,
+# `dummyindex:generated` in `context/domains/equip/models.py`, and
+# `dummyindex:installed` in `context/domains/equip/constants.py`). This
+# canary's markers are test-only scaffolding, not a managed region any tool
+# parses, so they must never ship inside that reserved namespace — hence
+# `test-anchor:`, verified by grepping every `dummyindex:` marker string above
+# to confirm none of them share so much as a prefix with `test-anchor:policy-
+# restatement:*` / `test-anchor:policy-selfapply:*` (nor do the two canary
+# markers collide with each other — "restatement" and "selfapply" share no
+# prefix beyond `test-anchor:policy-`, itself not a parsed marker anywhere).
+# `render_skill()` (`dummyindex/installer/common.py`) additionally strips any
+# line matching the `test-anchor:` comment shape at install/repair render
+# time, so even this test-only namespace never reaches an installed
+# `SKILL.md` — see `test_render_skill_strips_test_anchor_markers` in
+# `tests/test_install.py`. All region-scoped assertions below scan ONLY the
+# text between one doc's ONE relevant marker pair — whole-file scanning is
+# exactly what let a hedge/exception/reversal slip past while every pinned
+# token in the other 30k+ chars stayed put.
+#
+# Each row is (label, constant_pattern, statement_pattern, inversions,
+# region):
+#   - constant_pattern: a regex the flattened, lowercased constant must
+#     `re.search`. Regexes, not literals — an unambiguous literal also pins
+#     incidental glue (a comma, an article), reddening on a same-meaning
+#     copy-edit. Trimmed to the semantic core, tolerant gaps for glue.
+#   - statement_pattern: a regex the doc's named `region` must `re.search` —
+#     the rule's content, never its name (asserting the name "always-on
+#     output policy" is what let the flagship rule be deleted from every doc
+#     while staying green). `None` means the region legitimately omits this
+#     rule — verified by grepping the region's actual text, not assumed.
+#   - inversions: a small, tight tuple of regexes whose presence inside the
+#     REGION reddens the test even when `statement_pattern` still matches (a
+#     restatement can contradict the constant — negation dropped, precedence
+#     reversed, scope narrowed — while the rule's key phrase survives). Empty
+#     where no named contradiction shape applies.
+#   - region: which of the two marker-delimited regions this row is checked
+#     against ("restatement" or "selfapply"). Generalized to a field rather
+#     than two hardcoded code paths so a third region, if ever needed, is one
+#     new row attribute plus one new entry in `_POLICY_REGION_MARKERS`, not a
+#     forked test function.
+#
+# Matches are case-insensitive (region text is lowercased) regex checks on
+# whitespace-flattened text, mirroring `INVARIANTS`' `text.includes(phrase)`
+# upgraded to `re.search`, rescoped from "whole file" to "one named region".
 @dataclass(frozen=True)
 class _PolicyInvariant:
     """One policy rule, checked against the constant and one doc region.
@@ -145,11 +211,6 @@ _POLICY_INVARIANTS: tuple[_PolicyInvariant, ...] = (
         "lead with the outcome or next action",
     ),
     _PolicyInvariant(
-        "command-or-path-before-prose",
-        r"a command, path, or `file:line` comes first and prose comes after",
-        None,
-    ),
-    _PolicyInvariant(
         "numbered multi-step work",
         "number multi-step work",
         "number multi-step work",
@@ -215,12 +276,31 @@ _POLICY_INVARIANTS: tuple[_PolicyInvariant, ...] = (
         r"stop adhd mode.{0,30}acknowledge in one line",
         None,
     ),
+    _PolicyInvariant(
+        "at most 5 items per group",
+        "at most 5 items per group",
+        "at most 5 items per group",
+    ),
+    _PolicyInvariant(
+        "agent prompts in concise chinese",
+        r"subagent prompts.{0,40}concise chinese",
+        "concise chinese",
+    ),
+    _PolicyInvariant(
+        "repo docs in english caveman",
+        "english caveman style",
+        "english caveman",
+    ),
 )
 
-# Decay guard: a sha256 pin of the flattened constant fires on ANY edit so a
-# human re-checks `_POLICY_INVARIANTS`. It is not a proxy for "every clause has
-# a row"; a sentence-count guard both false-positived and false-negatived.
-_POLICY_CONSTANT_HASH = "6177b89c4ea1033b"
+# Decay guard, honest version: NOT a proxy for "every clause has a row" (the
+# sentence-count guard this replaces false-positived on an added `e.g.` and a
+# split sentence, and false-negatived on a genuinely new clause and on a
+# sentence ending `.)"` — net negative). A sha256 pin of the flattened
+# constant never lies about what changed: it fires on ANY edit, with an
+# explicit instruction to go re-check `_POLICY_INVARIANTS` by hand rather
+# than claiming to know what changed.
+_POLICY_CONSTANT_HASH = "9c2fba5c44d1d133"
 
 
 @pytest.mark.unit

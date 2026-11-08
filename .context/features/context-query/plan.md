@@ -13,7 +13,7 @@ query path. Downstream CLI callers, planning/build workflows and retrieval eval
 consume the public result; the evaluator does not import back into production.
 
 Missing `INDEX.json` is a hard error. Optional symbol/feature reads catch I/O or
-JSON-decoding failure and lose those signals; that fallback does not validate
+JSON-decoding failure. The fallback loses those signals. It does not validate
 arbitrary index schemas (`dummyindex/context/domains/query.py:313-358`,
 `dummyindex/context/domains/query.py:576-633`).
 
@@ -30,7 +30,7 @@ arbitrary index schemas (`dummyindex/context/domains/query.py:313-358`,
    by `(-score, feature_id)` (`dummyindex/context/domains/query.py:360-377`,
    `dummyindex/context/domains/query.py:428-573`). This weighted ranking pipeline
    is the implementation; no model, embedding or second scoring service runs.
-3. Construct citations and excerpts within the estimated token budget, then
+3. Construct citations and excerpts within the estimated token budget. Then
    remove complete trailing matches until both renderers fit `max_bytes`
    (`dummyindex/context/domains/query.py:379-425`,
    `dummyindex/context/domains/query.py:636-780`).
@@ -83,5 +83,5 @@ synonyms, directories and top-five symbol scoring
 missing-index paths have dedicated checks at
 `tests/context/domains/test_query.py:63-67` and
 `tests/context/domains/test_query.py:273-279`. The frozen correctness gate and
-networked benchmark belong to `retrieval-eval`; historical benchmark scores are
+networked benchmark belong to `retrieval-eval`. Historical benchmark scores are
 not a new measurement of the combined release.

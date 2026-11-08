@@ -930,6 +930,7 @@ def test_default_config_seeds_wired_from_default_plugins() -> None:
         "superpowers@claude-plugins-official",
         "caveman@caveman",
         "i-have-adhd@i-have-adhd",
+        "ponytail@ponytail",
     )
     assert default_config().default_plugins_enabled is True
 
@@ -1222,6 +1223,7 @@ def test_reconcile_default_plugins_preserves_custom_order_and_is_idempotent(
         "custom@private",
         "caveman@caveman",
         "i-have-adhd@i-have-adhd",
+        "ponytail@ponytail",
     )
     assert cfg.wired[1] == custom
 

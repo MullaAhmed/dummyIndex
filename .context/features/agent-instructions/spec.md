@@ -4,41 +4,42 @@ confidence: INFERRED
 
 ## Intent
 
-Emit the three Claude-facing documents that make a `.context/` index self-navigable for an AI coding agent without running the CLI: a `HOW_TO_USE.md` navigation guide, a deterministic `architecture/overview.md`, and a fixed set of task `playbooks/*.md`. All generators are pure — no LLM, no I/O beyond returning strings — so the output is reproducible and diff-stable (`dummyindex/context/output/instructions.py:1-8`).
+Emit the three Claude-facing documents that make `.context/` self-navigable for an AI coding agent. They need no CLI run. The documents are `HOW_TO_USE.md`, a deterministic `architecture/overview.md`, and task `playbooks/*.md`. All generators are pure. No LLM, no I/O beyond returning strings. Output is reproducible and diff-stable (`dummyindex/context/output/instructions.py:1-8`).
 
 ## User-visible behavior
 
-**`HOW_TO_USE.md`** — a static, hand-authored template returned verbatim (`instructions.py:23-145`). It tells the agent to read `.context/` before grepping, via:
-- A two-layer model: the *deterministic backbone* (map/tree/naming/source-docs) refreshed by `rebuild --changed`, vs. the *curated* layer (feature `spec.md`/`plan.md`/`concerns.md`, conventions) updated through the read-only `reconcile` → place/enrich → `reconcile-stamp` procedure (`instructions.py:26`, `:79-80`, `:138`).
-- A navigation table mapping questions → index files, keyed on `feature_id` (not `id`), distinguishing `INDEX.json` `*_count` summary keys from raw `feature.json` lists (`instructions.py:32-46`).
-- A PageIndex-style "walk the tree, don't grep" retrieval procedure, with `dummyindex context query` as an optional ranked first cut (`instructions.py:48-59`).
-- "When the index is wrong, the code wins" + which fix path matches which staleness; "your explicit instruction overrides a spec/plan" (`instructions.py:75-81`).
-- Commit policy (everything but `cache/` committed; generated workspaces GC'd; the committed-layout table now also carries the `.context/fleet/run-<id>/` row) and a secret-scanner note (the `sha256` fields are content fingerprints, scope the detect-secrets exclusion to `map/` + `source-docs/INDEX.json`, not all of `.context/`) (`instructions.py:87-102`, `:123-134`).
+**`HOW_TO_USE.md`** is a static, hand-authored template returned verbatim (`instructions.py:23-144`). It tells the agent to read `.context/` before grepping:
+- Two layers. The *deterministic backbone* (map, tree, naming, source-docs) refreshes via `rebuild --changed`. The *curated* layer (feature `spec.md`/`plan.md`/`concerns.md`, conventions) updates through read-only `reconcile`, then `/dummyindex --recouncil`, then `reconcile-stamp` (`instructions.py:26`, `:28`).
+- A navigation table keyed on `feature_id`, not `id`. It separates `INDEX.json` `*_count` keys from raw `feature.json` lists (`instructions.py:36-50`, `:40`).
+- A PageIndex-style "walk the tree, don't grep" procedure. `dummyindex context query` is an optional ranked first cut. Output caps at 16,000 bytes (`instructions.py:52-63`, `:56-57`).
+- "The code wins" and the fix path that matches each staleness. The user's explicit instruction overrides a spec or plan (`instructions.py:75-81`).
+- Commit policy: everything in `.context/` is committed except `cache/`, which is per-machine and never referenced. The committed-layout table adds `gc/evolution.jsonl`, `gc/evolve/<run>/` and `.context/fleet/run-<id>/` (`instructions.py:89`, `:97-105`).
+- A secret-scanner note. `sha256` fields are content fingerprints. Scope the detect-secrets exclusion to `map/` and `source-docs/INDEX.json`, not all of `.context/` (`instructions.py:126-136`).
 
-**`architecture/overview.md`** — derived deterministically from the file/symbol maps + meta (`instructions.py:212-306`): a Stack block (languages/file/symbol counts), a Top-level layout table (one row per top-level dir with a heuristic role hint, file count, symbol count, languages), a Repo-root files list, and — when a `DocCatalog` is supplied — a "Documented architecture" pointer section listing checked-in arch docs sorted high-confidence-first and labelled **advisory only**. Role hints come from a fixed dir-name lookup; unknown dirs render `_unknown_` (`instructions.py:151-200`, `:329-330`).
+**`architecture/overview.md`** is derived deterministically from the file and symbol maps plus meta (`instructions.py:215-309`). It holds a Stack block (languages, file and symbol counts) and a top-level layout table. Each row has a heuristic role hint, file count, symbol count and languages (`instructions.py:255`). It lists root files. With a `DocCatalog`, it adds a "Documented architecture" section. That section is labelled **advisory only** and sorts high-confidence first (`instructions.py:281-300`). Role hints come from a fixed dir-name lookup. Unknown dirs render `_unknown_`, not a guessed role (`instructions.py:154-203`, `:332-334`).
 
-**`playbooks/*.md`** — five static recipes selected by id from `_PLAYBOOK_BODIES`: `add-endpoint`, `add-feature`, `add-migration`, `fix-bug`, `refactor` (`instructions.py:367-516`). Each is a numbered procedure that routes the agent through `map/symbols.json`/`tree.json`/`conventions/naming.md` and ends by pairing `rebuild --changed` with the reconcile procedure when new files are added. `generate_playbook_md` raises `KeyError` (listing available ids) for an unknown id (`instructions.py:522-527`).
+**`playbooks/*.md`** are five static recipes selected by id from `_PLAYBOOK_BODIES` (`instructions.py:370-546`): `add-endpoint`, `add-feature`, `add-migration`, `fix-bug`, `refactor`. Each is a numbered procedure. It routes the agent through `map/symbols.json`, `tree.json` and `conventions/naming.md`. It ends by pairing `rebuild --changed` with reconcile when new files appear. `generate_playbook_md` raises `KeyError`, listing available ids, for an unknown id (`instructions.py:552-557`).
 
-The doc-evidence pointers catalogued for this feature (`docs.md`) are MEDIUM/LOW confidence with broken refs — historical only, not quoted here.
+The doc-evidence pointers catalogued for this feature (`docs.md`) are MEDIUM/LOW confidence with broken refs. They are historical only and not quoted here.
 
 ## Contracts
 
-Public functions / constants (`dummyindex/context/output/instructions.py`):
-- `generate_how_to_use_md() -> str` (`:144-145`) — returns the static `_HOW_TO_USE` template (`:23-141`).
-- `generate_architecture_overview_md(repo_root: Path, files_map: FilesMap, symbols_map: SymbolsMap, meta: Meta, *, doc_catalog: Optional[DocCatalog] = None) -> str` (`:212-306`).
-- `generate_playbook_md(playbook_id: str) -> str` (`:522-527`) — raises `KeyError` for unknown id.
-- `PLAYBOOK_IDS: tuple[str, ...]` = sorted keys of `_PLAYBOOK_BODIES` (`:519`).
-- `write_how_to_use_md(path: Path) -> None` (`:533-534`).
-- `write_architecture_overview_md(path, repo_root, files_map, symbols_map, meta, *, doc_catalog=None) -> None` (`:537-551`).
-- `write_playbook_md(path: Path, playbook_id: str) -> None` (`:554-555`).
+Public functions and constants (`dummyindex/context/output/instructions.py`):
+- `generate_how_to_use_md() -> str` (`:147-148`) returns the static `_HOW_TO_USE` template.
+- `generate_architecture_overview_md(repo_root: Path, files_map: FilesMap, symbols_map: SymbolsMap, meta: Meta, *, doc_catalog: Optional[DocCatalog] = None) -> str` (`:215-309`).
+- `generate_playbook_md(playbook_id: str) -> str` (`:552-557`) raises `KeyError` for an unknown id.
+- `PLAYBOOK_IDS: tuple[str, ...]` is the sorted keys of `_PLAYBOOK_BODIES` (`:549`).
+- `write_how_to_use_md(path: Path) -> None` (`:563-564`).
+- `write_architecture_overview_md(path, repo_root, files_map, symbols_map, meta, *, doc_catalog=None) -> None` (`:567-581`).
+- `write_playbook_md(path: Path, playbook_id: str) -> None` (`:584-585`).
 
-Private helpers: `_atomic_write(path, content)` writes to `path.suffix + ".tmp"` then `replace()`s (atomic, no partial file) (`:558-562`); `_group_files_by_top_level_dir` / `_group_symbols_by_top_level_dir` skip root files (`:309-326`); `_role_hint_for` is a case-insensitive `_DIR_ROLE_HINTS` lookup (`:329-330`); `_select_architecture_docs` matches arch filename signals or an "architecture" title, drops externals, sorts by `DOC_CONFIDENCE_ORDER` (`:345-361`).
+Private helpers: `_atomic_write(path, content)` writes `path.suffix + ".tmp"`, then `replace()` (`:588-592`). It is atomic, so no partial file appears. `_group_files_by_top_level_dir` and `_group_symbols_by_top_level_dir` skip root files (`:312-331`). `_role_hint_for` is a case-insensitive `_DIR_ROLE_HINTS` lookup (`:332-334`). `_select_architecture_docs` matches filename signals or an "architecture" title. It drops externals and sorts by `DOC_CONFIDENCE_ORDER` (`:348-364`).
 
 ## Examples
 
-- `generate_playbook_md("add-feature")` → markdown beginning `# Playbook — add a feature`, citing `map/symbols.json` and `conventions/naming.md` (`test_instructions.py:205-210`).
-- `generate_playbook_md("not-a-real-playbook")` → `KeyError` (`test_instructions.py:219-222`).
-- `generate_architecture_overview_md(...)` on a repo with `src/`, `tests/`, `README.md` → includes `# Architecture overview`, ``` `src/` ```, role "source code", "test suite", and the root `README.md` (`test_instructions.py:108-150`); a flat repo yields "No subdirectories detected" (`:152-169`); an unrecognized dir renders `_unknown_` (`:171-194`).
-- `write_how_to_use_md(path)` leaves no `.tmp` sibling (`test_instructions.py:97-101`).
-- `build_all(...)` writes `HOW_TO_USE.md`, `architecture/overview.md`, and one `playbooks/<id>.md` per `PLAYBOOK_IDS`, all listed in `INDEX.md` (`test_instructions.py:236-268`).
-- Doc-hygiene guards assert the generated prose carries the binding `— via` gate, read-only reconcile wording, the `feature_id`/INDEX.json field contract, and never the known-bad `install --scope user` remedy or phantom `dummyindex --recouncil` CLI verb (`test_skills_doc_hygiene.py:133-211`, `:621-666`). They also pin the codebase-scan council doc's ranked-seed contract — edit-the-ranked-shortlist wording, `symbolRef`/`evidence` requirements grounded in `graph-communities.json`, the 120-node/240-edge caps with the 40–80 aim, and `skill.md`'s matching scan-phase summary (`test_skills_doc_hygiene.py:668-732`) — plus fleet-skill red-flag and no-hardcoded-identifier guards for the newer families (`:756-791`).
+- `generate_playbook_md("add-feature")` returns markdown starting `# Playbook — add a feature`. It cites `map/symbols.json` and `conventions/naming.md` (`test_instructions.py:211`).
+- `generate_playbook_md("not-a-real-playbook")` raises `KeyError` (`test_instructions.py:225`).
+- `generate_architecture_overview_md(...)` on `src/`, `tests/`, `README.md` includes `# Architecture overview`, `` `src/` ``, "source code", "test suite" and the root `README.md` (`test_instructions.py:114`). A flat repo yields "No subdirectories detected" (`:158`). An unknown dir renders `_unknown_` (`:177`).
+- `write_how_to_use_md(path)` leaves no `.tmp` sibling (`test_instructions.py:103`).
+- `build_all(...)` writes `HOW_TO_USE.md`, `architecture/overview.md` and one `playbooks/<id>.md` per `PLAYBOOK_IDS`. `INDEX.md` lists them all (`test_instructions.py:242`, `:267`).
+- Doc-hygiene guards assert the binding `— via` gate, read-only reconcile wording and the `feature_id`/INDEX.json contract. They reject the known-bad `install --scope user` remedy and a bare `dummyindex --recouncil` verb (`test_skills_doc_hygiene.py:133-211`, `:568-600`). They pin the codebase-scan council doc's ranked-seed contract. It requires `symbolRef` and `evidence`, grounded in `graph-communities.json`, the 120-node/240-edge caps with the 40–80 aim, and `skill.md` wording (`:614-676`). They also check fleet red flags and hardcoded identifiers (`:699`, `:722`).

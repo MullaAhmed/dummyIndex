@@ -1,0 +1,30 @@
+{
+  "discarded": {
+    "plan.md": "Execution plan completed (checklist fully checked); durable implementation map lives in .context/features/equip/.",
+    "spec.md": "Implemented intent and contracts now live in source, tests and the reconciled feature docs (.context/features/equip/); reconciled in fleet run-0001 commit 17436b4."
+  },
+  "disposition": "completed",
+  "evidence": [],
+  "items": {},
+  "kind": "proposal",
+  "ownership": {
+    "changed_paths": [],
+    "reconciled_paths": [],
+    "session_id": null,
+    "task_id": "proposals:specialist-sourcing"
+  },
+  "pending_verification": [],
+  "resolved_verification": {},
+  "schema_version": 1,
+  "slug": "specialist-sourcing",
+  "source_commit": "ec126b438891d9ec5133ed27939330d1be0ec0ac",
+  "state": "implemented",
+  "superseded": {},
+  "transfers": [],
+  "workspace_files": {
+    "checklist.md": "80437f00e01dbe03385f3363f56ff7c54081936881e0500fd9eb9c827e3c0ca8",
+    "plan.md": "ea20bfcb5fa3f0074c570f7abf1c246cfe92e1ad45cce10c54a8577e3cc2dea3",
+    "proposal.json": "01ded0c73841dd9386ceceb8f210abc5cbcac93101e58d86a3ae8918e04bc202",
+    "spec.md": "ffc219881de5401f9de94d0a5ead7ef9d44b59b2c75f4a6f8de6a75333209a1a"
+  }
+}

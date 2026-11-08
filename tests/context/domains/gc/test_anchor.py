@@ -16,6 +16,7 @@ from pathlib import Path
 
 import pytest
 
+from dummyindex.context.domains.gc import scan
 from dummyindex.context.domains.gc.anchor import (
     anchor_orphaned,
     gc_commits_since,
@@ -355,3 +356,83 @@ def test_anchor_orphaned_false_off_git(tmp_path: Path) -> None:
     ctx = _context_dir(tmp_path)
     write_gc_anchor(ctx, "0123456789abcdef0123456789abcdef01234567")
     assert anchor_orphaned(ctx, tmp_path) is False
+
+
+# ----- orphaned anchor fires the nudge (C6) ---------------------------------
+
+_UNKNOWN_SHA = "0123456789abcdef0123456789abcdef01234567"
+
+
+def _orphaned_repo(root: Path) -> Path:
+    _init_repo(root)
+    ctx = _context_dir(root)
+    (root / "a.py").write_text("x = 1\n", encoding="utf-8")
+    _commit_all(root, "init")
+    write_gc_anchor(ctx, _UNKNOWN_SHA)
+    return ctx
+
+
+@pytest.mark.unit
+def test_should_signal_orphaned_anchor_fires_once_per_session(tmp_path: Path) -> None:
+    ctx = _orphaned_repo(tmp_path)
+    assert should_signal(ctx, tmp_path, "s1") is True
+    assert should_signal(ctx, tmp_path, "s1") is False
+
+
+@pytest.mark.unit
+def test_should_signal_orphaned_blank_session_never_suppresses(tmp_path: Path) -> None:
+    ctx = _orphaned_repo(tmp_path)
+    assert should_signal(ctx, tmp_path, "") is True
+    assert should_signal(ctx, tmp_path, "") is True
+
+
+@pytest.mark.unit
+def test_should_signal_no_anchor_is_false(tmp_path: Path) -> None:
+    _init_repo(tmp_path)
+    ctx = _context_dir(tmp_path)
+    (tmp_path / "a.py").write_text("x = 1\n", encoding="utf-8")
+    _commit_all(tmp_path, "init")
+    assert should_signal(ctx, tmp_path, "s1") is False
+
+
+@pytest.mark.unit
+def test_anchor_orphaned_false_on_shallow_clone(tmp_path: Path) -> None:
+    src = tmp_path / "src"
+    src.mkdir()
+    _init_repo(src)
+    (src / "a.py").write_text("x = 1\n", encoding="utf-8")
+    first = _commit_all(src, "init")
+    (src / "a.py").write_text("x = 2\n", encoding="utf-8")
+    _commit_all(src, "second")
+
+    dst = tmp_path / "dst"
+    subprocess.run(
+        ["git", "clone", "--depth", "1", src.as_uri(), str(dst)],
+        check=True,
+        capture_output=True,
+    )
+    assert _git(dst, "rev-parse", "--is-shallow-repository").strip() == "true"
+
+    ctx = _context_dir(dst)
+    write_gc_anchor(ctx, first)  # the first commit is absent from the shallow clone
+    assert anchor_orphaned(ctx, dst) is False
+    assert should_signal(ctx, dst, "s1") is False
+
+
+@pytest.mark.unit
+def test_scan_orphaned_reports_signal_and_recommendation(tmp_path: Path) -> None:
+    ctx = _orphaned_repo(tmp_path)
+    workspace = ctx / "proposals" / "demo"
+    workspace.mkdir(parents=True)
+    (workspace / "proposal.json").write_text(
+        json.dumps({"slug": "demo", "title": "Demo", "status": "planned"}),
+        encoding="utf-8",
+    )
+    (workspace / "checklist.md").write_text("- [x] a\n", encoding="utf-8")
+
+    report = scan(ctx, tmp_path)
+    assert report.should_signal is True
+    assert report.anchor_orphaned is True
+    demo = next(c for c in report.candidates if c.slug == "demo")
+    assert demo.recommendation == "close"
+    assert demo.reason

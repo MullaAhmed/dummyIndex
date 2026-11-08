@@ -1,6 +1,6 @@
 # Naming conventions (derived)
 
-_Generated 2026-11-07T21:13:52+00:00_
+_Generated 2026-11-08T02:53:01+00:00_
 
 ## powershell
 
@@ -8,9 +8,8 @@ _Generated 2026-11-07T21:13:52+00:00_
 
 ## python
 
-- **class** → `PascalCase` (93/93, 100%)
-- **function** → `snake_case` (5057/5710, 89%) — 509 exceptions; see [naming.json](naming.json)
-- **method** → `snake_case` (66/73, 90%) — 7 exceptions; see [naming.json](naming.json)
+- **class** → `PascalCase` (99/99, 100%)
+- **function** → `snake_case` (5500/6300, 87%) — 603 exceptions; see [naming.json](naming.json)
 
 ## typescript
 

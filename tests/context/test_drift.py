@@ -50,9 +50,7 @@ def _seed_meta(project_root: Path, indexed_commit: str) -> None:
     )
 
 
-def _write_doc_basis(
-    project_root: Path, features: dict[str, dict[str, str]]
-) -> None:
+def _write_doc_basis(project_root: Path, features: dict[str, dict[str, str]]) -> None:
     """Seed ``cache/doc-basis.json`` with a per-feature blob-sha map."""
     path = project_root / ".context" / DOC_BASIS_REL
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -345,9 +343,7 @@ def _seed_stamped_source(tmp_path: Path, content: str) -> Path:
     src = tmp_path / "app" / "service.py"
     src.parent.mkdir(parents=True, exist_ok=True)
     src.write_text(content, encoding="utf-8")
-    _make_feature(
-        tmp_path, "service-loop", files=["app/service.py"], docs=("spec.md",)
-    )
+    _make_feature(tmp_path, "service-loop", files=["app/service.py"], docs=("spec.md",))
     _write_doc_basis(
         tmp_path,
         {"service-loop": {"app/service.py": blob_sha(src.read_bytes())}},
@@ -361,8 +357,7 @@ def test_basis_match_suppresses_row_even_when_mtime_newer(tmp_path: Path) -> Non
     with mtime newer than every feature doc (the rebase/checkout/stash class:
     history moved under the index, the docs still describe these bytes)."""
     src = _seed_stamped_source(tmp_path, "def f(): return 1\n")
-    _touch(tmp_path / ".context" / "features" / "service-loop" / "spec.md",
-           mtime=500.0)
+    _touch(tmp_path / ".context" / "features" / "service-loop" / "spec.md", mtime=500.0)
     os.utime(src, (1_000.0, 1_000.0))  # newer than every doc
 
     report = compute_drift(tmp_path)
@@ -428,8 +423,7 @@ def test_corrupt_or_unknown_version_basis_is_ignored(tmp_path: Path) -> None:
     """A corrupt or future-versioned basis file switches the tier off and the
     conservative direction (report) wins — never a crash, never suppression."""
     src = _seed_stamped_source(tmp_path, "def f(): return 1\n")
-    _touch(tmp_path / ".context" / "features" / "service-loop" / "spec.md",
-           mtime=500.0)
+    _touch(tmp_path / ".context" / "features" / "service-loop" / "spec.md", mtime=500.0)
     os.utime(src, (1_000.0, 1_000.0))
 
     basis_path = tmp_path / ".context" / DOC_BASIS_REL
@@ -647,8 +641,7 @@ def test_render_suppression_note_only_when_suppressed() -> None:
     )
     text = render_drift_summary(report)
     assert (
-        "_2 mtime-touched files matched their doc-basis and were suppressed._"
-        in text
+        "_2 mtime-touched files matched their doc-basis and were suppressed._" in text
     )
     quiet = DriftReport(rows=(DriftRow(rel_path="a.py", feature_id="fx"),))
     assert "suppressed" not in render_drift_summary(quiet)

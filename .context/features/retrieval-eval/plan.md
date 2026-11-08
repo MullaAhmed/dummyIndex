@@ -29,7 +29,7 @@ the off-topic control and vocabulary overlap for every positive fixture
 (`tests/eval/test_retrieval_eval.py:70-81`,
 `tests/eval/test_retrieval_eval.py:182-214`,
 `tests/eval/test_retrieval_eval.py:216-265`). Fixed expectations make regressions
-repeatable, at the cost of representing a small authored sample rather than
+repeatable. They represent a small authored sample, not
 live feature IDs from arbitrary rebuilds. Token estimates are observations, not
 an additional quality floor.
 

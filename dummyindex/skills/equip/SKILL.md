@@ -31,10 +31,13 @@ manifest path as data, without requiring its native agent to be installed.
    when available; otherwise use a native implementation, exploration or
    general-purpose subagent. A missing native adapter never blocks the work.
 4. Pass the task, bounded scope, relevant grounding, verification expectations,
-   and any policies actually selected in this session to every delegate. If
-   Ponytail is selected and exposed, include its loaded mandate; do not
-   silently install or assume a policy skill. Native names and tool syntax
-   are adapters, not a second implementation of the capability.
+   and any policies actually selected in this session to every delegate.
+   Ponytail applies by default when exposed. When its Claude plugin hooks are
+   active in this session, its `SubagentStart` hook already injects it into
+   each subagent; do not paste it again. Otherwise pass its loaded mandate
+   unless the user turned it off this session. Never silently install it.
+   Native names and tool syntax are adapters, not a second implementation of
+   the capability.
 5. Verify actual work with the project's checks. Persist a durable lesson
    through `equip patch`, which updates the canonical body's hash and version;
    never teach by editing a native pointer or bypassing the ownership lifecycle.
@@ -172,10 +175,11 @@ dummyindex context equip discover "postgres perf" # query: search seeds + GitHub
 dummyindex context equip install <plugin>@<marketplace> [--yes] [--scope project|local|user]
 ```
 
+Before `equip apply --source`, follow [sourcing.md](sourcing.md).
+
 ### Two discovery channels (know which you're reaching for)
 
-There are **two** ecosystems available to the Claude workflow — use both, but
-keep them straight:
+Two ecosystems. Use both, keep them straight:
 
 - **Channel A — Claude plugin marketplaces** (`equip discover` / `equip
   install`, above). Plugins are wired **natively** into `.claude/settings.json`

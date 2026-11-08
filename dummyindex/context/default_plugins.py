@@ -9,6 +9,7 @@ in its result and never raises, so a bad ``settings.json`` cannot fail init.
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import subprocess
@@ -133,7 +134,9 @@ def _validate_default_plugins(
     return plugins
 
 
-# Ordered, reviewed built-ins. The official marketplace needs no declaration.
+# Ordered, reviewed built-ins. The official marketplace needs no declaration;
+# all three third-party sources track their upstream's latest default branch (see
+# the module docstring for why a commit pin is not expressible).
 DEFAULT_PLUGINS: tuple[DefaultPlugin, ...] = _validate_default_plugins(
     (
         DefaultPlugin(
@@ -159,6 +162,20 @@ DEFAULT_PLUGINS: tuple[DefaultPlugin, ...] = _validate_default_plugins(
             marketplace="i-have-adhd",
             repo="ayghri/i-have-adhd",
             surfaces=("skill", "opt-in SessionStart shell command hook"),
+            runs_code=True,
+        ),
+        DefaultPlugin(
+            plugin="ponytail",
+            marketplace="ponytail",
+            repo="DietrichGebert/ponytail",
+            surfaces=(
+                "skills",
+                "commands",
+                "SessionStart Node command hook",
+                "SubagentStart Node command hook",
+                "UserPromptSubmit Node command hook",
+                "band UI module with local task ledger",
+            ),
             runs_code=True,
         ),
     )
@@ -292,6 +309,20 @@ def _effective_enabled(project_root: Path, target: str) -> bool | None:
     return state
 
 
+def ensure_caveman_manual(project_root: Path) -> bool:
+    """Write ``.caveman.json`` as ``{"defaultMode": "manual"}``; True iff written."""
+    if project_root.resolve() == Path.home().resolve():
+        return False
+    if (project_root / ".caveman" / "config.json").exists():
+        return False
+    try:
+        with open(project_root / ".caveman.json", "x", encoding="utf-8") as fh:
+            fh.write(json.dumps({"defaultMode": "manual"}) + "\n")
+    except FileExistsError:
+        return False
+    return True
+
+
 def _default_for_target(target: str) -> DefaultPlugin | None:
     """Return the reviewed built-in matching ``target``, if any."""
     return next((plugin for plugin in DEFAULT_PLUGINS if plugin.target == target), None)
@@ -416,11 +447,27 @@ def wire_default_plugins(
 ) -> PluginWireResult:
     """Reconcile the declared ``wired`` list against the project ``settings.json``.
 
-    Runs inside headless, never-raise init, so it never prompts. Per plugin, by
-    :func:`_effective_enabled`: ``false`` → ``already``; otherwise a reviewed
-    third-party default's marketplace is declared (or healed) first, then ``true``
-    → ``already``, absent → write ``true``. Installing is the separate
-    :func:`install_default_plugins` pass; ``runner`` is unused (compatibility).
+    Non-interactive and never-blocking — it runs inside best-effort, never-raise,
+    headless ``install``/``ingest`` init, so it **only classifies and reports**;
+    it never calls ``input()``. Each :class:`WiredEntry` is classified against
+    the actual settings *presence* (:func:`_already_decided`) into the
+    :class:`PluginWireResult` buckets:
+
+    - ``kind=skill`` → always **needs-user** (no skill-enable primitive exists;
+      skills are declared + surfaced, never auto-wired here).
+    - ``kind=plugin`` already decided → **satisfied** (``already``).
+    - ``kind=plugin`` declared but absent → **acted** (``enabled``): declare a
+      reviewed pinned marketplace first when needed, then write ``true`` into
+      project settings. Materialisation is a separate, target-filtered
+      :func:`install_default_plugins` pass.
+
+    ``enabled=False`` (empty ``wired`` / ``--no-superpowers``) wires nothing —
+    every target lands in ``skipped``. ``WiredEntry.version`` is recorded only,
+    never used to trigger a re-wire. ``runner`` remains as a compatibility
+    parameter but is intentionally unused: declaration never executes the
+    Claude CLI. Any settings-write error is captured in ``errors`` — never
+    raised. A not-disabled ``caveman@caveman`` also seeds ``.caveman.json``
+    via :func:`ensure_caveman_manual`.
     """
     if not enabled:
         return PluginWireResult(skipped=tuple(e.target for e in wired))
@@ -449,6 +496,11 @@ def wire_default_plugins(
         if state is False:
             already.append(entry.target)
             continue
+        if entry.target == "caveman@caveman":
+            try:
+                ensure_caveman_manual(project_root)
+            except OSError as exc:
+                errors.append((entry.target, str(exc)))
         default = _default_for_target(entry.target)
         if default is not None:
             try:

@@ -8,6 +8,7 @@ one; ``uninstall`` removes our pristine files, our hook and the manifest only.
 
 from __future__ import annotations
 
+import dataclasses
 from pathlib import Path
 
 import pytest
@@ -29,6 +30,7 @@ from dummyindex.context.domains.equip.enums import (
 )
 from dummyindex.context.domains.equip.lifecycle.status import (
     classify_item,
+    is_sourced,
     refresh,
     reset,
     status,
@@ -485,3 +487,93 @@ def test_read_manifest_unknown_enum_raises_equiperror_not_valueerror(
     )
     with pytest.raises(EquipError):
         read_manifest(ctx)
+
+
+# ----- sourced items (upstream-adopted body, origin pinned) -----------------
+
+_UPSTREAM_BODY = "---\nname: python-implementer\nversion: 1.0.0\n---\nupstream body\n"
+_SHA = "a" * 40
+
+
+def _sourced_item(root: Path) -> EquipmentItem:
+    write_text_atomic(root / _IMPL_REL, _UPSTREAM_BODY)
+    return dataclasses.replace(
+        _item("python-implementer", _IMPL_REL, _UPSTREAM_BODY),
+        origin_repo="o/r",
+        origin_ref=_SHA,
+        marketplace="ecc",
+    )
+
+
+@pytest.mark.unit
+def test_is_sourced_requires_generated_and_origin_ref() -> None:
+    base = _item("python-implementer", _IMPL_REL, _IMPL_BODY)
+    assert is_sourced(dataclasses.replace(base, origin_ref=_SHA)) is True
+    assert is_sourced(base) is False
+    vendored = dataclasses.replace(
+        base, source=EquipmentSource.VENDORED, origin_ref=_SHA
+    )
+    assert is_sourced(vendored) is False
+
+
+@pytest.mark.integration
+def test_refresh_skips_sourced_items(tmp_path: Path) -> None:
+    from dummyindex.context.domains.equip import read_manifest
+
+    root = tmp_path
+    item = _sourced_item(root)
+    write_manifest(
+        root / ".context",
+        EquipmentManifest(schema_version=2, items=(item,)),
+    )
+    before = (root / _IMPL_REL).read_bytes()
+    # A different fresh template must not overwrite the upstream body.
+    report = refresh(
+        root, fresh_renders={"python-implementer": _IMPL_BODY.replace("body", "tpl")}
+    )
+    assert "python-implementer" in report.skipped_evolved
+    assert "python-implementer" not in report.refreshed
+    assert (root / _IMPL_REL).read_bytes() == before
+    assert read_manifest(root / ".context").items[0] == item
+
+
+@pytest.mark.integration
+def test_reset_restores_template_and_clears_origin(tmp_path: Path) -> None:
+    from dummyindex.context.domains.equip import read_manifest
+
+    root = tmp_path
+    item = dataclasses.replace(
+        _sourced_item(root),
+        mechanism="vendor",
+        invariants=("x",),
+        package_sha256="e" * 64,
+    )
+    manifest = EquipmentManifest(schema_version=2, items=(item,))
+    write_manifest(root / ".context", manifest)
+    fresh_item = dataclasses.replace(
+        _item("python-implementer", _IMPL_REL, _IMPL_BODY),
+        invariants=("a", "b"),
+        package_sha256="f" * 64,
+    )
+    out = reset(
+        root,
+        manifest,
+        "python-implementer",
+        fresh_render=_IMPL_BODY,
+        fresh_item=fresh_item,
+    )
+    assert out.origin_repo is None
+    assert out.origin_ref is None
+    assert out.marketplace is None
+    assert out.mechanism is None
+    assert out.invariants == ("a", "b")
+    assert out.package_sha256 == "f" * 64
+    disk = (root / _IMPL_REL).read_text(encoding="utf-8")
+    assert disk == _IMPL_BODY.replace("version: 1.0.0", "version: 1.1.0")
+    assert "upstream body" not in disk
+    persisted = _manifest_item(read_manifest(root / ".context"), "python-implementer")
+    assert persisted.origin_ref is None
+    assert persisted.origin_repo is None
+    assert persisted.marketplace is None
+    assert persisted.invariants == ("a", "b")
+    assert persisted.package_sha256 == "f" * 64

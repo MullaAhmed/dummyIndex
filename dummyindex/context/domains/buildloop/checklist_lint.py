@@ -16,8 +16,9 @@ import re
 from .models import ChecklistItem
 
 _LIVE_RE = re.compile(
-    r"\b(live[- ]tests?|live testing|production (test|run|smoke|verification)"
-    r"|smoke[- ]tests?|manual(ly)? (test|verif\w*)"
+    r"\b(live[- ]tests?|live testing|live (traffic|data|users|api)"
+    r"|(on|in) production|production (test|run|smoke|verification)"
+    r"|smoke[- ]tests?|manual(ly)? (test|verif\w*|click|check|run)"
     r"|against (production|staging|a live)|real (api|account)s?)\b",
     re.IGNORECASE,
 )

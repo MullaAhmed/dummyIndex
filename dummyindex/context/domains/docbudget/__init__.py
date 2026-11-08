@@ -2,7 +2,7 @@
 
 Public surface: ``measure``, ``scan``, ``read_ratchet``, ``format_ratchet``,
 ``check``, ``update_ratchet``, ``write_ratchet``, ``BudgetGroup``, ``BudgetViolation``,
-``UpdateResult``.
+``UpdateResult``, ``StyleViolation``, ``lint_text``, ``count_violations``.
 """
 
 from __future__ import annotations
@@ -18,11 +18,15 @@ from .ratchet import (
     update_ratchet,
     write_ratchet,
 )
+from .style import StyleViolation, count_violations, lint_text
 
 __all__ = [
     "BudgetGroup",
     "BudgetViolation",
+    "StyleViolation",
     "UpdateResult",
+    "count_violations",
+    "lint_text",
     "check",
     "format_ratchet",
     "measure",

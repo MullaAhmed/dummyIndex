@@ -5,10 +5,10 @@
 - `dummyindex/installer/args.py` parses scope, platform, link/copy, downgrade,
   dedupe, and initialization flags. `dummyindex/installer/common.py` provides
   shared host paths, rendering, command preparation, and version comparison.
-- `dummyindex/installer/install/orchestrate.py` validates destination chains,
-  plans scoped repairs, prepares the canonical family, dispatches existing link
-  machinery or native references, handles requested dedupe, and initializes the
-  project through `dummyindex/installer/install/project_init.py`.
+- `dummyindex/installer/install/orchestrate.py` validates destination chains
+  and plans scoped repairs. It prepares the canonical family, dispatches link
+  machinery or native references, and handles requested dedupe. Initialization
+  runs through `dummyindex/installer/install/project_init.py`.
 - `dummyindex/installer/install/family_write.py` declares complete package file
   sets and renders thin Claude references. `dummyindex/installer/ownership.py`
   implements per-file ownership, source identity, safe refresh, and removal.

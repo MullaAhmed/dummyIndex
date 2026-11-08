@@ -10,6 +10,7 @@ mirror ``memory/nudge.py``; commit math reuses ``git_delta.commits_since``.
 from __future__ import annotations
 
 import json
+import subprocess
 from datetime import datetime
 from pathlib import Path
 
@@ -60,16 +61,35 @@ def gc_commits_since(context_dir: Path, root: Path) -> int | None:
     return commits_since(root, read_gc_anchor(context_dir))
 
 
+def _is_shallow(root: Path) -> bool:
+    """True when ``root`` is a shallow clone. Any git failure reads as not shallow."""
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--is-shallow-repository"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError:
+        return False
+    return proc.stdout.strip() == "true"
+
+
 def anchor_orphaned(context_dir: Path, root: Path) -> bool:
     """True when a recorded anchor is unknown to the repo after a rewrite.
 
-    An anchor is recorded and HEAD resolves, yet ``gc_commits_since`` is
-    ``None`` (rebase / squash / never fetched). Off-git or no anchor is not
-    orphaned: no rewrite could have stranded anything.
+    The orphaned-anchor case: an anchor IS recorded, git IS present
+    (``head_commit`` resolves), yet ``gc_commits_since`` is ``None`` — meaning
+    the recorded sha no longer resolves in the repo (rebase / squash / never-
+    fetched). Off-git or no-anchor is *not* orphaned: there's nothing a rewrite
+    could have stranded. A shallow clone is never orphaned either: its missing
+    history is silent truncation, not a rewrite.
     """
     if read_gc_anchor(context_dir) is None:
         return False
     if head_commit(root) is None:
+        return False
+    if _is_shallow(root):
         return False
     return gc_commits_since(context_dir, root) is None
 
@@ -84,14 +104,23 @@ def should_signal(
 ) -> bool:
     """Whether the SessionStart nudge should fire for ``session_id``.
 
-    True iff at least ``threshold`` commits landed since the anchor and this
-    session hasn't been signalled; a True result marks the gitignored memo
-    (100-entry cap), so a repeat call returns ``False``. An empty ``session_id``
-    is never recorded and never suppresses, so a missing id can't silence the
-    nudge forever. ``now`` defaults to wall-clock.
+    True iff this session has not already been signalled AND either at least
+    ``threshold`` commits have landed since the GC anchor, or the anchor is
+    orphaned. On a decision to signal the fire-once memo is marked (so a second
+    call in the same session returns ``False``).
+
+    The memo lives in the **gitignored** ``context_dir / GC_MEMO_REL``, keyed by
+    ``session_id`` and pruned to a 100-entry cap — mirroring
+    ``nudge.already_nudged`` / ``mark_nudged``. An empty / blank ``session_id``
+    is never recorded and never suppresses: it degrades to "emit when the
+    trigger holds" so the nudge is never silenced forever by a missing id.
+    ``now`` is injectable for testability (defaults to wall-clock).
     """
     count = gc_commits_since(context_dir, root)
-    if count is None or count < threshold:
+    if count is None:
+        if not anchor_orphaned(context_dir, root):
+            return False
+    elif count < threshold:
         return False
     if _already_signalled(context_dir, session_id):
         return False

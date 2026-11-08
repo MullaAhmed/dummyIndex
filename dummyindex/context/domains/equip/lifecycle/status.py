@@ -120,6 +120,11 @@ def is_evolved(item: EquipmentItem) -> bool:
         return False
 
 
+def is_sourced(item: EquipmentItem) -> bool:
+    """True when a generated item was adopted from an upstream skill (origin pinned)."""
+    return item.source == EquipmentSource.GENERATED and item.origin_ref is not None
+
+
 def classify_item(root: Path, item: EquipmentItem) -> ItemState:
     """Classify a generated item against its recorded ``origin_hash``.
 
@@ -236,9 +241,10 @@ def refresh(
             skipped_missing.append(item.name)
             new_items.append(item)
             continue
-        # PRISTINE-but-evolved: content intentionally differs from the template
-        # (sanctioned patches) — regenerating would wipe the evolution. Keep.
-        if is_evolved(item):
+        # PRISTINE-but-evolved or sourced: content differs from the template
+        # (patches / upstream body) — regenerating would wipe it. Keep. Must
+        # precede the fresh-render comparison or the template overwrites sourced text.
+        if is_evolved(item) or is_sourced(item):
             skipped_evolved.append(item.name)
             new_items.append(item)
             continue
@@ -322,11 +328,20 @@ def reset(
     write_text_atomic(root / target_item.path, out)
     from ..identity import capability_metadata
 
+    extra: dict = {}
+    if is_sourced(target_item):
+        # Discarding the upstream body also drops its pin and restores template invariants.
+        extra.update(
+            origin_repo=None, origin_ref=None, marketplace=None, mechanism=None
+        )
+        if fresh_item is not None:
+            extra["invariants"] = fresh_item.invariants
     rebaselined = dataclasses.replace(
         target_item,
         origin_hash=content_hash(out),
         version=bumped,
         **(capability_metadata(fresh_item) if fresh_item is not None else {}),
+        **extra,
     )
     new_items = tuple(rebaselined if i.name == name else i for i in manifest.items)
     write_manifest(root / ".context", dataclasses.replace(manifest, items=new_items))

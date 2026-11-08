@@ -1,4 +1,7 @@
-"""`dummyindex context guard-doc-write` — PreToolUse Write/Edit/MultiEdit guard.
+"""`dummyindex context guard-doc-write` — PreToolUse doc guard and language hint.
+
+Agent/Task/SendMessage get a warn-only ``additionalContext`` language hint;
+it never denies.
 
 Two checks. (1) Citation guard (all three tools): deny new text that adds a
 ``.context/(proposals|audits)/<slug>/`` citation, absent from the existing file,
@@ -30,6 +33,7 @@ from .memory import read_hook_stdin
 
 WRITE_TOOL = "Write"
 CITATION_TOOLS = frozenset({"Write", "Edit", "MultiEdit"})
+LANGUAGE_TOOLS = frozenset({"Agent", "Task", "SendMessage"})
 MAX_SCAN_CHARS = 1_000_000  # 1 MB cap; larger input is allowed unscanned
 
 
@@ -51,6 +55,8 @@ def _decide(args: list[str]) -> int:
 
     hook = read_hook_stdin()
     tool_name = hook.get("tool_name")
+    if tool_name in LANGUAGE_TOOLS:
+        return _language_hint(hook)
     if tool_name not in CITATION_TOOLS:
         return 0
 
@@ -98,6 +104,37 @@ def _decide(args: list[str]) -> int:
     return 0
 
 
+def _language_hint(hook: dict) -> int:
+    """Warn via ``additionalContext`` when an agent prompt is mostly English.
+
+    Checks ``message`` for SendMessage and ``prompt`` for Agent/Task. Never
+    denies, never blocks, and always returns 0.
+    """
+    from dummyindex.context.domains.docguard.language import cjk_share, needs_warning
+
+    tool_input = hook.get("tool_input")
+    if not isinstance(tool_input, dict):
+        return 0
+    field = "message" if hook.get("tool_name") == "SendMessage" else "prompt"
+    text = tool_input.get(field)
+    if not isinstance(text, str) or len(text) > MAX_SCAN_CHARS:
+        return 0
+    if not needs_warning(cjk_share(text)):
+        return 0
+    payload = {
+        "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "additionalContext": (
+                "Language policy: write subagent prompts and SendMessage bodies in "
+                "concise Chinese with caveman rules. Keep code, paths, commands, and "
+                "identifiers verbatim. Code, commits, docs, and final reports stay English."
+            ),
+        }
+    }
+    print(json.dumps(payload, separators=(",", ":")))
+    return 0
+
+
 def _new_texts(tool_input: dict) -> list[str]:
     """Collect new-text strings from content / new_string / edits[].new_string."""
     texts: list[str] = []
@@ -131,6 +168,16 @@ def _repo_rel(repo_root: Path, file_path: str) -> str | None:
 
 def _post_edit_text(existing: str, tool_input: dict, texts: list[str]) -> str:
     """Best-effort post-edit text so citations split across old/new are caught."""
+    edits = tool_input.get("edits")
+    if existing and isinstance(edits, list):
+        text = existing
+        for edit in edits:
+            if not isinstance(edit, dict):
+                continue
+            old, new = edit.get("old_string"), edit.get("new_string")
+            if isinstance(old, str) and old and isinstance(new, str):
+                text = text.replace(old, new, 1)
+        return text
     old = tool_input.get("old_string")
     new = tool_input.get("new_string")
     if existing and isinstance(old, str) and old and isinstance(new, str):

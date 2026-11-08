@@ -15,11 +15,12 @@ benefits from automated context management:
    substantial (long output or subagents ran) and no handoff was saved yet.
 4. **PreCompact** — writes a deterministic breadcrumb entry to ``now.md``
    before context is discarded by compaction, so the session is never blank.
-5. **PreToolUse** (matcher ``Write|Edit|MultiEdit``) — classifies a ``Write`` target and
-   denies (with guidance) one that would create an internal planning doc in an
+5. **PreToolUse** (matcher ``Write|Edit|MultiEdit|Agent|Task|SendMessage``) —
+   classifies a ``Write`` target and denies (with guidance) one that would create an internal planning doc in an
    unmanaged location, so the leak can't recur. Unlike the retired PostToolUse
    hook below, it mutates **nothing** (pure read→classify→deny), so it upholds
-   the "hooks never rebuild the backbone" invariant.
+   the "hooks never rebuild the backbone" invariant. Agent/Task/SendMessage
+   calls get only a warn-only ``additionalContext`` language hint, never a deny.
 
 History note: pre-0.13.5, this module also installed a ``git post-commit``
 hook and a Claude ``PostToolUse`` hook, both of which ran
@@ -206,6 +207,18 @@ _STOP_HOOK = {
                 "exit 0\n"
             ),
         },
+        # Async observation hook: runs in the background, never blocks the turn.
+        {
+            "type": "command",
+            "async": True,
+            "command": (
+                _MANAGED_COMMENT
+                + _SILENT_GATE
+                + 'dummyindex context evolve evidence --root "$CLAUDE_PROJECT_DIR" '
+                ">/dev/null 2>&1 || true\n"
+                "exit 0\n"
+            ),
+        },
     ],
 }
 
@@ -226,9 +239,8 @@ _PRE_COMPACT_HOOK = {
 }
 
 _PRE_TOOL_USE_HOOK = {
-    # Write|Edit|MultiEdit: Write also gets the stray-doc check; all three get
-    # the citation guard. Re-install rewrites an older ``Write`` matcher.
-    "matcher": "Write|Edit|MultiEdit",
+    # Doc guard for writes, language hint for agent prompts; reinstall refreshes by sentinel.
+    "matcher": "Write|Edit|MultiEdit|Agent|Task|SendMessage",
     "hooks": [
         {
             # Doc-write guard: deny a ``Write`` that would create an internal

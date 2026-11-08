@@ -106,7 +106,7 @@
     {
       "path": "dummyindex/cli/check.py",
       "language": "python",
-      "symbols": 11,
+      "symbols": 14,
       "owners": [
         "cli-dispatch"
       ],
@@ -286,6 +286,16 @@
       "reason": ""
     },
     {
+      "path": "dummyindex/cli/equip/source.py",
+      "language": "python",
+      "symbols": 11,
+      "owners": [
+        "equip"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
       "path": "dummyindex/cli/equip/verbs.py",
       "language": "python",
       "symbols": 8,
@@ -301,6 +311,16 @@
       "symbols": 17,
       "owners": [
         "evolution"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "dummyindex/cli/evolve_probation.py",
+      "language": "python",
+      "symbols": 2,
+      "owners": [
+        "probation"
       ],
       "state": "indexed",
       "reason": ""
@@ -328,7 +348,7 @@
     {
       "path": "dummyindex/cli/gc.py",
       "language": "python",
-      "symbols": 12,
+      "symbols": 13,
       "owners": [
         "gc"
       ],
@@ -348,7 +368,7 @@
     {
       "path": "dummyindex/cli/guard_doc_write.py",
       "language": "python",
-      "symbols": 7,
+      "symbols": 8,
       "owners": [
         "managed-doc-homes"
       ],
@@ -398,7 +418,7 @@
     {
       "path": "dummyindex/cli/memory.py",
       "language": "python",
-      "symbols": 3,
+      "symbols": 4,
       "owners": [
         "cli-dispatch",
         "session-memory",
@@ -802,7 +822,7 @@
     {
       "path": "dummyindex/context/default_plugins.py",
       "language": "python",
-      "symbols": 33,
+      "symbols": 34,
       "owners": [
         "equip",
         "install-surface"
@@ -1170,7 +1190,17 @@
     {
       "path": "dummyindex/context/domains/docbudget/ratchet.py",
       "language": "python",
-      "symbols": 9,
+      "symbols": 10,
+      "owners": [
+        "doc-budget"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "dummyindex/context/domains/docbudget/style.py",
+      "language": "python",
+      "symbols": 6,
       "owners": [
         "doc-budget"
       ],
@@ -1241,6 +1271,16 @@
       "path": "dummyindex/context/domains/docguard/errors.py",
       "language": "python",
       "symbols": 6,
+      "owners": [
+        "managed-doc-homes"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "dummyindex/context/domains/docguard/language.py",
+      "language": "python",
+      "symbols": 3,
       "owners": [
         "managed-doc-homes"
       ],
@@ -1420,6 +1460,16 @@
       "reason": ""
     },
     {
+      "path": "dummyindex/context/domains/equip/generate/sourced.py",
+      "language": "python",
+      "symbols": 4,
+      "owners": [
+        "equip"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
       "path": "dummyindex/context/domains/equip/generate/specialists.py",
       "language": "python",
       "symbols": 6,
@@ -1502,7 +1552,7 @@
     {
       "path": "dummyindex/context/domains/equip/lifecycle/status.py",
       "language": "python",
-      "symbols": 15,
+      "symbols": 16,
       "owners": [
         "equip",
         "install-surface"
@@ -1573,7 +1623,17 @@
     {
       "path": "dummyindex/context/domains/equip/plugins/sources.py",
       "language": "python",
-      "symbols": 13,
+      "symbols": 21,
+      "owners": [
+        "equip"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "dummyindex/context/domains/equip/plugins/sourcing.py",
+      "language": "python",
+      "symbols": 11,
       "owners": [
         "equip"
       ],
@@ -1624,7 +1684,7 @@
     {
       "path": "dummyindex/context/domains/evidence.py",
       "language": "python",
-      "symbols": 10,
+      "symbols": 20,
       "owners": [
         "evolution"
       ],
@@ -1664,7 +1724,7 @@
     {
       "path": "dummyindex/context/domains/evolve_learning.py",
       "language": "python",
-      "symbols": 13,
+      "symbols": 14,
       "owners": [
         "evolution"
       ],
@@ -1935,7 +1995,7 @@
     {
       "path": "dummyindex/context/domains/gc/anchor.py",
       "language": "python",
-      "symbols": 10,
+      "symbols": 11,
       "owners": [
         "gc"
       ],
@@ -1975,7 +2035,7 @@
     {
       "path": "dummyindex/context/domains/gc/enums.py",
       "language": "python",
-      "symbols": 2,
+      "symbols": 3,
       "owners": [
         "gc"
       ],
@@ -2003,9 +2063,19 @@
       "reason": ""
     },
     {
-      "path": "dummyindex/context/domains/gc/scan.py",
+      "path": "dummyindex/context/domains/gc/recommend.py",
       "language": "python",
       "symbols": 1,
+      "owners": [
+        "gc"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "dummyindex/context/domains/gc/scan.py",
+      "language": "python",
+      "symbols": 2,
       "owners": [
         "gc"
       ],
@@ -2384,6 +2454,86 @@
       "reason": ""
     },
     {
+      "path": "dummyindex/context/domains/observe/__init__.py",
+      "language": "python",
+      "symbols": 0,
+      "owners": [
+        "observe"
+      ],
+      "state": "file-only",
+      "reason": "No AST symbols extracted; file navigation is available."
+    },
+    {
+      "path": "dummyindex/context/domains/observe/attribution.py",
+      "language": "python",
+      "symbols": 27,
+      "owners": [
+        "observe"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "dummyindex/context/domains/observe/enums.py",
+      "language": "python",
+      "symbols": 3,
+      "owners": [
+        "observe"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "dummyindex/context/domains/observe/importer.py",
+      "language": "python",
+      "symbols": 28,
+      "owners": [
+        "observe"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "dummyindex/context/domains/observe/keys.py",
+      "language": "python",
+      "symbols": 6,
+      "owners": [
+        "observe"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "dummyindex/context/domains/observe/ledger.py",
+      "language": "python",
+      "symbols": 17,
+      "owners": [
+        "observe"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "dummyindex/context/domains/observe/models.py",
+      "language": "python",
+      "symbols": 8,
+      "owners": [
+        "observe"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "dummyindex/context/domains/observe/security.py",
+      "language": "python",
+      "symbols": 1,
+      "owners": [
+        "observe"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
       "path": "dummyindex/context/domains/preflight/__init__.py",
       "language": "python",
       "symbols": 0,
@@ -2435,6 +2585,96 @@
       "reason": ""
     },
     {
+      "path": "dummyindex/context/domains/probation/__init__.py",
+      "language": "python",
+      "symbols": 0,
+      "owners": [
+        "probation"
+      ],
+      "state": "file-only",
+      "reason": "No AST symbols extracted; file navigation is available."
+    },
+    {
+      "path": "dummyindex/context/domains/probation/actions.py",
+      "language": "python",
+      "symbols": 13,
+      "owners": [
+        "probation"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "dummyindex/context/domains/probation/constants.py",
+      "language": "python",
+      "symbols": 0,
+      "owners": [
+        "probation"
+      ],
+      "state": "file-only",
+      "reason": "No AST symbols extracted; file navigation is available."
+    },
+    {
+      "path": "dummyindex/context/domains/probation/enums.py",
+      "language": "python",
+      "symbols": 3,
+      "owners": [
+        "probation"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "dummyindex/context/domains/probation/models.py",
+      "language": "python",
+      "symbols": 6,
+      "owners": [
+        "probation"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "dummyindex/context/domains/probation/render.py",
+      "language": "python",
+      "symbols": 11,
+      "owners": [
+        "probation"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "dummyindex/context/domains/probation/rules.py",
+      "language": "python",
+      "symbols": 9,
+      "owners": [
+        "probation"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "dummyindex/context/domains/probation/store.py",
+      "language": "python",
+      "symbols": 11,
+      "owners": [
+        "probation"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "dummyindex/context/domains/probation/sync.py",
+      "language": "python",
+      "symbols": 17,
+      "owners": [
+        "probation"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
       "path": "dummyindex/context/domains/proposals/__init__.py",
       "language": "python",
       "symbols": 0,
@@ -2463,6 +2703,16 @@
       ],
       "state": "file-only",
       "reason": "No AST symbols extracted; file navigation is available."
+    },
+    {
+      "path": "dummyindex/context/domains/proposals/draft.py",
+      "language": "python",
+      "symbols": 4,
+      "owners": [
+        "proposals"
+      ],
+      "state": "indexed",
+      "reason": ""
     },
     {
       "path": "dummyindex/context/domains/proposals/enums.py",
@@ -3615,6 +3865,16 @@
       "reason": ""
     },
     {
+      "path": "tests/cli/equip/test_equip_source_apply.py",
+      "language": "python",
+      "symbols": 30,
+      "owners": [
+        "equip"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
       "path": "tests/cli/equip/test_shared_preparation.py",
       "language": "python",
       "symbols": 21,
@@ -3647,7 +3907,7 @@
     {
       "path": "tests/cli/test_check_budget.py",
       "language": "python",
-      "symbols": 9,
+      "symbols": 17,
       "owners": [
         "doc-budget"
       ],
@@ -3767,6 +4027,16 @@
       "reason": ""
     },
     {
+      "path": "tests/cli/test_evolve_probation_cli.py",
+      "language": "python",
+      "symbols": 11,
+      "owners": [
+        "probation"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
       "path": "tests/cli/test_fleet_cli.py",
       "language": "python",
       "symbols": 11,
@@ -3779,7 +4049,7 @@
     {
       "path": "tests/cli/test_gc_cli.py",
       "language": "python",
-      "symbols": 24,
+      "symbols": 36,
       "owners": [
         "gc"
       ],
@@ -3799,7 +4069,7 @@
     {
       "path": "tests/cli/test_guard_doc_write.py",
       "language": "python",
-      "symbols": 19,
+      "symbols": 31,
       "owners": [
         "managed-doc-homes"
       ],
@@ -4313,6 +4583,26 @@
       "reason": ""
     },
     {
+      "path": "tests/context/domains/docbudget/test_style.py",
+      "language": "python",
+      "symbols": 17,
+      "owners": [
+        "doc-budget"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "tests/context/domains/docbudget/test_style_ratchet.py",
+      "language": "python",
+      "symbols": 2,
+      "owners": [
+        "doc-budget"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
       "path": "tests/context/domains/docguard/__init__.py",
       "language": "python",
       "symbols": 0,
@@ -4336,6 +4626,16 @@
       "path": "tests/context/domains/docguard/test_classify.py",
       "language": "python",
       "symbols": 19,
+      "owners": [
+        "managed-doc-homes"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "tests/context/domains/docguard/test_language.py",
+      "language": "python",
+      "symbols": 8,
       "owners": [
         "managed-doc-homes"
       ],
@@ -4518,7 +4818,7 @@
     {
       "path": "tests/context/domains/equip/test_equip_lifecycle.py",
       "language": "python",
-      "symbols": 25,
+      "symbols": 29,
       "owners": [
         "equip"
       ],
@@ -4568,9 +4868,29 @@
       "reason": ""
     },
     {
+      "path": "tests/context/domains/equip/test_equip_sourced.py",
+      "language": "python",
+      "symbols": 11,
+      "owners": [
+        "equip"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
       "path": "tests/context/domains/equip/test_equip_sources.py",
       "language": "python",
-      "symbols": 24,
+      "symbols": 41,
+      "owners": [
+        "equip"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "tests/context/domains/equip/test_equip_sourcing.py",
+      "language": "python",
+      "symbols": 39,
       "owners": [
         "equip"
       ],
@@ -4711,7 +5031,7 @@
     {
       "path": "tests/context/domains/gc/test_anchor.py",
       "language": "python",
-      "symbols": 26,
+      "symbols": 32,
       "owners": [
         "gc"
       ],
@@ -4721,7 +5041,7 @@
     {
       "path": "tests/context/domains/gc/test_delete.py",
       "language": "python",
-      "symbols": 19,
+      "symbols": 23,
       "owners": [
         "gc"
       ],
@@ -4732,6 +5052,16 @@
       "path": "tests/context/domains/gc/test_enumerate.py",
       "language": "python",
       "symbols": 15,
+      "owners": [
+        "gc"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "tests/context/domains/gc/test_recommend.py",
+      "language": "python",
+      "symbols": 11,
       "owners": [
         "gc"
       ],
@@ -4871,7 +5201,7 @@
     {
       "path": "tests/context/domains/memory/test_memory_cli.py",
       "language": "python",
-      "symbols": 13,
+      "symbols": 16,
       "owners": [
         "tree-enrich"
       ],
@@ -4951,7 +5281,17 @@
     {
       "path": "tests/context/domains/test_closeout.py",
       "language": "python",
-      "symbols": 27,
+      "symbols": 28,
+      "owners": [
+        "proposals"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "tests/context/domains/test_closeout_draft.py",
+      "language": "python",
+      "symbols": 10,
       "owners": [
         "proposals"
       ],
@@ -5042,7 +5382,7 @@
     {
       "path": "tests/context/domains/test_evidence.py",
       "language": "python",
-      "symbols": 6,
+      "symbols": 17,
       "owners": [
         "evolution"
       ],
@@ -5082,7 +5422,7 @@
     {
       "path": "tests/context/domains/test_evolve_learning.py",
       "language": "python",
-      "symbols": 15,
+      "symbols": 25,
       "owners": [
         "evolution"
       ],
@@ -5112,7 +5452,7 @@
     {
       "path": "tests/context/domains/test_fleetrun.py",
       "language": "python",
-      "symbols": 28,
+      "symbols": 29,
       "owners": [
         "fleet"
       ],
@@ -5180,11 +5520,61 @@
       "reason": ""
     },
     {
+      "path": "tests/context/domains/test_observe_attribution.py",
+      "language": "python",
+      "symbols": 22,
+      "owners": [
+        "observe"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "tests/context/domains/test_observe_import.py",
+      "language": "python",
+      "symbols": 24,
+      "owners": [
+        "observe"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "tests/context/domains/test_observe_units.py",
+      "language": "python",
+      "symbols": 25,
+      "owners": [
+        "observe"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
       "path": "tests/context/domains/test_preflight.py",
       "language": "python",
       "symbols": 32,
       "owners": [
         "preflight"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "tests/context/domains/test_probation.py",
+      "language": "python",
+      "symbols": 43,
+      "owners": [
+        "probation"
+      ],
+      "state": "indexed",
+      "reason": ""
+    },
+    {
+      "path": "tests/context/domains/test_probation_actions.py",
+      "language": "python",
+      "symbols": 19,
+      "owners": [
+        "probation"
       ],
       "state": "indexed",
       "reason": ""
@@ -5294,7 +5684,7 @@
     {
       "path": "tests/context/output/test_instructions.py",
       "language": "python",
-      "symbols": 18,
+      "symbols": 19,
       "owners": [
         "agent-instructions"
       ],
@@ -5344,7 +5734,7 @@
     {
       "path": "tests/context/test_default_plugins.py",
       "language": "python",
-      "symbols": 35,
+      "symbols": 46,
       "owners": [
         "install-surface"
       ],
@@ -5374,7 +5764,7 @@
     {
       "path": "tests/context/test_hooks.py",
       "language": "python",
-      "symbols": 74,
+      "symbols": 82,
       "owners": [
         "install-surface",
         "tree-enrich"
@@ -5736,7 +6126,7 @@
     {
       "path": "tests/test_skills_doc_hygiene.py",
       "language": "python",
-      "symbols": 54,
+      "symbols": 56,
       "owners": [
         "agent-instructions",
         "bootstrap"
@@ -5825,13 +6215,13 @@
       "reason": ""
     }
   ],
-  "source_count": 572,
-  "symbol_count": 5915,
+  "source_count": 611,
+  "symbol_count": 6531,
   "unassigned": [],
   "excluded": [
     {
-      "path": ".claude",
-      "reason": "hidden or generated directory; subtree excluded"
+      "path": ".caveman.json",
+      "reason": "hidden file"
     },
     {
       "path": ".context",
@@ -5986,7 +6376,15 @@
       "reason": "hidden or generated directory; subtree excluded"
     },
     {
+      "path": "dummyindex/context/domains/observe/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
       "path": "dummyindex/context/domains/preflight/__pycache__",
+      "reason": "hidden or generated directory; subtree excluded"
+    },
+    {
+      "path": "dummyindex/context/domains/probation/__pycache__",
       "reason": "hidden or generated directory; subtree excluded"
     },
     {
@@ -6419,6 +6817,11 @@
           "source_location": "L1"
         },
         {
+          "id": "constants_rationale_1__9334091915245ebb",
+          "path": "dummyindex/context/domains/probation/constants.py",
+          "source_location": "L1"
+        },
+        {
           "id": "constants_rationale_1__a8274a4bc82c74ff",
           "path": "dummyindex/context/domains/docguard/constants.py",
           "source_location": "L1"
@@ -6575,7 +6978,7 @@
         {
           "id": "dispatch_run__d34efca69e0b4d32",
           "path": "dummyindex/cli/equip/dispatch.py",
-          "source_location": "L101"
+          "source_location": "L103"
         },
         {
           "id": "dispatch_run__da46f3295a18c04c",
@@ -6652,6 +7055,11 @@
           "source_location": "L1"
         },
         {
+          "id": "enums_rationale_1__1eca6cdcc9b78956",
+          "path": "dummyindex/context/domains/observe/enums.py",
+          "source_location": "L1"
+        },
+        {
           "id": "enums_rationale_1__39415ad2a19ef540",
           "path": "dummyindex/context/domains/gc/enums.py",
           "source_location": "L1"
@@ -6664,6 +7072,11 @@
         {
           "id": "enums_rationale_1__54ebeb33d7c99ef4",
           "path": "dummyindex/context/domains/docbudget/enums.py",
+          "source_location": "L1"
+        },
+        {
+          "id": "enums_rationale_1__5633ba79f83f40d5",
+          "path": "dummyindex/context/domains/probation/enums.py",
           "source_location": "L1"
         },
         {
@@ -6731,17 +7144,70 @@
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
     },
     {
-      "original_id": "enums_rationale_21",
+      "original_id": "enums_rationale_17",
       "candidates": [
         {
-          "id": "enums_rationale_21__04fea1ac58f1b48d",
+          "id": "enums_rationale_17__1eca6cdcc9b78956",
+          "path": "dummyindex/context/domains/observe/enums.py",
+          "source_location": "L17"
+        },
+        {
+          "id": "enums_rationale_17__6f7fd0bef31f79b1",
+          "path": "dummyindex/context/domains/lesson/enums.py",
+          "source_location": "L17"
+        }
+      ],
+      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
+    },
+    {
+      "original_id": "enums_rationale_18",
+      "candidates": [
+        {
+          "id": "enums_rationale_18__87992d54f990fd27",
+          "path": "dummyindex/context/domains/memory/enums.py",
+          "source_location": "L18"
+        },
+        {
+          "id": "enums_rationale_18__e8202a067f7b2666",
+          "path": "dummyindex/pipeline/enums.py",
+          "source_location": "L18"
+        }
+      ],
+      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
+    },
+    {
+      "original_id": "enums_rationale_22",
+      "candidates": [
+        {
+          "id": "enums_rationale_22__5633ba79f83f40d5",
+          "path": "dummyindex/context/domains/probation/enums.py",
+          "source_location": "L22"
+        },
+        {
+          "id": "enums_rationale_22__ddaf5eaebf71b4e7",
+          "path": "dummyindex/context/domains/docguard/enums.py",
+          "source_location": "L22"
+        }
+      ],
+      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
+    },
+    {
+      "original_id": "enums_rationale_25",
+      "candidates": [
+        {
+          "id": "enums_rationale_25__04fea1ac58f1b48d",
           "path": "dummyindex/context/domains/memory/miner/enums.py",
           "source_location": "L21"
         },
         {
-          "id": "enums_rationale_21__ddaf5eaebf71b4e7",
-          "path": "dummyindex/context/domains/docguard/enums.py",
-          "source_location": "L21"
+          "id": "enums_rationale_25__06c885b930f68c2e",
+          "path": "dummyindex/context/domains/equip/enums.py",
+          "source_location": "L25"
+        },
+        {
+          "id": "enums_rationale_25__1eca6cdcc9b78956",
+          "path": "dummyindex/context/domains/observe/enums.py",
+          "source_location": "L25"
         }
       ],
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
@@ -6786,6 +7252,11 @@
           "source_location": "L9"
         },
         {
+          "id": "enums_rationale_9__1eca6cdcc9b78956",
+          "path": "dummyindex/context/domains/observe/enums.py",
+          "source_location": "L9"
+        },
+        {
           "id": "enums_rationale_9__39415ad2a19ef540",
           "path": "dummyindex/context/domains/gc/enums.py",
           "source_location": "L9"
@@ -6793,6 +7264,11 @@
         {
           "id": "enums_rationale_9__4e93a2df9a21ddb5",
           "path": "dummyindex/context/domains/graph_query/enums.py",
+          "source_location": "L9"
+        },
+        {
+          "id": "enums_rationale_9__5633ba79f83f40d5",
+          "path": "dummyindex/context/domains/probation/enums.py",
           "source_location": "L9"
         },
         {
@@ -6814,6 +7290,22 @@
           "id": "enums_rationale_9__ddaf5eaebf71b4e7",
           "path": "dummyindex/context/domains/docguard/enums.py",
           "source_location": "L9"
+        }
+      ],
+      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
+    },
+    {
+      "original_id": "enums_verdict",
+      "candidates": [
+        {
+          "id": "enums_verdict__1eca6cdcc9b78956",
+          "path": "dummyindex/context/domains/observe/enums.py",
+          "source_location": "L16"
+        },
+        {
+          "id": "enums_verdict__6f7fd0bef31f79b1",
+          "path": "dummyindex/context/domains/lesson/enums.py",
+          "source_location": "L16"
         }
       ],
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
@@ -7118,6 +7610,11 @@
           "source_location": "L1"
         },
         {
+          "id": "init_rationale_1__182cbf7fc1182e27",
+          "path": "dummyindex/context/domains/probation/__init__.py",
+          "source_location": "L1"
+        },
+        {
           "id": "init_rationale_1__1cddfac013c464cf",
           "path": "dummyindex/pipeline/extract/languages/__init__.py",
           "source_location": "L1"
@@ -7258,6 +7755,11 @@
           "source_location": "L1"
         },
         {
+          "id": "init_rationale_1__9496a2b1ccbeec6b",
+          "path": "dummyindex/context/domains/observe/__init__.py",
+          "source_location": "L1"
+        },
+        {
           "id": "init_rationale_1__9b7c3b0c4ec0d93f",
           "path": "dummyindex/context/domains/docbudget/__init__.py",
           "source_location": "L1"
@@ -7363,6 +7865,22 @@
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
     },
     {
+      "original_id": "keys_rationale_18",
+      "candidates": [
+        {
+          "id": "keys_rationale_18__3ca50f6c04714f3e",
+          "path": "dummyindex/context/domains/observe/keys.py",
+          "source_location": "L18"
+        },
+        {
+          "id": "keys_rationale_18__5683f4be94896410",
+          "path": "dummyindex/context/domains/source_docs/keys.py",
+          "source_location": "L18"
+        }
+      ],
+      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
+    },
+    {
       "original_id": "manifest_rationale_1",
       "candidates": [
         {
@@ -7435,6 +7953,11 @@
           "source_location": "L54"
         },
         {
+          "id": "models_from_dict__430371e4a6a5455f",
+          "path": "dummyindex/context/domains/observe/models.py",
+          "source_location": "L40"
+        },
+        {
           "id": "models_from_dict__89f54e67883c2417",
           "path": "dummyindex/context/domains/equip/models.py",
           "source_location": "L161"
@@ -7447,7 +7970,12 @@
         {
           "id": "models_from_dict__b20875d736a04353",
           "path": "dummyindex/context/domains/audit/models.py",
-          "source_location": "L47"
+          "source_location": "L49"
+        },
+        {
+          "id": "models_from_dict__f4f85d9f51f74f42",
+          "path": "dummyindex/context/domains/probation/models.py",
+          "source_location": "L71"
         }
       ],
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
@@ -7489,6 +8017,11 @@
         {
           "id": "models_rationale_1__2a8d9f7371b51e6e",
           "path": "dummyindex/context/domains/debt/models.py",
+          "source_location": "L1"
+        },
+        {
+          "id": "models_rationale_1__430371e4a6a5455f",
+          "path": "dummyindex/context/domains/observe/models.py",
           "source_location": "L1"
         },
         {
@@ -7554,6 +8087,11 @@
         {
           "id": "models_rationale_1__d1e5a479b5385b60",
           "path": "dummyindex/context/domains/lesson/models.py",
+          "source_location": "L1"
+        },
+        {
+          "id": "models_rationale_1__f4f85d9f51f74f42",
+          "path": "dummyindex/context/domains/probation/models.py",
           "source_location": "L1"
         },
         {
@@ -7676,6 +8214,22 @@
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
     },
     {
+      "original_id": "models_rationale_24",
+      "candidates": [
+        {
+          "id": "models_rationale_24__b20875d736a04353",
+          "path": "dummyindex/context/domains/audit/models.py",
+          "source_location": "L24"
+        },
+        {
+          "id": "models_rationale_24__f4f85d9f51f74f42",
+          "path": "dummyindex/context/domains/probation/models.py",
+          "source_location": "L24"
+        }
+      ],
+      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
+    },
+    {
       "original_id": "models_rationale_27",
       "candidates": [
         {
@@ -7692,17 +8246,17 @@
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
     },
     {
-      "original_id": "models_rationale_41",
+      "original_id": "models_rationale_39",
       "candidates": [
         {
-          "id": "models_rationale_41__6991b6d7a286c909",
-          "path": "dummyindex/context/domains/docguard/models.py",
-          "source_location": "L41"
+          "id": "models_rationale_39__cfb1d533a55e0666",
+          "path": "dummyindex/context/domains/gc/models.py",
+          "source_location": "L39"
         },
         {
-          "id": "models_rationale_41__981754b9edcc172c",
-          "path": "dummyindex/context/domains/memory/miner/models.py",
-          "source_location": "L41"
+          "id": "models_rationale_39__d1e5a479b5385b60",
+          "path": "dummyindex/context/domains/lesson/models.py",
+          "source_location": "L39"
         }
       ],
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
@@ -7724,23 +8278,7 @@
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
     },
     {
-      "original_id": "models_rationale_52",
-      "candidates": [
-        {
-          "id": "models_rationale_52__0576ad0ef5113d2f",
-          "path": "dummyindex/context/domains/features/scan/models.py",
-          "source_location": "L52"
-        },
-        {
-          "id": "models_rationale_52__f6a24b0f393bf9c2",
-          "path": "dummyindex/context/domains/buildloop/models.py",
-          "source_location": "L52"
-        }
-      ],
-      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
-    },
-    {
-      "original_id": "models_rationale_54",
+      "original_id": "models_rationale_51",
       "candidates": [
         {
           "id": "models_rationale_51__2a8d9f7371b51e6e",
@@ -7750,6 +8288,11 @@
         {
           "id": "models_rationale_51__a01c8614eaec1176",
           "path": "dummyindex/installer/link/models.py",
+          "source_location": "L51"
+        },
+        {
+          "id": "models_rationale_51__cfb1d533a55e0666",
+          "path": "dummyindex/context/domains/gc/models.py",
           "source_location": "L51"
         }
       ],
@@ -7928,6 +8471,11 @@
           "source_location": "L1"
         },
         {
+          "id": "render_rationale_1__6fcd9ec5cb606365",
+          "path": "dummyindex/context/domains/probation/render.py",
+          "source_location": "L1"
+        },
+        {
           "id": "render_rationale_1__725c531fb7419616",
           "path": "dummyindex/context/domains/memory/miner/render.py",
           "source_location": "L1"
@@ -7967,7 +8515,23 @@
       "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
     },
     {
-      "original_id": "render_rationale_29",
+      "original_id": "render_rationale_134",
+      "candidates": [
+        {
+          "id": "render_rationale_134__1804c1a8466413f1",
+          "path": "dummyindex/usage/render.py",
+          "source_location": "L134"
+        },
+        {
+          "id": "render_rationale_134__6fcd9ec5cb606365",
+          "path": "dummyindex/context/domains/probation/render.py",
+          "source_location": "L134"
+        }
+      ],
+      "reason": "Multiple distinct source definitions share a legacy identifier; uncertain references stay ambiguous."
+    },
+    {
+      "original_id": "render_write_report",
       "candidates": [
         {
           "id": "render_rationale_29__725c531fb7419616",
@@ -8101,6 +8665,11 @@
     {
       "original_id": "store_rationale_1",
       "candidates": [
+        {
+          "id": "store_rationale_1__8c7c650ecdb18ba3",
+          "path": "dummyindex/context/domains/probation/store.py",
+          "source_location": "L1"
+        },
         {
           "id": "store_rationale_1__a7c741e4e0cec976",
           "path": "dummyindex/context/domains/memory/store.py",

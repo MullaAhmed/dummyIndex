@@ -24,6 +24,8 @@ POSITIVES = [
     "Manually verify the output",
     "Hit staging: run against staging",
     "Call the real API and compare",
+    "Verify on production with live traffic",
+    "Manually click through the UI in the browser",
 ]
 NEGATIVES = [
     "Enable live-reload in dev server",

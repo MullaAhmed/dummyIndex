@@ -2559,6 +2559,12 @@ def test_install_declares_and_materializes_all_defaults_once(
         "ayghri/i-have-adhd (tracks latest); "
         "reviewed surfaces: skill, opt-in SessionStart shell command hook; "
         "runs code: yes; opt out this run with --no-default-plugins",
+        "default plugin trust -> ponytail@ponytail from "
+        "DietrichGebert/ponytail (tracks latest); "
+        "reviewed surfaces: skills, commands, SessionStart Node command hook, "
+        "SubagentStart Node command hook, UserPromptSubmit Node command hook, "
+        "band UI module with local task ledger; runs code: yes; opt out this run "
+        "with --no-default-plugins",
     )
     for disclosure in expected_trust_disclosures:
         assert disclosure in before_runner

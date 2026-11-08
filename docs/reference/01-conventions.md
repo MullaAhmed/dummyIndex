@@ -436,9 +436,10 @@ wire-compatible with the artefact format on disk.
 ```python
 class ConfidenceLevel(str, Enum):
     """Confidence on a node's name/summary. Persisted in tree.json."""
-    EXTRACTED = "EXTRACTED"   # deterministic AST output, no LLM
-    INFERRED = "INFERRED"     # LLM-enriched, judgment call
-    AMBIGUOUS = "AMBIGUOUS"   # extractor flagged uncertainty
+
+    EXTRACTED = "EXTRACTED"  # deterministic AST output, no LLM
+    INFERRED = "INFERRED"  # LLM-enriched, judgment call
+    AMBIGUOUS = "AMBIGUOUS"  # extractor flagged uncertainty
 ```
 
 If the schema changes, mirror it here in the same commit.
@@ -482,6 +483,7 @@ class Feature:
     name: str
     summary: str
     flows: tuple[Flow, ...] = ()  # tuple, not list, to keep frozen semantics
+
 
 @dataclass(frozen=True)
 class Flow:

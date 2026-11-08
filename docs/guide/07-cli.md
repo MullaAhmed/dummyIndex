@@ -70,6 +70,10 @@ materialization pass:
    (tracks the latest upstream default branch).
    The reviewed plugin exposes skills and commands plus `SessionStart` and
    `UserPromptSubmit` Node command hooks, so `runs_code=true`.
+   Install writes `.caveman.json` as `{"defaultMode": "manual"}`, so caveman starts inactive.
+   It skips the write when `.caveman.json` or `.caveman/config.json` already exists.
+   It also skips the user home directory, Codex-only installs, and `caveman@caveman` set to `false`.
+   `/caveman` still works. Env var `CAVEMAN_DEFAULT_MODE` overrides the file.
 <!-- test-anchor:policy-selfapply:begin -->
 3. `i-have-adhd@i-have-adhd`, with marketplace source `ayghri/i-have-adhd`
    (tracks the latest upstream default branch).
@@ -80,8 +84,17 @@ materialization pass:
    it self-apply. Dummyindex's managed project policy and per-prompt reminder
    carry the behavior across profiles and stand alone without the plugin.
 <!-- test-anchor:policy-selfapply:end -->
+4. `ponytail@ponytail`, with marketplace source `DietrichGebert/ponytail`
+   (tracks the latest upstream default branch). The reviewed plugin exposes
+   skills and commands. Its hooks are `SessionStart`, `SubagentStart`, and
+   `UserPromptSubmit` Node command hooks. Also reviewed: a band UI module with
+   local task ledger, so `runs_code=true`. The webhook is empty by default.
+   Once a user sets it, every task row leaves the machine. The `SubagentStart`
+   hook injects the ponytail ruleset into every subagent, including
+   dummyindex-dispatched ones. It applies when mode is not `off`; default mode
+   is `full`.
 
-The two third-party entries are a narrow, reviewed built-in exception. They
+The three third-party entries are a narrow, reviewed built-in exception. They
 track latest because Claude Code materializes marketplaces with
 `git clone --branch <ref>` — branch/tag names only, never a commit SHA, so a
 commit pin can never install. Sources and blast radii are disclosed before
@@ -96,23 +109,26 @@ attempted.
 <!-- test-anchor:policy-restatement:begin -->
 A Codex-only install writes no `.claude/**` files and invokes no Claude runner.
 It receives the behavior through the active managed **project** instruction
-file instead. Claude's managed project block carries the same policy: apply the
-combined `caveman`/`i-have-adhd` behavior on every reply without waiting for an
-invocation; lead with the outcome or next action, keep prose compact, number
-multi-step work, suppress tangents, restate current state, and preserve
-technical and safety detail. Explicit user formatting requests and safety
-requirements win. The same managed project guidance requires checking every
-exposed skill's trigger rules before acting and invoking every match without
-waiting to be asked. The policy is not written to Codex's global guidance.
+file instead. Claude's managed project block carries the same always-on output
+policy. Apply it on every reply without waiting for an invocation. Replies use
+the `i-have-adhd` shape at minimum verbosity, not `caveman` chat voice. Lead
+with the outcome or next action. Keep prose compact. Number multi-step work, at most 5
+items per group. Suppress tangents, restate current state, and preserve technical
+and safety detail. Subagent prompts and SendMessage bodies use concise Chinese
+with caveman rules. Code, commits, docs, and final reports stay English. Repo
+docs use English caveman style. Before acting, compare the request with every
+exposed skill's trigger rules and invoke every match without waiting to be asked.
+Explicit user formatting requests and safety requirements win. The policy is not
+written to Codex's global guidance.
 <!-- test-anchor:policy-restatement:end -->
 
 There are three distinct opt-out layers for the native defaults:
 
-- **One run, all three:** pass `--no-default-plugins`, or its legacy
+- **One run, all four:** pass `--no-default-plugins`, or its legacy
   `--no-superpowers` alias. The gate runs before config reconciliation,
   marketplace/settings changes, runner probes, or code execution; a current
   config remains byte-identical.
-- **Durable, all three:** set `.context/config.json` field
+- **Durable, all four:** set `.context/config.json` field
   `default_plugins_enabled` to `false`. Reinstall/update does not backfill
   missing defaults while this explicit state remains disabled.
 - **Durable, one target:** set its project or local `enabledPlugins` value to
@@ -176,6 +192,15 @@ config mutation instead of falling back to the built-in tuple.
   reports PATH shadowing, never fixes anything, and always exits 0.
 - A manual inspection command. **No longer auto-refreshes** and is **not** the SessionStart hook (that's `plan-update`, below).
 
+**`check` ratchets and reference checks:**
+
+- `--budget` enforces word-count ratchets in `.context/doc-budget.txt` and `tests/data/skill-budget.txt`.
+- `--style` enforces the style ratchet in `.context/style-budget.txt`. It flags sentences over 20 words and filler words.
+- With no style ratchet, `--style` only reports and prints the seed command. It exits 0.
+- `--refs` lists durable docs that cite `proposals/` or `audits/`. A hit exits 1.
+- `--update-ratchet` needs `--budget` or `--style`. It updates only the named group and only lowers entries. Alone, it exits 2.
+- Word or violation growth, or an unrecorded overage, exits 1.
+
 ### `dummyindex context plan-update [path] [--root DIR]`
 
 - The SessionStart-hook command (v0.13.5).
@@ -211,6 +236,12 @@ config mutation instead of falling back to the built-in tuple.
   - PreToolUse (`Write`) — runs `dummyindex context guard-doc-write` (managed-doc-homes guard).
 - `--global` writes `~/.claude/settings.json` instead, so the hooks fire in **every** repo (self-gating on `.context/` existing). A repo's own `--local` install overrides the global one — global hook bodies carry a `dummyindex context hooks defer-check` guard that yields when the repo has its own dummyindex hooks.
 - **Upgrade scrub** (local scope): removes any legacy `git post-commit` script and sentinel-bearing `PostToolUse` entry installed by pre-v0.13.5 versions. User-authored hooks (no sentinel) are left untouched.
+
+**PreToolUse language hint.** The PreToolUse matcher is `Write|Edit|MultiEdit|Agent|Task|SendMessage`.
+For `Agent` and `Task`, the hook reads `prompt`. For `SendMessage`, it reads `message`.
+Code, URLs, and paths are removed first. Text under 200 characters is then not judged.
+It warns when the CJK share (CJK characters / (CJK characters + Latin words)) is below 0.5.
+The warning goes out as `additionalContext`. It never denies, and `doc_guard_enabled` does not turn it off.
 
 ### `dummyindex context hooks defer-check [path] [--root DIR]`
 
@@ -530,7 +561,7 @@ equipment manifest does not block native delegation.
 - `--force` overwrites an existing proposal.
 - Why: gives `/dummyindex-plan` a structured, index-grounded scaffold to fill rather than drafting into the void.
 
-### `dummyindex context equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--platform agents|claude|both] [--lesson-file F] [--json]`
+### `dummyindex context equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--platform agents|claude|both] [--lesson-file F] [--source [--yes]] [--json]`
 
 - Prepare canonical capability bodies in `.context/equipment/` from the index and preflight data; record ownership in `.context/equipment.json` (schema v4). Every host uses these same bodies. `--platform claude` adds thin native references and supported hooks; default preparation creates no new Claude setup. Existing pristine native bodies migrate to references; edited/evolved files remain registered at their current paths.
 - **`apply` is an explicit verb.** A bare `dummyindex context equip` (no verb, no flags) is a help probe: it prints usage and **exits 2 without writing** — a discovery probe never mutates the repo. The only verbless form is the read-only `equip --dry-run` preview. `apply` also **refuses** (`exit 1`) on a repo with no `.context/` (equip renders *from* the index — run `dummyindex ingest` first).
@@ -538,6 +569,7 @@ equipment manifest does not block native delegation.
 - **Generated vs adopted.** A capability a template backs (**db / security / performance / docs / search**) is *generated* as a real, file-backed `<proj>-<cap>-specialist.md` (marker + `version`/`origin_hash`/`grounded_in`, lifecycle-managed like the core four). A capability with **no** template (e.g. frontend → *Frontend Developer*) is *adopted* manifest-only (`path: ""`, no file written).
 - `--for-proposal S` covers the capabilities `S`'s `plan.md`/`checklist.md` demand (adopting the ones no template backs; RLS / tenant-isolation map to `security`). `--specialist C` forces capability `C` to lead the specialist order. Neither flag is required to *get* a template-backed specialist — every one is generated on every pass — and already-applied specialists are carried forward, so a plain re-apply never drops or renames one.
 - Equipment-eval scaffolding and scoring are removed. Existing user-authored suites are left untouched.
+- `--source [--yes]` sources each db / security / performance / docs / search and procedure specialist from catalogs before templates: seed marketplaces (incl. ECC), then skills.sh (`npx --no skills find`), then GitHub search. A qualified `skills/<name>/SKILL.md`, pinned to a commit sha and scanned, becomes the body under a repo overlay; no candidate keeps the template. Untrusted or `warn:` candidates need `--yes`; `block:` findings never adopt. With no `gh`, it prints `source: gh unavailable — templates kept`. A later `apply --source` reports `needs-reverify (upstream changed)`; re-source with `equip reset NAME`, then `apply --source`. The sourced body lives at `.context/equipment/<name>.md`: plain `apply` keeps it (`(sourced, kept)`), `refresh` skips it, and `reset` restores the template and clears the origin fields. `--source --dry-run` is a read-only query and writes nothing. With `--json`, sourcing lines go to stderr.
 - `--dry-run` writes nothing; additive + never-clobber on real runs.
 
 ### `dummyindex context equip add-specialist CAPABILITY [--root DIR] [--dry-run] [--json]`
@@ -572,6 +604,7 @@ equipment manifest does not block native delegation.
 ### `dummyindex context equip reset NAME [--root DIR]`
 
 - Restore one generated item to its pristine render (the escape hatch), re-baseline + bump.
+- Resetting a sourced item restores the template and clears `origin_repo`, `origin_ref` and `marketplace`.
 
 ### `dummyindex context equip uninstall [--root DIR] [--dry-run]`
 

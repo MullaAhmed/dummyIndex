@@ -13,7 +13,31 @@ dir; the ``/dummyindex-gc`` skill picks it and gets user confirmation. In order:
 6. Knowledge lifecycle: needs a current closeout receipt, intact units/fixtures and
    no inbound durable dependencies; neither flag bypasses it.
 
-A missing target is an idempotent no-op, never an error.
+1. **Slug validation** — the kind's own ``validate_slug`` rejects an
+   out-of-charset slug (``../../etc``) by raising ``ProposalSlugError`` /
+   ``AuditSlugError`` *before any path work*. The caller maps these to exit 2.
+2. **Sentinel reject** — a slug that is ``_archive``, leads with ``_``, is
+   ``.``/``..``, or is empty raises ``GcTargetError``. ``_archive`` is
+   charset-valid and resolves *inside* the root, so guard 3 cannot catch it —
+   this guard is the only thing that does.
+3. **Realpath containment** — the target dir is resolved (following symlinks)
+   and must be inside the resolved kind-root, else ``GcPathError``. Reachable
+   via a symlinked workspace or an explicit ``path=`` — never via a clean slug.
+4. **Liveness** (proposals/archived only) — an ``in_progress`` proposal, or one
+   whose checklist is partial, is refused with ``GcTargetError`` unless
+   ``force_partial`` is given. A structural backstop against deleting a plan a
+   ``/dummyindex-build`` is mid-flight on.
+5. **Recoverability** — a git-untracked target is refused (returning a
+   ``DeleteResult``, not raising) unless ``allow_untracked`` is also given,
+   because its removal would be permanent.
+6. **Knowledge lifecycle** — authored work needs a current closeout receipt,
+   intact accepted units/fixtures and no inbound durable dependencies. Neither
+   force_partial nor allow_untracked bypasses this guard.
+
+A target that does not exist is an idempotent no-op (``deleted=False``,
+``refused=False``), never an error. No ``print`` here — the CLI owns stdout.
+This module never touches anything outside the resolved kind-root.
+``dry_run=True`` runs the same guards without the lock and returns before ``rmtree``.
 """
 
 from __future__ import annotations
@@ -30,17 +54,10 @@ from ..proposals.errors import CloseoutError
 from ..proposals.retirement import retirement_block
 from ..proposals.store import proposals_root
 from ..proposals.store import validate_slug as validate_proposal_slug
-from .constants import ARCHIVE_SENTINEL
+from .constants import ARCHIVE_SENTINEL, PROPOSAL_KINDS
 from .enums import CandidateKind
 from .errors import GcPathError, GcTargetError
 from .models import DeleteResult
-
-# Kinds whose workspace lives under ``.context/proposals/`` (validated + rooted
-# by the proposals domain). ``ARCHIVED`` is an ``_archive/<slug>`` child, which
-# still resolves under the proposals root, so it shares that validator + root.
-_PROPOSAL_KINDS = frozenset(
-    {CandidateKind.PROPOSAL, CandidateKind.ARCHIVED, CandidateKind.ORPHAN_SCAFFOLD}
-)
 
 
 def delete_workspace(
@@ -51,15 +68,26 @@ def delete_workspace(
     path: str | None = None,
     allow_untracked: bool = False,
     force_partial: bool = False,
+    dry_run: bool = False,
 ) -> DeleteResult:
     """Hold the shared project writer lock across all guards and deletion.
 
     An active closeout, receipt or policy writer refuses deletion with a retry
-    instruction. The CLI's read-only dry-run never calls this operation.
+    instruction. ``dry_run`` runs every guard, takes no lock, and deletes nothing.
     """
     from ..evolve_gate import EvolveError
     from ..evolve_promotion import project_lock
 
+    if dry_run:
+        return _delete_workspace_locked(
+            context_dir,
+            kind=kind,
+            slug=slug,
+            path=path,
+            allow_untracked=allow_untracked,
+            force_partial=force_partial,
+            dry_run=True,
+        )
     try:
         with project_lock(context_dir.parent):
             return _delete_workspace_locked(
@@ -82,6 +110,7 @@ def _delete_workspace_locked(
     path: str | None = None,
     allow_untracked: bool = False,
     force_partial: bool = False,
+    dry_run: bool = False,
 ) -> DeleteResult:
     """Delete one generated-doc workspace dir behind the guards.
 
@@ -129,8 +158,8 @@ def _delete_workspace_locked(
             deleted=False, refused=False, reason="nothing to delete", untracked=False
         )
 
-    # --- guard 4: liveness (proposals/archived only)
-    if kind in _PROPOSAL_KINDS and not force_partial:
+    # --- guard 4: liveness (proposals/archived only) ------------------------
+    if kind in PROPOSAL_KINDS and not force_partial:
         reason = _liveness_block(target)
         if reason is not None:
             raise GcTargetError(
@@ -153,14 +182,17 @@ def _delete_workspace_locked(
         reason = retirement_block(
             context_dir,
             resolved_target,
-            kind="proposal" if kind in _PROPOSAL_KINDS else "audit",
+            kind="proposal" if kind in PROPOSAL_KINDS else "audit",
         )
     except (CloseoutError, OSError, ValueError) as exc:
         raise GcTargetError(safe_slug or str(target), str(exc)) from exc
     if reason:
         raise GcTargetError(safe_slug or str(target), reason)
 
-    # --- delete
+    if dry_run:
+        return DeleteResult(would_delete=True, untracked=untracked)
+
+    # --- delete --------------------------------------------------------------
     shutil.rmtree(target)
     return DeleteResult(deleted=True, refused=False, reason=None, untracked=untracked)
 
@@ -170,14 +202,14 @@ def _delete_workspace_locked(
 
 def _kind_root(context_dir: Path, kind: CandidateKind) -> Path:
     """``.context/proposals`` or ``.context/audits`` for the candidate kind."""
-    if kind in _PROPOSAL_KINDS:
+    if kind in PROPOSAL_KINDS:
         return proposals_root(context_dir)
     return audits_root(context_dir)
 
 
 def _validate(kind: CandidateKind, slug: str) -> str:
     """Run the kind's own slug validator (raises the typed slug error)."""
-    if kind in _PROPOSAL_KINDS:
+    if kind in PROPOSAL_KINDS:
         return validate_proposal_slug(slug)
     return validate_audit_slug(slug)
 

@@ -67,7 +67,7 @@ Happy path — render a specialist and read its invariants off the resulting `Eq
 spec = specialist_spec("database", label="python", proj="backend")
 # spec.name == "backend-db-specialist", spec.capabilities == ("database",)
 
-(item, rel_path, content), = render_generated_set(
+((item, rel_path, content),) = render_generated_set(
     profile=StackProfile(label="python", frameworks=("FastAPI",)),
     specs=(spec,),
     conventions=(".context/conventions/naming.md",),
@@ -79,9 +79,9 @@ assert item.invariants == (
     "## Ground yourself first (mandatory, before any edit)",
     "Additive/expand-then-contract by default",
     "Stay inside the planned scope.",
-)                                      # the db template's slot-free literals
-assert all(inv in content for inv in item.invariants)   # verbatim in the body
-assert item.origin_hash == content_hash(content)        # invariants never hashed
+)  # the db template's slot-free literals
+assert all(inv in content for inv in item.invariants)  # verbatim in the body
+assert item.origin_hash == content_hash(content)  # invariants never hashed
 ```
 
 The substrings live only in the manifest entry, not the rendered bytes — so writing `content` to disk and deleting `item.invariants[0]` flips `classify_item` from `PRISTINE` to `INVARIANT_BROKEN`, while appending a harmless note (every invariant intact) yields `CUSTOMIZED` (`test_equip_specialist_invariants.py:119-154`).

@@ -4,8 +4,8 @@
   },
   "created_at": "2026-08-23T19:16:53+00:00",
   "dummyindex_version": "0.37.0",
-  "file_count": 572,
-  "indexed_commit": "6dd3924c84481151d0b1b883ff4a73caab701466",
+  "file_count": 611,
+  "indexed_commit": "ac5283bad0aa37deac890ea2869a3da426882c1a",
   "languages": [
     "powershell",
     "python",
@@ -13,6 +13,6 @@
   ],
   "root": ".",
   "schema_version": 1,
-  "symbol_count": 5915,
-  "updated_at": "2026-11-07T21:25:56+00:00"
+  "symbol_count": 6531,
+  "updated_at": "2026-11-08T02:54:38+00:00"
 }

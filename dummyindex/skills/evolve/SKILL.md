@@ -117,27 +117,24 @@ This procedure runs identically on Claude Code (`/dummyindex-evolve`) and on any
 
 After an accepted audit/build closeout, handle at most one pending event from
 `dummyindex context evolve learning --next` without another user prompt. Inspect
-its cited accepted outcome and current source. Reflect once: one narrow verified
-rule update, or `learning --event ID --no-entry`. Do not create a lesson merely
-because the queue exists. Direct accepted transfers already updating the right
-convention need no redundant rule.
+its cited outcome and current source. Reflect once: one narrow verified rule,
+or `learning --event ID --no-entry`. Create no lesson merely because the queue
+exists; accepted transfers already in place need no rule.
 
-For a supported change, write a reflection JSON with `verified: true`, `target`,
+For a supported change, write reflection JSON: `verified: true`, `target`,
 `rule_id`, `body`, `expected_sha256` (reviewed whole-document hash), `sources`
-(repo-relative source files), and existing project `tests`. Optional `supersedes`
-lists old rule IDs in that document. Run
-`learning --event ID --from-file reflection.json`. It stages one protected rule,
-executes the exact existing gate and automatically adopts only passing bytes.
+(repo-relative), existing project `tests`; optional `supersedes` (old IDs,
+same document). Run `learning --event ID --from-file reflection.json`. It
+stages one protected rule, runs the exact gate, adopts only passing bytes.
 Report pending/prepared/evaluated/applied accurately; blocked checks stay blocked.
 Never recursively learn from evolution or experiment output.
 
-`evolve evidence` imports only this project's host evidence. `evolve rules`
-reports source-invalid managed rules. For an explicit agent-quality improvement
-request, use the host's native agents through
-[native-protocol.md](native-protocol.md): observe actual task feedback before
-authoring general/domain proposals, then compose from their measured outcomes.
-The existing external executor remains available in
-[replay-protocol.md](replay-protocol.md).
+`evolve evidence` imports only this project's host evidence; `evolve rules`
+reports source-invalid managed rules. Chat corrections go through local probation:
+follow [probation-protocol.md](probation-protocol.md). For explicit agent-quality
+improvement, use native agents via [native-protocol.md](native-protocol.md):
+observe task feedback before authoring general/domain proposals, then
+compose from measured outcomes. External executor: [replay-protocol.md](replay-protocol.md).
 No trigger-word score or deterministic fixture is evidence of model improvement.
 
 ## CLI reference
@@ -152,6 +149,8 @@ dummyindex context evolve discard --candidate N --run NAME
 dummyindex context evolve evidence [--claude PROJECTS] [--codex SESSIONS] [--state SQLITE --history SQLITE]
 dummyindex context evolve learning --next
 dummyindex context evolve learning --event ID (--from-file REFLECTION | --no-entry)
+dummyindex context evolve attribute (--next | --event ID --verdict attributed|unrelated|unknown [--item ITEM] [--durable] [--retracts])
+dummyindex context evolve probation report|promote|demote [--item ID]...
 dummyindex context evolve rules
 dummyindex context evolve experiment --run NAME --from-file SPECIFICATION
 dummyindex context evolve utility

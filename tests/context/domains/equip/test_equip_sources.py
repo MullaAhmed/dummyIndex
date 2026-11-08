@@ -3,6 +3,8 @@
 import base64
 import json
 
+import pytest
+
 from dummyindex.context.domains.equip import (
     RunResult,
     ToolAvailability,
@@ -11,6 +13,17 @@ from dummyindex.context.domains.equip import (
     fetch_file,
     search_github,
 )
+from dummyindex.context.domains.equip.errors import SourceError
+from dummyindex.context.domains.equip.plugins.sources import (
+    RepoMeta,
+    SkillsShRef,
+    find_skills_sh,
+    is_safe_repo,
+    list_skills,
+    repo_meta,
+)
+
+pytestmark = pytest.mark.unit
 
 
 def _fake_runner(responses):
@@ -135,8 +148,6 @@ def test_search_github_fallback_is_flagged_degraded():
 
 from dummyindex.context.domains.equip import (  # noqa: E402
     SkillRef,
-    SourceError,
-    list_skills,
     resolve_ref,
 )
 
@@ -281,3 +292,141 @@ def test_list_skills_carries_pinned_ref():
     )
     skills = list_skills("o/r", ref=sha, runner=runner)
     assert skills[0].ref == sha
+
+
+# ----- specialist sourcing: root_fallback, skills.sh, repo_meta ---------------
+
+
+def test_list_skills_root_fallback_off_skips_repo_root():
+    seen: list[str] = []
+
+    def runner(argv):
+        seen.append(argv[2] if argv[:2] == ["gh", "api"] else "")
+        if argv[:2] == ["gh", "api"] and argv[2] == "repos/o/r/contents":
+            return _ok([{"type": "dir", "name": "solo", "path": "solo"}])
+        return RunResult(1, "", "not found")
+
+    assert list_skills("o/r", runner=runner, root_fallback=False) == ()
+    assert "repos/o/r/contents" not in seen
+    assert seen == ["repos/o/r/contents/skills"]
+
+
+def test_list_skills_root_fallback_default_still_uses_root():
+    runner = _api_runner(
+        {"repos/o/r/contents": _ok([{"type": "dir", "name": "solo", "path": "solo"}])}
+    )
+    assert [s.name for s in list_skills("o/r", runner=runner)] == ["solo"]
+
+
+def _sh_runner(*, rc=0, stdout="", stderr="", record=None):
+    def run(argv):
+        if record is not None:
+            record.append(list(argv))
+        return RunResult(rc, stdout, stderr)
+
+    return run
+
+
+def test_find_skills_sh_parses_ansi_and_counts():
+    out = (
+        "\x1b[32mvercel-labs/agent-skills@react-best\x1b[0m  1.2K installs\n"
+        "foo/bar@baz 3,400\n"
+    )
+    refs, reason = find_skills_sh("implement", runner=_sh_runner(stdout=out))
+    assert refs == (
+        SkillsShRef("vercel-labs/agent-skills", "react-best", 1200),
+        SkillsShRef("foo/bar", "baz", 3400),
+    )
+    assert reason is None
+
+
+def test_find_skills_sh_missing_count_is_none():
+    refs, reason = find_skills_sh("test", runner=_sh_runner(stdout="foo/bar@baz\n"))
+    assert refs == (SkillsShRef("foo/bar", "baz", None),)
+    assert reason is None
+
+
+def test_find_skills_sh_drops_unsafe_repo_and_skill():
+    out = "../x@evil\na/..@s\nfoo/bar@.hidden\nok/repo@good 5\n"
+    refs, _ = find_skills_sh("verify", runner=_sh_runner(stdout=out))
+    assert refs == (SkillsShRef("ok/repo", "good", 5),)
+
+
+def test_find_skills_sh_dedupes_keeping_first_order():
+    out = "a/b@x 10\nc/d@y\na/b@x 99\n"
+    refs, _ = find_skills_sh("review", runner=_sh_runner(stdout=out))
+    assert refs == (SkillsShRef("a/b", "x", 10), SkillsShRef("c/d", "y", None))
+
+
+def test_find_skills_sh_nonzero_returns_first_stderr_line():
+    refs, reason = find_skills_sh(
+        "implement",
+        runner=_sh_runner(rc=127, stderr="npx: not found\nmore"),
+    )
+    assert refs == ()
+    assert reason == "npx: not found"
+
+
+def test_find_skills_sh_empty_output_is_no_results():
+    assert find_skills_sh("test", runner=_sh_runner()) == ((), "no results")
+
+
+def test_find_skills_sh_rejects_non_capability_query_without_running():
+    record: list = []
+    refs, reason = find_skills_sh("rm -rf", runner=_sh_runner(record=record))
+    assert refs == ()
+    assert reason == "unsupported query"
+    assert record == []
+
+
+def test_find_skills_sh_uses_which_for_argv0(monkeypatch):
+    import dummyindex.context.domains.equip.plugins.sources as sources
+
+    record: list = []
+    monkeypatch.setattr(sources.shutil, "which", lambda _name: "C:/x/npx.cmd")
+    find_skills_sh("database", runner=_sh_runner(record=record))
+    assert record[0][0] == "C:/x/npx.cmd"
+    assert record[0][1:] == ["--no", "skills", "find", "database"]
+
+
+def test_find_skills_sh_falls_back_to_bare_npx(monkeypatch):
+    import dummyindex.context.domains.equip.plugins.sources as sources
+
+    record: list = []
+    monkeypatch.setattr(sources.shutil, "which", lambda _name: None)
+    find_skills_sh("database", runner=_sh_runner(record=record))
+    assert record[0][0] == "npx"
+
+
+def test_repo_meta_parses_fields():
+    payload = {
+        "stargazers_count": 42,
+        "pushed_at": "2026-01-02T03:04:05Z",
+        "license": {"spdx_id": "MIT"},
+        "archived": True,
+    }
+    runner = _sh_runner(stdout=json.dumps(payload))
+    assert repo_meta("o/r", runner=runner) == RepoMeta(
+        stars=42, pushed_at="2026-01-02T03:04:05Z", license="MIT", archived=True
+    )
+
+
+def test_repo_meta_null_license_is_none():
+    payload = {"stargazers_count": 1, "pushed_at": "", "license": None}
+    meta = repo_meta("o/r", runner=_sh_runner(stdout=json.dumps(payload)))
+    assert meta.license is None and meta.archived is False
+
+
+def test_repo_meta_nonzero_returns_none():
+    assert repo_meta("o/r", runner=_sh_runner(rc=1, stderr="nope")) is None
+
+
+def test_repo_meta_bad_json_raises():
+    with pytest.raises(SourceError):
+        repo_meta("o/r", runner=_sh_runner(stdout="{not json"))
+
+
+def test_is_safe_repo_accepts_and_rejects():
+    assert is_safe_repo("a/b") is True
+    for bad in ("a/b/c", "../b", "a/..", "a b/c", "a", "./b", "a/."):
+        assert is_safe_repo(bad) is False, bad

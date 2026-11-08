@@ -26,6 +26,11 @@
       "kind": "plugin",
       "target": "i-have-adhd@i-have-adhd",
       "version": null
+    },
+    {
+      "kind": "plugin",
+      "target": "ponytail@ponytail",
+      "version": null
     }
   ],
   "default_plugins_enabled": true,

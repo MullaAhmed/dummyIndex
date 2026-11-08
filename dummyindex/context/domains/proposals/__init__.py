@@ -1,15 +1,28 @@
 """Grounded planning: scaffold a consistency-checked proposal artifact.
 
-``dummyindex context propose --slug S --title "..."`` writes a
-``.context/proposals/<slug>/`` folder (``proposal.json`` plus ``spec.md`` /
-``plan.md`` / ``checklist.md`` templates), then a deterministic consistency scan
-(reusing the ``query`` retrieval domain) records related features + conventions.
-``__all__`` is the public surface the tests and CLI import.
+``dummyindex context propose --slug S --title "..."`` turns a natural-language
+feature request into a ``.context/proposals/<slug>/`` folder (``proposal.json``
+plus ``spec.md`` / ``plan.md`` / ``checklist.md`` templates), then runs a
+deterministic consistency scan (reusing the ``query`` retrieval domain) to
+record related features + conventions into the proposal.
+
+Public surface (the test + CLI import target):
+
+- ``Proposal``, ``ConsistencyHits`` — frozen dataclasses
+- ``ProposalStatus`` — enum for on-disk status values
+- ``SCHEMA_VERSION``
+- ``proposal_dir``, ``ensure_proposal``,
+  ``apply_consistency``, ``read_proposal``, ``validate_slug``, ``PROPOSALS_REL``,
+  ``set_routing``
+- ``scan_consistency``
+- ``draft_manifest``, ``draft_path``, ``write_draft`` — closeout drafts
+- ``ProposalError``, ``ProposalExistsError``, ``ProposalSlugError``
 """
 
 from __future__ import annotations
 
 from .closeout import closeout_from_file, closeout_workspace
+from .draft import draft_manifest, draft_path, write_draft
 from .enums import ProposalStatus
 from .errors import CloseoutError, ProposalError, ProposalExistsError, ProposalSlugError
 from .models import SCHEMA_VERSION, ConsistencyHits, Proposal
@@ -38,11 +51,14 @@ __all__ = [
     "apply_consistency",
     "closeout_from_file",
     "closeout_workspace",
+    "draft_manifest",
+    "draft_path",
     "ensure_proposal",
     "proposal_dir",
     "read_proposal",
     "scan_consistency",
     "set_routing",
     "validate_slug",
+    "write_draft",
     "write_proposal_json",
 ]

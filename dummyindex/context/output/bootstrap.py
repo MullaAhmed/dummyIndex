@@ -28,25 +28,34 @@ class UnbalancedMarkersError(ValueError):
 # not depend on either plugin being installed. Never shorten this to "use the
 # <plugin> behavior": naming an uninvocable skill made the ADHD half silently inert.
 ALWAYS_ON_OUTPUT_POLICY = (
-    "**Output policy — always on, never wait for an invocation.** Apply the "
-    "combined `caveman`/`i-have-adhd` behavior to every reply; the rules below "
-    "are self-contained, so follow them even when neither skill is loaded (the "
-    "`i-have-adhd` skill sets `disable-model-invocation: true` and cannot apply "
-    "itself). Lead with the outcome or the next action — a command, path, or "
-    "`file:line` comes first and prose comes after. Keep prose compact: cut "
-    "filler, pleasantries, hedging, and tool-call narration. Number multi-step "
-    "work, one bounded action per step. Suppress tangents and options you are "
-    "not taking. Restate the current state each turn rather than expecting the "
-    "reader to hold it. Prefer specific quantities (counts, paths, durations) "
-    'over vague ones like "a bit of work". Make finished work visible and end '
-    "with one concrete next action. Compress the prose, never the substance — "
-    "technical and safety detail, exact identifiers, commands, and error "
-    "strings stay verbatim.\n\n"
+    "**Output policy — always on, never wait for an invocation.** Reply in the "
+    "`i-have-adhd` shape at minimum verbosity. The `caveman` chat voice is not "
+    "the reply style here. These rules are self-contained, so follow them even "
+    "when neither skill is loaded. The `i-have-adhd` skill sets "
+    "`disable-model-invocation: true` and cannot apply itself. "
+    "Lead with the outcome or the next action on the first line. Number "
+    "multi-step work with the fewest steps, at most 5 items per group. Keep "
+    "prose compact: no preamble, recap, pleasantries, empty hedges, or "
+    "tool-call narration. Suppress tangents and options you are not taking. "
+    "Prefer a list or table over prose. Restate the current state each turn "
+    "rather than expecting the reader to hold it. Prefer specific quantities "
+    "(counts, paths, durations) over vague ones. Make finished work visible "
+    "and end with one concrete next action when work remains. Compress the "
+    "prose, never the substance: technical and safety detail, identifiers, "
+    "commands, and errors stay verbatim. "
+    "Give fuller prose when the user asks to explain or walk through "
+    "something. Confirm destructive actions in full sentences. Ask one "
+    "clarifying question only on real ambiguity.\n\n"
+    "Language: subagent prompts and SendMessage bodies use concise Chinese "
+    "with caveman rules. Code, commits, PRs, docs, and final reports stay "
+    "English. Payload stays verbatim. Docs written into the repo use English "
+    "caveman style, at most 20 words per sentence. This overrides caveman's "
+    "plain-prose rule for persisted text. "
     "This policy holds for the whole session. It does not lapse after several "
-    "turns or when the topic changes, and when you are unsure whether it still "
+    "turns or when the topic changes. When you are unsure whether it still "
     "applies, it does. It yields to an explicit user formatting request and to "
-    'safety requirements, and it stops when the user says so ("normal mode", '
-    '"stop caveman", "stop adhd mode") — acknowledge in one line.'
+    'safety requirements. It stops when the user says so ("normal mode", '
+    '"stop caveman", "stop adhd mode"); acknowledge in one line.'
 )
 
 # Project-scoped and self-contained: Claude profiles sharing this repo's settings
@@ -70,18 +79,21 @@ ALWAYS_ON_SKILL_POLICY = (
 # the UserPromptSubmit hook because a SessionStart/CLAUDE.md-only instruction
 # decays in long sessions. Kept short to bound the per-turn context cost.
 ALWAYS_ON_TURN_REMINDER = (
-    "Active project contracts for this turn: use the ADHD/caveman output shape "
-    "on this reply — lead with the outcome or next action, keep prose compact, "
-    "number multi-step work, cap lists at five, suppress tangents, restate the "
-    "current state, use concrete quantities, preserve exact technical and "
-    "safety detail, and omit preambles, recaps, and closing pleasantries. End "
-    "with one next action only when work remains. Apply this directly; "
-    "`i-have-adhd` cannot be model-invoked. Before responding or acting, "
-    "inspect every currently available skill's description and trigger rules "
-    "and invoke each match; a user-named skill is mandatory. Route dummyindex "
-    "requests through the matching `dummyindex-*` workflow. Tool, workflow, "
-    "and subagent output is input to reshape, not a formatting exception. "
-    "Explicit user formatting or skill opt-outs and safety requirements win."
+    "Active project contracts for this turn. Use the `i-have-adhd` reply shape "
+    "at minimum verbosity, not `caveman` chat voice. Lead with the outcome or "
+    "next action. Number multi-step work, at most 5 items per group. Suppress "
+    "tangents, preambles, recaps, and closing pleasantries. Restate the "
+    "current state and use concrete quantities. Keep technical and safety "
+    "detail verbatim. End with one next action only when work remains. Apply "
+    "this directly; `i-have-adhd` cannot be model-invoked. Subagent prompts and "
+    "SendMessage bodies use concise Chinese; code, commits, docs, and final "
+    "reports stay English. Repo docs use English caveman style. Before "
+    "responding or acting, inspect every currently available skill's trigger "
+    "rules and invoke each match. A user-named skill is mandatory. Route "
+    "dummyindex requests through the matching `dummyindex-*` workflow. Tool, "
+    "workflow, and subagent output is input to reshape, not a formatting "
+    "exception. Explicit user formatting or skill opt-outs and safety "
+    "requirements win."
 )
 
 

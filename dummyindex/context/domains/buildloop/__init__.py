@@ -6,6 +6,7 @@ atomically tick or skip boxes, and resolve the model-routing block. Dispatch and
 verify-before-tick live in the ``dummyindex-build`` skill, never here. A finished
 build reconciles into ``.context/``: a bare rebuild leaves its new files unassigned.
 """
+
 from __future__ import annotations
 
 from .checklist import counts, flip_item, next_wave, parse_checklist, skip_item

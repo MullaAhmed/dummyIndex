@@ -5,9 +5,10 @@ from __future__ import annotations
 from pathlib import Path
 
 from ..atomic_io import write_text_atomic
-from .constants import CONTEXT_CEILING, RATCHET_SEPARATOR, SKILLS_CEILING
+from .constants import CONTEXT_CEILING, RATCHET_SEPARATOR, SKILLS_CEILING, STYLE_CEILING
 from .enums import BudgetGroup
 from .models import BudgetViolation, UpdateResult
+from .style import count_violations
 
 __all__ = [
     "check",
@@ -29,6 +30,8 @@ _CONTEXT_GLOBS = (
 )
 _SKILLS_DIR = "dummyindex/skills"
 _SKILL_NAME = "SKILL.md"
+# Rebuild regenerates naming.md, so a style ratchet entry on it would churn.
+_STYLE_EXEMPT = ".context/conventions/naming.md"
 
 
 def measure(path: Path) -> int:
@@ -42,11 +45,17 @@ def is_skill_file(path: Path) -> bool:
 
 
 def _ceiling(group: BudgetGroup) -> int:
+    if group is BudgetGroup.STYLE:
+        return STYLE_CEILING
     return SKILLS_CEILING if group is BudgetGroup.SKILLS else CONTEXT_CEILING
 
 
+def _value(path: Path, group: BudgetGroup) -> int:
+    return count_violations(path) if group is BudgetGroup.STYLE else measure(path)
+
+
 def scan(root: Path, group: BudgetGroup) -> dict[str, int]:
-    """Word counts for every in-scope doc under ``root``, keyed by POSIX rel path."""
+    """Word counts (style: violation counts) for every in-scope doc under ``root``."""
     found: dict[str, int] = {}
     if group is BudgetGroup.SKILLS:
         # Exact-name filter: glob is case-insensitive on Windows (skill.md).
@@ -54,8 +63,9 @@ def scan(root: Path, group: BudgetGroup) -> dict[str, int]:
     else:
         paths = [p for pattern in _CONTEXT_GLOBS for p in root.glob(pattern)]
     for path in paths:
-        if path.is_file():
-            found[path.relative_to(root).as_posix()] = measure(path)
+        rel = path.relative_to(root).as_posix()
+        if path.is_file() and not (group is BudgetGroup.STYLE and rel == _STYLE_EXEMPT):
+            found[rel] = _value(path, group)
     return dict(sorted(found.items()))
 
 

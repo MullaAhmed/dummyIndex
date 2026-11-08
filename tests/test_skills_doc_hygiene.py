@@ -366,7 +366,22 @@ def test_gc_skill_no_runnable_gc_delete_without_yes() -> None:
     )
 
 
-# --- plan skill: agent-availability resolution + open-decisions rule
+@pytest.mark.unit
+def test_gc_skill_batch_sweep_phrases() -> None:
+    """Pin the recommendation-driven batch-sweep phrases in the gc skill."""
+    text = _gc_skill()
+    for phrase in (
+        "one batch table",
+        "one explicit confirmation",
+        "excluded from the batch",
+        "gc closeout --draft",
+        "blocked at delete",
+        "ran, found nothing to retire",
+    ):
+        assert phrase in text, f"batch-sweep phrase missing: {phrase!r}"
+
+
+# --- plan skill: agent-availability resolution + open-decisions rule ---------
 
 
 def _plan_skill() -> str:
@@ -396,10 +411,23 @@ def test_build_delegates_selected_capability_and_policy_on_every_host() -> None:
     assert "read `role_path`" in text
     assert "include the full capability mandate" in text
     assert "policies actually selected in this session" in text
-    assert "Ponytail is selected and exposed" in text
-    assert "never silently install or assume it" in text
     assert "Never stop solely because Claude equipment is missing" in text
     assert "sanctioned seam on every host" in text
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("skill", ["build", "plan", "equip"])
+def test_skills_apply_ponytail_by_default_and_never_install_silently(
+    skill: str,
+) -> None:
+    """Ponytail is default-on when exposed; the old selected-and-exposed gate is gone."""
+    text = " ".join(
+        (_SKILLS_DIR / skill / "SKILL.md").read_text(encoding="utf-8").split()
+    )
+    assert "Ponytail applies by default when exposed" in text
+    assert "`SubagentStart` hook already injects it" in text
+    assert "Never silently install it" in text
+    assert "Ponytail is selected" not in text
 
 
 @pytest.mark.unit
