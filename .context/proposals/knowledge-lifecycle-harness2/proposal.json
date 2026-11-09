@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "slug": "knowledge-lifecycle-harness2",
+  "title": "Adopt Harness2 knowledge-lifecycle ideas: required lesson records, placement-cost budget, reusable specialists, write-time proposal-citation guard",
+  "status": "done",
+  "related_features": [
+    "equip",
+    "managed-doc-homes",
+    "proposals"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": [],
+  "implementation_state": "implemented"
+}

@@ -1,42 +1,10 @@
-"""`dummyindex context build --proposal S <verb>` — grounded execution.
+"""`dummyindex context build --proposal S <verb>`: checklist state for grounded execution.
 
-Deterministic STATE management over a proposal's ``checklist.md``. The CLI
-is wire-only: it parses args, calls the ``buildloop`` domain, and prints.
-The actual agent dispatch (Task tool) + verify-before-tick discipline live
-in the ``dummyindex-build`` skill, not here. The ``--next``/``--next-wave``
-handlers live in the ``_build_next`` sibling (file-size discipline); this
-module keeps arg parsing + ``--check``/``--status``.
-
-Verbs (exactly one per call):
-
-- ``--next [--json]``      print the first unchecked item, the equipment item
-                           it maps to (or ``general-purpose`` fallback), and
-                           the grounding paths to inject into the agent.
-- ``--next-wave [--json]`` print EVERY unchecked item in the earliest
-                           incomplete wave (``## Wave N`` group in
-                           ``checklist.md``), each with its own equipment
-                           mapping — the parallel-dispatch frontier. On a
-                           flat (ungrouped) checklist this is exactly the
-                           single ``--next`` item.
-- ``--check "<item>"``     atomically flip that item (text substring or
-                           index) to ``- [x]``. Idempotent.
-- ``--skip "<item>" --reason "<why>"``
-                           close that item as ``- [~] … — skipped: <why>``
-                           — the renegotiated-scope affordance. Records the
-                           reason in ``checklist.md`` instead of a bare tick;
-                           refuses an already-closed box. ``--reason`` is
-                           mandatory.
-- ``--status [--json]``    print done/total plus the resolved model routing
-                           (``models: role=alias …`` in text mode, a
-                           ``routing`` map via ``--json``); when complete,
-                           print the reconcile next step.
-
-``--route K=V`` (repeatable) overrides the proposal's optional
-``"routing"`` block for this invocation — precedence: invocation >
-proposal > unset. It applies to ``--next``, ``--next-wave``, and
-``--status``; values are validated against the shared ModelChoice alias
-alphabet by the buildloop domain, so an invalid key/alias is rejected
-before anything runs.
+Wire-only over ``buildloop``; dispatch and verify-before-tick live in the
+``dummyindex-build`` skill. One verb per call: ``--next`` / ``--next-wave`` (see
+``waves``), ``--check ITEM`` (atomic, idempotent tick), ``--skip ITEM --reason WHY``
+(close as ``- [~]``), ``--status``, ``--closeout FILE``. ``--route K=V`` (repeatable,
+validated) overrides the proposal's routing block for the read verbs.
 """
 
 from __future__ import annotations
@@ -203,6 +171,11 @@ def run(args: list[str]) -> int:
             ProposalSlugError,
             closeout_from_file,
         )
+        from dummyindex.context.domains.proposals.closeout import (
+            failed_record_path,
+            learning_exit_code,
+            learning_line,
+        )
 
         try:
             receipt = closeout_from_file(
@@ -214,9 +187,13 @@ def run(args: list[str]) -> int:
         print(
             json.dumps(receipt, indent=2)
             if as_json
-            else f"build closeout [{proposal}]: {receipt['state']}; {len(receipt['pending_verification'])} pending verification"
+            else f"build closeout [{proposal}]: {receipt['state']}; {len(receipt['pending_verification'])} pending verification; "
+            + learning_line(
+                receipt.get("learning"),
+                failed_record_path(context_dir, "proposal", proposal),
+            )
         )
-        return 0
+        return learning_exit_code(receipt.get("learning"))
 
     try:
         items = parse_checklist(checklist_path)

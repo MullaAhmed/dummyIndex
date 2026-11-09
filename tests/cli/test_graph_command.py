@@ -1,11 +1,9 @@
 """Tests for `dummyindex context graph` dispatch (wire-only CLI contract).
 
-Unit tests run against the synthetic node-link fixture from
-``tests/context/domains/test_graph_query.py``; the integration smoke runs
-the verbs read-only against this repo's real
-``.context/features/symbol-graph.json`` when it is present, asserting only
-stable signals (exit codes, citation-path shapes) — never live community
-ids or member lists.
+Unit tests use the synthetic node-link fixture from
+``tests/context/domains/test_graph_query.py``. The integration smoke runs the
+verbs read-only on this repo's ``.context/features/symbol-graph.json`` when
+present, asserting only stable signals — never live community ids or members.
 """
 
 from __future__ import annotations
@@ -179,7 +177,7 @@ def test_graph_dead_code_is_bounded_and_cited(
     assert "src/app.py:L1" in out
 
 
-# ----- read-only smoke against this repo's real artifact --------------------
+# --- read-only smoke against this repo's real artifact
 
 
 @pytest.mark.integration

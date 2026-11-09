@@ -33,7 +33,7 @@ _AGE_BUCKETS: tuple[tuple[float, str], ...] = (
 )
 
 
-# ----- Catalog construction -------------------------------------------------
+# --- Catalog construction
 
 
 _DOC_TYPE_BY_EXT: dict[str, str] = {
@@ -69,10 +69,9 @@ def _classify_confidence(
 ) -> str:
     """Map (broken_ratio, age, broken_count) → high / medium / low.
 
-    The ``broken_count`` floor protects tiny docs: a 1-ref doc with that
-    one ref broken still scores `medium`, not `low`. Without this, a
-    one-sentence ADR that mentions a feature by an example name (e.g.
-    ``Authentication``) drops to `low` despite being mostly correct.
+    The ``broken_count`` floor protects tiny docs: a 1-ref doc with that one ref
+    broken (e.g. an ADR naming an example ``Authentication``) scores `medium`,
+    not `low`.
     """
     if broken_ratio >= _LOW_BROKEN_RATIO and broken_count >= _MIN_BROKEN_FOR_LOW:
         return DocConfidence.LOW
@@ -110,17 +109,11 @@ def build_doc_catalog(
 ) -> DocCatalog:
     """Compute the catalog for ``doc_paths`` against the current AST state.
 
-    ``file_paths`` should be the *full* set of repo-relative paths the
-    detection step found (code + docs + papers + ...), not just code
-    files. Prose docs reference more than code: README.md, schema JSON,
-    config files, generated artifacts. A path-set restricted to code
-    drives false-positive `broken_refs` reports.
-
-    ``extra_names`` is a superset of identifiers the caller already
-    knows are legitimate even when they're not in the AST — typically
-    JSON schema keys harvested from ``*.json`` files in the repo. The
-    catalog also bakes in a small ``_FRAMEWORK_WHITELIST`` for Claude
-    Code tools and hook events.
+    ``file_paths`` must be the *full* set of repo-relative paths detection found
+    (code, docs, JSON, config, …): prose cites more than code, so a code-only set
+    yields false-positive ``broken_refs``. ``extra_names`` are identifiers known
+    legitimate outside the AST (typically harvested JSON keys); a small
+    ``_FRAMEWORK_WHITELIST`` of Claude Code tools and hook events also applies.
     """
     repo_root = repo_root.resolve()
     seen: set[Path] = set()

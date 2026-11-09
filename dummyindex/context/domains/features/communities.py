@@ -1,16 +1,10 @@
 """`features/graph-communities.json` — the community mid-tier, rolled up.
 
-One card per symbol-graph community: a **stable slug** (dominant owning
-feature + top member name — never the raw partition integer, which
-renumbers between runs), the community's size, its top members by
-personalized PageRank with `path:line` citations, the owning feature from
-the curated taxonomy, and a deterministic one-line summary lifted from
-the top member's docstring (`rationale_for` nodes).
-
-Frozen dataclasses with `to_dict()` beside them — the same contract as
-`scan/models.py`. The roll-up here is pure (plain dicts in, frozen data
-out); the builder that computes PageRank, gathers the inputs and writes
-the artifact lives in `context/build/communities.py`.
+One card per symbol-graph community: a **stable slug** (dominant feature + top
+member name, never the renumbering partition int), size, top members by
+personalized PageRank with `path:line`, owning feature, and a one-line summary
+from the best-ranked member docstring. Pure roll-up (dicts in, frozen data out);
+PageRank, input gathering and the write live in `context/build/communities.py`.
 """
 
 from __future__ import annotations
@@ -103,13 +97,10 @@ def rollup_communities(
 ) -> GraphCommunities:
     """Roll the raw partition up into stable, feature-owned cards.
 
-    ``communities`` is `analysis.cluster`'s `{int: [node_ids]}` output —
-    the int is dropped on the floor, deliberately: partition ids renumber
-    between runs, so identity comes from what the community *contains*.
-    ``owner_of_symbol`` maps symbol ids to `features/INDEX.json` feature
-    ids (empty when no taxonomy exists yet). ``rationale_of`` maps a
-    symbol id to its docstring text. Output is fully sorted so the
-    committed artifact is byte-stable for identical inputs.
+    ``communities`` is `analysis.cluster`'s `{int: [node_ids]}`; the int is
+    dropped (ids renumber between runs). ``owner_of_symbol`` maps symbol ids to
+    feature ids (empty before a taxonomy exists); ``rationale_of`` maps a symbol
+    id to its docstring. Output is fully sorted, so it is byte-stable.
     """
     owners = owner_of_symbol or {}
     rationales = rationale_of or {}

@@ -16,21 +16,15 @@ from ..errors import EquipError
 from ..models import EquipmentManifest
 
 EQUIPMENT_REL = "equipment.json"
-# Sibling directory (NOT ``.context/equipment/``, which would shadow the
-# ``equipment.json`` file) holding one suite/result/benchmark trio per tool at
-# ``<tool>.{suite,result,benchmark}.json``.
 
 
 def read_manifest(context_dir: Path) -> EquipmentManifest:
     """Load ``<context_dir>/equipment.json``, or an empty manifest if absent.
 
-    Raises :class:`EquipError` when the file exists but is not valid JSON, or
-    carries an unrecognised kind/source value (e.g. a manifest written by a
-    NEWER dummyindex) — a manifest the caller can't load is a hard error to
-    surface, not silently overwrite. Every caller already wraps this in
-    ``except EquipError``, so normalising the enum/shape errors here keeps the
-    forward-compat failure mode clean (a clear message, not a raw traceback /
-    crashed audit roster) across all of them.
+    Raises :class:`EquipError` when the file is not valid JSON or carries an
+    unrecognised kind/source (e.g. written by a newer dummyindex): an unloadable
+    manifest is a hard error to surface, not silently overwrite. Normalising
+    enum/shape errors here gives every ``except EquipError`` caller a clear message.
     """
     path = context_dir / EQUIPMENT_REL
     if not path.is_file():

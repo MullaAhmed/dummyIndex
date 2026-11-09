@@ -1,27 +1,10 @@
 """Resolve a capability set into *generate vs adopt* coverage (spec §4).
 
-Per capability, in precedence order:
-
-1. **Project agent** — a file stem the preflight step found under
-   ``.claude/agents/``. The stem implies its capabilities via the shared keyword
-   table (``security`` → security, ``db|data`` → database, …); ``subagent_type``
-   is the stem itself. Adopted (manifest-only): the user already covers it.
-2. **Generated specialist template** — a capability a shipped template backs is
-   *generated* as a first-class, editable, hash-baselined file (the catalog
-   renders it). This supersedes a registry adoption: a grounded template is a
-   real specialist, not a manifest pointer.
-3. **Known-specialist registry** — the global :class:`SubagentType` members
-   (``Backend Architect``, ``Data Engineer`` …) with a fixed capability map.
-   Registry agents have no project file: ``path=""``, ``source=INSTALLED``.
-
-A capability none of these cover falls back to the generic implementer.
-
-:func:`resolve_coverage` is pure over its inputs and writes nothing. *Forced*
-capabilities (an explicit ``add-specialist`` ask, or an already-applied
-specialist read back from the manifest) generate whenever a template exists,
-bypassing the project-agent preference — the user has committed to a generated
-file. :func:`adopt_existing` is the back-compat thin wrapper: pure adoption with
-no templates and no forced caps.
+Precedence per capability: a project agent whose ``.claude/agents/`` stem implies
+it (adopted, manifest-only); else a shipped specialist template (generated as an
+editable, hash-baselined file); else a :class:`SubagentType` registry specialist
+(adopted, ``path=""``); else the generic implementer. *Forced* capabilities
+generate whenever a template exists, skipping the project-agent step. Pure.
 """
 
 from __future__ import annotations
@@ -35,12 +18,9 @@ from ..constants import _CAPABILITY_TOKENS
 from ..enums import Capability, EquipmentKind
 from ..models import AdoptSpec, EquipmentItem
 
-# Fixed capability map for the known-specialist registry. Every SubagentType
-# member maps to a non-empty tuple — including the universal ``general-purpose``
-# fallback, which covers the broad implement/review work no specialist claims.
-# There is intentionally no security/docs/performance specialist among the
-# global members: a gap in those capabilities is left for the generic
-# implementer rather than mis-adopted.
+# Registry capability map; every SubagentType member, ``general-purpose`` included,
+# maps to a non-empty tuple. No member covers security/docs/performance on purpose:
+# those gaps go to the generic implementer rather than a mis-adoption.
 _REGISTRY_CAPABILITIES: dict[SubagentType, tuple[str, ...]] = {
     SubagentType.DATA: (Capability.DATABASE, Capability.DATA),
     SubagentType.FRONTEND: (Capability.FRONTEND,),
@@ -89,22 +69,11 @@ def resolve_coverage(
 ) -> Coverage:
     """Split requested capabilities into generate vs adopt (spec §4).
 
-    ``forced_capabilities`` (an explicit ``add-specialist`` ask, or an
-    already-applied specialist carried forward from the manifest) generate a
-    specialist whenever a template backs them — bypassing the project-agent
-    preference. A forced capability with no template is dropped here (the CLI
-    validates explicit asks; manifest-derived forced caps are always templated).
-
-    ``proposal_capabilities`` follow the full precedence: a covering project
-    agent is adopted first (the user already owns it — not a gap), else a
-    template generates, else a registry specialist is adopted, else the gap
-    falls to the generic implementer. Each capability is satisfied at most once.
-
-    ``stack_frontend`` is the stack-consistency gate (default ``True`` for
-    back-compat): when the detected stack shows no frontend evidence, a
-    FRONTEND-capability *registry* adoption is skipped — a backend FastAPI repo
-    must never end up with a 'Frontend Developer' record just because the plan
-    text mentioned 'UI'. Project agents (the user's own) bypass the gate.
+    ``forced_capabilities`` generate when a template backs them, else are dropped.
+    ``proposal_capabilities`` follow the module precedence, each satisfied once.
+    ``stack_frontend=False`` (no frontend evidence) skips FRONTEND *registry*
+    adoptions so a backend repo never gets a Frontend Developer off plan text;
+    project agents bypass that gate.
     """
     project = _project_specs(preflight.project_agents)
     covered: set[str] = set()
@@ -127,15 +96,18 @@ def resolve_coverage(
             covered.update(project_spec.capabilities)
             continue
         if capability in templated_capabilities:
+            if not stack_frontend and capability == Capability.FRONTEND:
+                # Same stack-consistency gate as the registry branch: no
+                # frontend evidence ⇒ no frontend specialist either.
+                continue
             generate.append(capability)
             covered.add(capability)
             continue
         registry_spec = _match_registry(capability)
         if registry_spec is not None:
             if not stack_frontend and Capability.FRONTEND in registry_spec.capabilities:
-                # Stack-consistency gate: no frontend evidence ⇒ no Frontend
-                # Developer adoption; left to the generic implementer. The CLI
-                # boundary surfaces this skip so it is visible, not silent.
+                # No frontend evidence: leave it to the generic implementer.
+                # The CLI surfaces the skip so it is not silent.
                 continue
             adopt.append(registry_spec)
             covered.update(registry_spec.capabilities)
@@ -150,10 +122,8 @@ def adopt_existing(
 ) -> tuple[AdoptSpec, ...]:
     """Adopt project/registry specialists covering the ``needed`` capabilities.
 
-    The back-compat surface for pure adoption (no templates, no forced caps):
-    one :class:`AdoptSpec` per capability actually covered, project agents
-    preferred, registry fills remaining gaps, uncovered capabilities yield
-    nothing. Equivalent to :func:`resolve_coverage` with an empty templated set.
+    Back-compat pure adoption: :func:`resolve_coverage` with no templates and no
+    forced caps. Project agents first, registry next; uncovered yields nothing.
     """
     return resolve_coverage(preflight=preflight, proposal_capabilities=needed).adopt
 
@@ -195,11 +165,7 @@ def _match_registry(capability: str) -> AdoptSpec | None:
 
 
 def adopt_spec_to_item(spec: AdoptSpec) -> EquipmentItem:
-    """Render an adoption as an :class:`EquipmentItem` for the manifest.
-
-    Module-level converter (not a method) — data classes hold data; the
-    transformation lives with the adoption logic that produces the specs.
-    """
+    """Render an adoption as an :class:`EquipmentItem` for the manifest."""
     return EquipmentItem(
         kind=EquipmentKind.AGENT,
         name=spec.name,
@@ -211,9 +177,5 @@ def adopt_spec_to_item(spec: AdoptSpec) -> EquipmentItem:
 
 
 def registry_capabilities() -> dict[SubagentType, tuple[str, ...]]:
-    """Public, read-only view of the registry capability map (copy).
-
-    Exposed so callers (and tests) never reach into the private module-level
-    table; mutating the returned dict has no effect on adoption.
-    """
+    """A copy of the registry capability map; mutating it has no effect."""
     return dict(_REGISTRY_CAPABILITIES)

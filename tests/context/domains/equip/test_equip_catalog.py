@@ -1,11 +1,8 @@
-"""Tests for the catalog policy core — the deterministic decision of what to
-generate, adopt, and wire.
+"""Tests for ``build_catalog`` — the pure decision of what to generate, adopt, wire.
 
-``build_catalog`` is pure over its inputs (a :class:`StackProfile`, the
-conventions list, a :class:`PreflightReport`, and the proposal capabilities).
-The standard generated set is fixed (implementer + tester + reviewer agents and
-a verify skill); the format hook appears iff a formatter was detected;
-adoption covers proposal-capability gaps before any generic fallback.
+The generated set is the core four (implementer, tester, reviewer, verify skill)
+plus one specialist per template; the format hook appears iff a formatter was
+detected; adoption covers proposal-capability gaps before any generic fallback.
 """
 
 from __future__ import annotations
@@ -21,7 +18,11 @@ from dummyindex.context.domains.preflight.models import PreflightReport, Setting
 # Specialists are no longer opt-in: every equip pass generates one per template.
 # Counts are expressed as "core + the templated alphabet" so adding a template
 # never silently breaks an unrelated assertion.
-_SPECIALISTS = len(SPECIALIST_TEMPLATES)
+# Always-on specialists = the undimensioned templates. The dimensioned ones
+# (frontend / api / migration / ci) are signal-gated; the FastAPI test profile
+# evidences api (procedure + domain) only.
+_SPECIALISTS = sum(1 for t in SPECIALIST_TEMPLATES.values() if t.dimension is None)
+_API_PAIR = 2
 _CORE_GENERATE = 4  # implementer + tester + reviewer agents, verify skill
 _CORE_AGENTS = 3
 
@@ -74,7 +75,7 @@ def test_standard_generated_set() -> None:
     assert "python-tester" in names
     assert "myproj-reviewer" in names
     assert "myproj-verify" in names
-    assert len(agents) == _CORE_AGENTS + _SPECIALISTS
+    assert len(agents) == _CORE_AGENTS + _SPECIALISTS + _API_PAIR
     assert len(skills) == 1
 
 
@@ -90,7 +91,10 @@ def test_every_templated_specialist_is_generated_without_being_asked() -> None:
     )
     names = {g.name for g in decision.generate}
     for template in SPECIALIST_TEMPLATES.values():
-        assert f"p-{template.name_suffix}" in names
+        if template.dimension is None or template.capability == "api":
+            assert f"p-{template.name_suffix}" in names
+        else:  # frontend / migration / ci: no signal on a FastAPI stack
+            assert f"p-{template.name_suffix}" not in names
 
 
 @pytest.mark.unit
@@ -129,21 +133,19 @@ def test_proposal_capability_generates_specialist_when_template_exists() -> None
         proj="p",
         proposal_capabilities=("database",),
     )
-    # database has a template now → a grounded specialist is GENERATED (a file),
-    # not recorded as a manifest-only adoption (the old Data Engineer pointer).
+    # database has a template → a grounded specialist is GENERATED, not adopted.
     assert "p-db-specialist" in {g.name for g in decision.generate}
     # The specialist is generated once, not twice, when the proposal also names
     # a capability the always-on pass already covers.
-    assert len(decision.generate) == _CORE_GENERATE + _SPECIALISTS
+    assert len(decision.generate) == _CORE_GENERATE + _SPECIALISTS + _API_PAIR
     assert decision.adopt == ()
 
 
 @pytest.mark.unit
-def test_proposal_capability_adopts_when_no_template() -> None:
-    # frontend has no template → the registry's Frontend Developer is adopted
-    # (manifest-only), proving the unchanged "no template → adopt" fallback.
-    # The stack must show frontend evidence (audit C7: the gate skips the
-    # adoption on backend-only repos).
+def test_frontend_proposal_on_frontend_stack_generates_pair() -> None:
+    # The real template registry backs frontend: a frontend-evidenced stack
+    # GENERATES the procedure + domain pair; the registry Frontend Developer is
+    # never adopted for it.
     decision = build_catalog(
         profile=StackProfile(label="typescript", frameworks=("React",)),
         conventions=(),
@@ -151,11 +153,74 @@ def test_proposal_capability_adopts_when_no_template() -> None:
         proj="p",
         proposal_capabilities=("frontend",),
     )
-    # No FRONTEND specialist is generated (no template); the templated
-    # alphabet is generated regardless, and frontend still falls to adoption.
-    assert len(decision.generate) == _CORE_GENERATE + _SPECIALISTS
-    assert "p-frontend-specialist" not in {g.name for g in decision.generate}
-    assert any("frontend" in a.capabilities for a in decision.adopt)
+    names = {g.name for g in decision.generate}
+    assert {"p-frontend-procedure", "p-frontend-domain"} <= names
+    assert decision.adopt == ()
+
+
+@pytest.mark.unit
+def test_frontend_specialists_not_generated_on_backend_stack() -> None:
+    # REGRESSION: a FastAPI repo must not get frontend specialists, with or
+    # without a plan that names the capability.
+    for caps in ((), ("frontend",)):
+        decision = build_catalog(
+            profile=_python_profile(),
+            conventions=(),
+            preflight=_report(),
+            proj="p",
+            proposal_capabilities=caps,
+        )
+        assert not any("frontend" in g.name for g in decision.generate)
+
+
+@pytest.mark.unit
+def test_frontend_stack_signal_generates_without_proposal() -> None:
+    decision = build_catalog(
+        profile=StackProfile(label="typescript", frameworks=("React",)),
+        conventions=(),
+        preflight=_report(),
+        proj="p",
+    )
+    names = {g.name for g in decision.generate}
+    assert {"p-frontend-procedure", "p-frontend-domain"} <= names
+
+
+@pytest.mark.unit
+def test_migration_and_ci_generated_only_on_proposal_signal() -> None:
+    bare = build_catalog(
+        profile=_python_profile(), conventions=(), preflight=_report(), proj="p"
+    )
+    bare_names = {g.name for g in bare.generate}
+    signalled = build_catalog(
+        profile=_python_profile(),
+        conventions=(),
+        preflight=_report(),
+        proj="p",
+        proposal_capabilities=("migration", "ci"),
+    )
+    names = {g.name for g in signalled.generate}
+    for suffix in (
+        "migration-procedure",
+        "migration-domain",
+        "ci-procedure",
+        "ci-domain",
+    ):
+        assert f"p-{suffix}" not in bare_names
+        assert f"p-{suffix}" in names
+
+
+@pytest.mark.unit
+def test_user_project_agent_wins_over_stack_signalled_specialist() -> None:
+    # A frontend stack with the user's own UI agent: adopt theirs, generate no
+    # frontend specialist over it.
+    decision = build_catalog(
+        profile=StackProfile(label="typescript", frameworks=("React",)),
+        conventions=(),
+        preflight=_report(project_agents=("ui-wizard",)),
+        proj="p",
+    )
+    assert [a.subagent_type for a in decision.adopt] == ["ui-wizard"]
+    assert not any("frontend" in g.name for g in decision.generate)
 
 
 @pytest.mark.unit
@@ -169,7 +234,7 @@ def test_unknown_capability_no_crash_no_extra_generation() -> None:
     )
     assert decision.adopt == ()  # nothing covers it
     # An unknown capability adds nothing beyond the always-on templated set.
-    assert len(decision.generate) == _CORE_GENERATE + _SPECIALISTS
+    assert len(decision.generate) == _CORE_GENERATE + _SPECIALISTS + _API_PAIR
 
 
 @pytest.mark.unit
@@ -185,10 +250,9 @@ def test_generic_profile_still_generates_standard_set() -> None:
     assert decision.hooks == ()  # no formatter on a fresh repo
 
 
-# ----- stack-consistency gate: no Frontend Developer on backend repos --------
-# (audit 2026-06-13, C7: equip --for-proposal adopted 'Frontend Developer' for
-# a pure-backend FastAPI repo because one frontend-ish word appeared in the
-# proposal text; the registry fallthrough never saw the stack.)
+# --- stack-consistency gate: no Frontend Developer on backend repos
+# One frontend-ish word in a proposal must not adopt 'Frontend Developer' for a
+# backend repo: the registry fallthrough checks the stack.
 
 
 @pytest.mark.unit
@@ -202,27 +266,13 @@ def test_backend_stack_skips_frontend_registry_adoption() -> None:
     )
     assert decision.adopt == ()  # no Frontend Developer on a backend stack
     # frontend is left to the generic implementer; the templated set is unchanged.
-    assert len(decision.generate) == _CORE_GENERATE + _SPECIALISTS
-
-
-@pytest.mark.unit
-def test_frontend_stack_still_adopts_frontend_registry() -> None:
-    profile = StackProfile(label="typescript", frameworks=("React",))
-    decision = build_catalog(
-        profile=profile,
-        conventions=(),
-        preflight=_report(),
-        proj="p",
-        proposal_capabilities=("frontend",),
-    )
-    assert any("frontend" in a.capabilities for a in decision.adopt)
+    assert len(decision.generate) == _CORE_GENERATE + _SPECIALISTS + _API_PAIR
 
 
 @pytest.mark.unit
 def test_database_registry_adoption_unaffected_by_frontend_gate() -> None:
-    # The gate is frontend-specific: with no db template... db HAS a template,
-    # so prove via resolve_coverage directly that a DATABASE registry adoption
-    # still happens on a backend stack when no template covers it.
+    # The gate is frontend-specific. db has a template, so call resolve_coverage
+    # with none to show a DATABASE registry adoption survives a backend stack.
     from dummyindex.context.domains.equip import resolve_coverage
 
     coverage = resolve_coverage(
@@ -245,6 +295,7 @@ def test_project_frontend_agent_still_adopted_on_backend_stack() -> None:
         proposal_capabilities=("frontend",),
     )
     assert [a.subagent_type for a in decision.adopt] == ["ui-wizard"]
+    assert not any("frontend" in g.name for g in decision.generate)
 
 
 @pytest.mark.unit

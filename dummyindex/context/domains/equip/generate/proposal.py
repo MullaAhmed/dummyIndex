@@ -1,13 +1,8 @@
 """Extract the capabilities a proposal demands (spec §6).
 
-``equip --for-proposal S`` reads ``proposals/S/plan.md`` + ``checklist.md`` as
-plain text and harvests the *specialist* capabilities the work calls for
-(database / security / frontend / performance / docs) via the fixed
-:data:`_PROPOSAL_CAPABILITY_TOKENS` table. Those feed ``build_catalog`` as
-``proposal_capabilities`` so the catalog adopts a covering specialist *before*
-falling back to the generic implementer (adopt-before-generate).
-
-Pure over the text it is handed; the CLI does the file IO and slug validation.
+``equip --for-proposal S`` harvests the *specialist* capabilities named in
+``proposals/S/plan.md`` + ``checklist.md`` via :data:`_PROPOSAL_CAPABILITY_TOKENS`.
+They feed ``build_catalog`` as ``proposal_capabilities``. The CLI validates the slug.
 """
 
 from __future__ import annotations
@@ -27,22 +22,15 @@ _WORD_RE = re.compile(r"[a-z0-9]+")
 def extract_proposal_capabilities(proposal_dir: Path) -> tuple[str, ...]:
     """Read a proposal's plan + checklist and return the capabilities it implies.
 
-    Reads ``plan.md`` and ``checklist.md`` under ``proposal_dir`` (each optional),
-    lowercases the combined text, and returns each capability whose tokens appear
-    — in table order, each at most once. Returns ``()`` when neither file exists
-    or no specialist token matches (the catalog then generates only the standard
-    set).
+    Both files are optional. Returns each matching capability once, in table
+    order, or ``()`` when neither file exists or no specialist token matches.
     """
     text = _read_proposal_text(proposal_dir)
     return capabilities_from_text(text)
 
 
 def capabilities_from_text(text: str) -> tuple[str, ...]:
-    """Capabilities implied by ``text`` via the narrow proposal token table.
-
-    Tokens match on whole words (e.g. ``sql``, ``react``), not bare substrings,
-    so a short keyword like ``ui`` does not spuriously fire on ``build``.
-    """
+    """Capabilities implied by ``text`` via the narrow proposal token table."""
     words = _WORD_RE.findall(text.lower())
     out: list[str] = []
     for capability, tokens in _PROPOSAL_CAPABILITY_TOKENS:

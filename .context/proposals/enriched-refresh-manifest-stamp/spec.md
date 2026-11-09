@@ -109,7 +109,9 @@ verbatim — it warns rather than raising:
 try:
     write_manifest(context_dir, root=out_root, files=manifest_files)
 except Exception as exc:
-    warnings.warn(f"manifest write failed: {exc!r}; drift detection disabled", stacklevel=2)
+    warnings.warn(
+        f"manifest write failed: {exc!r}; drift detection disabled", stacklevel=2
+    )
 ```
 
 **Reused symbols** — cited from **source only**. `.context/map/symbols.json` does **not** index

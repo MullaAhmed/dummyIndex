@@ -1,24 +1,10 @@
-"""`dummyindex context debt` — technical-debt ledger over the repo's Python source.
+"""`dummyindex context debt`: technical-debt ledger over the repo's Python source.
 
-Answers: "where does this repo carry ``# TODO:`` / ``# FIXME:`` / ``# HACK:`` /
-``# DEBT:`` debt, and which entries declare an upgrade *trigger* versus none?"
-
-The harvest is **deterministic — no LLM in the loop** (see
-``context.domains.debt``). This module is the thin CLI boundary: it parses
-flags, calls the harvester, renders a per-file markdown ledger (or the stable
-JSON structure), and prints it.
-
-I/O contract (mirrors ``cli/query.py`` — stdout by default; spec D1):
-
-- **Default:** print the markdown ledger to stdout.
-- ``--write``: ALSO persist the markdown ledger to ``.context/debt.md`` (whether
-  that file is committed is the host repo's ``.context/`` policy, not ours).
-- ``--json``: emit the ``DebtLedger.to_dict()`` stable structure to stdout
-  instead of markdown. ``--write`` still persists the *markdown* view — the
-  on-disk ledger is always the human-readable one.
-
-Every rendered row is **repo-relative POSIX** (the harvester relativizes the
-path) so the output is reproducible across machines and never leaks a home dir.
+Lists ``# TODO:`` / ``# FIXME:`` / ``# HACK:`` / ``# DEBT:`` markers and whether each
+declares an upgrade *trigger*; the harvest (``context.domains.debt``) is deterministic,
+no LLM. Prints the markdown ledger, or ``DebtLedger.to_dict()`` with ``--json``;
+``--write`` also persists the markdown to ``.context/debt.md``. Paths are repo-relative
+POSIX, so output is reproducible and never leaks a home dir.
 """
 
 from __future__ import annotations
@@ -72,13 +58,9 @@ def run(args: list[str]) -> int:
 def render_markdown(ledger) -> str:
     """Render a :class:`DebtLedger` as the markdown the CLI prints by default.
 
-    Rows are grouped by file (path-sorted, already so from the harvester) with
-    a ``## <path>`` heading per group; within a group rows stay in line order.
-    Each row reads ``- path:line — <ceiling>. upgrade: <trigger>.`` and a
-    no-trigger row gets a trailing ``no-trigger`` tag instead of an
-    ``upgrade:`` clause. The body ends with the
-    ``N markers, M with no trigger.`` tally; an empty ledger prints the
-    no-debt message instead.
+    One ``## <path>`` group per file (path-sorted), rows in line order (format in
+    :func:`_render_row`), then the ``N markers, M with no trigger.`` tally; an
+    empty ledger prints the no-debt message instead.
     """
     if not ledger.rows:
         return "# debt ledger\n\n_No debt markers found in the repo's Python source._\n"

@@ -1,11 +1,8 @@
 """The patch seam (spec §7) — sanctioned, exact-once evolution of a generated tool.
 
-Applying a patch *through the CLI* is the one way to evolve a generated artifact
-without it becoming USER_MODIFIED: the old/new replacement (Hermes-style, more
-token-efficient than a full re-edit) must match exactly once, is written
-atomically, and the item is then re-baselined (``origin_hash``) and
-patch-version-bumped so it stays PRISTINE. The build skill's post-build learning
-step drafts these patches; the mechanics stay here in Python.
+Patching through the CLI is the one way to evolve a generated artifact without it
+becoming USER_MODIFIED: ``old`` must match exactly once, the write is atomic, and
+the item is re-baselined (``origin_hash``) and patch-bumped so it stays PRISTINE.
 """
 
 from __future__ import annotations

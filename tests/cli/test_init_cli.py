@@ -129,7 +129,7 @@ def test_init_proceeds_on_fresh_repo(
     assert (fresh / ".context").is_dir()
 
 
-# ----- reviewed default-plugin orchestration -------------------------------
+# --- reviewed default-plugin orchestration
 
 
 def _make_min_repo(target: Path) -> None:
@@ -434,7 +434,7 @@ def test_init_explicit_default_opt_out_remains_false(
     assert runner.calls == []
 
 
-# ----- --depth threading (Task 4) -------------------------------------------
+# --- --depth threading (Task 4)
 
 
 @pytest.mark.integration

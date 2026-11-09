@@ -15,6 +15,7 @@ from dummyindex.context.build.maps import (
 )
 from dummyindex.context.build.meta import SCHEMA_VERSION, Meta
 from dummyindex.context.build.runner import build_all
+from dummyindex.context.domains.docbudget.style import lint_text
 from dummyindex.context.output.instructions import (
     PLAYBOOK_IDS,
     generate_architecture_overview_md,
@@ -50,7 +51,7 @@ def _meta(root: Path, **overrides) -> Meta:
     return Meta(**base)
 
 
-# --- HOW_TO_USE.md -----------------------------------------------------------
+# --- HOW_TO_USE.md
 
 
 @pytest.mark.unit
@@ -94,6 +95,11 @@ def test_how_to_use_md_documents_commit_policy_for_machine_layer() -> None:
 
 
 @pytest.mark.unit
+def test_how_to_use_md_passes_style_lint() -> None:
+    assert lint_text(generate_how_to_use_md()) == ()
+
+
+@pytest.mark.unit
 def test_write_how_to_use_md_atomic(tmp_path: Path) -> None:
     out = tmp_path / ".context" / "HOW_TO_USE.md"
     write_how_to_use_md(out)
@@ -101,7 +107,7 @@ def test_write_how_to_use_md_atomic(tmp_path: Path) -> None:
     assert not list(out.parent.glob("HOW_TO_USE.md.tmp"))
 
 
-# --- architecture/overview.md ------------------------------------------------
+# --- architecture/overview.md
 
 
 @pytest.mark.unit
@@ -189,7 +195,7 @@ def test_architecture_overview_unknown_dir_no_role_hint(tmp_path: Path) -> None:
     assert "_unknown_" in text
 
 
-# --- playbooks ---------------------------------------------------------------
+# --- playbooks
 
 
 @pytest.mark.unit
@@ -229,7 +235,7 @@ def test_write_playbook_atomic(tmp_path: Path) -> None:
     assert not list(out.parent.glob("*.tmp"))
 
 
-# --- End-to-end via build_all -------------------------------------------------
+# --- End-to-end via build_all
 
 
 @pytest.mark.integration

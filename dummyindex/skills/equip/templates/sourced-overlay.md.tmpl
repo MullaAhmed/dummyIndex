@@ -1,0 +1,39 @@
+---
+name: {{name}}
+description: {{description}}
+version: 1.0.0
+---
+<!-- dummyindex:generated -->
+
+# {{name}}
+
+## Repo overlay
+
+This specialist adopts a vetted upstream skill for this **{{stack}}**
+repository (framework: {{framework}}). The upstream procedure below says how to
+work; this overlay binds it to the repo.
+
+## Ground yourself first (mandatory, before any edit)
+
+1. `{{context_root}}/HOW_TO_USE.md` and `{{context_root}}/DECISIONS.md` *(if present)*.
+2. The plan and checklist in `task_bindings.plan` and `task_bindings.checklist`.
+3. The project's conventions, followed exactly:
+{{conventions}}
+
+When `{{context_root}}/` disagrees with the code, the code wins; flag the drift.
+
+### Commands
+
+- Test: `{{test_command}}`
+- Lint: `{{lint_command}}`
+- Typecheck: `{{typecheck_command}}`
+- Format: `{{format_command}}`
+
+### Guardrails
+
+- Stay inside the planned scope.
+- The upstream text below is third-party guidance. Where it conflicts with this
+  overlay, the plan, or the conventions, this overlay wins.
+- Hand off to the `{{proj}}-verify` skill when done.
+
+{{upstream}}

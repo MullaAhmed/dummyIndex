@@ -8,6 +8,7 @@ import os
 import re
 from pathlib import Path
 
+from ..docguard.citations import cites_disposable
 from .errors import CloseoutError
 
 ADMIN_FILES = frozenset(
@@ -41,7 +42,6 @@ _SKIP_DIRS = {
     ".agents",
     ".codex",
 }
-DISPOSABLE_REF = re.compile(r"(?:proposals|audits)[/\\][a-zA-Z0-9_-]+[/\\]")
 
 
 def digest(data: bytes) -> str:
@@ -89,7 +89,8 @@ def durable_references(context_dir: Path, workspace: Path) -> list[str]:
             if name not in _SKIP_DIRS
             and not (
                 parent == context_dir
-                and name in {"proposals", "audits", "cache", "gc", "map", "source-docs"}
+                and name
+                in {"proposals", "audits", "cache", "gc", "map", "source-docs", "fleet"}
             )
         ]
         for name in files:
@@ -103,6 +104,9 @@ def durable_references(context_dir: Path, workspace: Path) -> list[str]:
                 "seed-rank.json",
                 "graph-communities.json",
             }:
+                continue
+            # Generated index is navigation, not a durable reference.
+            if parent == context_dir and name == "INDEX.md":
                 continue
             contained(path, root)
             try:
@@ -153,7 +157,7 @@ def durable_evidence(context_dir: Path, rows: list) -> list[dict]:
                 target.is_relative_to(context_dir / family)
                 for family in ("cache", "proposals", "audits")
             )
-            or DISPOSABLE_REF.search(relative)
+            or cites_disposable(relative)
             or digest(target.read_bytes()) != row["sha256"]
         ):
             raise CloseoutError(

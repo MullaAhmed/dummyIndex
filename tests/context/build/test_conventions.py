@@ -39,7 +39,7 @@ def sample_repo(tmp_path: Path) -> Path:
     return dest
 
 
-# --- Casing classifier --------------------------------------------------------
+# --- Casing classifier
 
 
 @pytest.mark.unit
@@ -69,7 +69,7 @@ def test_classify_casing(name: str, expected: str) -> None:
     assert classify_casing(name) == expected
 
 
-# --- analyze_naming on the fixture -------------------------------------------
+# --- analyze_naming on the fixture
 
 
 @pytest.mark.integration
@@ -179,7 +179,7 @@ def test_threshold_exception_listing() -> None:
     assert "weird_one" in rule.exceptions
 
 
-# --- Writers -----------------------------------------------------------------
+# --- Writers
 
 
 @pytest.mark.integration
@@ -250,7 +250,7 @@ def test_writers_atomic_no_tmp_remains(sample_repo: Path, tmp_path: Path) -> Non
     assert not list(tmp_path.glob("*.tmp"))
 
 
-# --- Agent-derived convention sections --------------------------------------
+# --- Agent-derived convention sections
 
 
 @pytest.mark.unit

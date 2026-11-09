@@ -1,16 +1,10 @@
-"""Tests for `dummyindex/installer/link.py` (Wave 2 — link primitives).
+"""Tests for the `dummyindex/installer/link` primitives, in isolation.
 
-Covers `classify_family_link`'s 6-state alphabet (including the security-
-sensitive parent-chain rule and the fail-closed OSError/RuntimeError
-handling), `create_family_links`'s safe-replacement dance (fresh create,
-idempotent rerun, proven-dir replace, evidence gating, error isolation,
-crash-window recovery), `remove_dangling_family_links`'s shared sweep, and
+Covers `classify_family_link`'s 6-state alphabet (with the security-sensitive
+parent-chain rule and fail-closed OSError/RuntimeError handling), the safe-replacement
+dance of `create_family_links` (create, rerun, proven-dir replace, evidence gating,
+error isolation, crash recovery), `remove_dangling_family_links` and
 `run_link_install`'s AUTO/LINK/COPY orchestration + capability pre-probe.
-
-Wiring these primitives into `install.py`/`repair.py`/`uninstall.py` is a
-later wave (see the proposal's plan.md) — these tests stay focused on
-`link.py` in isolation, mirroring `tests/test_install_repair.py`'s own
-"repair core first, wiring later" split.
 """
 
 from __future__ import annotations
@@ -46,20 +40,18 @@ _LEGACY_SKILL_MD = (FIXTURES_DIR / "legacy_skill_md" / "SKILL.md").read_text(
 )
 
 # The families, derived from the constant (never a `dummyindex*` glob —
-# that would also catch the equip-generated `dummyindex-verify` skill, which
-# is NOT part of this family).
+# that would also catch equip's `dummyindex-verify`).
 FAMILIES = ("dummyindex", *(label for _sub_name, label in _SIBLING_SKILLS))
 
 
-# ----- shared fixtures -----------------------------------------------------------
+# --- shared fixtures
 
 
 def _require_real_symlinks(tmp_path: Path) -> None:
     """Skip the calling test when this environment cannot create symlinks.
 
-    Only applied to tests that create REAL symlinks to exercise genuine
-    filesystem semantics — simulated-failure tests (DI raisers) must run
-    everywhere and are never guarded.
+    Only for tests that create REAL symlinks; simulated-failure tests (DI raisers)
+    run everywhere.
     """
     probe = tmp_path / ".link-primitive-capability-probe"
     target = tmp_path / ".link-primitive-capability-target"
@@ -142,9 +134,7 @@ def _symlink_claude_family(
     return family_dir
 
 
-# ==================================================================================
 # classify_family_link
-# ==================================================================================
 
 
 def test_classify_real_directory_is_not_a_link(tmp_path: Path) -> None:
@@ -236,13 +226,10 @@ def test_classify_regular_file_with_wrong_content_is_not_a_link(tmp_path: Path) 
 
 
 def test_classify_unstatable_leaf_is_foreign_not_missing(tmp_path: Path) -> None:
-    """MEDIUM-1: an unstatable leaf (ENOTDIR, because `.claude/skills` is a
-    regular file rather than a directory) must classify FOREIGN, never
-    MISSING. `.is_symlink()`/`.exists()` both swallow ENOTDIR/ELOOP/EBADF
-    into a bare `False` on py3.10-3.13, so a naive fail-closed handler never
-    sees them — MISSING is the one state the spec says needs no ownership
-    evidence ("an empty path is safe to fill"), and an unstatable path is
-    not an empty path."""
+    """An unstatable leaf (ENOTDIR: `.claude/skills` is a regular file) is FOREIGN,
+    never MISSING. `.is_symlink()`/`.exists()` swallow ENOTDIR/ELOOP/EBADF into `False`
+    on py3.10-3.13, and MISSING needs no ownership evidence ("an empty path is safe
+    to fill"), so an unstatable path must never pass as empty."""
     scope_root = tmp_path / "project"
     scope_root.mkdir()
     claude_dir = scope_root / ".claude"
@@ -298,8 +285,7 @@ def test_classify_symlinked_claude_parent_forces_foreign_at_project_scope(
     (scope_root / ".claude").symlink_to(victim, target_is_directory=True)
     family = "dummyindex"
     _write_owned_agents_family(scope_root, family)
-    # The leaf, reached through the symlinked `.claude`, looks like a
-    # perfectly healthy link.
+    # Reached through the symlinked `.claude`, the leaf looks like a healthy link.
     (victim / "skills" / "dummyindex").rmdir()
     (victim / "skills" / "dummyindex").symlink_to(
         relative_link_value(family), target_is_directory=True
@@ -314,10 +300,8 @@ def test_classify_symlinked_claude_parent_forces_foreign_at_project_scope(
 def test_classify_symlinked_claude_skills_parent_forces_foreign(
     tmp_path: Path,
 ) -> None:
-    """A symlinked `.claude/skills` (one level deeper) is never allowlisted
-    by this module's generic mechanism just because a caller's
-    `allowed_symlinks` happens to be non-empty for the top-level component —
-    an out-of-the-box call (no allowlist passed) always refuses it."""
+    """A symlinked `.claude/skills` (one level deeper) is FOREIGN: a call with no
+    allowlist always refuses it."""
     _require_real_symlinks(tmp_path)
     scope_root = tmp_path / "project"
     scope_root.mkdir()
@@ -336,12 +320,9 @@ def test_classify_symlinked_claude_skills_parent_forces_foreign(
 def test_classify_explicit_allowlisted_host_root_permits_healthy(
     tmp_path: Path,
 ) -> None:
-    """The dotfiles-management allowance is an EXPLICIT `allowed_symlinks`
-    parameter passed by the caller (install.py, in a later wave) — this
-    module no longer infers "user scope" from `HOME`/`Path.home()`. Passing
-    the symlinked top-level `.claude` explicitly is tolerated by the
-    parent-chain rule (distinct from the resolution check, which is what
-    catches genuine divergence)."""
+    """The dotfiles allowance is an EXPLICIT caller-passed `allowed_symlinks`, never
+    inferred from `HOME`; an allowlisted top-level `.claude` passes the parent-chain
+    rule (the resolution check separately catches real divergence)."""
     _require_real_symlinks(tmp_path)
     home = tmp_path / "home"
     home.mkdir()
@@ -350,10 +331,8 @@ def test_classify_explicit_allowlisted_host_root_permits_healthy(
     (home / ".claude").symlink_to(dotfiles_target, target_is_directory=True)
     family = "dummyindex"
     agents_dir = _write_owned_agents_family(home, family)
-    # Absolute value pointing straight at the real (non-dotfiles-hopped)
-    # target — this test is about the PARENT-CHAIN allowance only; the
-    # separate dotfiles-DIVERGENT-root case (a relative value that lands in
-    # the wrong place because of the `.claude` hop) is its own test below.
+    # An absolute value straight at the real target isolates the PARENT-CHAIN
+    # allowance; the dotfiles-DIVERGENT relative case is its own test below.
     claude_dir = _symlink_claude_family(home, family, value=str(agents_dir))
 
     result = classify_family_link(
@@ -366,19 +345,10 @@ def test_classify_explicit_allowlisted_host_root_permits_healthy(
 def test_classify_home_spoof_does_not_flip_foreign_to_ours_fail_closed(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """HIGH-1 SECURITY: with the fail-closed default (no explicit
-    `allowed_symlinks`), a symlinked `.claude` at PROJECT scope stays FOREIGN
-    no matter what `HOME` is set to — a prior version inferred "user scope"
-    from `scope_root == Path.home()`, so a `HOME`-spoofed environment (CI
-    runners, containers, wrapper scripts) could flip a project-scope
-    symlinked `.claude` from refused to admitted.
-
-    TEST GAP 2 (consolidated): this subsumes the plain (non-spoofed) case
-    too — this module never reads `HOME`/`Path.home()` at all anymore, so
-    setting `HOME` here changes nothing about the code path either way; a
-    separate "same shape, no `HOME` spoof" test would be byte-for-byte
-    identical to this one minus the `monkeypatch.setenv` line and is not
-    kept as a distinct test."""
+    """SECURITY: with the fail-closed default (no `allowed_symlinks`), a symlinked
+    `.claude` at PROJECT scope stays FOREIGN whatever `HOME` says, so a spoofed `HOME`
+    (CI, containers, wrappers) can't admit it. The module never reads `HOME`, so this
+    also covers the non-spoofed case."""
     _require_real_symlinks(tmp_path)
     project = tmp_path / "project"
     project.mkdir()
@@ -388,8 +358,7 @@ def test_classify_home_spoof_does_not_flip_foreign_to_ours_fail_closed(
     family = "dummyindex"
     _write_owned_agents_family(project, family)
 
-    # HOME-spoof: point HOME straight at the project root — this must NOT
-    # allowlist the symlink now that scope inference is gone.
+    # HOME-spoof: HOME at the project root must NOT allowlist the symlink.
     monkeypatch.setenv("HOME", str(project))
     monkeypatch.setenv("USERPROFILE", str(project))
 
@@ -401,15 +370,9 @@ def test_classify_home_spoof_does_not_flip_foreign_to_ours_fail_closed(
 def test_classify_dotfiles_divergent_lexically_canonical_link_is_foreign(
     tmp_path: Path,
 ) -> None:
-    """MEDIUM-3: even when the ALLOWLISTED dotfiles `.claude` hop makes the
-    leaf's link VALUE lexically canonical, the resolution check must still
-    run — otherwise a value that resolves somewhere else entirely (inside
-    the dotfiles repo, not under `scope_root`) is misclassified OURS_* and
-    the sweep would unlink a file that lives in the user's dotfiles repo.
-    Reproduced: `~/.claude -> ~/dotfiles-claude`, the leaf link's value is
-    exactly `relative_link_value()` but, followed from INSIDE the dotfiles
-    repo, its `../..` lands back inside the dotfiles repo instead of
-    reaching `home`'s own `.agents`."""
+    """An ALLOWLISTED dotfiles `.claude` hop with a lexically canonical value is still
+    resolution-checked: from inside the dotfiles repo `../..` never reaches home's
+    `.agents`, so it is FOREIGN; as OURS_* the sweep would unlink a dotfiles file."""
     _require_real_symlinks(tmp_path)
     home = tmp_path / "home"
     home.mkdir()
@@ -439,8 +402,7 @@ def test_classify_symlink_loop_is_foreign_never_dangling(tmp_path: Path) -> None
     scope_root.mkdir()
     family = "dummyindex"
     claude_dir = _symlink_claude_family(scope_root, family)
-    # Make the .agents side loop back into the .claude side, so following
-    # the claude-side link all the way through raises ELOOP.
+    # Loop the .agents side back into the .claude side so following it raises ELOOP.
     agents_dir = _agents_skills_root(scope_root) / family
     agents_dir.parent.mkdir(parents=True, exist_ok=True)
     agents_dir.symlink_to(claude_dir, target_is_directory=True)
@@ -497,11 +459,9 @@ def test_classify_fails_closed_on_unexpected_exception(
 
 
 def test_classify_cross_scope_root_is_scope_sensitive(tmp_path: Path) -> None:
-    """SECURITY-adjacent correctness: classification always runs against the
-    copy's OWN scope root. The same absolute-but-correct link classifies
-    OURS_HEALTHY against its true scope root and FOREIGN against a
-    different one — proving a caller must never substitute the invocation's
-    root for the copy's own."""
+    """SECURITY-adjacent: classification uses the copy's OWN scope root. The same
+    absolute link is OURS_HEALTHY there and FOREIGN against another root, so a caller
+    must never substitute the invocation's root."""
     _require_real_symlinks(tmp_path)
     scope_a = tmp_path / "project-a"
     scope_b = tmp_path / "project-b"
@@ -520,14 +480,10 @@ def test_classify_cross_scope_root_is_scope_sensitive(tmp_path: Path) -> None:
 def test_classify_wrong_scope_root_does_not_disarm_parent_chain_check(
     tmp_path: Path,
 ) -> None:
-    """HIGH-2 SECURITY: a WRONG `scope_root` must never disarm the
-    parent-chain check. `_first_symlink_component` itself fails OPEN
-    (returns `None` — "chain clean") when `relative_to` raises `ValueError`
-    for an out-of-tree path (`common.py`), so a wrong `scope_root` computed
-    elsewhere (waves 3-5 all pass roots computed by other code) must not
-    silently disarm the rule. Both the copy's own (correct) root AND a
-    foreign root must classify FOREIGN here — a `.claude -> /victim` layout
-    is genuinely foreign either way."""
+    """SECURITY: a WRONG `scope_root` must never disarm the parent-chain check.
+    `_first_symlink_component` fails OPEN (`None`, "chain clean") when `relative_to`
+    raises for an out-of-tree path, so a `.claude -> /victim` layout must be FOREIGN
+    against both its own root and a foreign one."""
     _require_real_symlinks(tmp_path)
     project = tmp_path / "project"
     project.mkdir()
@@ -558,11 +514,9 @@ def test_readlink_parts_posix_value_splits_on_forward_slash() -> None:
 def test_readlink_parts_posix_never_reinterprets_backslash_as_separator(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """MEDIUM-4: on POSIX, backslash is a legal filename character. A link
-    literally named `..\\..\\.agents\\skills\\dummyindex` must stay ONE
-    opaque component — a prior version force-reparsed any single-component
-    value through `PureWindowsPath`, which fired unconditionally on POSIX
-    and mis-split a genuine POSIX filename."""
+    """On POSIX a backslash is a legal filename character, so the value
+    `..\\..\\.agents\\skills\\dummyindex` stays ONE opaque component, never re-split
+    via `PureWindowsPath`."""
     monkeypatch.setattr(os, "name", "posix")
     raw = "..\\..\\.agents\\skills\\dummyindex"
     assert _readlink_parts(raw) == (raw,)
@@ -571,10 +525,8 @@ def test_readlink_parts_posix_never_reinterprets_backslash_as_separator(
 def test_readlink_parts_windows_round_trip_splits_natively(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """On genuine Windows, `PurePath` IS `PureWindowsPath` (selected off
-    `os.name` at construction time), so a readlink round-trip that
-    normalized `/` into `\\` parses correctly WITHOUT any special-casing in
-    this module."""
+    """On Windows `PurePath` IS `PureWindowsPath` (picked off `os.name`), so a
+    readlink value normalized to `\\` splits natively, with no special-casing."""
     monkeypatch.setattr(os, "name", "nt")
     raw = "..\\..\\.agents\\skills\\dummyindex"
     assert _readlink_parts(raw) == ("..", "..", ".agents", "skills", "dummyindex")
@@ -604,9 +556,7 @@ def test_verify_family_links_sweeps_every_family_read_only(
     assert all(r.state is FamilyLinkState.OURS_HEALTHY for r in results)
 
 
-# ==================================================================================
 # create_family_links — the safe replacement dance
-# ==================================================================================
 
 
 def test_create_family_links_fresh_create_every_family(tmp_path: Path) -> None:
@@ -766,11 +716,9 @@ def test_create_family_links_heals_a_dangling_link_once_target_exists(
 def test_create_family_links_detects_dotfiles_divergent_root_and_removes_bad_link(
     tmp_path: Path,
 ) -> None:
-    """The dotfiles case: `~/.claude -> ~/dotfiles/claude` makes the
-    relative `../..` land in `~/dotfiles/`, not the real home. The created
-    link is verified post-creation, found to diverge, removed, and
-    reported — never left behind broken. `allowed_symlinks` is passed
-    explicitly (this module no longer infers user scope from `HOME`)."""
+    """With `~/.claude` symlinked outside home, the relative `../..` misses the real
+    home: the created link is verified, found to diverge, removed and reported, never
+    left broken. `allowed_symlinks` is explicit; nothing is inferred from `HOME`."""
     _require_real_symlinks(tmp_path)
     fake_home = tmp_path / "home"
     fake_home.mkdir()
@@ -799,10 +747,8 @@ def test_create_family_links_file_exists_error_reclassifies_and_retries(
     """`FileExistsError` creating the temp link re-classifies and
     replaces-or-reports the family, then continues — never a hard abort.
 
-    TEST GAP 1: the injected `_flaky_symlink` DI raiser falls through to
-    REAL `os.symlink` on every call after the first, so this test needs the
-    capability guard even though it's a simulated-failure test — without it,
-    a symlink-incapable environment would FAIL here instead of skipping."""
+    Guarded although simulated: `_flaky_symlink` falls through to the REAL
+    `os.symlink` after its first call, so an incapable host must skip, not fail."""
     _require_real_symlinks(tmp_path)
     scope_root = tmp_path / "project"
     _seed_all_agents_families(scope_root)
@@ -829,10 +775,8 @@ def test_create_family_links_nth_call_capability_failure_aborts_remaining(
     REMAINING family (already-created links stay) and names every family
     left uncovered.
 
-    TEST GAP 1: the injected `_counting_raiser` DI raiser falls through to
-    REAL `os.symlink` on every non-failing call, so this test needs the
-    capability guard even though it's a simulated-failure test — without it,
-    a symlink-incapable environment would FAIL here instead of skipping."""
+    Guarded although simulated: `_counting_raiser` calls the REAL `os.symlink` on
+    every non-failing call, so an incapable host must skip, not fail."""
     _require_real_symlinks(tmp_path)
     scope_root = tmp_path / "project"
     _seed_all_agents_families(scope_root)
@@ -900,8 +844,7 @@ def test_create_family_links_crash_recovery_restores_renamed_aside_tree(
     claude_skills_root = _claude_skills_root(scope_root)
     tmp_old = claude_skills_root / f".{family}.dummyindex-old.tmp"
     _write_owned_dir(tmp_old)
-    # family_dir itself is deliberately absent (the rename-aside completed,
-    # promotion never landed).
+    # family_dir is absent: the rename-aside completed, promotion never landed.
 
     result = create_family_links(scope_root)
 
@@ -939,20 +882,10 @@ def test_create_family_links_crash_recovery_finishes_deferred_delete(
 def test_create_family_links_refuses_to_touch_through_symlinked_claude_parent(
     tmp_path: Path,
 ) -> None:
-    """CRITICAL-1, family path OCCUPIED inside the victim tree.
-
-    TEST GAP 2 (corrected docstring): this OCCUPIED variant does not, on its
-    own, prove the parent-chain gate runs BEFORE `_recover_leftover_temp_artifacts`
-    — it still passed even with that ordering reversed, because the occupant
-    here is not `OURS_HEALTHY`, so LOW-1's "occupied-by-something-else"
-    refusal alone was already enough to leave both `tmp_old` and the
-    occupant untouched. The genuine gate-ordering regression test is the
-    UNOCCUPIED sibling immediately below. Since the NEW-2 fix, BOTH variants
-    are additionally caught even earlier: `create_family_links` now refuses
-    the entire run on a single parent-chain check before `mkdir` ever runs
-    (~:843), so a `.claude -> victim` layout never reaches the per-family
-    loop (or `_recover_leftover_temp_artifacts`) at all — every family is
-    reported in `errors`, nothing under `victim` is touched."""
+    """SECURITY: through a symlinked `.claude` (family path OCCUPIED in the victim),
+    the run refuses on one parent-chain check before `mkdir`: every family lands in
+    `errors` and nothing under `victim` is touched. The UNOCCUPIED variant below is
+    the one that pins gate ordering."""
     _require_real_symlinks(tmp_path)
     project = tmp_path / "project"
     project.mkdir()
@@ -962,8 +895,7 @@ def test_create_family_links_refuses_to_touch_through_symlinked_claude_parent(
     (project / ".claude").symlink_to(victim, target_is_directory=True)
 
     family = "dummyindex"
-    # Leftover temp-old artifact under the victim tree, holding data that is
-    # NOT ours (a stamped tree with a payload file alongside it).
+    # A leftover stamped temp-old tree under the victim, with a payload NOT ours.
     tmp_old = victim_skills / f".{family}.dummyindex-old.tmp"
     _write_owned_dir(tmp_old)
     (tmp_old / "USER_DATA.txt").write_text("not ours\n", encoding="utf-8")
@@ -988,14 +920,9 @@ def test_create_family_links_refuses_to_touch_through_symlinked_claude_parent(
 def test_create_family_links_refuses_recovery_rename_through_symlinked_claude_parent(
     tmp_path: Path,
 ) -> None:
-    """CRITICAL-1, family path UNOCCUPIED — the variant that genuinely locks
-    gate ordering (a prior version would rename the victim's leftover
-    `tmp_old` tree straight into the family path, still inside the victim
-    tree, but a mutation the caller never asked for and could not have
-    predicted from a `.claude` symlink alone). Since the NEW-2 fix,
-    `create_family_links` also refuses the whole run before `mkdir` ever
-    runs, so this scenario never reaches the per-family loop at all —
-    every family is reported in `errors`."""
+    """SECURITY: family path UNOCCUPIED, the variant that pins gate ordering: the
+    victim's leftover `tmp_old` must never be renamed into the family path. The run
+    refuses before `mkdir` and every family is reported in `errors`."""
     _require_real_symlinks(tmp_path)
     project = tmp_path / "project"
     project.mkdir()
@@ -1023,12 +950,9 @@ def test_create_family_links_refuses_recovery_rename_through_symlinked_claude_pa
 def test_create_family_links_squatted_temp_link_directory_is_reported_not_deleted(
     tmp_path: Path,
 ) -> None:
-    """CRITICAL-2: `_silently_remove` must never recurse into a directory —
-    `path.is_dir()` is not ownership evidence. A directory squatting the
-    temp-link name, holding a payload file, must be reported, never
-    deleted. Reproduced verbatim:
-    ``project/.claude/skills/.dummyindex.dummyindex-link.tmp/NOT_OURS.txt``
-    survives a `create_family_links` run."""
+    """`_silently_remove` never recurses into a directory: `is_dir()` is not
+    ownership evidence. A directory squatting the temp-link name, with a payload,
+    is reported and never deleted."""
     _require_real_symlinks(tmp_path)
     scope_root = tmp_path / "project"
     _seed_all_agents_families(scope_root)
@@ -1052,15 +976,9 @@ def test_create_family_links_squatted_temp_link_directory_is_reported_not_delete
 def test_create_family_links_permission_error_during_removal_does_not_abort_others(
     tmp_path: Path,
 ) -> None:
-    """HIGH-3: a family whose renamed-aside-tree removal raises
-    `PermissionError` must not abort the other 7 — the run continues
-    regardless.
-
-    Updated for NEW-1: this exact scenario (the link IS promoted; only the
-    renamed-aside tree's final delete fails) is now reported as `replaced`
-    plus a named warning, not an `error` — the conversion genuinely
-    succeeded, only cleanup failed, and reporting it as an opaque `error`
-    used to lose that distinction entirely."""
+    """A `PermissionError` deleting one family's renamed-aside tree never aborts the
+    other 7. The link IS promoted, so it reports `replaced` plus a named warning,
+    not an opaque `error`: only cleanup failed."""
     _require_real_symlinks(tmp_path)
     if hasattr(os, "geteuid") and os.geteuid() == 0:
         pytest.skip("root ignores directory permission bits")
@@ -1087,11 +1005,8 @@ def test_create_family_links_permission_error_during_removal_does_not_abort_othe
     try:
         result = create_family_links(scope_root)
     finally:
-        # The removal failure happens on the RENAMED-ASIDE tree (the safe
-        # replacement dance moves `claude_dir` to a `.dummyindex-old.tmp`
-        # sibling before deleting it), so `locked`'s final location depends
-        # on iteration order inside `_remove_owned_tree_no_follow` — restore
-        # write permission wherever it ended up so pytest can clean up.
+        # The delete fails on the RENAMED-ASIDE tree, so `locked` may have moved:
+        # restore write permission wherever it ended up so pytest can clean up.
         for locked_dir in _claude_skills_root(scope_root).rglob("locked"):
             os.chmod(locked_dir, 0o700)
 
@@ -1126,14 +1041,10 @@ def test_create_family_links_claude_skills_as_regular_file_reports_errors_not_cr
 def test_create_family_links_refuses_mkdir_through_symlinked_claude_parent(
     tmp_path: Path,
 ) -> None:
-    """NEW-2 (MEDIUM): `create_family_links` ran `claude_skills_root.mkdir(...)`
-    with NO `_parent_chain_clean` gate — unlike the capability probe, which
-    IS gated. A `project/.claude -> ../victim` layout with `victim/skills`
-    absent got `victim/skills` CREATED (inside the victim tree) before every
-    family was skipped — `run_link_install` never hit this because its own
-    probe gates first, so the hole was only reachable via the public
-    `create_family_links` entry point. Non-destructive, but a write through
-    an attacker-placed symlink, forbidden by the spec's security frame."""
+    """SECURITY: `create_family_links` gates its `mkdir` on the parent chain, so a
+    `project/.claude -> ../victim` layout never gets `victim/skills` created: even a
+    non-destructive write through an attacker-placed symlink is forbidden. Only this
+    public entry reaches it; `run_link_install`'s probe gates first."""
     _require_real_symlinks(tmp_path)
     project = tmp_path / "project"
     project.mkdir()
@@ -1154,13 +1065,9 @@ def test_create_family_links_refuses_mkdir_through_symlinked_claude_parent(
 def test_create_family_links_reverify_after_rename_requires_stamp_not_heading(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """MEDIUM-2: the POST-rename re-verify must be at least as strict as the
-    classify-time gate, never looser. Simulate a classify->rename TOCTOU
-    where the on-disk tree loses its `.dummyindex_version` stamp between the
-    gate check and the rename, leaving only the legacy heading (which
-    `is_owned_copy` alone would still accept) — the rename-aside tree must
-    be restored, never destroyed, under evidence the policy explicitly
-    refuses."""
+    """The POST-rename re-verify is never looser than the classify-time gate: if the
+    stamp vanishes between check and rename (TOCTOU), leaving only the legacy heading
+    `is_owned_copy` accepts, the renamed-aside tree is restored, never destroyed."""
     _require_real_symlinks(tmp_path)
     scope_root = tmp_path / "project"
     _seed_all_agents_families(scope_root)
@@ -1196,11 +1103,8 @@ def test_create_family_links_reverify_after_rename_requires_stamp_not_heading(
 def test_create_family_links_refuses_to_create_when_agents_family_missing(
     tmp_path: Path,
 ) -> None:
-    """MEDIUM-5: without a real `.agents/skills/<family>` directory to link
-    to, `create_family_links` must never report `created` — a prior version
-    happily created 8 fully-dangling links and reported success, because
-    the post-create resolve check (`_resolves_to_target`) is purely lexical
-    (`resolve(strict=False)`) and cannot see the target is fully absent."""
+    """With no real `.agents/skills/<family>` to link to, nothing is `created`: the
+    post-create check (`resolve(strict=False)`) is lexical and can't see a missing target."""
     scope_root = tmp_path / "project"
 
     result = create_family_links(scope_root)
@@ -1215,10 +1119,8 @@ def test_create_family_links_refuses_to_create_when_agents_family_missing(
 def test_recover_leftover_temp_old_not_deleted_when_family_dir_is_foreign(
     tmp_path: Path,
 ) -> None:
-    """LOW-1: mere occupancy of `family_dir` must never trigger finish-delete
-    of a leftover `.dummyindex-old.tmp` — only when `family_dir` classifies
-    OURS_HEALTHY (this run's OWN promotion actually landed) is finish-delete
-    ever considered."""
+    """Mere occupancy of `family_dir` never triggers finish-delete of a leftover
+    `.dummyindex-old.tmp`; only an OURS_HEALTHY `family_dir` (our promotion) does."""
     _require_real_symlinks(tmp_path)
     scope_root = tmp_path / "project"
     _seed_all_agents_families(scope_root)
@@ -1239,15 +1141,9 @@ def test_recover_leftover_temp_old_not_deleted_when_family_dir_is_foreign(
 
 
 def test_recover_leftover_temp_old_not_relocated_when_unproven(tmp_path: Path) -> None:
-    """NEW-4 (LOW): the rename-aside-`tmp_old`-back-to-`family_dir` path was
-    gated ONLY on `family_dir` being unoccupied — a foreign directory
-    squatting our own reserved `tmp_old` temp name (never created by us)
-    got silently RELOCATED into the family path, where it then permanently
-    blocks conversion (reported afterwards as "no stamp", but the
-    relocation itself was unannounced). The rename must also require
-    `is_owned_copy(tmp_old)`; otherwise it stays exactly where it is and
-    is reported, and the family's own genuinely-missing link is still
-    created normally alongside it."""
+    """A foreign dir squatting our reserved `tmp_old` name is never relocated into the
+    family path, where it would silently block conversion: the rename requires
+    `is_owned_copy(tmp_old)`. It is reported, and the missing link is still created."""
     _require_real_symlinks(tmp_path)
     scope_root = tmp_path / "project"
     _seed_all_agents_families(scope_root)
@@ -1272,33 +1168,16 @@ def test_recover_leftover_temp_old_not_relocated_when_unproven(tmp_path: Path) -
 def test_create_family_links_partial_delete_leaves_stranded_tmp_old_named_on_every_run(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """NEW-1 (HIGH): `_remove_owned_tree_no_follow` (common.py:329, out of
-    this proposal's scope to reorder) is non-atomic and deletes children in
-    `iterdir()` order, so it can destroy `.dummyindex_version`/SKILL.md
-    BEFORE failing on a locked subdirectory — destroying the very ownership
-    evidence a LATER run needs to finish the job. Reproduced verbatim: a
-    proven real Claude family containing `sub/USER_DATA.txt` with
-    `chmod 0500 sub`.
-
-    Before the fix: run 1 promoted the link correctly but reported the
-    family in `errors` (an opaque "unexpected error", losing the fact that
-    the link itself is healthy); run 2 (and run 3, even after "fixing
-    permissions") reported COMPLETELY CLEAN
-    (`errors=() skipped=() created=() replaced=()`) while the
-    partially-destroyed tree sat forever at
-    `.claude/skills/.dummyindex.dummyindex-old.tmp` — a run reporting
-    success while the user's real data was silently orphaned. After the
-    fix: run 1 reports `replaced` + a named warning (the conversion DID
-    succeed, only cleanup failed); every subsequent run — including one
-    where the link is already healthy and there would otherwise be nothing
-    else to report — NAMES the stranded path."""
+    """`_remove_owned_tree_no_follow` is non-atomic and deletes in `iterdir()` order, so
+    it can destroy `.dummyindex_version`/SKILL.md before failing on a locked subdir
+    (`chmod 0500 sub`), stranding user data at `.dummyindex-old.tmp` with no ownership
+    evidence. Run 1 reports `replaced` + a named warning; every later run, even with a
+    healthy link and nothing else to do, still NAMES the stranded path."""
     _require_real_symlinks(tmp_path)
     if hasattr(os, "geteuid") and os.geteuid() == 0:
         pytest.skip("root ignores directory permission bits")
-    # `_remove_owned_tree_no_follow` deletes children in `iterdir()` order,
-    # which the filesystem does not guarantee. This test reproduces the
-    # "evidence destroyed BEFORE the locked dir is hit" order, so pin it:
-    # sorted() puts `.dummyindex_version` (dotfile) ahead of `sub`.
+    # `iterdir()` order isn't guaranteed; sorted() pins the "evidence destroyed
+    # first" order (`.dummyindex_version` sorts ahead of `sub`).
     real_iterdir = Path.iterdir
     monkeypatch.setattr(Path, "iterdir", lambda self: iter(sorted(real_iterdir(self))))
     scope_root = tmp_path / "project"
@@ -1324,9 +1203,8 @@ def test_create_family_links_partial_delete_leaves_stranded_tmp_old_named_on_eve
     tmp_old = _claude_skills_root(scope_root) / f".{family}.dummyindex-old.tmp"
 
     try:
-        # ----- Run 1: the conversion succeeds, but the final delete of the
-        # renamed-aside real copy fails partway through, after already
-        # destroying its own ownership evidence.
+        # --- Run 1: the link promotes, but deleting the renamed-aside copy
+        # fails partway, after destroying its ownership evidence.
         result_1 = create_family_links(scope_root)
 
         assert (
@@ -1340,9 +1218,7 @@ def test_create_family_links_partial_delete_leaves_stranded_tmp_old_named_on_eve
         assert (tmp_old / "sub" / "USER_DATA.txt").exists()  # user data survives
         assert any(family in s and str(tmp_old) in s for s in result_1.skipped)
 
-        # ----- Run 2 (permissions still locked): the stranded tmp_old must
-        # NOT vanish from the report just because the link is already
-        # healthy and there is "nothing else" to do this run.
+        # --- Run 2 (still locked): a healthy link must not hide the stranded tmp_old.
         result_2 = create_family_links(scope_root)
 
         assert tmp_old.exists()
@@ -1353,10 +1229,8 @@ def test_create_family_links_partial_delete_leaves_stranded_tmp_old_named_on_eve
             is FamilyLinkState.OURS_HEALTHY
         )
 
-        # ----- Run 3 (permissions fixed): the stranded tree is never
-        # auto-deleted without ownership evidence — by design, it is no
-        # longer PROVABLY ours — but it must STILL be reported, every time.
-        # `sub` moved with the rename-aside — it now lives under `tmp_old`.
+        # --- Run 3 (permissions fixed): never auto-deleted without ownership
+        # evidence, but still reported every time. `sub` now lives under `tmp_old`.
         os.chmod(tmp_old / "sub", 0o700)
         result_3 = create_family_links(scope_root)
 
@@ -1371,10 +1245,8 @@ def test_create_family_links_partial_delete_leaves_stranded_tmp_old_named_on_eve
 def test_finish_replace_real_reports_stranded_original_when_restore_also_fails(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """LOW-2: when the promote (`os.replace`) fails AND the restoring rename
-    back to `family_dir` ALSO fails, the user's only real copy is stranded
-    at `.dummyindex-old.tmp` — this must be reported loudly (naming the
-    stranded path), never silently swallowed."""
+    """When the promote (`os.replace`) AND the restoring rename both fail, the only
+    real copy is stranded at `.dummyindex-old.tmp`: reported by path, never swallowed."""
     _require_real_symlinks(tmp_path)
     scope_root = tmp_path / "project"
     _seed_all_agents_families(scope_root)
@@ -1411,9 +1283,7 @@ def test_finish_replace_real_reports_stranded_original_when_restore_also_fails(
 def test_create_family_links_prints_hand_edits_caveat_after_success(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """LOW-3: the hand-edits caveat is an explicit acceptance criterion —
-    assert it with `capsys`, and only once the promotion is known to have
-    succeeded."""
+    """The hand-edits caveat prints once the promotion has succeeded."""
     _require_real_symlinks(tmp_path)
     scope_root = tmp_path / "project"
     _seed_all_agents_families(scope_root)
@@ -1430,9 +1300,7 @@ def test_create_family_links_prints_hand_edits_caveat_after_success(
 def test_create_family_links_does_not_print_caveat_when_promotion_fails(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """LOW-3: a prior version printed the caveat BEFORE the operation was
-    known to have succeeded. When the promote fails, the caveat must never
-    have printed at all."""
+    """When the promote fails, the hand-edits caveat never prints."""
     _require_real_symlinks(tmp_path)
     scope_root = tmp_path / "project"
     _seed_all_agents_families(scope_root)
@@ -1456,10 +1324,8 @@ def test_create_family_links_does_not_print_caveat_when_promotion_fails(
 
 
 def test_create_family_links_passes_target_is_directory_true(tmp_path: Path) -> None:
-    """The module's only Windows-specific contract: `target_is_directory=True`
-    must actually be PASSED to `symlink_fn`, not merely accepted as a
-    keyword default (a spy that never checks the kwarg would still pass if
-    the call site silently dropped it)."""
+    """The Windows-specific contract: `target_is_directory=True` is actually PASSED
+    to `symlink_fn`, not merely accepted as a keyword default."""
     _require_real_symlinks(tmp_path)
     scope_root = tmp_path / "project"
     _seed_all_agents_families(scope_root)
@@ -1475,9 +1341,7 @@ def test_create_family_links_passes_target_is_directory_true(tmp_path: Path) -> 
     assert all(kwargs.get("target_is_directory") is True for kwargs in seen_kwargs)
 
 
-# ==================================================================================
 # remove_dangling_family_links
-# ==================================================================================
 
 
 def test_remove_dangling_family_links_removes_only_dangling_not_foreign(
@@ -1562,9 +1426,7 @@ def test_remove_dangling_family_links_refuses_symlinked_claude_parent(
     assert dangling.is_symlink()
 
 
-# ==================================================================================
 # run_link_install — AUTO/LINK/COPY orchestration
-# ==================================================================================
 
 
 class _SpySymlink:
@@ -1711,12 +1573,9 @@ def test_run_link_install_refuses_probe_through_symlinked_claude_parent(
 def test_run_link_install_auto_parent_chain_refusal_uses_dotfiles_hint(
     tmp_path: Path,
 ) -> None:
-    """NEW-3 (MEDIUM): a parent-chain refusal (a symlinked `.claude`, most
-    often a dotfiles-managed home directory) is NOT a symlink-capability
-    problem — conflating the two attached the Windows Developer-Mode /
-    `core.symlinks` hint to a dotfiles-symlinked `.claude`, telling a
-    macOS/Linux user to enable Windows Developer Mode. The AUTO warning
-    must carry the dotfiles remediation instead."""
+    """A parent-chain refusal (a symlinked, usually dotfiles-managed `.claude`) is
+    NOT a capability problem: the AUTO warning carries the dotfiles remediation,
+    never the Windows Developer-Mode / `core.symlinks` hint."""
     _require_real_symlinks(tmp_path)
     project = tmp_path / "project"
     project.mkdir()
@@ -1737,8 +1596,7 @@ def test_run_link_install_auto_parent_chain_refusal_uses_dotfiles_hint(
 def test_run_link_install_strict_link_parent_chain_refusal_uses_dotfiles_hint(
     tmp_path: Path,
 ) -> None:
-    """NEW-3 variant: strict `LinkMode.LINK`'s raised error must carry the
-    same discriminated remediation, not the Windows hint."""
+    """Strict `LinkMode.LINK`'s raised error carries the same dotfiles remediation."""
     _require_real_symlinks(tmp_path)
     project = tmp_path / "project"
     project.mkdir()
@@ -1759,13 +1617,9 @@ def test_run_link_install_strict_link_parent_chain_refusal_uses_dotfiles_hint(
 def test_run_link_install_threads_allowed_symlinks_to_probe_and_create(
     tmp_path: Path,
 ) -> None:
-    """API GAP: `run_link_install` had NO `allowed_symlinks` parameter at
-    all — there was no argument a caller could pass to reach the
-    legitimate user-scope path. A dotfiles-symlinked `~/.claude` whose
-    RELATIVE link resolves correctly (`~/.claude -> ~/localclaude`, one
-    level under home) is forced to fall back to copy mode without it, even
-    though `create_family_links` with the SAME allowlist already links it
-    every family cleanly."""
+    """`allowed_symlinks` reaches the probe and `create_family_links`: a `~/.claude ->
+    ~/localclaude` link (relative value resolves correctly) falls back to copy
+    without it, and links every family with it."""
     _require_real_symlinks(tmp_path)
     home = tmp_path / "home"
     home.mkdir()

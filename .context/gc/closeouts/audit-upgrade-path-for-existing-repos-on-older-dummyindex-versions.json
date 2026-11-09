@@ -1,0 +1,52 @@
+{
+  "discarded": {
+    "_debate-log.json": "CLI debate progress log; rounds 0-2 recorded, no durable lesson beyond the report",
+    "audit.json": "CLI audit head (slug, scope, mode, model); bookkeeping only",
+    "catalog.json": "Persona catalog snapshot used to pick the panel; no durable lesson",
+    "description.md": "Audit brief; restated in report header",
+    "findings/correctness.md": "Round-0 correctness workpaper; findings 3,5,8-11,13,18,19 consolidated into report.md",
+    "findings/correctness.r1.md": "Round-1 correctness rebuttals; status/severity changes folded into report.md",
+    "findings/correctness.r2.md": "Round-2 correctness verdicts (cache-collision high, junction medium, tree-abstract loss low); folded into report.md",
+    "findings/data-integrity.md": "Round-0 data-integrity workpaper; findings 1,2,4,6,7,12,15-17 consolidated into report.md",
+    "findings/data-integrity.r1.md": "Round-1 data-integrity rebuttals; folded into report.md",
+    "findings/data-integrity.r2.md": "Round-2 data-integrity verdicts and conditional concurrences on bloat cuts; folded into report.md",
+    "findings/over-engineering.md": "Round-0 bloat workpaper; cuts B1-B8 consolidated into report.md",
+    "findings/over-engineering.r1.md": "Round-1 over-engineering rebuttals incl. withdrawn policy-duplication cut; folded into report.md",
+    "findings/over-engineering.r2.md": "Round-2 narrowed cuts (tree indent=0, council gitignore, coverage whitespace, supporting stub-skip); folded into report.md",
+    "report.md": "Final ranked audit report retained for the user"
+  },
+  "disposition": "completed",
+  "evidence": [],
+  "items": {},
+  "kind": "audit",
+  "ownership": {
+    "changed_paths": [],
+    "reconciled_paths": [],
+    "session_id": null,
+    "task_id": "audits:upgrade-path-for-existing-repos-on-older-dummyindex-versions"
+  },
+  "pending_verification": [],
+  "resolved_verification": {},
+  "schema_version": 1,
+  "slug": "upgrade-path-for-existing-repos-on-older-dummyindex-versions",
+  "source_commit": "404654ad1c553a431c55da653b47873258a6f711",
+  "state": "implemented",
+  "superseded": {},
+  "transfers": [],
+  "workspace_files": {
+    "_debate-log.json": "10e4961fd005dc15365eee1b6e7e43385230b65529072a0e8504454c0ccaef79",
+    "audit.json": "d6bfdc0234c5fba0d0350dfddf9dc83fa457f5afe57722d51fb2b9e6a7e3e226",
+    "catalog.json": "f750358d88b431ab10c65ad9ca333b2278c759c60e093c09d0031f76f01bedd3",
+    "description.md": "353c35dc0f8636123f4cd4b89d0b31a360883e7ddaa8e3b1c6bb4693212f2724",
+    "findings/correctness.md": "5e6040b02dbda944eecd3b44dc4174dc42ff2d32936a96a73119243b907fde7a",
+    "findings/correctness.r1.md": "4b89be3064cae54525b23f11143005b23edc4b514d09e74495e6b0c1d8a59ab9",
+    "findings/correctness.r2.md": "0eaf4c259fcf682af1c08cd5dc557766399b10507b9ba6871c53e5e405ca8b7f",
+    "findings/data-integrity.md": "618ca869f93ff669caf528bc09cbe76d183886a4e5921f00ecac19d640c8de13",
+    "findings/data-integrity.r1.md": "55e84b2abe0642992d08457f6880117126e83b848862b4e4e9277929674b67e6",
+    "findings/data-integrity.r2.md": "70496ed572ff1ed4788b24861484bbba8939cf4b7022c18174dda903ff57503c",
+    "findings/over-engineering.md": "6b4c4ac288336b53b0999c6501bef1e0e2ae17d8d404345ca61d78616ffc0243",
+    "findings/over-engineering.r1.md": "7994dcfc5fe9f27982e9a1ce82ad01e985e7dc68df60c1ee835f8de27461e40b",
+    "findings/over-engineering.r2.md": "63c89e0097b51caddf6b2833635a35b71d59082e026501e5801f6dc4124011fc",
+    "report.md": "f45341f6863e394bd34e06a80368177d7516d4eee08f95b54f97edbac88cc8eb"
+  }
+}

@@ -1,9 +1,9 @@
 {
-  "schema_version": 4,
+  "schema_version": 5,
   "scope": "repo",
   "scope_path": null,
   "mode": "deep",
-  "model": "opus-4.8",
+  "model": "opus",
   "auto_refresh_hook": true,
   "external_docs": [],
   "reconcile_exclude": [
@@ -26,10 +26,18 @@
       "kind": "plugin",
       "target": "i-have-adhd@i-have-adhd",
       "version": null
+    },
+    {
+      "kind": "plugin",
+      "target": "ponytail@ponytail",
+      "version": null
     }
   ],
   "default_plugins_enabled": true,
-  "dummyindex_version": "0.33.0",
+  "dummyindex_version": "0.37.0",
   "doc_guard_enabled": true,
-  "doc_guard_allow": []
+  "doc_guard_allow": [],
+  "build": {
+    "auto_recouncil": true
+  }
 }

@@ -34,6 +34,22 @@ from dummyindex.context.build.maps import (
 )
 from dummyindex.context.build.meta import Meta, new_meta, write_meta
 from dummyindex.context.build.tree import Tree, tree_from_structure, write_tree
+
+# The managed-file helpers moved to `upgrade` (the one context-layout
+# migration); the names stay importable from `runner`.
+from dummyindex.context.build.upgrade import (
+    _CONTEXT_GITATTRIBUTES_HEADER,  # noqa: F401 - re-exported for existing importers
+    _CONTEXT_GITIGNORE_HEADER,  # noqa: F401 - re-exported for existing importers
+    _MANAGED_GITATTRIBUTES_RULES,  # noqa: F401 - re-exported for existing importers
+    _MANAGED_GITIGNORE_PATTERNS,  # noqa: F401 - re-exported for existing importers
+    LayoutMigration,
+    _context_gitignore_body,  # noqa: F401 - re-exported for existing importers
+    _ensure_managed_lines,  # noqa: F401 - re-exported for existing importers
+    ensure_context_gitattributes,  # noqa: F401 - re-exported for existing importers
+    ensure_context_gitignore,  # noqa: F401 - re-exported for existing importers
+    migrate_context_layout,
+    remove_legacy_enrich_plan,  # noqa: F401 - re-exported for existing importers
+)
 from dummyindex.context.domains.features import scaffold_features
 from dummyindex.context.domains.source_docs import (
     DocCatalog,
@@ -70,6 +86,7 @@ class BuildResult:
     bootstrapped: bool
     graph: GraphResult | None = None
     doc_catalog: DocCatalog | None = None
+    migration: LayoutMigration = LayoutMigration()
 
 
 def build_all(
@@ -83,20 +100,11 @@ def build_all(
 ) -> BuildResult:
     """Run the full .context/ build and write every artifact atomically.
 
-    Args:
-        scope: directory to scan for code. The contents below this path
-            are what get extracted and indexed.
-        out_root: where `.context/` and `.claude/CLAUDE.md` are written.
-            Defaults to ``scope``. Pass a parent of ``scope`` to ingest a
-            subdirectory of a larger repo while keeping the index at the
-            repo root.
-
-            All file paths inside the generated artifacts (`tree.json`,
-            `map/files.json`, `map/symbols.json`) are relative to ``out_root``,
-            so a sub-scan of `/repo/app` from out_root `/repo` produces paths
-            like `app/utils.py` — sensible from `/repo/.context/`.
-
-    Returns a BuildResult listing what was written and the high-level counts.
+    ``scope`` is the directory scanned for code. ``out_root`` (default ``scope``) is where
+    `.context/` and `.claude/CLAUDE.md` go; pass a parent of ``scope`` to index a
+    subdirectory at the repo root. Artifact paths are relative to ``out_root``, so
+    scanning `/repo/app` from `/repo` yields `app/utils.py`. Returns a BuildResult with
+    what was written and the counts.
     """
     scope = scope.resolve()
     out_root = (out_root or scope).resolve()
@@ -106,10 +114,16 @@ def build_all(
     context_dir = out_root / ".context"
     cache = (cache_root or out_root).resolve()
 
-    # Pin the per-file extraction cache to .context/cache/ so the env var
-    # picked up by pipeline.cache.cache_dir() points at the same location
-    # regardless of caller-provided cache roots.
+    # Pin the per-file extraction cache to .context/cache/ via the trusted in-process
+    # override (cache_dir_override, not the env var), whatever cache root the caller gave.
     cache_target = context_dir / "cache"
+
+    # Migrate an older .context/ forward BEFORE extraction (`scan_root` validated the
+    # destination): the cache scope deletes entries stamped by another version, so running
+    # it later would wipe this build's entries. The cache dir exists first so a fresh repo
+    # is stamped now. Never raises; failures land in `migration.errors`.
+    cache_target.mkdir(parents=True, exist_ok=True)
+    migration = migrate_context_layout(context_dir, package_version=dummyindex_version)
 
     with cache_dir_override(cache_target):
         detection = detect(scope, extra_doc_roots=tuple(extra_doc_roots))
@@ -150,13 +164,9 @@ def build_all(
     doc_paths = collect_doc_paths(detection, out_root, extra_doc_roots)
     newest_code_mtime = newest_mtime(code_files)
     symbol_names: frozenset[str] = frozenset(s.name for s in symbols_map.symbols)
-    # File-path match set covers *every* tracked file, not just code.
-    # Prose docs reference docs, JSON, configs, generated artifacts —
-    # restricting to code drives false positives. We compose:
-    #   - paths in `files_map` (code files, repo-relative)
-    #   - the doc paths themselves (mostly repo-relative; external ones
-    #     get filtered when they can't be made relative to out_root)
-    #   - every other tracked file from detection (papers, images, etc.)
+    # The file-path match set covers every detected file, not just code: prose docs cite
+    # docs, JSON, configs and generated artifacts, and a code-only set drives false
+    # positives. Files outside out_root (external --docs) are left out.
     all_repo_file_paths = _all_repo_file_paths(detection, out_root)
     file_paths_set: frozenset[str] = (
         frozenset(f.path for f in files_map.files) | all_repo_file_paths
@@ -189,9 +199,7 @@ def build_all(
         doc_catalog=doc_catalog,
     )
 
-    # Symbol-level knowledge graph (deterministic). v0.6+ writes under
-    # .context/features/symbol-graph.json — the legacy .context/graph/ folder
-    # is gone (pyvis HTML hairball dropped).
+    # Symbol-level knowledge graph (deterministic) at features/symbol-graph.json.
     graph_result: GraphResult | None = None
     graph_data_for_features: dict | None = None
     features_dir = context_dir / "features"
@@ -204,9 +212,8 @@ def build_all(
 
         graph_data_for_features = read_graph_payload(graph_result.json_path)
     except Exception as exc:
-        # Don't let graph generation failures block the rest of the .context/ build.
-        # The agent-shaped files (tree.json, maps, conventions, playbooks) are the
-        # primary product; the graph is a useful-but-secondary visualization.
+        # A graph failure must not block the rest of the build: tree.json, maps,
+        # conventions and playbooks are the primary product.
         import warnings
 
         warnings.warn(
@@ -244,11 +251,9 @@ def build_all(
 
         warnings.warn(f"source-docs catalog write failed: {exc!r}", stacklevel=2)
 
-    # Session-memory store (agent-maintained; never regenerated). Seed empty
-    # tier stubs so the SessionStart hook + /dummyindex-remember have a home.
-    # Idempotent and non-destructive — existing memory survives every rebuild.
-    # The store lives at .context/session-memory/ which detect() does NOT scan,
-    # so its files are intentionally NOT tracked in the drift manifest.
+    # Session-memory store: agent-maintained, never regenerated. Seeding the empty tier
+    # stubs is idempotent and non-destructive, so memory survives every rebuild. detect()
+    # skips .context/session-memory/, so it stays out of the drift manifest.
     try:
         from dummyindex.context.domains.memory import ensure_memory_store
 
@@ -312,6 +317,7 @@ def build_all(
         bootstrapped=guidance_ready,
         graph=graph_result,
         doc_catalog=doc_catalog,
+        migration=migration,
     )
 
 
@@ -335,136 +341,6 @@ def _all_repo_file_paths(detection: dict, repo_root: Path) -> frozenset[str]:
     return frozenset(out)
 
 
-# Single source of truth for the patterns dummyindex manages inside
-# .context/.gitignore. Both the fresh-file body and the upgrade-merge below
-# derive from this tuple so they can never drift. Bare filenames (no slash)
-# match at any depth, which is how the per-feature scratch/log artefacts
-# (e.g. features/<id>/council/_council-log.json) get ignored.
-_MANAGED_GITIGNORE_PATTERNS: tuple[str, ...] = (
-    "cache/",
-    "_doc_backups/",
-    # Internal scratch/log artefacts — local work-lists and audit trails the
-    # session writes, never committed docs. `_enrich_plan.json` is belt-and-
-    # suspenders: new runs write it under cache/, but repos indexed by 0.15.0
-    # may still have a transitional copy at the .context/ root.
-    "_enrich_plan.json",
-    "_structural-plan.json",
-    "_council-log.json",
-    "_reality-check.json",
-    "_reality-check.md",
-)
-
-_CONTEXT_GITIGNORE_HEADER = (
-    "# Generated by dummyindex. These are local scratch/cache artefacts that\n"
-    "# regenerate automatically — don't commit them.\n"
-)
-
-# Machine-layer artefacts marked `linguist-generated` in the managed
-# .context/.gitattributes. DESIGN DECISION: these stay *committed* — a fresh
-# clone must navigate .context/ without running the CLI, and the
-# commit-anchored reconcile model diffs against the committed index — but
-# their rebuild churn is generated noise, so GitHub folds them out of PR
-# review. Deliberately no `-diff` attribute: it would also suppress local
-# `git diff` and hide merge conflicts.
-_MANAGED_GITATTRIBUTES_RULES: tuple[str, ...] = (
-    "tree.json linguist-generated",
-    "map/files.json linguist-generated",
-    "map/symbols.json linguist-generated",
-    "features/symbol-graph.json linguist-generated -text",
-    "features/symbol-graph.parts/*.json linguist-generated -text",
-    "coverage.json linguist-generated",
-    "features/graph.json linguist-generated",
-    "features/graph.html linguist-generated",
-)
-
-_CONTEXT_GITATTRIBUTES_HEADER = (
-    "# Generated by dummyindex. The machine-layer artefacts below are\n"
-    "# committed by design but their diffs are rebuild noise —\n"
-    "# `linguist-generated` collapses them in GitHub PR review.\n"
-)
-
-
-def _context_gitignore_body() -> str:
-    """Render the full managed body: header comment + one pattern per line."""
-    return _CONTEXT_GITIGNORE_HEADER + "".join(
-        f"{pattern}\n" for pattern in _MANAGED_GITIGNORE_PATTERNS
-    )
-
-
-def _ensure_managed_lines(
-    path: Path, header: str, managed_lines: tuple[str, ...]
-) -> None:
-    """Write/upgrade a managed line-oriented file (gitignore/gitattributes).
-
-    Fresh file: write header + every managed line. Existing file: append only
-    the managed lines that are missing (stripped line comparison), preserving
-    user-added lines and any header — pure-merge, never drops a user line.
-    Idempotent: a second call with nothing missing rewrites nothing.
-    """
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if not path.exists():
-        path.write_text(
-            header + "".join(f"{line}\n" for line in managed_lines),
-            encoding="utf-8",
-        )
-        return
-
-    current = path.read_text(encoding="utf-8")
-    present = {line.strip() for line in current.splitlines() if line.strip()}
-    missing = [line for line in managed_lines if line not in present]
-    if not missing:
-        return
-    addition = "".join(f"{line}\n" for line in missing)
-    path.write_text(current.rstrip() + "\n" + addition, encoding="utf-8")
-
-
-def ensure_context_gitignore(context_dir: Path) -> None:
-    """Write/upgrade the managed .gitignore inside .context/.
-
-    Public on purpose: the non-build verbs that create scratch artefacts
-    (e.g. ``enrich-plan``) call this too, so a repo maintained purely via
-    the reconcile path still receives new managed patterns. Merge semantics
-    are documented on :func:`_ensure_managed_lines`.
-    """
-    _ensure_managed_lines(
-        context_dir / ".gitignore",
-        _CONTEXT_GITIGNORE_HEADER,
-        _MANAGED_GITIGNORE_PATTERNS,
-    )
-
-
-def ensure_context_gitattributes(context_dir: Path) -> None:
-    """Write/upgrade the managed .gitattributes inside .context/.
-
-    Marks the heavy machine-layer artefacts ``linguist-generated`` (see
-    ``_MANAGED_GITATTRIBUTES_RULES`` for the commit-policy rationale) while
-    the curated taxonomy stays reviewable. Same pure-merge semantics as the
-    managed .gitignore.
-    """
-    _ensure_managed_lines(
-        context_dir / ".gitattributes",
-        _CONTEXT_GITATTRIBUTES_HEADER,
-        _MANAGED_GITATTRIBUTES_RULES,
-    )
-
-
-def remove_legacy_enrich_plan(context_dir: Path) -> bool:
-    """Unlink the pre-0.21 root-level ``.context/_enrich_plan.json``.
-
-    Versions <= 0.20 wrote the transient enrichment work-list at the
-    .context/ root; current code writes it under ``cache/`` (gitignored).
-    The bare-name gitignore pattern only hides the stale copy from git —
-    this removes the file itself on the next build / enrich-plan run.
-    The current ``cache/_enrich_plan.json`` is never touched. Returns
-    ``True`` when a stale copy was removed.
-    """
-    legacy = context_dir / "_enrich_plan.json"
-    if not legacy.is_file():
-        return False
-    legacy.unlink()
-    return True
-
-
 def _derive_languages(files_map: FilesMap) -> tuple[str, ...]:
     return tuple(sorted({f.language for f in files_map.files if f.language}))
 
@@ -480,10 +356,8 @@ def _write_all(
     *,
     doc_catalog: DocCatalog | None = None,
 ) -> list[str]:
-    ensure_context_gitignore(context_dir)
-    ensure_context_gitattributes(context_dir)
-    remove_legacy_enrich_plan(context_dir)
-
+    # The managed .gitignore/.gitattributes and the legacy-plan cleanup ran
+    # in `build_all`'s `migrate_context_layout` call, before extraction.
     written: list[str] = []
     write_meta(context_dir / "meta.json", meta)
     written.append("meta.json")

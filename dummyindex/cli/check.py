@@ -1,11 +1,9 @@
-"""`dummyindex context check` — diff snapshotted manifest against current state.
+"""`dummyindex context check`: diff the snapshotted manifest against current state.
 
-``--versions`` is a separate, detection-only mode: it reports version skew
-across the layers that drift independently (running CLI, the repo's installed
-Claude and Codex skill stamps at repo and user scope, the
-``.context/meta.json`` stamp) plus a PATH-shadowing venv binary. It never
-auto-fixes, never touches the network, and always exits 0 — remediation is the
-host-neutral ``dummyindex-update`` skill.
+``--versions`` is a separate detection-only mode: it reports version skew across the
+running CLI, the Claude and Codex skill stamps at repo and user scope, and the
+``.context/meta.json`` stamp, plus a PATH-shadowing venv binary. It never auto-fixes,
+never touches the network and always exits 0; remediation is ``dummyindex-update``.
 """
 
 from __future__ import annotations
@@ -13,6 +11,7 @@ from __future__ import annotations
 import shutil
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from .common import (
     parse_path_and_root,
@@ -21,6 +20,11 @@ from .common import (
     resolve_doc_paths,
 )
 from .rebuild import run as run_rebuild
+
+if TYPE_CHECKING:
+    from dummyindex.context.domains.docbudget import BudgetGroup
+
+_Groups = tuple[tuple["BudgetGroup", str], ...]
 
 
 def run(args: list[str]) -> int:
@@ -33,6 +37,10 @@ def run(args: list[str]) -> int:
     auto_refresh = False
     quiet = False
     versions = False
+    budget = False
+    style = False
+    update_ratchet = False
+    refs = False
     leftover: list[str] = []
     for a in rest:
         if a == "--auto-refresh":
@@ -41,6 +49,14 @@ def run(args: list[str]) -> int:
             quiet = True
         elif a == "--versions":
             versions = True
+        elif a == "--budget":
+            budget = True
+        elif a == "--style":
+            style = True
+        elif a == "--update-ratchet":
+            update_ratchet = True
+        elif a == "--refs":
+            refs = True
         else:
             leftover.append(a)
     if leftover:
@@ -49,8 +65,27 @@ def run(args: list[str]) -> int:
 
     out_root = resolve_context_root(scope, explicit_root=explicit_root)
 
+    if update_ratchet and not (budget or style):
+        print("error: --update-ratchet requires --budget or --style", file=sys.stderr)
+        return 2
     if versions:
         return _run_version_check(out_root, quiet=quiet)
+    if budget or style or refs:
+        rc = 0
+        if budget:
+            rc = _run_ratchet_check(
+                out_root, _budget_groups(), update=update_ratchet, flag="--budget"
+            )
+        if style:
+            rc = max(
+                rc,
+                _run_ratchet_check(
+                    out_root, _style_groups(), update=update_ratchet, flag="--style"
+                ),
+            )
+        if refs:
+            rc = max(rc, _run_refs_check(out_root))
+        return rc
 
     context_dir = out_root / ".context"
     if not context_dir.is_dir():
@@ -126,6 +161,116 @@ def run(args: list[str]) -> int:
     return rc
 
 
+# ----- ratchets (--budget, --style), disposable citations (--refs) -----------
+
+
+def _budget_groups() -> _Groups:
+    from dummyindex.context.domains.docbudget import BudgetGroup
+    from dummyindex.context.domains.docbudget.constants import (
+        CONTEXT_RATCHET_REL,
+        SKILLS_RATCHET_REL,
+    )
+
+    return (
+        (BudgetGroup.CONTEXT, CONTEXT_RATCHET_REL),
+        (BudgetGroup.SKILLS, SKILLS_RATCHET_REL),
+    )
+
+
+def _style_groups() -> _Groups:
+    from dummyindex.context.domains.docbudget import BudgetGroup
+    from dummyindex.context.domains.docbudget.constants import STYLE_RATCHET_REL
+
+    return ((BudgetGroup.STYLE, STYLE_RATCHET_REL),)
+
+
+def _print_style_details(root: Path, rel: str) -> None:
+    from dummyindex.context.domains.docbudget import lint_text
+
+    for v in lint_text((root / rel).read_text(encoding="utf-8")):
+        print(f"{rel}:{v.line}: {v.rule}: {v.excerpt}")
+
+
+def _run_ratchet_check(
+    root: Path,
+    groups: _Groups,
+    *,
+    update: bool,
+    flag: str,
+) -> int:
+    """Check or update each (group, ratchet) pair. rc 1 on growth or refusal."""
+    from dummyindex.context.domains.docbudget import (
+        BudgetGroup,
+        read_ratchet,
+        write_ratchet,
+    )
+    from dummyindex.context.domains.docbudget import (
+        check as budget_check,
+    )
+    from dummyindex.context.domains.docbudget import (
+        scan as budget_scan,
+    )
+    from dummyindex.context.domains.docbudget import (
+        update_ratchet as run_update,
+    )
+
+    rc = 0
+    checked = False
+    for group, rel in groups:
+        is_style = group is BudgetGroup.STYLE
+        unit = "violations" if is_style else "words"
+        ratchet_path = root / rel
+        if is_style and not update and not ratchet_path.is_file():
+            for path, count in budget_scan(root, group).items():
+                if count:
+                    _print_style_details(root, path)
+            print(
+                "no style ratchet; seed it with: "
+                "dummyindex context check --style --update-ratchet"
+            )
+            continue
+        try:
+            ratchet = read_ratchet(ratchet_path)
+        except ValueError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        if update:
+            result = run_update(root, ratchet, group)
+            write_ratchet(ratchet_path, result.ratchet)
+            print(
+                f"{rel}: {len(result.ratchet)} entries, {len(result.lowered)} lowered"
+            )
+            for v in result.refused:
+                print(f"  refused: {v.path} grew {v.recorded} -> {v.words} {unit}")
+                rc = 1
+            continue
+        checked = True
+        for v in budget_check(root, ratchet, group):
+            if v.recorded is None:
+                print(f"over budget: {v.path} {v.words} {unit} (ceiling {v.limit})")
+            else:
+                print(f"grew: {v.path} {v.words} {unit} (recorded {v.recorded})")
+            if is_style:
+                _print_style_details(root, v.path)
+            rc = 1
+    if rc == 0 and checked and not update:
+        print(f"context check {flag}: ok")
+    return rc
+
+
+def _run_refs_check(root: Path) -> int:
+    """List durable docs citing proposals/audits. rc 1 if any."""
+    from dummyindex.context.domains.docguard.citations import scan_durable
+
+    hits = scan_durable(root)
+    for path, cites in hits:
+        print(f"{path}: {', '.join(cites)}")
+    if not hits:
+        print("context check --refs: clean")
+        return 0
+    return 1
+
+
 # ----- version skew detection (--versions) ----------------------------------
 #
 # The seams below are tiny so they can be monkeypatched in tests and kept
@@ -178,23 +323,11 @@ _HOST_LABEL = {"claude": "Claude skill", "codex": "Codex skill"}
 def _read_skill_stamps(out_root: Path) -> tuple[tuple[str, str | None], ...]:
     """Read every Claude/Codex stamp at repo and user scope independently.
 
-    A thin label-formatting wrapper around the one four-root scanner in
-    ``installer.repair`` — the shared logic lives there now so `--versions`
-    and repair can never drift on what "installed" means. A missing or empty
-    stamp remains ``None`` for that exact layer. Never short-circuit:
-    coexistence is precisely where a stale second host used to be hidden by
-    whichever stamp happened to be checked first.
-
-    The Claude-side row (never the Codex/``.agents`` row, which is the real
-    target) also gets a link-state suffix, reusing ``classify_family_link``
-    rather than reimplementing it: `` (linked)`` when the family dir
-    classifies ``OURS_HEALTHY``/``OURS_DANGLING``, `` (materialized link ...)``
-    plus the `core.symlinks` remediation when it classifies ``MATERIALIZED``
-    — so a coherent-versions report on a linked layout stays
-    self-explanatory (versions agree AND the Claude side is linked, not
-    duplicated). Classification never raises (fails closed to ``FOREIGN``
-    internally); a stray error here still degrades to no suffix, matching
-    every other probe in this module.
+    Wraps ``installer.repair``'s four-root scanner so `--versions` and repair agree
+    on "installed"; a missing or empty stamp stays ``None`` for that layer. Never
+    short-circuit, or a stale second host hides behind the first stamp checked.
+    Claude rows also get a ``classify_family_link`` suffix (`` (linked)``, or
+    `` (materialized link ...)`` with the `core.symlinks` fix); an error means none.
     """
     from dummyindex.installer.link import FamilyLinkState, classify_family_link
     from dummyindex.installer.repair import scan_installed_copies
@@ -326,11 +459,8 @@ def _run_version_check(out_root: Path, *, quiet: bool) -> int:
     elif not quiet:
         coherent = next(iter(distinct), "unknown")
         print(f"context check: dummyindex versions coherent ({coherent}).")
-        # A coherent report must still say when the Claude side is a link
-        # rather than a duplicated copy (or a materialized-file placeholder
-        # needing the core.symlinks fix) — "versions agree" alone would hide
-        # that fact, so surface just the annotated row(s), even though
-        # nothing here is skewed.
+        # "Versions agree" alone would hide that the Claude side is a link (or a
+        # materialized placeholder needing core.symlinks), so print those rows.
         for line in lines:
             if "(linked)" in line or "(materialized link" in line:
                 print(line)

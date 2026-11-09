@@ -1,35 +1,10 @@
 """Frozen dataclasses + dispatch alphabet for the build loop.
 
-Two tiny value objects, both immutable:
-
-- ``ChecklistItem`` — one ``- [ ]`` / ``- [x]`` line parsed out of a
-  proposal's ``checklist.md``. ``index`` is the 0-based position in the
-  flat list (the key callers use for ``--check N``); ``done`` reflects
-  whether the box is ticked. ``gate`` is True for human-decision items
-  (text leads with a ``**GATE**`` / ``GATE`` marker) and ``via`` carries
-  the tool name from a trailing ``— via <tool>`` tag — both parsed
-  structurally so the CLI never re-derives them from prose.
-- ``Choice`` — the outcome of mapping one checklist item to an equipment
-  item. When nothing scores, the mapper still routes to the manifest's
-  implement-capable item if one exists (``fallback=False``) — the work is
-  implementation. ``fallback`` is ``True`` and ``equipment_name`` is ``None``
-  only when the manifest is empty, or has items but no implement-capable one;
-  the CLI/skill renders the ``general-purpose`` agent name at that point. The
-  model itself never stores that literal (the manifest didn't produce it).
-  ``subagent_type`` is the chosen item's dispatch target (the build skill's
-  Task-tool agent), or ``None`` when the item declared none / a fallback
-  occurred — the CLI renders the ``general-purpose`` fallback there too.
-
-``DispatchMode`` is the closed alphabet for *where an item executes* —
-``(str, Enum)`` so ``.value`` lands wire-compatible in ``build --json``
-payloads. ``dispatch_mode`` derives it: GATE and binding ``— via`` items
-(plugin commands, skills, MCP-bound tools) belong to the main session and
-are never offered as Task-dispatchable subagent units. Two via-tag shapes
-ARE subagent units: an explicit ``— via agent:<name>`` tag, and a bare
-``— via <name>`` that exactly matches a ``kind: agent`` equipment-pool
-name passed via ``agent_names`` (the defensive upgrade — the caller
-records it). With ``agent_names=None`` bare names stay main-session, so
-pool-less callers see the historical behaviour.
+``ChecklistItem`` is one parsed checklist line; ``index`` is its 0-based
+``--check N`` key. ``Choice`` is an item's equipment mapping: ``fallback=True``
+(``equipment_name=None``) or ``subagent_type=None`` makes the CLI render
+``general-purpose``, a literal the model never stores. ``DispatchMode`` is
+``(str, Enum)`` so ``.value`` is wire-compatible in ``build --json``.
 """
 
 from __future__ import annotations
@@ -76,15 +51,11 @@ def dispatch_mode(
 ) -> DispatchMode:
     """Classify where ``item`` executes.
 
-    A GATE (human decision) item is always main-session — even when it
-    also carries a via tag. A ``— via <tool>`` item is a subagent unit
-    only when the tag names an agent: either explicitly with the
-    ``agent:`` prefix (:data:`AGENT_VIA_PREFIX`), or as a bare name that
-    exactly matches one of ``agent_names`` (the caller's kind-agent pool;
-    the caller records the upgrade). Any other via tag binds the
-    conductor's own tool/skill and stays main-session; so does a bare
-    name when ``agent_names`` is ``None`` or has no match. Items without
-    a gate or via tag are subagent dispatch units.
+    A GATE item is always main-session, even with a via tag. A via item is a
+    subagent unit only when the tag names an agent: the ``agent:`` prefix
+    (:data:`AGENT_VIA_PREFIX`) or a bare name in ``agent_names`` (the caller's
+    kind-agent pool; the caller records the upgrade). Other via tags bind the
+    conductor's own tool and stay main-session. Items with neither are subagents.
     """
     if item.gate:
         return DispatchMode.MAIN_SESSION

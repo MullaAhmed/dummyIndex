@@ -75,7 +75,7 @@ def test_user_added_gitignore_lines_preserved(sample_repo: Path) -> None:
     assert "cache/" in gi_text
 
 
-# ----- managed .gitignore patterns + merge logic ----------------------------
+# --- managed .gitignore patterns + merge logic
 
 
 @pytest.mark.unit

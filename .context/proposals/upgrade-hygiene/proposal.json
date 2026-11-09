@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "slug": "upgrade-hygiene",
+  "title": "Upgrade hygiene: prune orphan graph shards, versioned retired-artifact migration on the install refresh path, stamp meta last and never downgrade, graph-format schema marker",
+  "status": "planned",
+  "related_features": [
+    "install-surface",
+    "index-lifecycle",
+    "graph-query"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": []
+}

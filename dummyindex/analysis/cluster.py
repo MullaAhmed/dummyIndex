@@ -1,4 +1,9 @@
-"""Community detection on NetworkX graphs. The committed ``community`` field uses NetworkX-Louvain only (GATE strategy (b), spec.md 2026-06-23) so it is byte-reproducible across machines; Leiden (graspologic) is available off-path for non-committed use. Splits oversized communities. Returns cohesion scores."""
+"""Community detection on NetworkX graphs; splits oversized communities.
+
+The committed ``community`` field uses NetworkX-Louvain only, so it is
+byte-reproducible across machines; Leiden (graspologic) is available off-path for
+non-committed use.
+"""
 
 from __future__ import annotations
 
@@ -9,18 +14,17 @@ import sys
 
 import networkx as nx
 
-# Fixed seed for community detection so community IDs are stable run-to-run,
-# and identical across the Leiden (graspologic) and Louvain (networkx) paths.
+# Fixed seed, shared by the Louvain and Leiden paths, so community IDs are stable
+# run-to-run.
 _RANDOM_SEED = 42
 
 
 def _suppress_output():
-    """Context manager to suppress stdout/stderr during library calls.
+    """Context manager that captures stdout in a ``StringIO`` during library calls.
 
-    graspologic's leiden() emits ANSI escape sequences (progress bars,
-    colored warnings) that corrupt PowerShell 5.1's scroll buffer on
-    Windows (see issue #19). Redirecting stdout/stderr to devnull during
-    the call prevents this without losing any dummyindex output.
+    graspologic's leiden() emits ANSI escapes (progress bars, colored warnings)
+    that corrupt PowerShell 5.1's scroll buffer on Windows (issue #19). Only
+    stdout is redirected here; the caller swaps ``sys.stderr`` itself.
     """
     return contextlib.redirect_stdout(io.StringIO())
 
@@ -28,21 +32,11 @@ def _suppress_output():
 def _louvain_partition(G: nx.Graph) -> dict[str, int]:
     """Community detection via NetworkX-Louvain only. Returns {node_id: community_id}.
 
-    GATE DECISION (spec.md Open questions, 2026-06-23): strategy (b) —
-    always-Louvain for committed bytes. The committed ``community`` field
-    persisted into ``symbol-graph.json`` MUST be produced by NetworkX-Louvain
-    (pure-Python, always present, seeded) so its bytes are reproducible on any
-    machine regardless of whether graspologic is installed. Leiden is NOT
-    consulted here: a backend whose presence varies per machine would make the
-    committed ``community`` values non-deterministic across machines (it
-    produces a different partition than Louvain). Leiden may still serve
-    non-committed/on-demand use via ``_leiden_partition`` below, but it must
-    never influence committed values — so the committed path
-    (``cluster`` → ``_partition`` → ``_split_community``) calls only this.
-
-    Louvain has been built into networkx since 2.7. Inspect kwargs to stay
-    compatible across NetworkX versions — ``max_level`` was added in a later
-    release and prevents hangs on large sparse graphs.
+    The committed ``community`` field in ``symbol-graph.json`` MUST come from seeded,
+    pure-Python Louvain so its bytes reproduce on any machine, with or without
+    graspologic. Leiden is never consulted: the committed path ``cluster`` →
+    ``_partition`` → ``_split_community`` calls only this. ``max_level`` is passed
+    only where NetworkX supports it; it prevents hangs on large sparse graphs.
     """
     kwargs: dict = {"seed": _RANDOM_SEED, "threshold": 1e-4}
     if "max_level" in inspect.signature(nx.community.louvain_communities).parameters:
@@ -52,15 +46,11 @@ def _louvain_partition(G: nx.Graph) -> dict[str, int]:
 
 
 def _leiden_partition(G: nx.Graph) -> dict[str, int]:
-    """Community detection via Leiden (graspologic). For NON-committed/on-demand use only.
+    """Community detection via Leiden (graspologic), for NON-committed use only.
 
-    Per the GATE decision (strategy (b)), this MUST NOT feed the committed
-    ``community`` field — only ``_louvain_partition`` does. Provided for
-    callers that want Leiden's higher-quality partition off the persisted path.
-    Raises ``ImportError`` if graspologic is not installed.
-
-    Output from graspologic is suppressed to prevent ANSI escape codes from
-    corrupting terminal scroll buffers on Windows PowerShell 5.1 (issue #19).
+    MUST NOT feed the committed ``community`` field (only ``_louvain_partition``
+    does). Raises ``ImportError`` if graspologic is not installed. Its output is
+    suppressed: ANSI escapes corrupt PowerShell 5.1's scroll buffer on Windows.
     """
     from graspologic.partition import leiden
 
@@ -77,9 +67,8 @@ def _leiden_partition(G: nx.Graph) -> dict[str, int]:
 def _partition(G: nx.Graph) -> dict[str, int]:
     """Partition for the COMMITTED-bytes path. Returns {node_id: community_id}.
 
-    GATE strategy (b): always-Louvain — see ``_louvain_partition``. Leiden is
-    deliberately never called here so the committed ``community`` field is
-    byte-reproducible across machines (graspologic presence must not change it).
+    Always Louvain (see ``_louvain_partition``); Leiden is never called here, so
+    graspologic's presence cannot change the committed ``community`` bytes.
     """
     return _louvain_partition(G)
 
@@ -91,14 +80,10 @@ _MIN_SPLIT_SIZE = 10  # only split if community has at least this many nodes
 def cluster(G: nx.Graph) -> dict[int, list[str]]:
     """Run community detection. Returns {community_id: [node_ids]}.
 
-    Community IDs are stable across runs AND machines: 0 = largest community
-    after splitting. The committed ``community`` field is produced by
-    NetworkX-Louvain only (GATE strategy (b) — see ``_louvain_partition``);
-    Leiden is never on this path. Oversized communities (> 25% of graph nodes,
-    min 10) are split by running a second Louvain pass on the subgraph.
-
-    Accepts directed or undirected graphs. DiGraphs are converted to undirected
-    internally since Louvain requires undirected input.
+    IDs are stable across runs AND machines (0 = largest after splitting): the
+    committed ``community`` field is NetworkX-Louvain only, never Leiden (see
+    ``_louvain_partition``). Communities larger than max(10, 25% of nodes) get a
+    second Louvain pass. DiGraphs are made undirected first (Louvain needs that).
     """
     if G.number_of_nodes() == 0:
         return {}
@@ -107,7 +92,7 @@ def cluster(G: nx.Graph) -> dict[int, list[str]]:
     if G.number_of_edges() == 0:
         return {i: [n] for i, n in enumerate(sorted(G.nodes))}
 
-    # Leiden warns and drops isolates - handle them separately
+    # Partition only connected nodes; isolates are appended below.
     isolates = [n for n in G.nodes() if G.degree(n) == 0]
     connected_nodes = [n for n in G.nodes() if G.degree(n) > 0]
     connected = G.subgraph(connected_nodes)
@@ -143,7 +128,7 @@ def cluster(G: nx.Graph) -> dict[int, list[str]]:
 def _split_community(G: nx.Graph, nodes: list[str]) -> list[list[str]]:
     """Run a second Louvain pass on a community subgraph to split it further.
 
-    Committed-bytes path — calls ``_partition`` (Louvain only, GATE strategy (b)).
+    Committed-bytes path — calls ``_partition`` (Louvain only).
     """
     subgraph = G.subgraph(nodes)
     if subgraph.number_of_edges() == 0:

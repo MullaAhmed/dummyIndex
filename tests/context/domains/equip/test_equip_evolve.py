@@ -1,4 +1,4 @@
-"""Tests for the patch seam (spec §7) — sanctioned, exact-once evolution.
+"""Tests for the patch seam — sanctioned, exact-once evolution.
 
 ``apply_patch`` is the CLI-sanctioned way to evolve a generated artifact: an
 exact old/new string replacement (must match exactly once), written atomically,

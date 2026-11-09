@@ -1,24 +1,10 @@
 """Ack store — user-recorded dismissals for drift rows (``drift-ack`` verb).
 
-A row that is a false positive *for this machine/workflow* would otherwise
-resurface every session with no way to act on it. An **ack** records the
-judgement "feature ``X``'s file ``Y`` at blob sha ``Z`` is known-good" as an
-append-only entry in the gitignored cache at
-``.context/cache/drift-acks.json``:
-
-    {feature_id, path?, acked_sha, reason?, ts}
-
-Suppression semantics live with the consumer (``context/drift.py``): an ack
-suppresses a drift row only while the file's current sha still equals
-``acked_sha`` — any edit auto-expires it, because a changed file is real work
-again. On-git repos record git blob shas; off-git repos work identically using
-content sha256 instead.
-
-Storage mirrors the corrupt-tolerant cache pattern of
-``gc/anchor.py:_load_memo``: a missing / malformed / non-dict payload reads
-back as empty and never raises, while every write goes through
-``write_text_atomic`` (tmp + replace) so a concurrent reader never observes a
-half-written store. Nothing here decides policy — read, append, clear.
+An ack records "feature ``X``'s file ``Y`` at sha ``Z`` is known-good" as an
+append-only ``{feature_id, path?, acked_sha, reason?, ts}`` entry in gitignored
+``.context/cache/drift-acks.json``. ``context/drift.py`` suppresses a row only
+while the file's sha (git blob, or content sha256 off-git) equals ``acked_sha``,
+so any edit auto-expires it. Reads never raise; writes are atomic (tmp + replace).
 """
 
 from __future__ import annotations
@@ -105,5 +91,7 @@ def clear_acks(context_dir: Path) -> int:
 
 
 def _write(context_dir: Path, acks: list[dict]) -> None:
-    payload = json.dumps({"schema_version": ACKS_SCHEMA_VERSION, "acks": acks}, indent=2)
+    payload = json.dumps(
+        {"schema_version": ACKS_SCHEMA_VERSION, "acks": acks}, indent=2
+    )
     write_text_atomic(acks_path(context_dir), payload + "\n")

@@ -1,24 +1,10 @@
 """dummyindex CLI — thin entrypoint dispatching to the real surfaces.
 
-Two surfaces:
-
-1. `dummyindex install [--platform claude|agents|both] [--scope user|project]`
-   — copy the skill family into Claude Code's ``.claude/skills`` and/or
-   the cross-harness ``.agents/skills`` directory (``codex`` is accepted as
-   a deprecated alias for ``agents``). When the resolved
-   project candidate (``--dir`` if given, else CWD) is a git repo, this
-   also runs the full project init: builds ``.context/``, writes a
-   selected host guidance and, for Claude, installs managed session hooks.
-   Pass ``--skill-only`` to opt out of the project init step.
-   The implementation lives in ``dummyindex/installer/``.
-2. `dummyindex ingest <path>` (a.k.a. `dummyindex context init <path>`) —
-   stand-alone project init for cases where ``install`` already ran or
-   you need to init a directory other than the one you installed from.
-
-`dummyindex context <subcommand>` covers the rest of the surface —
-incremental rebuilds, retrieval (`query`), enrichment, session memory,
-and the v0.15 build loop (`propose` / `equip` / `build`). Run
-`dummyindex context --help` for the full list.
+- `install` copies the skill family into ``.claude/skills`` and/or ``.agents/skills``
+  (``codex`` is a deprecated alias for ``agents``). In a git repo (``--dir`` or CWD)
+  it also runs project init unless ``--skill-only``. See ``dummyindex/installer/``.
+- `ingest <path>` (= `context init`) runs project init on its own.
+- `context <subcommand>` is the rest; `usage` and `status` are top-level helpers.
 """
 
 from __future__ import annotations
@@ -53,9 +39,7 @@ TOP_LEVEL_COMMANDS: tuple[str, ...] = (
 def _run_usage(args: list[str]) -> int:
     """`dummyindex usage [chat|daily|session|monthly|blocks]` — token report.
 
-    Thin CLI boundary: parse the kind, call the usage domain, print the
-    rendered string. Mirrors the top-level `install`/`uninstall` pattern
-    (logic in the domain package, print + exit codes here).
+    Thin CLI boundary: logic lives in `dummyindex.usage`; print + exit codes here.
     """
     import datetime as _dt
 

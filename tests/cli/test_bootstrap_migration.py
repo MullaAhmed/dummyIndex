@@ -1,19 +1,10 @@
-"""`context bootstrap` legacy-root-CLAUDE.md folding (install-claude-md-migration).
+"""`context bootstrap` folds a legacy root CLAUDE.md into ``.claude/CLAUDE.md``.
 
-The bootstrap command regenerates the managed guidance block for the selected
-host. Since the fold wiring, it must ALSO consolidate a dangling legacy root
-``CLAUDE.md`` into the canonical ``.claude/CLAUDE.md`` — but only when
-
-1. the platform touches Claude (``claude|both`` — ``agents`` never folds), and
-2. :func:`has_foldable_legacy_claude_md` passes (root exists AND is not an
-   active Codex instruction candidate).
-
-Degradations inside ``reconcile_claude_md`` are non-fatal: exit stays 0, a
-warning lands on stderr, and the root file survives.
-
-The legacy root file is seeded strictly AFTER ``_ingested()`` returns:
-``init`` itself runs ``build_all(bootstrap=True)`` which would otherwise
-consume the seed instead of the code under test.
+Only when the platform touches Claude (``claude|both``; ``agents`` never folds)
+and :func:`has_foldable_legacy_claude_md` passes. ``reconcile_claude_md``
+degradations are non-fatal: exit 0, a stderr warning, the root file survives.
+The legacy file is seeded AFTER ``_ingested()`` because ``init`` runs
+``build_all(bootstrap=True)``, which would otherwise consume it.
 """
 
 from __future__ import annotations
@@ -141,7 +132,7 @@ def test_bootstrap_leaves_codex_fallback_doc_alone(
     codex_home.mkdir()
     trust_key = json.dumps(str(target.resolve()))
     (codex_home / "config.toml").write_text(
-        "project_doc_fallback_filenames = [\"CLAUDE.md\"]\n"
+        'project_doc_fallback_filenames = ["CLAUDE.md"]\n'
         f"[projects.{trust_key}]\n"
         'trust_level = "trusted"\n',
         encoding="utf-8",

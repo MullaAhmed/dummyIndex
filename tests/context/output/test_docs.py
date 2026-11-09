@@ -31,7 +31,7 @@ def _meta(root: Path, **overrides) -> Meta:
     return Meta(**base)
 
 
-# --- generate_index_md -------------------------------------------------------
+# --- generate_index_md
 
 
 @pytest.mark.unit
@@ -55,7 +55,7 @@ def test_index_md_handles_unknown_file() -> None:
     assert "`custom/extra.json`" in text
 
 
-# --- generate_project_md -----------------------------------------------------
+# --- generate_project_md
 
 
 @pytest.mark.unit
@@ -150,7 +150,7 @@ def test_project_md_ends_with_newline(tmp_path: Path) -> None:
     assert not text.endswith("\n\n\n")
 
 
-# --- Writers -----------------------------------------------------------------
+# --- Writers
 
 
 @pytest.mark.unit

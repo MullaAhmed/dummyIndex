@@ -1,15 +1,10 @@
 """The ranked shortlist the scan seed consumes (`features/seed-rank.json`).
 
-Personalized PageRank over `features/symbol-graph.json`, computed by the
-deterministic builder in `context/build/communities.py` and written next
-to the graph it ranks. `seed_scan` stays pure, so — like `refs.py` — the
-file I/O lives here: `load_seed_rank` reads the artifact back and hands
-the seed one frozen `SeedRank`.
-
-Degradation is deliberate: a missing or unreadable artifact loads as
-``None`` and the seed falls back to its per-feature file-count ordering,
-which is what keeps repos without a symbol graph working exactly as
-before.
+Personalized PageRank over `features/symbol-graph.json`, computed by
+`context/build/communities.py`. `seed_scan` stays pure, so the file I/O lives
+here: `load_seed_rank` returns one frozen `SeedRank`, or ``None`` for a missing
+or unreadable artifact — the seed then falls back to file-count ordering, so
+repos without a symbol graph keep working.
 """
 
 from __future__ import annotations

@@ -28,7 +28,7 @@ def _ingested(tmp_path: Path, name: str) -> Path:
     return target
 
 
-# ----- build_plan ------------------------------------------------------------
+# --- build_plan
 
 
 @pytest.mark.unit
@@ -114,7 +114,7 @@ def test_write_plan_round_trips(tmp_path: Path) -> None:
     assert len(raw["batches"]) == len(plan.batches)
 
 
-# ----- apply_updates ---------------------------------------------------------
+# --- apply_updates
 
 
 @pytest.mark.unit
@@ -159,7 +159,7 @@ def test_apply_updates_is_idempotent(tmp_path: Path) -> None:
     assert second.unknown == ()
 
 
-# ----- CLI -------------------------------------------------------------------
+# --- CLI
 
 
 @pytest.mark.integration

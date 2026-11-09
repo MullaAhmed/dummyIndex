@@ -1,16 +1,10 @@
 """Doc-sync guards: every ContextSubcommand must be documented everywhere.
 
-The CLI grew three subcommands in v0.15 and two help/doc surfaces silently
-lagged (an earlier surface had drifted the same way the release before).
-These tests turn that class of drift into a red test instead of an audit
-finding. Guarded surfaces:
-
-- ``dummyindex context --help`` — the canonical reference, exercised through
-  the public ``dispatch(["--help"])`` path so wrapping/truncation count too.
-- ``docs/guide/07-cli.md``     — the public CLI guide ("every command").
-- ``dummyindex --help``        — derives its subcommand list from the enum at
-  runtime; the test proves the lazy-import path actually renders every name
-  (a silent fall-through to its except-branch would otherwise go unnoticed).
+Help and doc surfaces have silently lagged new subcommands. Guarded surfaces:
+- ``dummyindex context --help``, via ``dispatch(["--help"])`` so wrapping counts.
+- ``docs/guide/07-cli.md``, the public CLI guide ("every command").
+- ``dummyindex --help``, whose lazy enum import must render every name rather
+  than silently fall through to its except-branch.
 """
 
 from __future__ import annotations
@@ -149,6 +143,9 @@ def test_default_plugin_docs_pin_targets_and_reviewed_trust(
         "runs_code=true",
         "opt-in `SessionStart` shell command hook",
         "per-profile `.i-have-adhd-always` flag",
+        "ponytail@ponytail",
+        "DietrichGebert/ponytail",
+        "SubagentStart",
     )
     missing = [token for token in required_tokens if token not in flat]
     assert not missing, f"{doc_path.relative_to(_REPO_ROOT)} omits: {missing}"
@@ -205,12 +202,10 @@ def test_default_plugin_docs_pin_host_scope_and_opt_out_layers(
     )
 
 
-# ----- verb/flag-granularity guards -----------------------------------------
+# --- verb/flag-granularity guards
 #
-# Name-granularity guards (above) miss drift WITHIN a subcommand: equip's
-# discover/install verbs and build's --next-wave/--skip flags shipped without a
-# usage line, and an embedded `(v2)` literal lagged behind SCHEMA_VERSION. These
-# turn that finer drift class into a red test too.
+# Name-granularity guards miss drift WITHIN a subcommand (verbs, flags, an
+# embedded `(v2)` literal lagging SCHEMA_VERSION); these catch that finer class.
 
 
 def _context_usage() -> str:
@@ -273,9 +268,8 @@ def test_usage_equipment_schema_version_current() -> None:
 
 @pytest.mark.unit
 def test_usage_build_status_names_the_real_loop_closer() -> None:
-    """`context --help` must describe build --status's close-the-loop command
-    as the actual RECONCILE_HINT, not a stale `rebuild --changed` — the audit
-    found the help text and the CLI disagreeing, which made Claude skip the
+    """`context --help` must name RECONCILE_HINT as build --status's loop closer,
+    not a stale `rebuild --changed`; the mismatch made Claude skip the
     (non-destructive) reconcile."""
     from dummyindex.cli.build_loop.waves import RECONCILE_HINT
 
@@ -292,8 +286,7 @@ def test_usage_build_status_names_the_real_loop_closer() -> None:
 def test_command_reference_documents_platform_agents_and_dedupe() -> None:
     """`--platform agents` (the platform-agnostic selector) and `--dedupe`
     (repair-on-reinstall duplicate removal) must be documented in the
-    command reference — doc-sync guard for the universal-harness-support
-    proposal's install-surface changes."""
+    command reference."""
     text = _COMMAND_REFERENCE.read_text(encoding="utf-8")
     assert "--platform agents" in text, (
         f"{_COMMAND_REFERENCE.relative_to(_REPO_ROOT)} does not document "

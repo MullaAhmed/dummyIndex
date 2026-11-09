@@ -1,11 +1,4 @@
-"""Frozen dataclasses for the context-hygiene GC domain.
-
-Data only — no behaviour. A ``Candidate`` is one generated-doc workspace the
-sweep enumerated, carrying the deterministic *signals* the council reasons
-over. A ``SweepReport`` is the read-only ``gc status`` payload (candidates plus
-the commit-throttle state). A ``DeleteResult`` is what the bounded destructive
-op reports back.
-"""
+"""Frozen, data-only dataclasses for the context-hygiene GC domain."""
 
 from __future__ import annotations
 
@@ -18,9 +11,9 @@ from .enums import CandidateKind
 class Candidate:
     """One generated-doc workspace surfaced by the sweep, with its signals.
 
-    ``signals`` are deterministic tags only (``status:<v>``,
-    ``checklist-partial``, ``report-written``, ``orphan-empty``, ``untracked``,
-    ``age-<n>d``) — no verdict; the council assigns the ``Disposition``.
+    ``signals`` are deterministic tags only (``status:<v>``, ``untracked``,
+    ``age-<n>d``, ...). ``recommendation`` and ``reason`` are the pre-council
+    hint ``scan`` fills; the council assigns the ``Disposition``.
     """
 
     kind: CandidateKind
@@ -30,6 +23,8 @@ class Candidate:
     signals: tuple[str, ...] = ()
     tracked: bool = True
     age_days: int | None = None
+    recommendation: str | None = None
+    reason: str | None = None
 
 
 @dataclass(frozen=True)
@@ -50,10 +45,12 @@ class DeleteResult:
 
     Either ``deleted`` (the dir was removed) or ``refused`` (a guard blocked
     it, with the human-readable ``reason``). ``untracked`` records whether the
-    target was outside git — i.e. its removal was unrecoverable.
+    target was outside git — i.e. its removal was unrecoverable. In dry-run,
+    ``would_delete`` is True when every guard passes.
     """
 
     deleted: bool = False
     refused: bool = False
     reason: str | None = None
     untracked: bool = False
+    would_delete: bool = False

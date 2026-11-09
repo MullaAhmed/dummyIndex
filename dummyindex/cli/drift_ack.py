@@ -1,23 +1,10 @@
-"""`dummyindex context drift-ack` — record drift rows as acknowledged.
+"""`dummyindex context drift-ack`: record drift rows as acknowledged (wire-only).
 
-Wire-only, following the ``cli/gc.py`` shape: parse this command's own flag
-alphabet, lazy-import the domain (``context.domains.drift_acks``) *inside*
-``run`` (the layering rule — ``cli`` imports the domain, never the reverse),
-delegate, print, return an exit code. No suppression policy lives here —
-matching/expiry is owned by the consumer (``context/drift.py``); this verb
-only records and reports judgements.
-
-Modes:
-
-- **record** (default) — ``--feature ID [--path REL] [--reason TEXT]``:
-  append one ack per file. With ``--path``, exactly that file; without it,
-  every currently-drifting file of the feature (today's rows). The recorded
-  sha is the git blob sha on-git, content sha256 off-git.
-- ``--list [--feature ID]`` — print recorded acks (oldest first).
-- ``--clear`` — drop every ack.
-
-The modes are mutually exclusive; mixing their flags is a usage error
-(exit 2), never a silent reinterpretation.
+Matching/expiry belongs to ``context/drift.py``; this only records and reports. Record
+(default): ``--feature ID [--path REL] [--reason TEXT]`` acks that file, or every file of
+the feature drifting now, at its git blob sha (content sha256 off-git). ``--list
+[--feature ID]`` prints recorded acks; ``--clear`` drops all. Mixing modes is a usage
+error (exit 2), never a silent reinterpretation.
 """
 
 from __future__ import annotations
@@ -46,9 +33,7 @@ def run(args: list[str]) -> int:
     it never reaches here.
     """
     scope, explicit_root, rest = parse_path_and_root(args)
-    parsed, leftover = parse_kv_flags(
-        rest, allowed={"--feature", "--path", "--reason"}
-    )
+    parsed, leftover = parse_kv_flags(rest, allowed={"--feature", "--path", "--reason"})
     want_list = "--list" in leftover
     want_clear = "--clear" in leftover
     leftover = [a for a in leftover if a not in ("--list", "--clear")]
@@ -115,9 +100,7 @@ def _record(context_dir: Path, parsed: dict[str, str]) -> int:
         rels = [rel_path]
     else:
         report = compute_drift(project_root)
-        rels = sorted(
-            {r.rel_path for r in report.rows if r.feature_id == feature_id}
-        )
+        rels = sorted({r.rel_path for r in report.rows if r.feature_id == feature_id})
         if not rels:
             print(f"nothing to ack: no drifting rows for feature '{feature_id}'.")
             return 0

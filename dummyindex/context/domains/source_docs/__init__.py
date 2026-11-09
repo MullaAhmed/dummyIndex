@@ -1,20 +1,10 @@
 """Build and read the source-docs catalog under `.context/source-docs/`.
 
-Catalog the markdown / RST / text docs checked into the repo (README,
-CHANGELOG, docs/, ADR/, RFC/, ARCHITECTURE.md, SECURITY.md, BRIEF.md,
-plus any *.md at the repo root) and grade each one against the current
-AST. Drift is flagged via broken-reference ratios — backticked code
-references that no longer match any symbol demote the doc's confidence.
-
-Public surface (kept stable for tests, ``context/build/runner.py``,
-``context/output/instructions.py`` / ``output/docs.py``, and
-``context/domains/features/``):
-
-- ``DocCatalog``, ``DocEntry`` — dataclasses
-- ``build_doc_catalog``, ``discover_default_doc_paths``,
-  ``harvest_json_keys``
-- ``extract_code_refs``, ``find_broken_refs``, ``looks_like_code_ref``
-- ``read_catalog``, ``write_catalog``
+Catalogs the markdown / RST / text docs checked into the repo (README, CHANGELOG,
+docs/, ADR/, RFC/, root ``*.md``, …) and grades each against the current AST:
+backticked code references that no longer match any symbol demote the doc's
+confidence. ``__all__`` is the stable surface for tests, ``build/runner.py``,
+``output/`` and ``domains/features/``.
 """
 
 from __future__ import annotations

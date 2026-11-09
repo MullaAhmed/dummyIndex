@@ -1,19 +1,19 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-06T14:07:00+00:00",
-  "repo_root": "D:\\Projects\\dummyindex-release-0.37.0",
+  "generated_at": "2026-11-08T02:53:01+00:00",
+  "repo_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base",
   "default_discovery_used": true,
   "extra_doc_roots": [],
-  "doc_count": 81,
+  "doc_count": 84,
   "by_confidence": {
-    "high": 18,
+    "high": 20,
     "medium": 24,
-    "low": 39
+    "low": 37
   },
   "docs": [
     {
       "path": "docs/EVOLUTION.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\EVOLUTION.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\EVOLUTION.md",
       "doc_type": "markdown",
       "title": "Optional runtime replay and learning",
       "headings": [
@@ -21,19 +21,19 @@
       ],
       "sha256": "6887df3fea31af01a4c5737ecd0df8c201267ee1b879b16e673646d8d114a67e",
       "size_bytes": 204,
-      "mtime": 1793972323.6953433,
-      "age_delta_seconds": 1491.6669685840607,
+      "mtime": 1794085446.1131215,
+      "age_delta_seconds": 20341.45045900345,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "docs/guide/01-purpose.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\01-purpose.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\01-purpose.md",
       "doc_type": "markdown",
       "title": "01 \u2014 Purpose",
       "headings": [
@@ -50,19 +50,19 @@
       ],
       "sha256": "bce695d88cbbabc635facd47340913c77877ecd37f25e235adbaaa95d4e6a982",
       "size_bytes": 5167,
-      "mtime": 1793972323.6953433,
-      "age_delta_seconds": 1491.6669685840607,
+      "mtime": 1794085446.1141229,
+      "age_delta_seconds": 20341.449457645416,
       "age_bucket": "recent",
       "referenced_count": 5,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "docs/guide/05-council.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\05-council.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\05-council.md",
       "doc_type": "markdown",
       "title": "05 \u2014 Multi-agent council",
       "headings": [
@@ -80,8 +80,8 @@
       ],
       "sha256": "f6e2fcc17068ec7c129faa617bf1fb9febc12f78c1b1e983881d2c0e5072d5a7",
       "size_bytes": 9493,
-      "mtime": 1793972323.6953433,
-      "age_delta_seconds": 1491.6669685840607,
+      "mtime": 1794085446.1151228,
+      "age_delta_seconds": 20341.448457717896,
       "age_bucket": "recent",
       "referenced_count": 19,
       "broken_refs": [
@@ -90,11 +90,11 @@
       "broken_ratio": 0.0526,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "docs/guide/10-non-goals.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\10-non-goals.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\10-non-goals.md",
       "doc_type": "markdown",
       "title": "10 \u2014 Non-goals",
       "headings": [
@@ -116,19 +116,19 @@
       ],
       "sha256": "5e8a3d887422f50f9064ddf449cc5e1ff7320e881d29af062127147e9ec8189a",
       "size_bytes": 4669,
-      "mtime": 1793972323.6953433,
-      "age_delta_seconds": 1491.6669685840607,
+      "mtime": 1794085446.117122,
+      "age_delta_seconds": 20341.44645857811,
       "age_bucket": "recent",
       "referenced_count": 2,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "docs/guide/12-retrieval.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\12-retrieval.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\12-retrieval.md",
       "doc_type": "markdown",
       "title": "12 \u2014 Retrieval model",
       "headings": [
@@ -145,8 +145,8 @@
       ],
       "sha256": "9c1c9c136878b70b1e670cb53369a0db91f120883ab5799a069e07af707948e0",
       "size_bytes": 5476,
-      "mtime": 1793972323.6953433,
-      "age_delta_seconds": 1491.6669685840607,
+      "mtime": 1794085446.117122,
+      "age_delta_seconds": 20341.44645857811,
       "age_bucket": "recent",
       "referenced_count": 21,
       "broken_refs": [
@@ -156,11 +156,11 @@
       "broken_ratio": 0.0952,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/audit/agents/architecture.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\audit\\agents\\architecture.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\audit\\agents\\architecture.md",
       "doc_type": "markdown",
       "title": "Architecture auditor \u2014 dummyindex audit panel",
       "headings": [
@@ -174,19 +174,19 @@
       ],
       "sha256": "cd810941ca053ac165d7a952043592cdbe790267e1682bd40df20737e277d255",
       "size_bytes": 2688,
-      "mtime": 1793972323.790275,
-      "age_delta_seconds": 1491.572036743164,
+      "mtime": 1794085446.2422771,
+      "age_delta_seconds": 20341.321303367615,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/audit/agents/correctness.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\audit\\agents\\correctness.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\audit\\agents\\correctness.md",
       "doc_type": "markdown",
       "title": "Correctness auditor \u2014 dummyindex audit panel",
       "headings": [
@@ -200,19 +200,19 @@
       ],
       "sha256": "e56fd5d465340dea4fe0abef3bdb5651a69c6b5639e44cc1e17d180568e76a7e",
       "size_bytes": 2538,
-      "mtime": 1793972323.790275,
-      "age_delta_seconds": 1491.572036743164,
+      "mtime": 1794085446.2422771,
+      "age_delta_seconds": 20341.321303367615,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/audit/agents/data-integrity.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\audit\\agents\\data-integrity.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\audit\\agents\\data-integrity.md",
       "doc_type": "markdown",
       "title": "Data-integrity auditor \u2014 dummyindex audit panel",
       "headings": [
@@ -226,19 +226,19 @@
       ],
       "sha256": "d84c4ccfa7eb76531027f3fa6104ded62074fc2b51b7538973ace52130531a2a",
       "size_bytes": 2550,
-      "mtime": 1793972323.790275,
-      "age_delta_seconds": 1491.572036743164,
+      "mtime": 1794085446.2432797,
+      "age_delta_seconds": 20341.32030081749,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/audit/agents/maintainability.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\audit\\agents\\maintainability.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\audit\\agents\\maintainability.md",
       "doc_type": "markdown",
       "title": "Maintainability auditor \u2014 dummyindex audit panel",
       "headings": [
@@ -252,19 +252,19 @@
       ],
       "sha256": "2b95d8b0e46e86d393cec6dfd4f242e50ab4c8b9b6465c38985bc2e7a3680f05",
       "size_bytes": 2554,
-      "mtime": 1793972323.790275,
-      "age_delta_seconds": 1491.572036743164,
+      "mtime": 1794085446.2432797,
+      "age_delta_seconds": 20341.32030081749,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/audit/agents/over-engineering.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\audit\\agents\\over-engineering.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\audit\\agents\\over-engineering.md",
       "doc_type": "markdown",
       "title": "Over-engineering auditor \u2014 dummyindex audit panel",
       "headings": [
@@ -277,19 +277,19 @@
       ],
       "sha256": "b10a2ca6e44741fbe1755b5d7edcc704c16bc75ecaf3b72d76c44e937a182f58",
       "size_bytes": 4349,
-      "mtime": 1793972323.790275,
-      "age_delta_seconds": 1491.572036743164,
+      "mtime": 1794085446.2432797,
+      "age_delta_seconds": 20341.32030081749,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/audit/agents/performance.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\audit\\agents\\performance.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\audit\\agents\\performance.md",
       "doc_type": "markdown",
       "title": "Performance auditor \u2014 dummyindex audit panel",
       "headings": [
@@ -303,19 +303,19 @@
       ],
       "sha256": "0d64bad1fc9f88d0f01edd2ba31783d67136d81529cd8d2d86285941121cdc2a",
       "size_bytes": 2542,
-      "mtime": 1793972323.7995973,
-      "age_delta_seconds": 1491.5627145767212,
+      "mtime": 1794085446.2432797,
+      "age_delta_seconds": 20341.32030081749,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/audit/agents/security.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\audit\\agents\\security.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\audit\\agents\\security.md",
       "doc_type": "markdown",
       "title": "Security auditor \u2014 dummyindex audit panel",
       "headings": [
@@ -329,19 +329,19 @@
       ],
       "sha256": "413ae178b2d02936e2ab7176fdb6662d5926ad2a39ada22b03f57df0821e8b28",
       "size_bytes": 2591,
-      "mtime": 1793972323.7995973,
-      "age_delta_seconds": 1491.5627145767212,
+      "mtime": 1794085446.2442763,
+      "age_delta_seconds": 20341.31930422783,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/council/19-resume.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\19-resume.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\19-resume.md",
       "doc_type": "markdown",
       "title": "Resumption \u2014 pick up where we left off",
       "headings": [
@@ -359,19 +359,19 @@
       ],
       "sha256": "9de869751f7b623c168158653c8772ab6207c1c3c0be5ff422277453934000ce",
       "size_bytes": 3084,
-      "mtime": 1793972323.7995973,
-      "age_delta_seconds": 1491.5627145767212,
+      "mtime": 1794085446.247276,
+      "age_delta_seconds": 20341.316304445267,
       "age_bucket": "recent",
       "referenced_count": 1,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/council/22-parallel-dispatch.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\22-parallel-dispatch.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\22-parallel-dispatch.md",
       "doc_type": "markdown",
       "title": "Parallel dispatch \u2014 the council batch loop",
       "headings": [
@@ -392,19 +392,63 @@
       ],
       "sha256": "783bb225f9a0833b12777c82b485e79094a0698f26d29807f2148c83d4758ff9",
       "size_bytes": 2596,
-      "mtime": 1793972323.7995973,
-      "age_delta_seconds": 1491.5627145767212,
+      "mtime": 1794085446.2482767,
+      "age_delta_seconds": 20341.31530380249,
       "age_bucket": "recent",
       "referenced_count": 1,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+    },
+    {
+      "path": "dummyindex/skills/equip/sourcing.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\equip\\sourcing.md",
+      "doc_type": "markdown",
+      "title": "Sourcing specialists from catalogs",
+      "headings": [
+        "Sourcing specialists from catalogs",
+        "Channels (per target, in order)",
+        "Procedure",
+        "Scan codes",
+        "Offline and degraded runs",
+        "Lifecycle",
+        "Trust"
+      ],
+      "sha256": "97b7b4288edab223c8c026817b13d0bd5a34a38f2565a49c4f9ad05f30090ebb",
+      "size_bytes": 1819,
+      "mtime": 1794098333.2828486,
+      "age_delta_seconds": 7454.280731916428,
+      "age_bucket": "recent",
+      "referenced_count": 0,
+      "broken_refs": [],
+      "broken_ratio": 0.0,
+      "confidence": "high",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+    },
+    {
+      "path": "tests/data/skill-budget.txt",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\tests\\data\\skill-budget.txt",
+      "doc_type": "text",
+      "title": "dummyindex/skills/audit/SKILL.md\t914",
+      "headings": [],
+      "sha256": "662e312eccb0a83088c31860e5766277d14e7ee622cafb9766dc2d470eb20168",
+      "size_bytes": 339,
+      "mtime": 1794104859.9746287,
+      "age_delta_seconds": 927.5889518260956,
+      "age_bucket": "recent",
+      "referenced_count": 0,
+      "broken_refs": [],
+      "broken_ratio": 0.0,
+      "confidence": "high",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "tests/fixtures/evolve/audit-report.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\tests\\fixtures\\evolve\\audit-report.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\tests\\fixtures\\evolve\\audit-report.md",
       "doc_type": "markdown",
       "title": "Audit report \u2014 fixture snippet",
       "headings": [
@@ -414,19 +458,19 @@
       ],
       "sha256": "07023af9d8a343ee694f56892c6ea38c5e9bdc4236f33935e7222f3f6a561dfd",
       "size_bytes": 628,
-      "mtime": 1793972323.8832178,
-      "age_delta_seconds": 1491.479094028473,
+      "mtime": 1794085446.329894,
+      "age_delta_seconds": 20341.233686447144,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "tests/fixtures/evolve/session-now.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\tests\\fixtures\\evolve\\session-now.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\tests\\fixtures\\evolve\\session-now.md",
       "doc_type": "markdown",
       "title": "Now",
       "headings": [
@@ -435,19 +479,19 @@
       ],
       "sha256": "0f6145cb166ee39be51cd9bd97db27072fc15740441d726795db1ee85244d51b",
       "size_bytes": 265,
-      "mtime": 1793972323.8832178,
-      "age_delta_seconds": 1491.479094028473,
+      "mtime": 1794085446.329894,
+      "age_delta_seconds": 20341.233686447144,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "tests/fixtures/evolve/session-recent.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\tests\\fixtures\\evolve\\session-recent.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\tests\\fixtures\\evolve\\session-recent.md",
       "doc_type": "markdown",
       "title": "Recent",
       "headings": [
@@ -456,19 +500,19 @@
       ],
       "sha256": "93c719564f5abc9ebdbb5c8e7fe0dbab01c77015f0c8819260cc736fb957f085",
       "size_bytes": 237,
-      "mtime": 1793972323.8832178,
-      "age_delta_seconds": 1491.479094028473,
+      "mtime": 1794085446.329894,
+      "age_delta_seconds": 20341.233686447144,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "tests/fixtures/legacy_skill_md/SKILL.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\tests\\fixtures\\legacy_skill_md\\SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\tests\\fixtures\\legacy_skill_md\\SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex \u2014 index this repo",
       "headings": [
@@ -477,19 +521,19 @@
       ],
       "sha256": "3e3ee7e19390f58459451d844fd8250cc7b1560fc45c40e27ab5427990d83bcd",
       "size_bytes": 628,
-      "mtime": 1793972323.8864963,
-      "age_delta_seconds": 1491.4758155345917,
+      "mtime": 1794085446.3328936,
+      "age_delta_seconds": 20341.230686903,
       "age_bucket": "recent",
       "referenced_count": 1,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "CONTRIBUTING.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\CONTRIBUTING.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\CONTRIBUTING.md",
       "doc_type": "markdown",
       "title": "Contributing to dummyindex",
       "headings": [
@@ -501,8 +545,8 @@
       ],
       "sha256": "4e01734b9e6a70e21456923a34ea3e43c220e623cb3e1bcc9f23e54dbae5f502",
       "size_bytes": 2690,
-      "mtime": 1793972323.6882834,
-      "age_delta_seconds": 1491.6740283966064,
+      "mtime": 1794085446.1111224,
+      "age_delta_seconds": 20341.452458143234,
       "age_bucket": "recent",
       "referenced_count": 2,
       "broken_refs": [
@@ -512,67 +556,11 @@
       "broken_ratio": 1.0,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
-    },
-    {
-      "path": "benchmarks/RUN_LATER.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\benchmarks\\RUN_LATER.md",
-      "doc_type": "markdown",
-      "title": "Run the benchmark later \u2014 quick runbook",
-      "headings": [
-        "Run the benchmark later \u2014 quick runbook",
-        "0. Prerequisites (once)",
-        "1. Phase 0 \u2014 enrich every target repo (paid, tracked separately)",
-        "2. Sweep both suites (paid)",
-        "3. Monitor",
-        "4. Grade SWE-bench patches (after swebench hits 100)",
-        "5. Final report",
-        "Troubleshooting"
-      ],
-      "sha256": "3bfc09d3d7ae964735dc9b44740331a9d92c2ba7f26b1b043830084c71db71a7",
-      "size_bytes": 3636,
-      "mtime": 1793972323.6897547,
-      "age_delta_seconds": 1491.6725571155548,
-      "age_bucket": "recent",
-      "referenced_count": 4,
-      "broken_refs": [
-        "results/benchmarks/enrichment/runs.jsonl",
-        "index_state",
-        "resolved.json"
-      ],
-      "broken_ratio": 0.75,
-      "confidence": "medium",
-      "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
-    },
-    {
-      "path": "benchmarks/retrieval/RESULTS.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\benchmarks\\retrieval\\RESULTS.md",
-      "doc_type": "markdown",
-      "title": "Retrieval benchmark results",
-      "headings": [
-        "Retrieval benchmark results",
-        "Confirmation: fresh untouched set (holdout-2)",
-        "Batch 2: 50 measured iterations (2026-11-05)"
-      ],
-      "sha256": "e71c54745127a446f30c6b42e367c007e88d6f46b77817c5caea1badfa3de462",
-      "size_bytes": 8472,
-      "mtime": 1793972523.0050895,
-      "age_delta_seconds": 1292.3572223186493,
-      "age_bucket": "recent",
-      "referenced_count": 4,
-      "broken_refs": [
-        "questions_holdout2.json",
-        "questions_holdout3.json"
-      ],
-      "broken_ratio": 0.5,
-      "confidence": "medium",
-      "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "docs/README.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\README.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\README.md",
       "doc_type": "markdown",
       "title": "Documentation",
       "headings": [
@@ -583,8 +571,8 @@
       ],
       "sha256": "315995715930d104663e890f21a2801113eb347ff3d890239dd23cd2ca522f2c",
       "size_bytes": 2890,
-      "mtime": 1793972323.6953433,
-      "age_delta_seconds": 1491.6669685840607,
+      "mtime": 1794085446.1131215,
+      "age_delta_seconds": 20341.45045900345,
       "age_bucket": "recent",
       "referenced_count": 1,
       "broken_refs": [
@@ -593,11 +581,11 @@
       "broken_ratio": 1.0,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "docs/guide/02-mental-model.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\02-mental-model.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\02-mental-model.md",
       "doc_type": "markdown",
       "title": "02 \u2014 Mental model",
       "headings": [
@@ -611,8 +599,8 @@
       ],
       "sha256": "511bbf4dcacdbe0dfd0569a2ad56d7a40fff108e55d74d4dc71a9802bb98a460",
       "size_bytes": 2884,
-      "mtime": 1793972323.6953433,
-      "age_delta_seconds": 1491.6669685840607,
+      "mtime": 1794085446.1141229,
+      "age_delta_seconds": 20341.449457645416,
       "age_bucket": "recent",
       "referenced_count": 1,
       "broken_refs": [
@@ -621,11 +609,11 @@
       "broken_ratio": 1.0,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "docs/guide/03-architecture.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\03-architecture.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\03-architecture.md",
       "doc_type": "markdown",
       "title": "03 \u2014 Architecture",
       "headings": [
@@ -641,8 +629,8 @@
       ],
       "sha256": "2064d241f43fd654ac8fc4bf8435c3e51ac0674a4b1bd64ffa2255eb4317e30f",
       "size_bytes": 12792,
-      "mtime": 1793972323.6953433,
-      "age_delta_seconds": 1491.6669685840607,
+      "mtime": 1794085446.1141229,
+      "age_delta_seconds": 20341.449457645416,
       "age_bucket": "recent",
       "referenced_count": 26,
       "broken_refs": [
@@ -660,11 +648,11 @@
       "broken_ratio": 0.3846,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "docs/guide/04-data-model.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\04-data-model.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\04-data-model.md",
       "doc_type": "markdown",
       "title": "04 \u2014 `.context/` data model",
       "headings": [
@@ -677,8 +665,8 @@
       ],
       "sha256": "d3c6e4bb6acdc60c4af06afd9c797d59e001dffc57378a01e5de0243be2de317",
       "size_bytes": 14026,
-      "mtime": 1793972323.6953433,
-      "age_delta_seconds": 1491.6669685840607,
+      "mtime": 1794085446.1151228,
+      "age_delta_seconds": 20341.448457717896,
       "age_bucket": "recent",
       "referenced_count": 51,
       "broken_refs": [
@@ -695,11 +683,88 @@
       "broken_ratio": 0.1765,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+    },
+    {
+      "path": "docs/reference/01-conventions.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\reference\\01-conventions.md",
+      "doc_type": "markdown",
+      "title": "01 \u2014 Conventions",
+      "headings": [
+        "01 \u2014 Conventions",
+        "Table of contents",
+        "1. Folder organisation",
+        "2. Layering rules",
+        "3. Where does a new module go?",
+        "4. File-size & splitting rules",
+        "5. Naming",
+        "6. Constants must be enums",
+        "7. Every data class is frozen",
+        "8. CLI subcommand shape",
+        "cli/init.py",
+        "9. Module-class shape",
+        "10. Errors: explicit exception hierarchy",
+        "11. JSON read/write helpers",
+        "12. Logging",
+        "13. Security",
+        "14. Testing",
+        "15. Pre-flight",
+        "16. KISS, YAGNI, no single-line wrappers, no dangling code",
+        "17. Things to avoid",
+        "18. BOS sections that do not apply here"
+      ],
+      "sha256": "7c99719fc424fb2ccfc2c0574d403948c1b5e54b3382fbce87b365d16cc989bc",
+      "size_bytes": 40645,
+      "mtime": 1794105787.562071,
+      "age_delta_seconds": 0.0015094280242919922,
+      "age_bucket": "recent",
+      "referenced_count": 94,
+      "broken_refs": [
+        "_common.py",
+        "sanitize_label",
+        "export.to_html",
+        "to_html",
+        "_html_assets.py",
+        "context/output/viewer.py",
+        "snake_case",
+        "PascalCase",
+        "self._cache",
+        "out_path",
+        "cache_root",
+        "export/canvas.py",
+        "obsidian_canvas.py",
+        "CanvasRenderer",
+        "ObsidianCanvasRenderer",
+        "Enum",
+        "StrEnum",
+        "IntEnum",
+        "Literal",
+        "enum.StrEnum",
+        "ValueError",
+        "reconcile_gate",
+        "Exception",
+        "_to_dict()",
+        "dataclasses.asdict",
+        "_from_dict()",
+        "Meta.SCHEMA_VERSION",
+        "runtime/logging.py",
+        "esc()",
+        "safeKind()",
+        "style.cssText",
+        "runtime.security.sanitize_label",
+        "pyproject.toml",
+        "context.build.manifest",
+        "ObsidianFoo",
+        "Neo4jBar"
+      ],
+      "broken_ratio": 0.383,
+      "confidence": "medium",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/agents/architect.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\agents\\architect.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\agents\\architect.md",
       "doc_type": "markdown",
       "title": "Software Architect \u2014 dummyindex council persona",
       "headings": [
@@ -719,8 +784,8 @@
       ],
       "sha256": "07f4674b58709168a3d0857d1e6165d35cee1f53ae2e2d39f7f2ff7b7d0f74fe",
       "size_bytes": 5774,
-      "mtime": 1793972323.790275,
-      "age_delta_seconds": 1491.572036743164,
+      "mtime": 1794085446.240276,
+      "age_delta_seconds": 20341.32330441475,
       "age_bucket": "recent",
       "referenced_count": 14,
       "broken_refs": [
@@ -730,11 +795,11 @@
       "broken_ratio": 0.1429,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/agents/critic-database.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\agents\\critic-database.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\agents\\critic-database.md",
       "doc_type": "markdown",
       "title": "Database critic \u2014 dummyindex concerns-only persona",
       "headings": [
@@ -750,8 +815,8 @@
       ],
       "sha256": "41308b66aabc562e547bf08f2f1db6f7ab0c47ce305d543c2ac43b3531ee5d71",
       "size_bytes": 3821,
-      "mtime": 1793972323.790275,
-      "age_delta_seconds": 1491.572036743164,
+      "mtime": 1794085446.240276,
+      "age_delta_seconds": 20341.32330441475,
       "age_bucket": "recent",
       "referenced_count": 7,
       "broken_refs": [
@@ -760,11 +825,11 @@
       "broken_ratio": 0.1429,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/agents/critic-product.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\agents\\critic-product.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\agents\\critic-product.md",
       "doc_type": "markdown",
       "title": "No PM-specific subagent is assumed on either host. The persona instructions",
       "headings": [
@@ -783,8 +848,8 @@
       ],
       "sha256": "4be8b6398502c04ac586c56281f4a4c7a88c469a62b04c8c6315a32c0bd7321d",
       "size_bytes": 3055,
-      "mtime": 1793972323.790275,
-      "age_delta_seconds": 1491.572036743164,
+      "mtime": 1794085446.240276,
+      "age_delta_seconds": 20341.32330441475,
       "age_bucket": "recent",
       "referenced_count": 6,
       "broken_refs": [
@@ -793,11 +858,11 @@
       "broken_ratio": 0.1667,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/agents/dev.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\agents\\dev.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\agents\\dev.md",
       "doc_type": "markdown",
       "title": "subagent_type resolved per-feature via `dummyindex context dev-pick`;",
       "headings": [
@@ -833,8 +898,8 @@
       ],
       "sha256": "f20dab6389509b1eaabbbdd4fa7fdf9e9497ca47fddb95e7c2bc56db85c4a1c9",
       "size_bytes": 6432,
-      "mtime": 1793972323.790275,
-      "age_delta_seconds": 1491.572036743164,
+      "mtime": 1794085446.2412753,
+      "age_delta_seconds": 20341.322305202484,
       "age_bucket": "recent",
       "referenced_count": 9,
       "broken_refs": [
@@ -843,11 +908,11 @@
       "broken_ratio": 0.1111,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/audit/agents/tests.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\audit\\agents\\tests.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\audit\\agents\\tests.md",
       "doc_type": "markdown",
       "title": "Test-coverage auditor \u2014 dummyindex audit panel",
       "headings": [
@@ -861,8 +926,8 @@
       ],
       "sha256": "6230757f726dfcddc5b0bffb59d5c48abb81e58c570a1db460b6f7884769ec45",
       "size_bytes": 2507,
-      "mtime": 1793972323.7995973,
-      "age_delta_seconds": 1491.5627145767212,
+      "mtime": 1794085446.2442763,
+      "age_delta_seconds": 20341.31930422783,
       "age_bucket": "recent",
       "referenced_count": 1,
       "broken_refs": [
@@ -871,20 +936,20 @@
       "broken_ratio": 1.0,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/audit/closeout.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\audit\\closeout.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\audit\\closeout.md",
       "doc_type": "markdown",
       "title": "Audit closeout recipe",
       "headings": [
         "Audit closeout recipe"
       ],
-      "sha256": "28f73aba86b1225299657f75c00b013d15918ae94d7b3359d0107b07d10584c8",
-      "size_bytes": 4243,
-      "mtime": 1793972323.7995973,
-      "age_delta_seconds": 1491.5627145767212,
+      "sha256": "44bfc18af0341bee62bacd89cd43136e7fc9006f1a1d05e7b54f8f89a015b759",
+      "size_bytes": 4373,
+      "mtime": 1794105787.5635805,
+      "age_delta_seconds": 0.0,
       "age_bucket": "recent",
       "referenced_count": 2,
       "broken_refs": [
@@ -894,11 +959,11 @@
       "broken_ratio": 1.0,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/council/10-structural-review.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\10-structural-review.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\10-structural-review.md",
       "doc_type": "markdown",
       "title": "Structural review (pre-stage)",
       "headings": [
@@ -920,8 +985,8 @@
       ],
       "sha256": "78b882eee5223edeed130cb902084b64720e3a5789be08cffc0a9aba1238ece5",
       "size_bytes": 5204,
-      "mtime": 1793972323.7995973,
-      "age_delta_seconds": 1491.5627145767212,
+      "mtime": 1794085446.2462764,
+      "age_delta_seconds": 20341.31730413437,
       "age_bucket": "recent",
       "referenced_count": 9,
       "broken_refs": [
@@ -930,11 +995,11 @@
       "broken_ratio": 0.1111,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/council/18-filter-trivial.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\18-filter-trivial.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\18-filter-trivial.md",
       "doc_type": "markdown",
       "title": "Trivial-feature filter \u2192 consolidation decision",
       "headings": [
@@ -954,8 +1019,8 @@
       ],
       "sha256": "92b40a8612e2d957509db8298b34405f3a4d0de35136986066e0b0873e9b9548",
       "size_bytes": 10008,
-      "mtime": 1793972323.7995973,
-      "age_delta_seconds": 1491.5627145767212,
+      "mtime": 1794085446.247276,
+      "age_delta_seconds": 20341.316304445267,
       "age_bucket": "recent",
       "referenced_count": 28,
       "broken_refs": [
@@ -971,11 +1036,11 @@
       "broken_ratio": 0.2857,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/council/20-specify.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\20-specify.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\20-specify.md",
       "doc_type": "markdown",
       "title": "Stage 1 \u2014 `/specify` (dev drafts spec.md + plan.md)",
       "headings": [
@@ -992,8 +1057,8 @@
       ],
       "sha256": "86fc3945340f7dc53056ea473ab4e600ddfbec1a5024494c4300580fffa13236",
       "size_bytes": 3500,
-      "mtime": 1793972323.7995973,
-      "age_delta_seconds": 1491.5627145767212,
+      "mtime": 1794085446.2482767,
+      "age_delta_seconds": 20341.31530380249,
       "age_bucket": "recent",
       "referenced_count": 11,
       "broken_refs": [
@@ -1005,11 +1070,11 @@
       "broken_ratio": 0.3636,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/council/30-plan.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\30-plan.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\30-plan.md",
       "doc_type": "markdown",
       "title": "Stage 2 \u2014 `/plan` (architect reorganises plan.md)",
       "headings": [
@@ -1026,8 +1091,8 @@
       ],
       "sha256": "af8c6ca2bf258e21f75cc3f0f296f5eff5106433760739b13440eefe504c80b9",
       "size_bytes": 3213,
-      "mtime": 1793972323.7995973,
-      "age_delta_seconds": 1491.5627145767212,
+      "mtime": 1794085446.2482767,
+      "age_delta_seconds": 20341.31530380249,
       "age_bucket": "recent",
       "referenced_count": 11,
       "broken_refs": [
@@ -1038,11 +1103,11 @@
       "broken_ratio": 0.2727,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/council/50-flow-narrative.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\50-flow-narrative.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\50-flow-narrative.md",
       "doc_type": "markdown",
       "title": "Flow refinement \u2014 keep, discard, narrate",
       "headings": [
@@ -1059,8 +1124,8 @@
       ],
       "sha256": "801da2aaecd9ec2e6ab6d7f1de89de5d21a6f9fb2bbdc5c3340fcbbec6d9436f",
       "size_bytes": 3101,
-      "mtime": 1793972323.7995973,
-      "age_delta_seconds": 1491.5627145767212,
+      "mtime": 1794085446.2492754,
+      "age_delta_seconds": 20341.314305067062,
       "age_bucket": "recent",
       "referenced_count": 8,
       "broken_refs": [
@@ -1069,11 +1134,11 @@
       "broken_ratio": 0.125,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/council/60-doc-reorg.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\60-doc-reorg.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\60-doc-reorg.md",
       "doc_type": "markdown",
       "title": "Doc reorg \u2014 reorganise the repo's real docs in place (DESTRUCTIVE)",
       "headings": [
@@ -1085,8 +1150,8 @@
       ],
       "sha256": "6ff8dad4f87c21338ef929693f8a14ef581b95b87e003c907282e43c915836c7",
       "size_bytes": 3020,
-      "mtime": 1793972323.8064456,
-      "age_delta_seconds": 1491.555866241455,
+      "mtime": 1794085446.2502766,
+      "age_delta_seconds": 20341.31330394745,
       "age_bucket": "recent",
       "referenced_count": 6,
       "broken_refs": [
@@ -1095,11 +1160,11 @@
       "broken_ratio": 0.1667,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/evolve/native-protocol.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\evolve\\native-protocol.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\evolve\\native-protocol.md",
       "doc_type": "markdown",
       "title": "Native adaptive improvement",
       "headings": [
@@ -1107,8 +1172,8 @@
       ],
       "sha256": "e49c910c40b75307dec6b6e90849380a74a048a6335eea38fe5989c7521493fa",
       "size_bytes": 6321,
-      "mtime": 1793972323.8068817,
-      "age_delta_seconds": 1491.555430173874,
+      "mtime": 1794085446.2583184,
+      "age_delta_seconds": 20341.305262088776,
       "age_bucket": "recent",
       "referenced_count": 2,
       "broken_refs": [
@@ -1118,11 +1183,40 @@
       "broken_ratio": 1.0,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+    },
+    {
+      "path": "dummyindex/skills/evolve/probation-protocol.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\evolve\\probation-protocol.md",
+      "doc_type": "markdown",
+      "title": "Probation protocol",
+      "headings": [
+        "Probation protocol",
+        "Rubric",
+        "Order",
+        "Routing",
+        "Report wording",
+        "Safety"
+      ],
+      "sha256": "a4eb86831f69d6c143c8b4c5eba19fde5f2c9e4bed1ae1fde9fdb3046ffff583",
+      "size_bytes": 2154,
+      "mtime": 1794095450.7001321,
+      "age_delta_seconds": 10336.863448381424,
+      "age_bucket": "recent",
+      "referenced_count": 4,
+      "broken_refs": [
+        "applies_when",
+        "needs_enforcement",
+        "demote_pending"
+      ],
+      "broken_ratio": 0.75,
+      "confidence": "medium",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/gc/SKILL.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\gc\\SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\gc\\SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-gc / $dummyindex-gc \u2014 context-hygiene GC council sweep",
       "headings": [
@@ -1133,10 +1227,10 @@
         "Discipline (non-negotiable)",
         "CLI reference (deterministic state only)"
       ],
-      "sha256": "84e048ce805209c55a040df09c0301a54f0532b5a6d1ff3d10880529cb16ddcb",
-      "size_bytes": 15924,
-      "mtime": 1793972323.8068817,
-      "age_delta_seconds": 1491.555430173874,
+      "sha256": "94f243a8125f0ac720ae13e270ecaa59f75fac7fd6183b2bac1267326c4f2809",
+      "size_bytes": 15604,
+      "mtime": 1794091469.0386982,
+      "age_delta_seconds": 14318.52488231659,
       "age_bucket": "recent",
       "referenced_count": 20,
       "broken_refs": [
@@ -1148,11 +1242,11 @@
       "broken_ratio": 0.2,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/retrieval/00-overview.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\retrieval\\00-overview.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\retrieval\\00-overview.md",
       "doc_type": "markdown",
       "title": "Retrieval \u2014 PageIndex-style tree search",
       "headings": [
@@ -1167,8 +1261,8 @@
       ],
       "sha256": "be919c7b5b80de0dde9b970df40c616002a3fcdf9c0da6dd0ccd33d95996dcae",
       "size_bytes": 3650,
-      "mtime": 1793972323.8068817,
-      "age_delta_seconds": 1491.555430173874,
+      "mtime": 1794085446.2613182,
+      "age_delta_seconds": 20341.302262306213,
       "age_bucket": "recent",
       "referenced_count": 13,
       "broken_refs": [
@@ -1179,11 +1273,11 @@
       "broken_ratio": 0.2308,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/retrieval/10-feature-lookup.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\retrieval\\10-feature-lookup.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\retrieval\\10-feature-lookup.md",
       "doc_type": "markdown",
       "title": "Feature lookup",
       "headings": [
@@ -1201,8 +1295,8 @@
       ],
       "sha256": "fc91864e26793104e81af49fb4c88aaae515b46e58995acc7d8cf5fce5c91887",
       "size_bytes": 4362,
-      "mtime": 1793972323.8068817,
-      "age_delta_seconds": 1491.555430173874,
+      "mtime": 1794085446.2613182,
+      "age_delta_seconds": 20341.302262306213,
       "age_bucket": "recent",
       "referenced_count": 9,
       "broken_refs": [
@@ -1213,11 +1307,11 @@
       "broken_ratio": 0.3333,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/retrieval/20-symbol-lookup.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\retrieval\\20-symbol-lookup.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\retrieval\\20-symbol-lookup.md",
       "doc_type": "markdown",
       "title": "Symbol lookup",
       "headings": [
@@ -1234,8 +1328,8 @@
       ],
       "sha256": "d6c15ac4bdd75cdecc1757711b6f18ea5c1c8b2aeca3389915ef7cdd86cdf71b",
       "size_bytes": 3354,
-      "mtime": 1793972323.8068817,
-      "age_delta_seconds": 1491.555430173874,
+      "mtime": 1794085446.2613182,
+      "age_delta_seconds": 20341.302262306213,
       "age_bucket": "recent",
       "referenced_count": 7,
       "broken_refs": [
@@ -1246,15 +1340,16 @@
       "broken_ratio": 0.4286,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "CHANGELOG.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\CHANGELOG.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\CHANGELOG.md",
       "doc_type": "markdown",
       "title": "Changelog",
       "headings": [
         "Changelog",
+        "0.37.0 (2026-11-06)",
         "Unreleased",
         "0.36.0 (2026-09-02)",
         "0.35.0 (2026-08-07)",
@@ -1302,14 +1397,15 @@
         "0.12.0 \u2014 source-docs + retrieval + viewer + reality-check",
         "0.5.0 \u2014 Claude Code only"
       ],
-      "sha256": "6f6747d7268866f332fa0cec0ccb150c011f350d298d7688cdb817ef3bb88483",
-      "size_bytes": 99195,
-      "mtime": 1793972782.6462567,
-      "age_delta_seconds": 1032.7160551548004,
+      "sha256": "3c6c8a6b3910b3f99d91116a5de891428724d9a307af76ee17362ea2cca9adfd",
+      "size_bytes": 99245,
+      "mtime": 1794085446.1111224,
+      "age_delta_seconds": 20341.452458143234,
       "age_bucket": "recent",
-      "referenced_count": 298,
+      "referenced_count": 301,
       "broken_refs": [
         "benchmarks/retrieval/RESULTS.md",
+        "dummyindex_version",
         "features/seed-rank.json",
         "features/graph-communities.json",
         "imports_from",
@@ -1399,7 +1495,6 @@
         "load_manifest",
         "save_manifest",
         "detect_incremental",
-        "runtime/security.py",
         "validate_graph_path",
         "pipeline/build/_common.py",
         "dummyindex.runtime.security",
@@ -1451,14 +1546,14 @@
         "V0_SCOPE.md",
         "pipeline.structure"
       ],
-      "broken_ratio": 0.4732,
+      "broken_ratio": 0.4698,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "README.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\README.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\README.md",
       "doc_type": "markdown",
       "title": "dummyindex",
       "headings": [
@@ -1481,8 +1576,8 @@
       ],
       "sha256": "ae902192e127693c4c56835f43453d06669b0d8d3cc095c7b05c6836debec25b",
       "size_bytes": 11385,
-      "mtime": 1793972323.6892836,
-      "age_delta_seconds": 1491.6730282306671,
+      "mtime": 1794085446.1121216,
+      "age_delta_seconds": 20341.45145893097,
       "age_bucket": "recent",
       "referenced_count": 6,
       "broken_refs": [
@@ -1494,11 +1589,11 @@
       "broken_ratio": 0.6667,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "SECURITY.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\SECURITY.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\SECURITY.md",
       "doc_type": "markdown",
       "title": "Security Policy",
       "headings": [
@@ -1510,8 +1605,8 @@
       ],
       "sha256": "3d0bcc68c4bde27fc078b84eb5658b20400d66040c55f043b734d2ef4a5a4a7d",
       "size_bytes": 4127,
-      "mtime": 1793972323.6897547,
-      "age_delta_seconds": 1491.6725571155548,
+      "mtime": 1794085446.1121216,
+      "age_delta_seconds": 20341.45145893097,
       "age_bucket": "recent",
       "referenced_count": 8,
       "broken_refs": [
@@ -1524,52 +1619,11 @@
       "broken_ratio": 0.625,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
-    },
-    {
-      "path": "benchmarks/README.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\benchmarks\\README.md",
-      "doc_type": "markdown",
-      "title": "dummyindex benchmark harness",
-      "headings": [
-        "dummyindex benchmark harness",
-        "Phase 0 \u2014 enrichment BEFORE benchmarking (required)",
-        "free plan: lists unique (repo, commit) targets and their state",
-        "paid: full council build (~72 repos across both suites)",
-        "Suites",
-        "Safety gates",
-        "Contamination controls",
-        "Usage",
-        "real sweep (costs money):",
-        "Metrics & gates",
-        "Layout",
-        "Smoke stage (first paid step)"
-      ],
-      "sha256": "223e1f214baf2f26d0c04cd572bd399f3222bcae83f4d353e8d6c464a8182d54",
-      "size_bytes": 8993,
-      "mtime": 1793972323.6897547,
-      "age_delta_seconds": 1491.6725571155548,
-      "age_bucket": "recent",
-      "referenced_count": 18,
-      "broken_refs": [
-        "AGENTS.md",
-        "results/benchmarks/enrichment/runs.jsonl",
-        "index_state",
-        "base_commit",
-        "scoring/swegrade.sh",
-        "opencode/auth.json",
-        "tests/eval/BASELINE.md",
-        "input_tokens",
-        "output_tokens"
-      ],
-      "broken_ratio": 0.5,
-      "confidence": "low",
-      "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "docs/COMMANDS.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\COMMANDS.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\COMMANDS.md",
       "doc_type": "markdown",
       "title": "Commands",
       "headings": [
@@ -1577,20 +1631,29 @@
         "Agent commands",
         "CLI commands (the agent's backbone)"
       ],
-      "sha256": "0ee27bfc1c935bec67de0914f3677aa74a6b375c795aafe83f0842607fc4b7c8",
-      "size_bytes": 31527,
-      "mtime": 1793972323.6953433,
-      "age_delta_seconds": 1491.6669685840607,
+      "sha256": "e7d9b14f94a2bbb86a93e5d01a97b83a5492c7657cbf1f99e1675dda98f2c511",
+      "size_bytes": 33812,
+      "mtime": 1794101734.259594,
+      "age_delta_seconds": 4053.3039865493774,
       "age_bucket": "recent",
-      "referenced_count": 32,
+      "referenced_count": 41,
       "broken_refs": [
+        ".caveman.json",
+        ".caveman/config.json",
+        "SubagentStart",
         "default_plugins_enabled",
         ".context/config.json",
         "AGENTS.md",
         "cache/drift-acks.json",
         "acked_sha",
         "stop_hook_active",
+        ".context/doc-budget.txt",
+        "tests/data/skill-budget.txt",
+        ".context/style-budget.txt",
         ".claude/settings.json",
+        "Agent",
+        "SendMessage",
+        "doc_guard_enabled",
         ".context/debt.md",
         "now.md",
         ".context/cache/skill-feedback.json",
@@ -1602,17 +1665,16 @@
         "meta.indexed_commit",
         "skills/council/65-reconcile.md",
         ".context/gc/state.json",
-        "doc_guard_enabled",
         "doc_guard_allow"
       ],
-      "broken_ratio": 0.625,
+      "broken_ratio": 0.6829,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "docs/guide/06-personas.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\06-personas.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\06-personas.md",
       "doc_type": "markdown",
       "title": "06 \u2014 Personas",
       "headings": [
@@ -1625,8 +1687,8 @@
       ],
       "sha256": "88acf7d397d9c4eb13847116585a15bbe191b380f522181a12dbd0ec5b0f6472",
       "size_bytes": 6685,
-      "mtime": 1793972323.6953433,
-      "age_delta_seconds": 1491.6669685840607,
+      "mtime": 1794085446.1151228,
+      "age_delta_seconds": 20341.448457717896,
       "age_bucket": "recent",
       "referenced_count": 18,
       "broken_refs": [
@@ -1642,11 +1704,11 @@
       "broken_ratio": 0.4444,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "docs/guide/07-cli.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\07-cli.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\07-cli.md",
       "doc_type": "markdown",
       "title": "07 \u2014 CLI surface",
       "headings": [
@@ -1674,24 +1736,33 @@
         "Status \u2014 read-only overview",
         "What is NOT a CLI command"
       ],
-      "sha256": "344447a982aa3976c3fde2fa573b84b1c4adda2e9202de439b31836732b3455f",
-      "size_bytes": 67633,
-      "mtime": 1793972323.6953433,
-      "age_delta_seconds": 1491.6669685840607,
+      "sha256": "fce1546ccd95cf548f2978d127f51cc76a1a4cda057437d65beccfc49e94c538",
+      "size_bytes": 71807,
+      "mtime": 1794101734.2605944,
+      "age_delta_seconds": 4053.3029861450195,
       "age_bucket": "recent",
-      "referenced_count": 106,
+      "referenced_count": 117,
       "broken_refs": [
         ".claude/settings.json",
+        ".caveman.json",
+        ".caveman/config.json",
+        "SubagentStart",
         ".context/config.json",
         "default_plugins_enabled",
         "AGENTS.override.md",
         "AGENTS.md",
         "README.md",
         "meta.indexed_commit",
+        ".context/doc-budget.txt",
+        "tests/data/skill-budget.txt",
+        ".context/style-budget.txt",
         "stop_hook_active",
         "session_id",
         "transcript_path",
         "now.md",
+        "Agent",
+        "SendMessage",
+        "doc_guard_enabled",
         "settings.json",
         "claude_user_prompt_submit",
         "claude_session_start",
@@ -1725,12 +1796,13 @@
         "settings.local.json",
         "InstallMechanism.VENDOR",
         "SKILL.md",
+        "origin_repo",
+        "origin_ref",
         "upgrade_note",
         "report.md",
         "Path.replace",
         "playbooks/migrate-stray-docs.md",
         "file_path",
-        "doc_guard_enabled",
         "doc_guard_allow",
         "audit.json",
         "description.md",
@@ -1743,14 +1815,14 @@
         "statusline.sh",
         ".context/cache/drift-acks.json"
       ],
-      "broken_ratio": 0.5755,
+      "broken_ratio": 0.6068,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "docs/guide/08-skill.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\08-skill.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\08-skill.md",
       "doc_type": "markdown",
       "title": "08 \u2014 Skill orchestration",
       "headings": [
@@ -1769,8 +1841,8 @@
       ],
       "sha256": "2263828bcab7c5dda6d7d1806062d375281efa773113b0b6429f0487bc7d28b1",
       "size_bytes": 14536,
-      "mtime": 1793972323.6953433,
-      "age_delta_seconds": 1491.6669685840607,
+      "mtime": 1794085446.1161225,
+      "age_delta_seconds": 20341.447458028793,
       "age_bucket": "recent",
       "referenced_count": 14,
       "broken_refs": [
@@ -1784,11 +1856,11 @@
       "broken_ratio": 0.4286,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "docs/guide/09-lifecycle.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\09-lifecycle.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\09-lifecycle.md",
       "doc_type": "markdown",
       "title": "09 \u2014 Lifecycle",
       "headings": [
@@ -1811,8 +1883,8 @@
       ],
       "sha256": "6ad7266c78d2dd7458b6fbc17ce916716e6fcb4aa2b06ea0b11a97991858e442",
       "size_bytes": 21498,
-      "mtime": 1793972323.6953433,
-      "age_delta_seconds": 1491.6669685840607,
+      "mtime": 1794085446.1161225,
+      "age_delta_seconds": 20341.447458028793,
       "age_bucket": "recent",
       "referenced_count": 29,
       "broken_refs": [
@@ -1833,11 +1905,11 @@
       "broken_ratio": 0.4483,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "docs/guide/11-roadmap.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\11-roadmap.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\11-roadmap.md",
       "doc_type": "markdown",
       "title": "11 \u2014 Roadmap",
       "headings": [
@@ -1864,8 +1936,8 @@
       ],
       "sha256": "f58fcced423897eead3ae0cf7ba7525ccc568ed791d95a04fb700e3942c3dc4b",
       "size_bytes": 20559,
-      "mtime": 1793972323.6953433,
-      "age_delta_seconds": 1491.6669685840607,
+      "mtime": 1794085446.117122,
+      "age_delta_seconds": 20341.44645857811,
       "age_bucket": "recent",
       "referenced_count": 55,
       "broken_refs": [
@@ -1905,11 +1977,11 @@
       "broken_ratio": 0.5818,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "docs/guide/README.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\README.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\README.md",
       "doc_type": "markdown",
       "title": "dummyindex \u2014 Conceptual Guide",
       "headings": [
@@ -1920,8 +1992,8 @@
       ],
       "sha256": "cf5aa7b069d92a4ed5262daf2e4d1cdc82f592de6ce622f75b020b949f87562c",
       "size_bytes": 5195,
-      "mtime": 1793972323.6953433,
-      "age_delta_seconds": 1491.6669685840607,
+      "mtime": 1794085446.1181655,
+      "age_delta_seconds": 20341.44541501999,
       "age_bucket": "recent",
       "referenced_count": 7,
       "broken_refs": [
@@ -1933,22 +2005,23 @@
       "broken_ratio": 0.5714,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "docs/guide/closeout.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\guide\\closeout.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\closeout.md",
       "doc_type": "markdown",
       "title": "Close completed work without losing its lessons",
       "headings": [
-        "Close completed work without losing its lessons"
+        "Close completed work without losing its lessons",
+        "Lesson records and learning status"
       ],
-      "sha256": "05f6c2601be8af757dffefd608b4244e76e6383114575e1498812812c9ca291b",
-      "size_bytes": 6118,
-      "mtime": 1793972323.6953433,
-      "age_delta_seconds": 1491.6669685840607,
+      "sha256": "514beae400f4525ecb754d6ce9789057c72b87da7b5ba451b90a2b2270957b77",
+      "size_bytes": 6919,
+      "mtime": 1794085446.1181655,
+      "age_delta_seconds": 20341.44541501999,
       "age_bucket": "recent",
-      "referenced_count": 10,
+      "referenced_count": 11,
       "broken_refs": [
         "reviewed_files",
         "task_id",
@@ -1959,95 +2032,17 @@
         "item_id",
         "item_sha256",
         "learning_reflection",
-        "report.md"
+        "report.md",
+        "legacy_shape"
       ],
       "broken_ratio": 1.0,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
-    },
-    {
-      "path": "docs/reference/01-conventions.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\reference\\01-conventions.md",
-      "doc_type": "markdown",
-      "title": "01 \u2014 Conventions",
-      "headings": [
-        "01 \u2014 Conventions",
-        "Table of contents",
-        "1. Folder organisation",
-        "2. Layering rules",
-        "3. Where does a new module go?",
-        "4. File-size & splitting rules",
-        "5. Naming",
-        "6. Constants must be enums",
-        "7. Every data class is frozen",
-        "8. CLI subcommand shape",
-        "cli/init.py",
-        "9. Module-class shape",
-        "10. Errors: explicit exception hierarchy",
-        "11. JSON read/write helpers",
-        "12. Logging",
-        "13. Security",
-        "14. Testing",
-        "15. Pre-flight",
-        "16. KISS, YAGNI, no single-line wrappers, no dangling code",
-        "17. Things to avoid",
-        "18. BOS sections that do not apply here"
-      ],
-      "sha256": "872237fe12cd81c24aed29b03b81dcae811497b53bd466824313c43cd6c74e42",
-      "size_bytes": 40646,
-      "mtime": 1793972323.6953433,
-      "age_delta_seconds": 1491.6669685840607,
-      "age_bucket": "recent",
-      "referenced_count": 94,
-      "broken_refs": [
-        "_common.py",
-        "security.py",
-        "sanitize_label",
-        "export.to_html",
-        "to_html",
-        "_html_assets.py",
-        "context/output/viewer.py",
-        "snake_case",
-        "PascalCase",
-        "self._cache",
-        "out_path",
-        "cache_root",
-        "export/canvas.py",
-        "obsidian_canvas.py",
-        "CanvasRenderer",
-        "ObsidianCanvasRenderer",
-        "Enum",
-        "StrEnum",
-        "IntEnum",
-        "Literal",
-        "enum.StrEnum",
-        "ValueError",
-        "reconcile_gate",
-        "Exception",
-        "_to_dict()",
-        "dataclasses.asdict",
-        "_from_dict()",
-        "Meta.SCHEMA_VERSION",
-        "runtime/logging.py",
-        "esc()",
-        "safeKind()",
-        "style.cssText",
-        "runtime.security.sanitize_label",
-        "pyproject.toml",
-        "context.build.meta",
-        "context.build.manifest",
-        "ObsidianFoo",
-        "Neo4jBar"
-      ],
-      "broken_ratio": 0.4043,
-      "confidence": "low",
-      "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "docs/sources/installable-sources.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\docs\\sources\\installable-sources.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\sources\\installable-sources.md",
       "doc_type": "markdown",
       "title": "Installable sources catalog",
       "headings": [
@@ -2061,8 +2056,8 @@
       ],
       "sha256": "ae27acac7d0f3b35d560d5bf684499f9f6ce10b1dc5cfa76a27cb163627d0c31",
       "size_bytes": 11853,
-      "mtime": 1793972323.6953433,
-      "age_delta_seconds": 1491.6669685840607,
+      "mtime": 1794085446.1197424,
+      "age_delta_seconds": 20341.443838119507,
       "age_bucket": "recent",
       "referenced_count": 7,
       "broken_refs": [
@@ -2075,11 +2070,11 @@
       "broken_ratio": 0.7143,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/agents/critic-security.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\agents\\critic-security.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\agents\\critic-security.md",
       "doc_type": "markdown",
       "title": "Security critic \u2014 dummyindex concerns-only persona",
       "headings": [
@@ -2096,8 +2091,8 @@
       ],
       "sha256": "ce6a24196ec2f8cc3e0c52f95cf02c7ba25030707ab58d88ef87033bad2a4028",
       "size_bytes": 4841,
-      "mtime": 1793972323.790275,
-      "age_delta_seconds": 1491.572036743164,
+      "mtime": 1794085446.2412753,
+      "age_delta_seconds": 20341.322305202484,
       "age_bucket": "recent",
       "referenced_count": 10,
       "broken_refs": [
@@ -2110,11 +2105,11 @@
       "broken_ratio": 0.5,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/audit/SKILL.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\audit\\SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\audit\\SKILL.md",
       "doc_type": "markdown",
       "title": "Dummyindex audit",
       "headings": [
@@ -2126,10 +2121,10 @@
         "5. Close out one reusable lesson",
         "CLI reference"
       ],
-      "sha256": "438ce877e9b3fce7ac6b849db8eb9853e4460cc9d7ad581a966d9c3a01f4ec4c",
-      "size_bytes": 7053,
-      "mtime": 1793972323.790275,
-      "age_delta_seconds": 1491.572036743164,
+      "sha256": "276ffacb5ffcd7852f392f77c1a46404941d3e97065a831d8f09f6f1f2bc715f",
+      "size_bytes": 6703,
+      "mtime": 1794085446.2422771,
+      "age_delta_seconds": 20341.321303367615,
       "age_bucket": "recent",
       "referenced_count": 6,
       "broken_refs": [
@@ -2142,11 +2137,11 @@
       "broken_ratio": 0.8333,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/build/SKILL.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\build\\SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\build\\SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-build / $dummyindex-build \u2014 grounded execution of a proposal",
       "headings": [
@@ -2156,12 +2151,12 @@
         "Discipline (non-negotiable)",
         "CLI reference (deterministic state only)"
       ],
-      "sha256": "c43cdbf81fbbd172ddc3d932d95be810dfae799609b58ad2a8723b8cf005393b",
-      "size_bytes": 21668,
-      "mtime": 1793972323.7995973,
-      "age_delta_seconds": 1491.5627145767212,
+      "sha256": "641d820861f9d1d679a4c50b833f57c764949329eb6ab37e6278fc88700e102e",
+      "size_bytes": 21872,
+      "mtime": 1794092868.482265,
+      "age_delta_seconds": 12919.081315517426,
       "age_bucket": "recent",
-      "referenced_count": 13,
+      "referenced_count": 14,
       "broken_refs": [
         "checklist.md",
         "proposal.json",
@@ -2169,19 +2164,20 @@
         "../dummyindex/council/65-reconcile.md",
         "SKILL.md",
         "role_path",
+        "SubagentStart",
         "task_id",
         "upgrade_note",
         "docs/guide/closeout.md",
         "pending_verification"
       ],
-      "broken_ratio": 0.7692,
+      "broken_ratio": 0.7857,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/council/00-overview.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\00-overview.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\00-overview.md",
       "doc_type": "markdown",
       "title": "Council overview",
       "headings": [
@@ -2196,8 +2192,8 @@
       ],
       "sha256": "a2f5a0fbabedea9b998a7c038564f2b75f97b7d47c7a19c4d3b3827f7b112feb",
       "size_bytes": 6078,
-      "mtime": 1793972323.7995973,
-      "age_delta_seconds": 1491.5627145767212,
+      "mtime": 1794085446.2462764,
+      "age_delta_seconds": 20341.31730413437,
       "age_bucket": "recent",
       "referenced_count": 16,
       "broken_refs": [
@@ -2215,11 +2211,11 @@
       "broken_ratio": 0.625,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/council/05-onboarding.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\05-onboarding.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\05-onboarding.md",
       "doc_type": "markdown",
       "title": "Onboarding (first run only)",
       "headings": [
@@ -2232,8 +2228,8 @@
       ],
       "sha256": "11106dbc09b78c81642aeeb669cd4b6e3f5fa5386509c248e8d746e6c79bcdd0",
       "size_bytes": 6758,
-      "mtime": 1793972323.7995973,
-      "age_delta_seconds": 1491.5627145767212,
+      "mtime": 1794085446.2462764,
+      "age_delta_seconds": 20341.31730413437,
       "age_bucket": "recent",
       "referenced_count": 6,
       "broken_refs": [
@@ -2246,11 +2242,11 @@
       "broken_ratio": 0.8333,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/council/15-conventions.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\15-conventions.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\15-conventions.md",
       "doc_type": "markdown",
       "title": "Phase 1.5 \u2014 Conventions (agent-derived)",
       "headings": [
@@ -2270,8 +2266,8 @@
       ],
       "sha256": "4102291bd706220bfabc1ad656cfc4e0a672109d69063973441bf1b56b75c021",
       "size_bytes": 7276,
-      "mtime": 1793972323.7995973,
-      "age_delta_seconds": 1491.5627145767212,
+      "mtime": 1794085446.247276,
+      "age_delta_seconds": 20341.316304445267,
       "age_bucket": "recent",
       "referenced_count": 30,
       "broken_refs": [
@@ -2299,11 +2295,11 @@
       "broken_ratio": 0.6667,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/council/40-critique.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\40-critique.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\40-critique.md",
       "doc_type": "markdown",
       "title": "Stage 3 \u2014 `/critique` (critics file concerns, mode-gated)",
       "headings": [
@@ -2321,8 +2317,8 @@
       ],
       "sha256": "2a82a2fef594551be123fd4ac8707adcad8ab743f49a8ac779231047532309ee",
       "size_bytes": 3792,
-      "mtime": 1793972323.7995973,
-      "age_delta_seconds": 1491.5627145767212,
+      "mtime": 1794085446.2482767,
+      "age_delta_seconds": 20341.31530380249,
       "age_bucket": "recent",
       "referenced_count": 12,
       "broken_refs": [
@@ -2335,11 +2331,11 @@
       "broken_ratio": 0.4167,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/council/45-reality-check.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\45-reality-check.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\45-reality-check.md",
       "doc_type": "markdown",
       "title": "Phase 3.5 \u2014 Reality check",
       "headings": [
@@ -2354,8 +2350,8 @@
       ],
       "sha256": "ac3e64dfea9e830725674449c347ed4f0d5f225361a9638e59ebaf2cf920137f",
       "size_bytes": 5106,
-      "mtime": 1793972323.7995973,
-      "age_delta_seconds": 1491.5627145767212,
+      "mtime": 1794085446.2492754,
+      "age_delta_seconds": 20341.314305067062,
       "age_bucket": "recent",
       "referenced_count": 14,
       "broken_refs": [
@@ -2370,11 +2366,11 @@
       "broken_ratio": 0.5,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/council/52-tree-enrich.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\52-tree-enrich.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\52-tree-enrich.md",
       "doc_type": "markdown",
       "title": "Phase 4.5 \u2014 Tree enrichment (node abstracts)",
       "headings": [
@@ -2386,8 +2382,8 @@
       ],
       "sha256": "582ab2eb3128b51a0ffa73a9c1d04ad5b23b77224b1a3eed3f6f769d2e7885a1",
       "size_bytes": 4790,
-      "mtime": 1793972323.7995973,
-      "age_delta_seconds": 1491.5627145767212,
+      "mtime": 1794085446.2492754,
+      "age_delta_seconds": 20341.314305067062,
       "age_bucket": "recent",
       "referenced_count": 12,
       "broken_refs": [
@@ -2403,11 +2399,11 @@
       "broken_ratio": 0.6667,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/council/55-context7.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\55-context7.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\55-context7.md",
       "doc_type": "markdown",
       "title": "Context7 lookup protocol (MCP companion)",
       "headings": [
@@ -2420,8 +2416,8 @@
       ],
       "sha256": "b1bea6d69b11dff4663a56fc72de54b1713004e1e25db71eb3a4dd5f3c78b959",
       "size_bytes": 4579,
-      "mtime": 1793972323.7995973,
-      "age_delta_seconds": 1491.5627145767212,
+      "mtime": 1794085446.2492754,
+      "age_delta_seconds": 20341.314305067062,
       "age_bucket": "recent",
       "referenced_count": 16,
       "broken_refs": [
@@ -2443,11 +2439,11 @@
       "broken_ratio": 0.875,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/council/56-github.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\56-github.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\56-github.md",
       "doc_type": "markdown",
       "title": "GitHub release-check protocol (MCP companion)",
       "headings": [
@@ -2460,8 +2456,8 @@
       ],
       "sha256": "b8845e9058c80b9cccef389284623c7f79e6887f6e4255b5e5d3bf9b716187b9",
       "size_bytes": 4102,
-      "mtime": 1793972323.7995973,
-      "age_delta_seconds": 1491.5627145767212,
+      "mtime": 1794085446.2502766,
+      "age_delta_seconds": 20341.31330394745,
       "age_bucket": "recent",
       "referenced_count": 12,
       "broken_refs": [
@@ -2481,11 +2477,11 @@
       "broken_ratio": 1.0,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/council/58-codebase-scan.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\58-codebase-scan.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\58-codebase-scan.md",
       "doc_type": "markdown",
       "title": "Codebase scan \u2014 author `features/graph.json`",
       "headings": [
@@ -2502,8 +2498,8 @@
       ],
       "sha256": "78acddafcd3162cd1668781e74e997c6b5c7b7be8a553e7bfd1bd0b85794a0f8",
       "size_bytes": 13277,
-      "mtime": 1793972323.7995973,
-      "age_delta_seconds": 1491.5627145767212,
+      "mtime": 1794085446.2502766,
+      "age_delta_seconds": 20341.31330394745,
       "age_bucket": "recent",
       "referenced_count": 26,
       "broken_refs": [
@@ -2527,11 +2523,11 @@
       "broken_ratio": 0.6154,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/council/65-reconcile.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\council\\65-reconcile.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\65-reconcile.md",
       "doc_type": "markdown",
       "title": "Reconcile \u2014 fold a commit delta into the curated index",
       "headings": [
@@ -2542,10 +2538,10 @@
         "Why it's restart-safe",
         "Non-goals"
       ],
-      "sha256": "928b556a368906b52547891aada91e5ebd922473caabe761fd281a732ebaa3de",
-      "size_bytes": 9915,
-      "mtime": 1793972323.8064456,
-      "age_delta_seconds": 1491.555866241455,
+      "sha256": "321a88cd42e519c5b8aae4268f073dee9b5e67b1c01ac99554b41a72ce5d64f6",
+      "size_bytes": 10022,
+      "mtime": 1794101734.2685988,
+      "age_delta_seconds": 4053.2949817180634,
       "age_bucket": "recent",
       "referenced_count": 11,
       "broken_refs": [
@@ -2561,17 +2557,17 @@
       "broken_ratio": 0.7273,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/equip/SKILL.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\equip\\SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\equip\\SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-equip / $dummyindex-equip \u2014 equip the project with a tuned, evolving toolkit",
       "headings": [
         "/dummyindex-equip / $dummyindex-equip \u2014 equip the project with a tuned, evolving toolkit",
         "Shared preparation and use",
-        "Generated vs adopted (the distinction that matters)",
+        "Generated vs adopted",
         "Safety framing (state this to the user)",
         "The lifecycle (verbs)",
         "Plugin manager (discover + install; Claude Code only)",
@@ -2583,30 +2579,34 @@
         "Discipline (spec-led)",
         "Checklist (verify before claiming done)"
       ],
-      "sha256": "7fe59e4bca845307613a913a438f536f86a736539fc598ae6ec0934efd4deaec",
-      "size_bytes": 25497,
-      "mtime": 1793972323.8068817,
-      "age_delta_seconds": 1491.555430173874,
+      "sha256": "4175ed1db4fe30af0a6f012d6690d7a3638eb2016429c80a3fadae22df37a6ee",
+      "size_bytes": 25900,
+      "mtime": 1794098333.2818491,
+      "age_delta_seconds": 7454.281731367111,
       "age_bucket": "recent",
-      "referenced_count": 11,
+      "referenced_count": 15,
       "broken_refs": [
         ".context/equipment.json",
+        "SubagentStart",
         "origin_hash",
         "grounded_in",
         "settings.json",
         "checklist.md",
         "patch.json",
+        "EXPERIENCE.md",
+        "library.json",
+        "equipment.json",
         ".claude/settings.json",
         "SKILL.md"
       ],
-      "broken_ratio": 0.7273,
+      "broken_ratio": 0.8,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/evolve/SKILL.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\evolve\\SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\evolve\\SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-evolve / $dummyindex-evolve \u2014 evidence \u2192 diagnosis \u2192 gated edit \u2192 decision history",
       "headings": [
@@ -2619,10 +2619,10 @@
         "Automatic closeout learning",
         "CLI reference"
       ],
-      "sha256": "4e65b6559ad7acc57b3cc11d24ce4c8001f263607958b2776a801f5e4aab564f",
-      "size_bytes": 9745,
-      "mtime": 1793972323.8068817,
-      "age_delta_seconds": 1491.555430173874,
+      "sha256": "cf380beb992b1867a92e7824c21a1a5a73316e5b02f10473cbb2e79f7ce04a3d",
+      "size_bytes": 9857,
+      "mtime": 1794095450.7001321,
+      "age_delta_seconds": 10336.863448381424,
       "age_bucket": "recent",
       "referenced_count": 13,
       "broken_refs": [
@@ -2641,11 +2641,11 @@
       "broken_ratio": 0.8462,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/evolve/replay-protocol.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\evolve\\replay-protocol.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\evolve\\replay-protocol.md",
       "doc_type": "markdown",
       "title": "Optional runtime replay and learning",
       "headings": [
@@ -2653,8 +2653,8 @@
       ],
       "sha256": "132812281b2dc126cce116978ee7a93fff14fc50b6e7aa43ae1b3321c033ca22",
       "size_bytes": 4714,
-      "mtime": 1793972323.8068817,
-      "age_delta_seconds": 1491.555430173874,
+      "mtime": 1794085446.2583184,
+      "age_delta_seconds": 20341.305262088776,
       "age_bucket": "recent",
       "referenced_count": 5,
       "broken_refs": [
@@ -2667,11 +2667,11 @@
       "broken_ratio": 1.0,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/fleet/SKILL.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\fleet\\SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\fleet\\SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-fleet / $dummyindex-fleet \u2014 fleet-run babysitter",
       "headings": [
@@ -2687,8 +2687,8 @@
       ],
       "sha256": "3fbc953c8f02948e5e1e794823b1bbb8a115f0e93c41ac27104ace4e9b472713",
       "size_bytes": 7218,
-      "mtime": 1793972323.8068817,
-      "age_delta_seconds": 1491.555430173874,
+      "mtime": 1794085446.2593174,
+      "age_delta_seconds": 20341.30426311493,
       "age_bucket": "recent",
       "referenced_count": 4,
       "broken_refs": [
@@ -2700,11 +2700,11 @@
       "broken_ratio": 1.0,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/memory/SKILL.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\memory\\SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\memory\\SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-remember / $dummyindex-remember \u2014 save the session into `.context/session-memory/`",
       "headings": [
@@ -2715,8 +2715,8 @@
       ],
       "sha256": "51e4f6c91bea66bf307d119a59d219453dc0237e3bb00b8ed788524efaa49e24",
       "size_bytes": 2174,
-      "mtime": 1793972323.8068817,
-      "age_delta_seconds": 1491.555430173874,
+      "mtime": 1794085446.2603185,
+      "age_delta_seconds": 20341.303261995316,
       "age_bucket": "recent",
       "referenced_count": 4,
       "broken_refs": [
@@ -2728,11 +2728,11 @@
       "broken_ratio": 1.0,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/plan/SKILL.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\plan\\SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\plan\\SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-plan / $dummyindex-plan \u2014 Grounded planning",
       "headings": [
@@ -2746,31 +2746,32 @@
         "Checklist + spec-led discipline (embed this in how you work)",
         "Done"
       ],
-      "sha256": "40cee9a5ce9f8cd2f9ebb9b26d9807806ba9e1240dd5a6370889fbf132290b2f",
-      "size_bytes": 14742,
-      "mtime": 1793972323.8068817,
-      "age_delta_seconds": 1491.555430173874,
+      "sha256": "9171aab8d0fdb45b0aecb2fa893098375719da704570469b51b8f38f4410929a",
+      "size_bytes": 14909,
+      "mtime": 1794092868.4837997,
+      "age_delta_seconds": 12919.079780817032,
       "age_bucket": "recent",
-      "referenced_count": 15,
+      "referenced_count": 16,
       "broken_refs": [
         "checklist.md",
         "proposal.json",
         "related_features",
         "reused_symbols",
         ".context/equipment.json",
+        "SubagentStart",
         "Wave",
         "Group",
         "DECISIONS.md",
         ".context/config.json"
       ],
-      "broken_ratio": 0.6,
+      "broken_ratio": 0.625,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/retrieval/30-flow-trace.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\retrieval\\30-flow-trace.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\retrieval\\30-flow-trace.md",
       "doc_type": "markdown",
       "title": "Flow trace",
       "headings": [
@@ -2790,8 +2791,8 @@
       ],
       "sha256": "a909015eec717850f0b14e2e9a49698b865b941d02a8b72e3d618765878b85e2",
       "size_bytes": 3908,
-      "mtime": 1793972323.8068817,
-      "age_delta_seconds": 1491.555430173874,
+      "mtime": 1794085446.2623181,
+      "age_delta_seconds": 20341.301262378693,
       "age_bucket": "recent",
       "referenced_count": 14,
       "broken_refs": [
@@ -2806,11 +2807,11 @@
       "broken_ratio": 0.5,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/skill.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\skill.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\skill.md",
       "doc_type": "markdown",
       "title": "/dummyindex / $dummyindex \u2014 The context engine orchestrator",
       "headings": [
@@ -2839,15 +2840,19 @@
         "Failure handling at the orchestrator level",
         "Session memory (sibling skill)",
         "Build loop (sibling skills) \u2014 plan \u2192 equip \u2192 execute",
+        "Placement rule",
         "Final word"
       ],
-      "sha256": "9f02cb2ec92ea94a273d43c609182977bbc91ede2eaa284155d25cef1b65ff76",
-      "size_bytes": 36666,
-      "mtime": 1793972323.8068817,
-      "age_delta_seconds": 1491.555430173874,
+      "sha256": "89351cc4878e4eee2f3349cc00755c700f0d41d121a59c0791fd56c3f4736995",
+      "size_bytes": 37866,
+      "mtime": 1794101734.2695994,
+      "age_delta_seconds": 4053.293981075287,
       "age_bucket": "recent",
-      "referenced_count": 72,
+      "referenced_count": 75,
       "broken_refs": [
+        ".caveman.json",
+        ".caveman/config.json",
+        "SubagentStart",
         "runs_code",
         ".context/config.json",
         "council/05-onboarding.md",
@@ -2891,14 +2896,14 @@
         "checklist.md",
         ".context/equipment.json"
       ],
-      "broken_ratio": 0.5833,
+      "broken_ratio": 0.6,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "dummyindex/skills/update/SKILL.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\dummyindex\\skills\\update\\SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\update\\SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-update / $dummyindex-update [&lt;version|tag&gt;] \u2014 Update (or pin) dummyindex",
       "headings": [
@@ -2910,8 +2915,8 @@
       ],
       "sha256": "3446f4d9143016c97288a65a5261db50ab69022822859956602fad2974be3649",
       "size_bytes": 11173,
-      "mtime": 1793972323.8068817,
-      "age_delta_seconds": 1491.555430173874,
+      "mtime": 1794085446.2633183,
+      "age_delta_seconds": 20341.300262212753,
       "age_bucket": "recent",
       "referenced_count": 11,
       "broken_refs": [
@@ -2928,11 +2933,11 @@
       "broken_ratio": 0.8182,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "tests/eval/BASELINE.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\tests\\eval\\BASELINE.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\tests\\eval\\BASELINE.md",
       "doc_type": "markdown",
       "title": "Retrieval eval baseline",
       "headings": [
@@ -2944,8 +2949,8 @@
       ],
       "sha256": "0887fc040c55da13619f958a53261b3f4244b9446ca77dc419d1e855766b5bc0",
       "size_bytes": 4264,
-      "mtime": 1793972323.8736942,
-      "age_delta_seconds": 1491.488617658615,
+      "mtime": 1794085446.325893,
+      "age_delta_seconds": 20341.237687587738,
       "age_bucket": "recent",
       "referenced_count": 18,
       "broken_refs": [
@@ -2961,11 +2966,11 @@
       "broken_ratio": 0.4444,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "tests/eval/BEHAVIOR_BASELINE.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\tests\\eval\\BEHAVIOR_BASELINE.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\tests\\eval\\BEHAVIOR_BASELINE.md",
       "doc_type": "markdown",
       "title": "Behavior-gate two-arm baseline",
       "headings": [
@@ -2976,8 +2981,8 @@
       ],
       "sha256": "d795f0c303ccd45fbaa06d84b535504c5e717458521fa4337ee2809f1bf794da",
       "size_bytes": 4847,
-      "mtime": 1793972323.8736942,
-      "age_delta_seconds": 1491.488617658615,
+      "mtime": 1794085446.325893,
+      "age_delta_seconds": 20341.237687587738,
       "age_bucket": "recent",
       "referenced_count": 13,
       "broken_refs": [
@@ -2996,11 +3001,11 @@
       "broken_ratio": 0.8462,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     },
     {
       "path": "tests/fixtures/legacy_skill_md/remember_0_36.md",
-      "abs_path": "D:\\Projects\\dummyindex-release-0.37.0\\tests\\fixtures\\legacy_skill_md\\remember_0_36.md",
+      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\tests\\fixtures\\legacy_skill_md\\remember_0_36.md",
       "doc_type": "markdown",
       "title": "/dummyindex-remember / $dummyindex-remember \u2014 save the session into `.context/session-memory/`",
       "headings": [
@@ -3011,8 +3016,8 @@
       ],
       "sha256": "55e763cc3f77626caf824cfba525c3b06bfeb506d72a65f47dab8d5430d5d222",
       "size_bytes": 2169,
-      "mtime": 1793972323.8864963,
-      "age_delta_seconds": 1491.4758155345917,
+      "mtime": 1794085446.3328936,
+      "age_delta_seconds": 20341.230686903,
       "age_bucket": "recent",
       "referenced_count": 5,
       "broken_refs": [
@@ -3025,7 +3030,7 @@
       "broken_ratio": 1.0,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex-release-0.37.0"
+      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
     }
   ]
 }

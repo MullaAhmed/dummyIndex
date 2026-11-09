@@ -1,15 +1,10 @@
 """Scaffold + read the on-disk ``.context/audits/<slug>/`` workspace.
 
-``ensure_audit`` creates the workspace and its three scaffolded artifacts:
-
-- ``audit.json``      — the structured head (``AuditConfig.to_dict``).
-- ``description.md``  — the human-readable brief (the request + scope).
-- ``catalog.json``    — the persona menu the skill picks the panel from.
-- ``findings/``       — empty dir the per-persona finding files land in.
-
-Unlike ``propose``, audit does **not** require a pre-existing ``.context/`` —
-an on-demand audit can run on any repo; the workspace is created on demand.
-All writes are atomic (tmp + ``replace``). No ``print`` here — the CLI prints.
+``ensure_audit`` writes ``audit.json`` (the ``AuditConfig`` head),
+``description.md`` (request + scope), ``catalog.json`` (the persona menu) and an
+empty ``findings/`` dir. Unlike ``propose``, audit needs no pre-existing
+``.context/``, so it runs on any repo. Writes are atomic (tmp + ``replace``); no
+``print`` here — the CLI prints.
 """
 
 from __future__ import annotations
@@ -93,10 +88,8 @@ def audit_dir(context_dir: Path, slug: str) -> Path:
 def report_written(context_dir: Path, slug: str) -> bool:
     """Whether the audit's ``report.md`` exists for a validated slug.
 
-    Shared probe for the synthesis output of an argue-and-audit panel: the
-    CLI's ``audit show`` and the context-hygiene GC both need to know whether
-    a panel has produced its ``report.md``. Validates the slug the same way
-    ``audit_dir`` does (raising ``AuditSlugError`` on an unsafe slug).
+    Shared probe for ``audit show`` and the context-hygiene GC. Validates the slug
+    like ``audit_dir`` (``AuditSlugError`` on an unsafe slug).
     """
     return (audit_dir(context_dir, slug) / "report.md").exists()
 
@@ -127,12 +120,9 @@ def resolve_model(context_dir: Path, model_flag: str | None) -> ModelChoice:
 def resolve_mode(context_dir: Path, mode_flag: str | None) -> CouncilMode:
     """Resolve the audit effort mode — a thin wrapper over ``resolve_depth``.
 
-    Delegates to ``config.resolve_depth(context_dir, DepthCommand.AUDIT, ..)``
-    so per-command depth is resolved one way for every command (precedence:
-    ``--mode``/``--depth`` flag → ``command_depths[audit]`` → ``mode`` →
-    ``standard``). The signature/return are kept so audit's callers and tests
-    are undisturbed; an invalid flag surfaces as ``AuditError`` (the audit-bound
-    error) rather than the generic ``ConfigError``.
+    Precedence: ``--mode``/``--depth`` flag → ``command_depths[audit]`` → ``mode``
+    → ``standard``. An invalid flag raises the audit-bound ``AuditError`` rather
+    than the generic ``ConfigError``.
     """
     try:
         return resolve_depth(context_dir, DepthCommand.AUDIT, mode_flag or None)
@@ -154,14 +144,11 @@ def ensure_audit(
 ) -> AuditStart:
     """Create ``.context/audits/<slug>/`` plus its scaffolded artifacts.
 
-    ``slug`` defaults to ``slugify(description)``. Raises ``AuditExistsError``
-    when the directory exists and ``force`` is False, and ``AuditSlugError``
-    for an unsafe explicit slug.
-
-    The emitted catalog's ``subagent_type`` values are resolved against the
-    repo's installed roster (see ``catalog.resolve_catalog``). ``roster``
-    defaults to ``collect_roster(context_dir.parent, context_dir)``; pass an
-    explicit tuple (or ``None`` for the no-sources identity) to override.
+    ``slug`` defaults to ``slugify(description)``. Raises ``AuditError`` for an
+    empty description, ``AuditExistsError`` when the directory exists and ``force``
+    is False, ``AuditSlugError`` for an unsafe explicit slug. Catalog
+    ``subagent_type`` values are resolved against ``roster`` (default
+    ``collect_roster(context_dir.parent, context_dir)``; ``None`` is the identity).
     """
     if not description or not description.strip():
         raise AuditError("an audit description is required (--describe)")
@@ -227,7 +214,7 @@ def read_audit(context_dir: Path, slug: str) -> AuditConfig:
         raise AuditError(f"could not read {path}: {exc}") from exc
 
 
-# ----- templates ------------------------------------------------------------
+# --- templates
 
 
 def _description_template(config: AuditConfig) -> str:

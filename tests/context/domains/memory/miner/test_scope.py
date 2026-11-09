@@ -1,11 +1,9 @@
 """Guards on what the miner is allowed to write down.
 
-These are the tests for an audit finding, not for a feature. The first cut of
-the miner scanned the host's entire transcript store and rendered a
-200-character slice of raw tool output into `.context/session-memory/`, which
-is git-tracked — so an unrelated private repo's source, and any credential
-that had ever appeared in a tool result, were candidates for being committed
-here. Everything below exists to keep that from coming back.
+`.context/session-memory/` is git-tracked. Scanning the host's whole transcript
+store, or keeping raw tool-output excerpts, would let another private repo's
+source or any credential seen in a tool result be committed here. These tests
+pin project scoping, path sanitization and the no-excerpt rule.
 """
 
 from __future__ import annotations
@@ -78,7 +76,7 @@ def _seed_project(project_dir: Path, path_read: str, output: str) -> None:
     )
 
 
-# --- project scoping -------------------------------------------------------
+# --- project scoping
 
 
 def test_project_directory_name_is_one_component_on_the_native_host(
@@ -162,7 +160,7 @@ def test_skill_feedback_row_cwd_closes_project_name_encoding_collision(
     )
 
 
-# --- path sanitization -----------------------------------------------------
+# --- path sanitization
 
 
 def test_in_repo_paths_become_relative_and_foreign_paths_are_redacted() -> None:

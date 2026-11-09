@@ -1,10 +1,8 @@
 """Tests for the managed Claude Code hook set and the `hooks` CLI verb.
 
-Pre-0.13.5 also installed a ``git post-commit`` hook and a Claude
-``PostToolUse`` hook. Those were retired because they re-ran the
-deterministic backbone on every edit and clobbered council-enriched
-feature folders. Several tests below exercise the upgrade path —
-``install`` must scrub the legacy entries it finds.
+The retired ``git post-commit`` and ``PostToolUse`` hooks re-ran the backbone on
+every edit and clobbered council-enriched feature folders, so ``install`` must
+scrub any legacy entries it finds.
 """
 
 from __future__ import annotations
@@ -71,7 +69,7 @@ def _write_settings(path: Path, payload: dict) -> None:
     path.write_text(json.dumps(payload), encoding="utf-8")
 
 
-# ----- install --------------------------------------------------------------
+# --- install
 
 
 @pytest.mark.integration
@@ -303,8 +301,7 @@ def test_install_preserves_user_hook_co_located_in_managed_stop_entry(
     tmp_path: Path,
 ) -> None:
     """A user hook wired INTO our managed Stop entry survives an upgrade
-    re-install even when the canonical Stop body changed (the v0.25.0
-    DUMMYINDEX_BACKBONE_REFRESH-drop regression, end-to-end)."""
+    re-install even when the canonical Stop body changed."""
     _init_git_repo(tmp_path)
     settings_path = tmp_path / ".claude" / "settings.json"
 
@@ -333,9 +330,8 @@ def test_install_with_co_located_user_hook_reports_no_false_refresh(
     tmp_path: Path,
 ) -> None:
     """A user hook co-located in our managed Stop entry must not make every
-    subsequent install report 'refreshed' — the classify-by-canonical-body bug
-    would compare the stored entry (incl. the user hook) against our hookless
-    canonical body and always differ, lying that settings.json was rewritten."""
+    later install report 'refreshed': comparing the stored entry (with the user
+    hook) to our canonical body would always differ."""
     _init_git_repo(tmp_path)
     settings_path = tmp_path / ".claude" / "settings.json"
 
@@ -360,10 +356,9 @@ def test_install_with_co_located_user_hook_reports_no_false_refresh(
 def test_install_preserves_malformed_settings(tmp_path: Path) -> None:
     """A malformed settings.json must never be clobbered to just our hook.
 
-    Regression: ``_install_claude_hook`` used to reset ``settings = {}`` on a
-    ``JSONDecodeError`` and then overwrite the file — silently destroying the
-    user's permissions / env / other hooks. The fix is preserve-or-refuse:
-    leave the file byte-for-byte intact and surface the failure.
+    An overwrite would destroy the user's permissions / env / other hooks, so
+    install preserves-or-refuses: the file stays byte-for-byte and the failure
+    is surfaced.
     """
     _init_git_repo(tmp_path)
     settings_path = tmp_path / ".claude" / "settings.json"
@@ -382,11 +377,7 @@ def test_install_preserves_malformed_settings(tmp_path: Path) -> None:
 
 @pytest.mark.integration
 def test_install_refuses_non_object_settings(tmp_path: Path) -> None:
-    """Valid JSON that isn't an object (e.g. a list) must not crash or clobber.
-
-    Regression: ``settings.setdefault("hooks", {})`` raised an uncaught
-    ``AttributeError`` when the top-level JSON was a list/number/string.
-    """
+    """Valid JSON that isn't an object (e.g. a list) must not crash or clobber."""
     _init_git_repo(tmp_path)
     settings_path = tmp_path / ".claude" / "settings.json"
     settings_path.parent.mkdir(parents=True, exist_ok=True)
@@ -400,7 +391,7 @@ def test_install_refuses_non_object_settings(tmp_path: Path) -> None:
     assert "claude/SessionStart" not in result.installed
 
 
-# ----- legacy scrub (upgrade path) ----------------------------------------
+# --- legacy scrub (upgrade path)
 
 
 @pytest.mark.integration
@@ -488,7 +479,7 @@ def test_install_scrubs_legacy_post_tool_use_keeps_user_entries(
     assert after["hooks"]["PostToolUse"] == [user_entry]
 
 
-# ----- uninstall ------------------------------------------------------------
+# --- uninstall
 
 
 @pytest.mark.integration
@@ -499,7 +490,7 @@ def test_uninstall_removes_session_start(tmp_path: Path) -> None:
     assert "claude/SessionStart" in result.removed
 
 
-# ----- PreToolUse Write guard (enforce-managed-doc-homes) -------------------
+# --- PreToolUse Write guard (enforce-managed-doc-homes)
 
 
 def _pre_tool_use_commands(settings_path: Path) -> list[str]:
@@ -510,9 +501,8 @@ def _pre_tool_use_commands(settings_path: Path) -> list[str]:
 
 @pytest.mark.integration
 def test_install_wires_pre_tool_use_write_guard(tmp_path: Path) -> None:
-    """Local install wires the PreToolUse Write guard: matcher ``Write``, our
-    sentinel, the ``command -v dummyindex`` self-gate, and the guard-doc-write
-    command with ``--root``. Local bodies are verbatim — no global guard."""
+    """Local install wires the self-gated PreToolUse Write guard, with no
+    global defer-check guard."""
     from dummyindex.context import hooks as H
 
     _init_git_repo(tmp_path)
@@ -523,7 +513,7 @@ def test_install_wires_pre_tool_use_write_guard(tmp_path: Path) -> None:
     assert len(entries) == 1
     entry = entries[0]
     # Edit/MultiEdit require the target to pre-exist, so only Write can leak.
-    assert entry["matcher"] == "Write"
+    assert entry["matcher"] == "Write|Edit|MultiEdit|Agent|Task|SendMessage"
     cmd = entry["hooks"][0]["command"]
     assert "DUMMYINDEX_AUTO_REFRESH" in cmd  # sentinel recognised/scrubbable
     assert "command -v dummyindex" in cmd  # self-gate present
@@ -535,12 +525,39 @@ def test_install_wires_pre_tool_use_write_guard(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
+def test_reinstall_rewrites_old_write_matcher(tmp_path: Path) -> None:
+    _init_git_repo(tmp_path)
+    install(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+    data = json.loads(settings_path.read_text())
+    data["hooks"]["PreToolUse"][0]["matcher"] = "Write"
+    settings_path.write_text(json.dumps(data))
+    install(tmp_path)
+    entries = json.loads(settings_path.read_text())["hooks"]["PreToolUse"]
+    assert len(entries) == 1
+    assert entries[0]["matcher"] == "Write|Edit|MultiEdit|Agent|Task|SendMessage"
+
+
+@pytest.mark.integration
+def test_reinstall_rewrites_previous_doc_guard_matcher(tmp_path: Path) -> None:
+    _init_git_repo(tmp_path)
+    install(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+    data = json.loads(settings_path.read_text())
+    data["hooks"]["PreToolUse"][0]["matcher"] = "Write|Edit|MultiEdit"
+    settings_path.write_text(json.dumps(data))
+    install(tmp_path)
+    entries = json.loads(settings_path.read_text())["hooks"]["PreToolUse"]
+    assert len(entries) == 1
+    assert entries[0]["matcher"] == "Write|Edit|MultiEdit|Agent|Task|SendMessage"
+
+
+@pytest.mark.integration
 def test_global_install_pre_tool_use_carries_self_gate_and_global_guard(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A GLOBAL-scope install inserts the defer-check guard immediately after
-    the PreToolUse hook's ``_SILENT_GATE`` self-gate — assert BOTH present and
-    in that order (so a repo with its own --local install suppresses it)."""
+    """A GLOBAL-scope install puts the defer-check guard right after
+    ``_SILENT_GATE``, so a repo with its own --local install suppresses it."""
     from dummyindex.context import hooks as H
 
     home = tmp_path / "home"
@@ -548,7 +565,7 @@ def test_global_install_pre_tool_use_carries_self_gate_and_global_guard(
     install(tmp_path, scope="global")
     settings = json.loads((home / ".claude" / "settings.json").read_text())
     entry = settings["hooks"]["PreToolUse"][0]
-    assert entry["matcher"] == "Write"
+    assert entry["matcher"] == "Write|Edit|MultiEdit|Agent|Task|SendMessage"
     cmd = entry["hooks"][0]["command"]
     assert H._SILENT_GATE in cmd  # self-gate
     assert H._GLOBAL_GUARD in cmd  # defer-check guard inserted by _guard_body
@@ -579,8 +596,7 @@ def test_global_per_prompt_contract_carries_override_guard(
 
 @pytest.mark.integration
 def test_pre_tool_use_guard_idempotent_byte_stable(tmp_path: Path) -> None:
-    """A second install adds no duplicate guard and leaves settings.json
-    byte-identical; exactly one PreToolUse guard entry remains."""
+    """A second install leaves settings.json byte-identical, one guard entry."""
     _init_git_repo(tmp_path)
     install(tmp_path)
     settings_path = tmp_path / ".claude" / "settings.json"
@@ -596,8 +612,7 @@ def test_pre_tool_use_guard_idempotent_byte_stable(tmp_path: Path) -> None:
 
 @pytest.mark.integration
 def test_uninstall_removes_pre_tool_use_guard(tmp_path: Path) -> None:
-    """uninstall scrubs the guard automatically (PreToolUse is in
-    CURRENT_CLAUDE_EVENTS) — no manual uninstall edit needed."""
+    """uninstall scrubs the guard because PreToolUse is in CURRENT_CLAUDE_EVENTS."""
     _init_git_repo(tmp_path)
     install(tmp_path)
     result = uninstall(tmp_path)
@@ -608,9 +623,8 @@ def test_uninstall_removes_pre_tool_use_guard(tmp_path: Path) -> None:
 
 @pytest.mark.integration
 def test_legacy_post_tool_use_scrub_keeps_pre_tool_use_guard(tmp_path: Path) -> None:
-    """The legacy PostToolUse scrub removes the legacy entry but must NOT touch
-    the new PreToolUse guard — PreToolUse is a different event key, not in
-    _LEGACY_CLAUDE_EVENTS."""
+    """The legacy PostToolUse scrub must NOT touch the PreToolUse guard, a
+    different event key not in _LEGACY_CLAUDE_EVENTS."""
     _init_git_repo(tmp_path)
     settings_path = tmp_path / ".claude" / "settings.json"
     _write_settings(
@@ -633,11 +647,9 @@ def test_legacy_post_tool_use_scrub_keeps_pre_tool_use_guard(tmp_path: Path) -> 
 def test_pre_tool_use_preserves_co_located_and_foreign_user_hooks(
     tmp_path: Path,
 ) -> None:
-    """A user hook co-located in our managed PreToolUse entry survives a
-    re-install (upgrade); a SEPARATE foreign PreToolUse entry survives both
-    install and uninstall — each byte-untouched. (The co-located hook rides
-    its managed entry out on uninstall, matching the established entry-level
-    Stop/SessionStart uninstall behaviour.)"""
+    """A co-located user hook survives re-install; a separate foreign
+    PreToolUse entry survives install and uninstall byte-untouched. On
+    uninstall the co-located hook leaves with its managed entry."""
     _init_git_repo(tmp_path)
     settings_path = tmp_path / ".claude" / "settings.json"
 
@@ -677,7 +689,7 @@ def test_pre_tool_use_preserves_co_located_and_foreign_user_hooks(
     assert colocated_cmd not in cmds  # rode out with the managed entry
 
 
-# ----- statusline: wired by install (write-if-absent) ------------------------
+# --- statusline: wired by install (write-if-absent)
 
 
 from dummyindex.context.hooks import install_statusline  # noqa: E402
@@ -929,7 +941,7 @@ def test_uninstall_preserves_malformed_settings(tmp_path: Path) -> None:
     assert any(name == "claude/settings.json" for name, _ in result.errors)
 
 
-# ----- status ---------------------------------------------------------------
+# --- status
 
 
 @pytest.mark.integration
@@ -955,7 +967,7 @@ def test_status_true_after_install(tmp_path: Path) -> None:
     assert s.claude_session_start
 
 
-# ----- CLI dispatch ---------------------------------------------------------
+# --- CLI dispatch
 
 
 @pytest.mark.integration
@@ -990,7 +1002,7 @@ def test_cli_hooks_unknown_verb(
     assert "unknown hooks verb" in capsys.readouterr().err
 
 
-# ----- ingest auto-installs hooks ------------------------------------------
+# --- ingest auto-installs hooks
 
 
 @pytest.mark.integration
@@ -1127,7 +1139,7 @@ def test_skill_feedback_hooks_are_independent_bounded_and_stop_unchanged(
         for entry in settings["hooks"]["Stop"]
         for hook in entry["hooks"]
     ]
-    assert len(stop_commands) == 2
+    assert len(stop_commands) == 3
     assert not any("memory mine" in command for command in stop_commands)
     assert any("memory nudge" in command for command in stop_commands)
     assert any("reconcile-gate" in command for command in stop_commands)
@@ -1260,7 +1272,7 @@ def test_cli_hooks_status_lists_all_five(
     assert "claude/PreToolUse" in out
 
 
-# ----- Stop gate + global scope (v0.23.0) -----------------------------------
+# --- Stop gate + global scope (v0.23.0)
 
 from dummyindex.context import hooks as _H  # noqa: E402
 
@@ -1282,7 +1294,7 @@ def test_install_idempotent_with_gate(tmp_path: Path) -> None:
     _H.install(tmp_path)
     settings = json.loads((tmp_path / ".claude" / "settings.json").read_text())
     assert len(settings["hooks"]["Stop"]) == 1
-    assert len(settings["hooks"]["Stop"][0]["hooks"]) == 2
+    assert len(settings["hooks"]["Stop"][0]["hooks"]) == 3
 
 
 def test_global_install_targets_home_and_guards(
@@ -1337,7 +1349,7 @@ def test_global_status_independent_of_local(
     assert _H.status(tmp_path, scope="global").all_installed is False
 
 
-# ----- hook-body labelling + degraded-mode signal ---------------------------
+# --- hook-body labelling + degraded-mode signal
 
 
 def _all_managed_commands(settings_path: Path) -> list[str]:
@@ -1406,3 +1418,121 @@ def test_uninstall_removes_old_style_bodies(tmp_path: Path) -> None:
     )
     result = uninstall(tmp_path)
     assert "claude/SessionStart" in result.removed
+
+
+# ----- evolve evidence (async Stop observer) --------------------------------
+
+
+def _evidence_stop_hooks(settings_path: Path) -> list[dict]:
+    data = json.loads(settings_path.read_text(encoding="utf-8"))
+    return [
+        h
+        for e in data["hooks"]["Stop"]
+        for h in e["hooks"]
+        if "evolve evidence" in h.get("command", "")
+    ]
+
+
+@pytest.mark.integration
+def test_stop_evidence_hook_is_async_without_timeout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path / "home"))
+    _init_git_repo(tmp_path)
+    install(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+    hooks = _evidence_stop_hooks(settings_path)
+    assert len(hooks) == 1
+    h = hooks[0]
+    assert h["async"] is True
+    assert "timeout" not in h
+    assert ">/dev/null 2>&1" in h["command"]
+    assert '"async": true' in settings_path.read_text(encoding="utf-8")
+
+
+@pytest.mark.integration
+def test_global_stop_evidence_hook_stays_async_and_guarded(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    home = tmp_path / "home"
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
+    install(tmp_path, scope="global")
+    hooks = _evidence_stop_hooks(home / ".claude" / "settings.json")
+    assert len(hooks) == 1
+    assert hooks[0]["async"] is True
+    assert "defer-check" in hooks[0]["command"]
+
+
+@pytest.mark.integration
+def test_reinstall_skips_stop_when_evidence_hook_current(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path / "home"))
+    _init_git_repo(tmp_path)
+    install(tmp_path)
+    second = install(tmp_path)
+    assert "claude/Stop" in second.skipped
+    assert "claude/Stop" not in second.refreshed
+
+
+@pytest.mark.integration
+def test_old_style_stop_refresh_adds_evidence_hook(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path / "home"))
+    _init_git_repo(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+    _write_settings(
+        settings_path,
+        {
+            "hooks": {
+                "Stop": [
+                    {
+                        "matcher": "*",
+                        "hooks": [
+                            {
+                                "type": "command",
+                                "command": "# DUMMYINDEX_AUTO_REFRESH\nold body\n",
+                            }
+                        ],
+                    }
+                ]
+            }
+        },
+    )
+    result = install(tmp_path)
+    assert "claude/Stop" in result.refreshed
+    assert len(_evidence_stop_hooks(settings_path)) == 1
+
+
+@pytest.mark.integration
+def test_user_hook_in_managed_stop_survives_reinstall_single_evidence_hook(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path / "home"))
+    _init_git_repo(tmp_path)
+    install(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+    data = json.loads(settings_path.read_text(encoding="utf-8"))
+    user_hook = {"type": "command", "command": "echo user-stop-hook"}
+    data["hooks"]["Stop"][0]["hooks"].append(user_hook)
+    settings_path.write_text(json.dumps(data), encoding="utf-8")
+
+    install(tmp_path)
+    after = json.loads(settings_path.read_text(encoding="utf-8"))
+    cmds = [h["command"] for e in after["hooks"]["Stop"] for h in e["hooks"]]
+    assert "echo user-stop-hook" in cmds
+    assert len(_evidence_stop_hooks(settings_path)) == 1
+
+
+@pytest.mark.integration
+def test_uninstall_removes_evidence_hook(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path / "home"))
+    _init_git_repo(tmp_path)
+    install(tmp_path)
+    uninstall(tmp_path)
+    settings_path = tmp_path / ".claude" / "settings.json"
+    text = settings_path.read_text(encoding="utf-8") if settings_path.exists() else ""
+    assert "evolve evidence" not in text

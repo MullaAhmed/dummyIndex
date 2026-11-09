@@ -1,38 +1,12 @@
 """Build loop — drive a proposal's ``checklist.md`` to completion.
 
-The deterministic state layer behind ``dummyindex context build``:
-
-- parse a proposal's flat ``checklist.md`` into items — including the
-  structural ``**GATE**`` marker and trailing ``— via <tool>`` tag
-  (``dispatch_mode`` classifies those as main-session items, never
-  Task-dispatchable subagent units),
-- map each unchecked item to the best-fit equipment item (capability-
-  lexicon keyword overlap against ``.context/equipment.json``, item-kind
-  aware: the implement-capable item is the default owner of checklist work
-  and a specialist needs a scoring margin to take work from it;
-  ``general-purpose`` fallback only when there's no implementer),
-- atomically flip one ``- [ ]`` → ``- [x]`` as each item is verified, or
-  close it as ``- [~] … — skipped: <reason>`` when scope is renegotiated,
-- resolve a proposal's optional model-routing block (``proposal.json``
-  ``"routing"`` + the CLI ``--route`` override) against the shared
-  ``ModelChoice`` alias alphabet.
-
-The actual agent dispatch + verify-before-tick discipline live in the
-``dummyindex-build`` skill (markdown), not here — this package is pure,
-testable state management. When every item is ticked, the loop closes by
-**reconciling** the new code into ``.context/`` (``dummyindex context
-reconcile`` → place/enrich → ``reconcile-stamp``), not a bare deterministic
-rebuild — a build adds files a rebuild would leave unassigned.
-
-Public surface (kept stable for ``context/cli/*`` and tests):
-
-- Dataclasses: ``ChecklistItem``, ``Choice``
-- Enums: ``DispatchMode``
-- Exception: ``BuildLoopError``
-- Checklist ops: ``parse_checklist``, ``flip_item``, ``skip_item``, ``counts``
-- Mapping: ``map_task_to_equipment``, ``dispatch_mode``
-- Routing: ``parse_route_flags``, ``resolve_routing``
+Deterministic state for ``dummyindex context build``: parse items (GATE and binding
+``— via <tool>`` items run in the main session), map each to an equipment item,
+atomically tick or skip boxes, and resolve the model-routing block. Dispatch and
+verify-before-tick live in the ``dummyindex-build`` skill, never here. A finished
+build reconciles into ``.context/``: a bare rebuild leaves its new files unassigned.
 """
+
 from __future__ import annotations
 
 from .checklist import counts, flip_item, next_wave, parse_checklist, skip_item

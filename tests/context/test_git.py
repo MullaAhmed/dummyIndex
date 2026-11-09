@@ -1,17 +1,10 @@
 """Tests for the cross-cutting git-fact seam in ``context/git.py``.
 
-The seam exposes three functions with two distinct I/O boundaries, so the
-markers split accordingly (``--strict-markers`` is on, no implicit default):
-
+Markers follow the I/O boundary (``--strict-markers``, no implicit default):
 - ``is_git_repo`` is a pure-filesystem probe (re-exported from
-  ``pipeline/io/git.py``), so its happy/sad cases are built as on-disk shapes
-  under ``tmp_path`` — ``@pytest.mark.unit`` — mirroring
-  ``tests/pipeline/io/test_git.py``.
-- ``is_tracked`` / ``run_git`` *are* the git-subprocess boundary; they can only
-  be exercised against a real ``git`` (a throwaway ``git init`` under
-  ``tmp_path``, never the host repo), so those are ``@pytest.mark.integration``.
-  The one ``is_tracked`` path that never shells out (a path outside ``root``) is
-  a pure-logic ``@pytest.mark.unit``.
+  ``pipeline/io/git.py``): on-disk shapes under ``tmp_path``, ``unit``.
+- ``is_tracked`` / ``run_git`` shell out to a throwaway ``git init`` (never the
+  host repo): ``integration``, except the no-subprocess outside-root path.
 """
 
 from __future__ import annotations
@@ -47,7 +40,7 @@ def _write(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
-# ----- is_git_repo (pure filesystem) ----------------------------------------
+# --- is_git_repo (pure filesystem)
 
 
 @pytest.mark.unit
@@ -75,7 +68,7 @@ def test_is_git_repo_true_after_real_git_init(tmp_path: Path) -> None:
     assert is_git_repo(tmp_path) is True
 
 
-# ----- is_tracked (git subprocess) ------------------------------------------
+# --- is_tracked (git subprocess)
 
 
 @pytest.mark.integration
@@ -121,7 +114,7 @@ def test_is_tracked_true_for_path_outside_root(tmp_path: Path) -> None:
     assert is_tracked(root, outside) is True
 
 
-# ----- run_git (git subprocess) ---------------------------------------------
+# --- run_git (git subprocess)
 
 
 @pytest.mark.integration

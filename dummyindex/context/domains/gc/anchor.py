@@ -1,26 +1,16 @@
 """The committed GC anchor and the commit-throttled fire-once signal.
 
-Two storage locations, deliberately split:
-
-- the **committed** anchor at ``.context/gc/state.json`` (``GC_STATE_REL``),
-  holding only the commit sha the last sweep stamped (``{"anchor": sha}``).
-  This is canonical, versioned ``.context/`` state.
-- the **gitignored** per-session memo at ``.context/cache/gc-nudge-state.json``
-  (``GC_MEMO_REL``), keyed by session id so the SessionStart nudge fires at most
-  once per session. Best-effort, last-writer-wins — never committed.
-
-The anchor reader copies the corrupt-tolerance shape of
-``memory/nudge.py:_load_state`` (missing file / ``JSONDecodeError`` / non-dict /
-missing-or-non-string key → ``None``, never a garbage sha). The fire-once memo
-mirrors ``nudge.already_nudged`` / ``mark_nudged`` (100-entry cap, empty session
-id never recorded). The commit-count math reuses ``git_delta.commits_since`` /
-``head_commit``; ``stamp_gc`` mirrors ``reconcile.stamp_reconciled``'s off-git
-no-op (no HEAD to anchor to → return ``None``, never a raise).
+Two stores, deliberately split: the committed ``GC_STATE_REL`` anchor holds only
+the last sweep's sha (``{"anchor": sha}``); the gitignored ``GC_MEMO_REL`` memo,
+keyed by session id, fires the SessionStart nudge at most once per session
+(best-effort, last-writer-wins, never committed). Both readers and the memo
+mirror ``memory/nudge.py``; commit math reuses ``git_delta.commits_since``.
 """
 
 from __future__ import annotations
 
 import json
+import subprocess
 from datetime import datetime
 from pathlib import Path
 
@@ -34,12 +24,10 @@ _MEMO_CAP = 100
 
 
 def read_gc_anchor(context_dir: Path) -> str | None:
-    """Return the committed GC anchor sha, or ``None``.
+    """Return the committed GC anchor sha, or ``None``. Never raises.
 
-    Reads ``context_dir / GC_STATE_REL`` (``{"anchor": "<sha>"}``). Corrupt-
-    tolerant exactly like ``memory/nudge.py:_load_state``: a missing file, a
-    ``JSONDecodeError``, a non-dict payload, or a missing / non-string
-    ``anchor`` key all degrade to ``None`` — never a garbage sha. Never raises.
+    A missing file, bad JSON, a non-dict payload, or a missing / non-string /
+    empty ``anchor`` all degrade to ``None``, never a garbage sha.
     """
     path = context_dir / GC_STATE_REL
     if not path.exists():
@@ -57,9 +45,8 @@ def read_gc_anchor(context_dir: Path) -> str | None:
 def write_gc_anchor(context_dir: Path, sha: str) -> None:
     """Atomically write ``{"anchor": sha}`` to ``context_dir / GC_STATE_REL``.
 
-    Creates the ``gc/`` dir as needed (``write_text_atomic`` mkdirs the parent)
-    and emits a trailing newline so the committed artifact passes
-    ``end-of-file-fixer``.
+    The parent dir is created as needed; the trailing newline keeps the
+    committed artifact ``end-of-file-fixer``-clean.
     """
     path = context_dir / GC_STATE_REL
     write_text_atomic(path, json.dumps({"anchor": sha}, indent=2) + "\n")
@@ -68,12 +55,24 @@ def write_gc_anchor(context_dir: Path, sha: str) -> None:
 def gc_commits_since(context_dir: Path, root: Path) -> int | None:
     """Commits landed on HEAD since the recorded GC anchor, or ``None``.
 
-    A thin wrapper over ``git_delta.commits_since`` reading the anchor from the
-    committed ``gc/state.json``. ``None`` (signal goes safely dark) when no
-    anchor is recorded, git is absent, HEAD is unborn, or the anchor is unknown
-    to the repo (a history rewrite orphaned it).
+    ``None`` (the signal goes safely dark) when no anchor is recorded, git is
+    absent, HEAD is unborn, or a history rewrite orphaned the anchor.
     """
     return commits_since(root, read_gc_anchor(context_dir))
+
+
+def _is_shallow(root: Path) -> bool:
+    """True when ``root`` is a shallow clone. Any git failure reads as not shallow."""
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--is-shallow-repository"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError:
+        return False
+    return proc.stdout.strip() == "true"
 
 
 def anchor_orphaned(context_dir: Path, root: Path) -> bool:
@@ -83,11 +82,14 @@ def anchor_orphaned(context_dir: Path, root: Path) -> bool:
     (``head_commit`` resolves), yet ``gc_commits_since`` is ``None`` — meaning
     the recorded sha no longer resolves in the repo (rebase / squash / never-
     fetched). Off-git or no-anchor is *not* orphaned: there's nothing a rewrite
-    could have stranded.
+    could have stranded. A shallow clone is never orphaned either: its missing
+    history is silent truncation, not a rewrite.
     """
     if read_gc_anchor(context_dir) is None:
         return False
     if head_commit(root) is None:
+        return False
+    if _is_shallow(root):
         return False
     return gc_commits_since(context_dir, root) is None
 
@@ -102,20 +104,23 @@ def should_signal(
 ) -> bool:
     """Whether the SessionStart nudge should fire for ``session_id``.
 
-    True iff at least ``threshold`` commits have landed since the GC anchor AND
-    this session has not already been signalled. On a decision to signal the
-    fire-once memo is marked (so a second call in the same session returns
-    ``False``).
+    True iff this session has not already been signalled AND either at least
+    ``threshold`` commits have landed since the GC anchor, or the anchor is
+    orphaned. On a decision to signal the fire-once memo is marked (so a second
+    call in the same session returns ``False``).
 
     The memo lives in the **gitignored** ``context_dir / GC_MEMO_REL``, keyed by
     ``session_id`` and pruned to a 100-entry cap — mirroring
     ``nudge.already_nudged`` / ``mark_nudged``. An empty / blank ``session_id``
-    is never recorded and never suppresses: it degrades to "emit when over
-    threshold" so the nudge is never silenced forever by a missing id. ``now``
-    is injectable for testability (defaults to wall-clock).
+    is never recorded and never suppresses: it degrades to "emit when the
+    trigger holds" so the nudge is never silenced forever by a missing id.
+    ``now`` is injectable for testability (defaults to wall-clock).
     """
     count = gc_commits_since(context_dir, root)
-    if count is None or count < threshold:
+    if count is None:
+        if not anchor_orphaned(context_dir, root):
+            return False
+    elif count < threshold:
         return False
     if _already_signalled(context_dir, session_id):
         return False
@@ -131,10 +136,8 @@ def stamp_gc(
 ) -> str | None:
     """Advance the GC anchor to ``to`` (else HEAD) and return the stamped sha.
 
-    Mirrors ``reconcile.stamp_reconciled``'s off-git handling: with no ``to``
-    and no resolvable HEAD (non-git repo or unborn HEAD) there is nothing to
-    anchor to, so this is a graceful no-op returning ``None`` — never a raise.
-    Otherwise it writes the resolved sha via ``write_gc_anchor`` and returns it.
+    With no ``to`` and no resolvable HEAD (off-git or unborn) this is a graceful
+    no-op returning ``None``, never a raise, like ``reconcile.stamp_reconciled``.
     """
     target = to if to is not None else head_commit(root)
     if target is None:

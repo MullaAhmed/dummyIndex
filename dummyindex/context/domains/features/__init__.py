@@ -1,42 +1,10 @@
 """Detect features and flows; emit `.context/features/`.
 
-Two passes, both deterministic:
-
-1. **Community-based features** — every Leiden community in
-   `graph/graph.json` becomes a candidate feature. Covers the whole
-   codebase coarsely.
-2. **Entry-point-based flows** — functions with in-degree 0 in the
-   call subgraph (`calls` / `uses` edges) are likely user-facing entry
-   points (HTTP handlers, CLI commands, public APIs). For each, a BFS
-   over the call graph captures the ordered flow of calls. The flow
-   gets attached to the community that contains its entry point.
-
-Output:
-
-    .context/features/
-    ├── INDEX.json             # machine-readable list (the agent's nav)
-    ├── INDEX.md               # human-readable summary
-    ├── HOW_TO_NAVIGATE.md     # agent navigation guide
-    ├── graph.json             # the curated codebase scan (schema v2)
-    └── <feature-id>/
-        ├── feature.json       # canonical machine description
-        ├── spec.md            # human-readable entry point
-        └── flows/
-            ├── <flow-id>.json # ordered call sequence
-            └── <flow-id>.md   # human-readable flow doc
-
-The /dummyindex skill enriches names / summaries / flow narratives on
-top of this scaffolding (every node carries `confidence: "EXTRACTED"`
-initially; enrichment flips to `"INFERRED"`).
-
-Public surface (kept stable for ``context/cli/*`` and tests):
-
-- Dataclasses: ``Feature``, ``Flow``, ``FlowStep``, ``ScaffoldResult``,
-  ``RenameResult``, ``MergeResult``
-- Exception: ``FeatureRenameError``
-- Operations: ``scaffold_features``, ``rename_feature``, ``merge_feature``,
-  ``remove_flow``, ``write_section``
-- Index rebuilders: ``refresh_features_index_md``, ``rebuild_features_graph``
+Two deterministic passes: each graph community becomes a feature, and each
+in-degree-0 node of the `calls`/`uses` subgraph seeds a BFS flow attached to its
+community. Writes `INDEX.{json,md}`, `HOW_TO_NAVIGATE.md`, `graph.{json,html}`
+(curated scan v2) and per feature `feature.json`, `spec.md`, `flows/<id>.{json,md}`.
+All start `EXTRACTED` (enrichment flips to `INFERRED`); `__all__` is the stable API.
 """
 
 from __future__ import annotations

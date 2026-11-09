@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "slug": "upgrade-path-for-existing-repos-on-older-dummyindex-versions",
+  "entries": [
+    {
+      "timestamp": "2026-11-07T16:04:26+00:00",
+      "round": 0,
+      "persona": "correctness",
+      "status": "started",
+      "note": null
+    },
+    {
+      "timestamp": "2026-11-07T16:04:26+00:00",
+      "round": 0,
+      "persona": "data-integrity",
+      "status": "started",
+      "note": null
+    },
+    {
+      "timestamp": "2026-11-07T16:04:27+00:00",
+      "round": 0,
+      "persona": "over-engineering",
+      "status": "started",
+      "note": null
+    },
+    {
+      "timestamp": "2026-11-07T16:15:11+00:00",
+      "round": 0,
+      "persona": "data-integrity",
+      "status": "complete",
+      "note": null
+    },
+    {
+      "timestamp": "2026-11-07T16:19:04+00:00",
+      "round": 0,
+      "persona": "correctness",
+      "status": "complete",
+      "note": null
+    },
+    {
+      "timestamp": "2026-11-07T16:21:00+00:00",
+      "round": 0,
+      "persona": "over-engineering",
+      "status": "complete",
+      "note": null
+    },
+    {
+      "timestamp": "2026-11-07T16:21:00+00:00",
+      "round": 1,
+      "persona": "correctness",
+      "status": "started",
+      "note": null
+    },
+    {
+      "timestamp": "2026-11-07T16:21:01+00:00",
+      "round": 1,
+      "persona": "data-integrity",
+      "status": "started",
+      "note": null
+    },
+    {
+      "timestamp": "2026-11-07T16:21:01+00:00",
+      "round": 1,
+      "persona": "over-engineering",
+      "status": "started",
+      "note": null
+    },
+    {
+      "timestamp": "2026-11-07T16:24:29+00:00",
+      "round": 1,
+      "persona": "over-engineering",
+      "status": "complete",
+      "note": null
+    },
+    {
+      "timestamp": "2026-11-07T16:26:19+00:00",
+      "round": 1,
+      "persona": "data-integrity",
+      "status": "complete",
+      "note": null
+    },
+    {
+      "timestamp": "2026-11-07T16:27:04+00:00",
+      "round": 1,
+      "persona": "correctness",
+      "status": "complete",
+      "note": null
+    },
+    {
+      "timestamp": "2026-11-07T16:27:04+00:00",
+      "round": 2,
+      "persona": "correctness",
+      "status": "started",
+      "note": null
+    },
+    {
+      "timestamp": "2026-11-07T16:27:05+00:00",
+      "round": 2,
+      "persona": "data-integrity",
+      "status": "started",
+      "note": null
+    },
+    {
+      "timestamp": "2026-11-07T16:27:05+00:00",
+      "round": 2,
+      "persona": "over-engineering",
+      "status": "started",
+      "note": null
+    },
+    {
+      "timestamp": "2026-11-07T16:28:50+00:00",
+      "round": 2,
+      "persona": "correctness",
+      "status": "complete",
+      "note": null
+    },
+    {
+      "timestamp": "2026-11-07T16:29:06+00:00",
+      "round": 2,
+      "persona": "over-engineering",
+      "status": "complete",
+      "note": null
+    },
+    {
+      "timestamp": "2026-11-07T16:29:35+00:00",
+      "round": 2,
+      "persona": "data-integrity",
+      "status": "complete",
+      "note": null
+    }
+  ]
+}

@@ -11,11 +11,14 @@ from __future__ import annotations
 
 import base64
 import json
+import re
+import shutil
 import subprocess
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from ..enums import Capability
 from ..errors import SourceError
 
 CATALOG_PATH = ".claude-plugin/marketplace.json"
@@ -72,12 +75,10 @@ def fetch_file(
 ) -> str | None:
     """Fetch one file's text from a GitHub repo via ``gh api`` contents.
 
-    ``ref`` pins the fetch to a commit sha / branch / tag (the contents API
-    ``?ref=`` query) so a vendored file is taken at the exact revision the user
-    approved; ``None`` (default) fetches the default-branch HEAD, preserving the
-    existing call sites. Returns ``None`` when the file/repo is absent (non-zero
-    exit). Raises :class:`SourceError` when the response is present but
-    undecodable.
+    ``ref`` pins the fetch to a commit sha / branch / tag so a vendored file is
+    taken at the exact revision the user approved; ``None`` fetches the
+    default-branch HEAD. Returns ``None`` when the file/repo is absent (non-zero
+    exit); raises :class:`SourceError` when a present response is undecodable.
     """
     endpoint = f"repos/{repo}/contents/{path}"
     if ref:
@@ -132,15 +133,12 @@ _SKILL_FILE = "SKILL.md"
 
 
 def _is_safe_skill_name(name: str) -> bool:
-    """True when ``name`` is a single, visible path component safe to use as a
-    skill directory.
+    """True when ``name`` is one visible path component, safe as a skill dir.
 
-    A collection's skill name becomes a path segment under ``.claude/skills/`` at
-    install time, so reject empty, hidden (``.`` prefix — also rules out ``.``
-    and ``..``), and any separator/traversal (``/``, ``\\``). Enumerating these
-    out here means ``discover`` never even surfaces a crafted catalog entry that
-    could escape the skills dir (defense-in-depth; the install boundary guards
-    again)."""
+    The name becomes a segment under ``.claude/skills/`` at install, so reject
+    empty, hidden (``.`` prefix, which also rules out ``.`` and ``..``) and any
+    separator/traversal (``/``, ``\\``): a crafted catalog entry never escapes
+    the skills dir. Defense-in-depth; the install boundary guards again."""
     return (
         bool(name) and not name.startswith(".") and "/" not in name and "\\" not in name
     )
@@ -192,21 +190,22 @@ def _list_dir(
 
 
 def list_skills(
-    repo: str, *, ref: str | None = None, runner: Runner = default_runner
+    repo: str,
+    *,
+    ref: str | None = None,
+    runner: Runner = default_runner,
+    root_fallback: bool = True,
 ) -> tuple[SkillRef, ...]:
     """Enumerate the skills a collection repo ships, deterministically.
 
-    A skill is a subdirectory holding a ``SKILL.md``. The conventional layouts in
-    :data:`_SKILL_DIRS` are tried in order (``skills/<name>/`` then the repo root);
-    the FIRST layout that yields any candidate wins, so a repo is never
-    double-counted. Files, hidden dirs (``.github`` …), and any name that is not a
-    safe single path component (:func:`_is_safe_skill_name`) are skipped — so a
-    crafted entry can never become a traversal segment downstream. Results are
-    sorted by name — the contents API order is not stable, and the caller's
-    candidate ranking must not depend on arrival order. Membership of an actual
-    ``SKILL.md`` is confirmed downstream by the install fetch (a miss skips it).
+    A skill is a subdirectory holding a ``SKILL.md``. :data:`_SKILL_DIRS` layouts
+    are tried in order and the first yielding any candidate wins (no double
+    count). Files, hidden dirs and unsafe names (:func:`_is_safe_skill_name`) are
+    skipped, so a crafted entry never becomes a traversal segment. Sorted by name
+    (contents API order is unstable); the install fetch confirms each ``SKILL.md``.
     """
-    for base in _SKILL_DIRS:
+    dirs = _SKILL_DIRS if root_fallback else _SKILL_DIRS[:1]
+    for base in dirs:
         found: dict[str, SkillRef] = {}
         for entry in _list_dir(repo, base, ref=ref, runner=runner):
             if entry.get("type") != "dir":
@@ -280,4 +279,105 @@ def search_github(query: str, *, runner: Runner = default_runner) -> GitHubSearc
             repos.add(token)
     return GitHubSearchResult(
         repos=tuple(sorted(repos)), degraded=degraded, reason=reason
+    )
+
+
+_SAFE_REPO_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+_SAFE_SKILL_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
+_ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
+_SKILLS_SH_TOKEN_RE = re.compile(r"([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)@([A-Za-z0-9_.-]+)")
+_COUNT_RE = re.compile(r"(\d[\d,]*(?:\.\d+)?)\s*([KkMm])?\b")
+
+
+def is_safe_repo(repo: str) -> bool:
+    """True when ``repo`` is ``owner/name`` with a safe charset and no ``.``/``..`` part."""
+    if _SAFE_REPO_RE.fullmatch(repo) is None:
+        return False
+    return all(part not in {".", ".."} for part in repo.split("/"))
+
+
+def is_safe_skill(name: str) -> bool:
+    """True when ``name`` is one safe path segment with a plain charset."""
+    return _is_safe_skill_name(name) and _SAFE_SKILL_RE.fullmatch(name) is not None
+
+
+@dataclass(frozen=True)
+class SkillsShRef:
+    repo: str
+    skill: str
+    installs: int | None = None
+
+
+def _first_stderr_line(stderr: str) -> str:
+    for line in stderr.splitlines():
+        if line.strip():
+            return line.strip()
+    return "no results"
+
+
+def _parse_installs(rest: str) -> int | None:
+    match = _COUNT_RE.search(rest)
+    if match is None:
+        return None
+    number, suffix = match.group(1), (match.group(2) or "").lower()
+    multiplier = {"k": 1_000, "m": 1_000_000}.get(suffix, 1)
+    # round(): float "1.2" * 1000 can land just under 1200 and truncate to 1199.
+    return int(round(float(number.replace(",", "")) * multiplier))
+
+
+def find_skills_sh(
+    capability: str, *, runner: Runner = default_runner
+) -> tuple[tuple[SkillsShRef, ...], str | None]:
+    """Search skills.sh for ``capability``; returns ``(refs, reason_if_empty)``."""
+    # Only enum values reach argv: a free-text query would hit the Windows .cmd shim.
+    if capability not in {c.value for c in Capability}:
+        return (), "unsupported query"
+    argv = [shutil.which("npx") or "npx", "--no", "skills", "find", capability]
+    res = runner(argv)
+    if res.returncode != 0:
+        return (), _first_stderr_line(res.stderr)
+    refs: list[SkillsShRef] = []
+    seen: set[tuple[str, str]] = set()
+    for line in _ANSI_RE.sub("", res.stdout).splitlines():
+        for match in _SKILLS_SH_TOKEN_RE.finditer(line):
+            repo, skill = match.group(1), match.group(2)
+            if not is_safe_repo(repo) or not is_safe_skill(skill):
+                continue
+            if (repo, skill) in seen:
+                continue
+            seen.add((repo, skill))
+            refs.append(SkillsShRef(repo, skill, _parse_installs(line[match.end() :])))
+    if not refs:
+        return (), _first_stderr_line(res.stderr)
+    return tuple(refs), None
+
+
+@dataclass(frozen=True)
+class RepoMeta:
+    stars: int
+    pushed_at: str
+    license: str | None
+    archived: bool
+
+
+def repo_meta(repo: str, *, runner: Runner = default_runner) -> RepoMeta | None:
+    """Repo metadata via ``gh api``; ``None`` when the repo is unreachable."""
+    res = runner(["gh", "api", f"repos/{repo}"])
+    if res.returncode != 0:
+        return None
+    try:
+        obj = json.loads(res.stdout)
+    except json.JSONDecodeError as exc:
+        raise SourceError(f"could not decode metadata for {repo}: {exc}") from exc
+    if not isinstance(obj, dict):
+        raise SourceError(f"unexpected metadata response shape for {repo}")
+    stars = obj.get("stargazers_count")
+    pushed_at = obj.get("pushed_at")
+    license_obj = obj.get("license")
+    spdx = license_obj.get("spdx_id") if isinstance(license_obj, dict) else None
+    return RepoMeta(
+        stars=stars if isinstance(stars, int) and not isinstance(stars, bool) else 0,
+        pushed_at=pushed_at if isinstance(pushed_at, str) else "",
+        license=spdx if isinstance(spdx, str) else None,
+        archived=obj.get("archived") is True,
     )

@@ -1,11 +1,9 @@
 """Tests for the SessionStart drift detector and the `plan-update` CLI verb.
 
-The drift detector compares the mtime of every source file in
-``.context/features/<id>/feature.json#files`` against the mtime of the
-feature's prose docs (``architecture.md``, ``data-model.md``, …). A
-source is "drifting" when it's newer than every prose doc in its
-feature folder. Editing a doc updates its mtime and naturally clears
-the drift signal (heuristic decay — no explicit stamp needed).
+A source in ``feature.json#files`` drifts when its mtime is newer than every
+prose doc in its feature folder; the doc-basis and manifest sha tiers refine
+that so unchanged bytes don't drift. Editing a doc bumps its mtime and clears
+the signal.
 """
 
 from __future__ import annotations
@@ -52,9 +50,7 @@ def _seed_meta(project_root: Path, indexed_commit: str) -> None:
     )
 
 
-def _write_doc_basis(
-    project_root: Path, features: dict[str, dict[str, str]]
-) -> None:
+def _write_doc_basis(project_root: Path, features: dict[str, dict[str, str]]) -> None:
     """Seed ``cache/doc-basis.json`` with a per-feature blob-sha map."""
     path = project_root / ".context" / DOC_BASIS_REL
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -100,7 +96,7 @@ def _touch(path: Path, *, mtime: float) -> None:
     os.utime(path, (mtime, mtime))
 
 
-# ----- compute_drift -------------------------------------------------------
+# --- compute_drift
 
 
 @pytest.mark.integration
@@ -161,8 +157,7 @@ def test_any_feature_doc_suppresses_drift(tmp_path: Path) -> None:
 
 @pytest.mark.integration
 def test_v014_spec_or_plan_suppresses_drift(tmp_path: Path) -> None:
-    """A fresh `spec.md`/`plan.md` (the v0.14 doc names) clears drift just
-    like the legacy essay docs — they were added to _FEATURE_DOC_NAMES."""
+    """A fresh `spec.md`/`plan.md` clears drift like the legacy essay docs."""
     src = tmp_path / "app" / "service.py"
     _touch(src, mtime=500.0)
     feature_dir = _make_feature(
@@ -188,7 +183,7 @@ def test_drift_when_feature_has_no_docs(tmp_path: Path) -> None:
     assert report.has_drift
 
 
-# ----- render: file vs (feature,file) row count -----------------------------
+# --- render: file vs (feature,file) row count
 
 
 @pytest.mark.unit
@@ -215,7 +210,7 @@ def test_render_recouncil_hint_is_scoped(tmp_path: Path) -> None:
     assert "--recouncil <feature-id>" in out or "65-reconcile.md" in out
 
 
-# ----- manifest content cross-check (git-operation false positives) ---------
+# --- manifest content cross-check (git-operation false positives)
 
 
 def _write_manifest_for(project_root: Path, files: list[str]) -> None:
@@ -273,15 +268,12 @@ def test_mtime_row_kept_when_content_changed(tmp_path: Path) -> None:
 def test_mtime_row_survives_changed_rebuild_and_clears_on_stamp(
     tmp_path: Path,
 ) -> None:
-    """A real undocumented edit KEEPS its DriftRow across ``rebuild --changed``
-    (the deterministic refresh must never re-stamp the manifest — stamping
-    the edit's own sha would erase the change that triggered the rebuild),
+    """A real undocumented edit keeps its DriftRow across ``rebuild --changed``,
     then clears on ``stamp_reconciled``.
 
-    The non-empty assertion before the stamp is the mandatory negative
-    control: ``compute_drift`` returns rows=() unconditionally when no
-    feature.json carries a populated files list, so without it this test
-    could pass vacuously.
+    The refresh must never re-stamp the manifest: stamping the edit's own sha
+    would erase the change. The pre-rebuild assertion is the negative control;
+    with no populated feature files ``compute_drift`` returns rows=() anyway.
     """
     from dummyindex.context.build.incremental import rebuild_changed
     from dummyindex.context.build.meta import new_meta, write_meta
@@ -343,7 +335,7 @@ def test_absent_manifest_preserves_legacy_mtime_behavior(tmp_path: Path) -> None
     )
 
 
-# ----- doc-basis classification (stamp-declared freshness) ------------------
+# --- doc-basis classification (stamp-declared freshness)
 
 
 def _seed_stamped_source(tmp_path: Path, content: str) -> Path:
@@ -351,9 +343,7 @@ def _seed_stamped_source(tmp_path: Path, content: str) -> Path:
     src = tmp_path / "app" / "service.py"
     src.parent.mkdir(parents=True, exist_ok=True)
     src.write_text(content, encoding="utf-8")
-    _make_feature(
-        tmp_path, "service-loop", files=["app/service.py"], docs=("spec.md",)
-    )
+    _make_feature(tmp_path, "service-loop", files=["app/service.py"], docs=("spec.md",))
     _write_doc_basis(
         tmp_path,
         {"service-loop": {"app/service.py": blob_sha(src.read_bytes())}},
@@ -367,8 +357,7 @@ def test_basis_match_suppresses_row_even_when_mtime_newer(tmp_path: Path) -> Non
     with mtime newer than every feature doc (the rebase/checkout/stash class:
     history moved under the index, the docs still describe these bytes)."""
     src = _seed_stamped_source(tmp_path, "def f(): return 1\n")
-    _touch(tmp_path / ".context" / "features" / "service-loop" / "spec.md",
-           mtime=500.0)
+    _touch(tmp_path / ".context" / "features" / "service-loop" / "spec.md", mtime=500.0)
     os.utime(src, (1_000.0, 1_000.0))  # newer than every doc
 
     report = compute_drift(tmp_path)
@@ -397,8 +386,7 @@ def test_basis_differs_reports_edited_row_regardless_of_mtime(tmp_path: Path) ->
 
 @pytest.mark.integration
 def test_fallback_chain_manifest_tier_when_no_basis_entry(tmp_path: Path) -> None:
-    """No basis entry for the pair → fall to the manifest tier: unchanged
-    bytes are suppressed exactly as before this proposal."""
+    """No basis entry for the pair → the manifest tier suppresses unchanged bytes."""
     src = tmp_path / "app" / "service.py"
     src.parent.mkdir(parents=True, exist_ok=True)
     src.write_text("def f(): return 1\n", encoding="utf-8")
@@ -435,8 +423,7 @@ def test_corrupt_or_unknown_version_basis_is_ignored(tmp_path: Path) -> None:
     """A corrupt or future-versioned basis file switches the tier off and the
     conservative direction (report) wins — never a crash, never suppression."""
     src = _seed_stamped_source(tmp_path, "def f(): return 1\n")
-    _touch(tmp_path / ".context" / "features" / "service-loop" / "spec.md",
-           mtime=500.0)
+    _touch(tmp_path / ".context" / "features" / "service-loop" / "spec.md", mtime=500.0)
     os.utime(src, (1_000.0, 1_000.0))
 
     basis_path = tmp_path / ".context" / DOC_BASIS_REL
@@ -447,7 +434,7 @@ def test_corrupt_or_unknown_version_basis_is_ignored(tmp_path: Path) -> None:
         assert report.suppressed_count == 0
 
 
-# ----- drift-ack dismissal (record once, suppressed until edited) -----------
+# --- drift-ack dismissal (record once, suppressed until edited)
 
 
 def _drifting_source(tmp_path: Path) -> Path:
@@ -538,7 +525,7 @@ def test_drift_clears_after_doc_edit(tmp_path: Path) -> None:
     assert not compute_drift(tmp_path).has_drift
 
 
-# ----- commit-anchored signals (augment mtime drift) ----------------------
+# --- commit-anchored signals (augment mtime drift)
 
 
 @pytest.mark.integration
@@ -594,7 +581,7 @@ def test_compute_drift_off_git_still_sees_awaiting_marker(tmp_path: Path) -> Non
     assert report.unassigned_new_files == ()  # needs a git diff — none off-git
 
 
-# ----- render_drift_summary ----------------------------------------------
+# --- render_drift_summary
 
 
 def test_render_empty_report_returns_empty_string() -> None:
@@ -654,14 +641,13 @@ def test_render_suppression_note_only_when_suppressed() -> None:
     )
     text = render_drift_summary(report)
     assert (
-        "_2 mtime-touched files matched their doc-basis and were suppressed._"
-        in text
+        "_2 mtime-touched files matched their doc-basis and were suppressed._" in text
     )
     quiet = DriftReport(rows=(DriftRow(rel_path="a.py", feature_id="fx"),))
     assert "suppressed" not in render_drift_summary(quiet)
 
 
-# ----- compute_badge (pure statusline string) ----------------------------
+# --- compute_badge (pure statusline string)
 
 
 @pytest.mark.unit
@@ -705,13 +691,12 @@ def test_compute_badge_omits_zero_segments() -> None:
     assert compute_badge(edited_only) == "[ctx: 1 edited]"
 
 
-# ----- drifted_features propagation (commit-anchored, F6) ------------------
+# --- drifted_features propagation (commit-anchored, F6)
 
 
 def _stamp_real_anchor(project_root: Path) -> str:
-    """Stand up a REAL stamped, anchored ``.context/`` over a git repo and
-    return the stamped sha (the exact write path the ``reconcile-stamp`` verb
-    drives, via ``stamp_reconciled``)."""
+    """Stamp a real anchored ``.context/`` over a git repo via
+    ``stamp_reconciled`` (the ``reconcile-stamp`` write path); return the sha."""
     from dummyindex.context.build.meta import new_meta, write_meta
     from dummyindex.context.build.reconcile import stamp_reconciled
 
@@ -809,7 +794,7 @@ def test_render_drift_summary_renders_extra_drifted_feature() -> None:
     assert "billing" in text
 
 
-# ----- CLI dispatch -------------------------------------------------------
+# --- CLI dispatch
 
 
 @pytest.mark.integration

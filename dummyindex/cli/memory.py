@@ -1,16 +1,10 @@
-"""`dummyindex context memory <verb>` — session-memory store ops.
+"""`dummyindex context memory <verb>`: session-memory store ops (wire-only).
 
-Verbs:
-  session-start   read-only emit for the SessionStart hook (silent when the
-                  remember plugin is present or the store is empty).
-  roll            relocate dated entries down the tiers (idempotent).
-  init            create `.context/session-memory/` + empty tier stubs.
-  nudge           Stop-hook: emit handoff CTA when session is significant.
-  breadcrumb      PreCompact-hook: write a deterministic entry to now.md.
-  mine            SessionStart: refresh local recurring-skill feedback.
-  prompt-context  UserPromptSubmit: emit bounded skill-policy JSON.
-
-Wire-only: parse args, call the memory domain, print, return an exit code.
+``session-start`` (read-only SessionStart emit; silent with the remember plugin or an
+empty store), ``roll`` (move dated entries down the tiers, idempotent), ``init`` (create
+`.context/session-memory/` + tier stubs), ``nudge`` (Stop-hook handoff CTA),
+``breadcrumb`` (PreCompact entry in now.md), ``mine`` (refresh recurring-skill
+feedback), ``prompt-context`` (UserPromptSubmit skill-policy JSON).
 """
 
 from __future__ import annotations
@@ -54,6 +48,20 @@ def resolve_transcript(hook: dict[str, object], root: Path) -> tuple[str, Path |
     if isinstance(tp, str) and tp:
         return session_id, Path(tp)
     return session_id, find_main_transcript(session_id=session_id or None, cwd=root)
+
+
+def _print_probation(root: Path) -> None:
+    """Print the session's local probation block after the memory block; silent on error."""
+    try:
+        hook = read_hook_stdin()
+        raw = hook.get("session_id")
+        from dummyindex.context.domains.probation import session_block
+
+        extra = session_block(root / ".context", raw if isinstance(raw, str) else "")
+        if extra:
+            print(extra)
+    except Exception:
+        pass
 
 
 def run(args: list[str]) -> int:
@@ -152,6 +160,7 @@ def run(args: list[str]) -> int:
         block = render_session_start(root)
         if block:
             print(block)
+        _print_probation(root)
         return 0  # a SessionStart hook must never fail the session
 
     context_dir = root / ".context"

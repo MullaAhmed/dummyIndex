@@ -1,4 +1,4 @@
-"""Wave 4 — lifecycle parity for vendored skills.
+"""Lifecycle parity for vendored skills.
 
 A vendored ``SKILL.md`` is hash-baselined exactly like a generated file, so
 ``classify_item`` / ``uninstall`` treat it identically (PRISTINE vs USER_MODIFIED

@@ -17,14 +17,9 @@ def harvest_json_keys(
 ) -> frozenset[str]:
     """Pull every distinct JSON object key from ``json_paths``.
 
-    Prose docs frequently cite schema field names (``feature_id``,
-    ``broken_refs``, ``confidence``) that aren't Python/JS symbols but
-    *are* real names. Without harvesting them, every doc that documents
-    a JSON schema looks "stale" because all its backticked field-names
-    fail the AST check.
-
-    Capped at ``limit`` keys to keep startup latency bounded on repos
-    with very large JSON corpora.
+    Docs cite schema field names (``feature_id``, ``broken_refs``) that aren't
+    code symbols; without them every doc describing a JSON schema looks stale.
+    Capped at ``limit`` keys to bound startup latency on large JSON corpora.
     """
     out: set[str] = set()
 

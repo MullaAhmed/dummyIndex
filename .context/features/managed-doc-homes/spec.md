@@ -1,38 +1,62 @@
 # Feature: Managed doc homes
 
-Keeps internal planning artifacts (plans, specs, design docs, audits) in their **managed `.context/` homes** — `proposals/<slug>/` and `audits/<slug>/` — instead of leaking into the user-facing `docs/` tree. One **shared, location-gated classifier** backs two capabilities: a deterministic relocation command and a PreToolUse write-guard that stops the leak recurring.
+Keeps internal planning docs (plans, specs, design docs, audits) in managed `.context/` homes, not `docs/`. One location-gated classifier backs relocation and the stray guard. A citation guard blocks durable docs from linking disposable workspaces.
 
 ## Architecture
 
-A single source of truth — `domains/docguard/classify.py:classify_doc_path` — decides whether a `.md` path is a stray planning doc and where it belongs. Two consumers sit on top of it:
+`dummyindex/context/domains/docguard/classify.py:53` `classify_doc_path` is the single stray verdict. Consumers:
 
-1. **Migration** (`domains/docguard/migrate.py` + `cli/migrate_docs.py`) — `dummyindex context migrate-docs` relocates existing strays under `docs/` into their managed homes, preserving git history.
-2. **Write-guard** (`domains/docguard/decision.py` + `cli/guard_doc_write.py`) — `dummyindex context guard-doc-write` is a PreToolUse `Write` hook that denies a *fresh* write creating a planning doc in an unmanaged location.
+1. **Migration** (`domains/docguard/migrate.py`, `cli/migrate_docs.py`) relocates strays into managed homes.
+2. **Stray guard** (`domains/docguard/decision.py:33`, `cli/guard_doc_write.py`) denies a fresh `Write` that creates a stray.
+3. **Citation guard** (`domains/docguard/citations.py`, `cli/guard_doc_write.py:178`) denies new workspace citations in durable docs.
 
-A small cross-cutting **git-fact seam** (`context/git.py`) is the one place new code asks git questions, so the feature adds **zero** cross-domain private imports.
+`check --refs` (`cli/check.py:263`) and closeout (`domains/proposals/closeout.py:426`) reuse the predicate.
+
+## Citation guard
+
+- Tools: `Write`, `Edit`, `MultiEdit` (`guard_doc_write.py:35`).
+- Pattern: `proposals` or `audits`, separator, slug, separator. Slash or backslash (`citations.py:12`).
+- Durable set: feature `spec.md`, `plan.md`, `concerns.md`, `PROJECT.md`, `architecture/overview.md`, `conventions/*.md` except `naming.md`. Not `council/` (`citations.py:35-57`).
+- Only added citations deny (set difference against disk, `citations.py:30-32`).
+- `Write` scans `content`. `MultiEdit` scans `edits[].new_string` (`_new_texts`, `:138-151`).
+- `Edit` scans post-edit text from `old_string`, `new_string` (`_post_edit_text`, `:169-175`, `:195`).
+- `doc_guard_allow` does not exempt citations (`:97`).
+- The deny asks agents to state facts, not link (`:198-209`).
+- Input over 1 MB is unscanned (`:37,189`).
 
 ## Key components
 
-- **`context/git.py`** — `is_git_repo` (pure-filesystem, re-exported from `pipeline/io/git.py`), `is_tracked`, `run_git(root, *args) -> CompletedProcess` (modeled on `build/git_delta.py:_run_git`). Callers branch on `is_git_repo` **first**; `is_tracked` preserves the documented non-git degradation (`True` when off-git) from `gc/delete.py`.
-- **`domains/docguard/classify.py`** — `classify_doc_path(repo_root, path) -> DocClassification` (pure/lexical, no I/O) and `group_strays(repo_root, paths) -> tuple[StrayGroup, ...]`. Planning-doc signals are **location-gated**: a `.md` under `docs/` in a `plans|specs|proposals|audits` segment (incl. `docs/internal/*`, `docs/superpowers/{plans,specs}`), or a `*-design.md` / `YYYY-MM-DD-<name>.md` filename under such a dir. Excludes `.context/` (sets `in_managed_location`), `docs/{guide,reference,sources}`, root chrome, non-`.md`. Slug = `audit/workspace.py:slugify` → `proposals/store.py:validate_slug`, skip-on-fail. Pairing key is `(directory, stem)`.
-- **`domains/docguard/migrate.py`** — `enumerate_strays` (filesystem walk, skips symlinks) → `plan_moves` (whole-plan transactional pre-validation: every slug valid, every source/target realpath-contained, aborts before any move) → `apply_moves` (dry-run by default). Branches `is_git_repo` first: non-git → `Path.replace`; tracked → `git mv` (history preserved); untracked → `Path.replace` + `git add`. `--force` fills only *missing* files (never clobbers a non-empty target). Audits land via `audit/workspace.py:ensure_audit`.
-- **`domains/docguard/decision.py`** — pure builder mapping a `DocClassification` to the PreToolUse decision dict: a `deny` (with interpolated `suggested_home`/`spec.md|plan.md`) for a placeable stray, `{}` (allow) otherwise.
-- **`cli/guard_doc_write.py`** — wire-only. `Write`-only matcher; **fail-open everywhere** (exit 0 on every path except an explicit JSON deny, **never `exit 2`**); no git/subprocess on the hot path; config-gated by `doc_guard_enabled` + a `doc_guard_allow` glob allowlist (read via the cheap `domains/config.py:read_doc_guard_settings` accessor).
-- **`cli/migrate_docs.py`** — wire-only, mirrors `cli/gc.py`: `--root/--yes/--force/--json`, dry-run by default, whole-plan refusal → exit 2.
-- **`domains/proposals/store.py:write_proposal_json`** — narrow writer the migration uses: writes **only** `proposal.json` (terminal status `done`, no template `spec.md`/`plan.md`/`checklist.md` to collide with the relocation), byte-identical to `ensure_proposal`.
+- `context/git.py:39-110`: `is_git_repo`, `run_git`, `is_tracked`.
+- `classify.py:120` `group_strays`: pure, lexical. Docs gate `classify.py:89`. Planning segments `constants.py:49`. Excluded `docs/{guide,reference,sources}` (`constants.py:57`).
+- `migrate.py:64` `enumerate_strays`, `:94` `plan_moves`, `:165` `apply_moves` (dry-run unless `yes`).
+- `decision.py:33` `decide` returns `deny` only for a placeable stray.
+- `guard_doc_write.py:40-50` `run`: fail-open, never `exit 2`.
+- `domains/proposals/store.py` `write_proposal_json` writes `proposal.json` at `done`.
 
-## Config & wiring
+## Config and wiring
 
-- **`domains/config.py`** — schema `v2→3` adds typed `doc_guard_enabled: bool = True` and `doc_guard_allow: tuple[str, ...] = ()`, a value-preserving `migrate_config_in_place` step, and `read_doc_guard_settings(context_dir)` — a tolerant `(enabled, allow_globs)` accessor that never builds a full `Config` on the Write hot path and defaults to `(True, ())` on absent/malformed config (default-ON everywhere).
-- **`context/hooks.py`** — a managed **PreToolUse** entry (matcher `"Write"`, command `dummyindex context guard-doc-write`) built from `_SILENT_GATE` so a global install gets the defer-check guard. Appended to `_CLAUDE_HOOKS`, so it flows through `install`/`uninstall`/`status`/`all_installed` automatically; `PreToolUse ≠ legacy PostToolUse`, so the legacy scrub leaves it alone.
-- Verbs registered in `context/enums.py:ContextSubcommand` (`MIGRATE_DOCS`, `GUARD_DOC_WRITE`), the `cli` dispatcher, `cli/help.py`, `docs/guide/07-cli.md`, `HOW_TO_USE.md`, and `playbooks/migrate-stray-docs.md`.
+- `read_doc_guard_settings` (`domains/config.py:571`) tolerantly reads `doc_guard_enabled`, `doc_guard_allow`. Defaults `(True, ())`.
+- `doc_guard_enabled` gates the citation and stray checks (`guard_doc_write.py:70-74`).
+- `context/hooks.py:258-279`: PreToolUse matcher `Write|Edit|MultiEdit|Agent|Task|SendMessage` (`hooks.py:260`), built from `_SILENT_GATE`.
+- Verbs: `context/enums.py:162` (`GUARD_DOC_WRITE`), `check --refs` (`cli/check.py:75-89`).
 
-## Concerns / invariants
+## Language hint
 
-- **The guard must never wedge a session.** It is `Write`-only, config-gated, and fail-open — a single bad classification can only ever *allow*, never block (never `exit 2`). An unplaceable stray (no slug-able content) deliberately fails open rather than emit a `None/spec.md` deny.
-- **The guard upholds "hooks never rebuild the backbone."** Unlike the retired PostToolUse hook, it mutates nothing (pure read→classify→deny).
-- **Migration is transactional and non-destructive.** Whole-plan pre-validation aborts before any move; realpath containment refuses `..`/symlink escapes (nothing moved); `--force` never clobbers a non-empty file; it never touches source code or moves outside `docs/`.
-- **Migrated proposals carry terminal `status` and no template checklist**, so the context-hygiene GC won't read them as in-flight.
-- **Behavioral override:** when enabled, the guard denies the superpowers `writing-plans` skill's default writes to `docs/superpowers/{plans,specs}` — intended, and a repo can exempt a published path via `doc_guard_allow`.
+- `LANGUAGE_TOOLS` (`Agent`, `Task`, `SendMessage`) runs first in `_decide` (`guard_doc_write.py:58-59`). `doc_guard_enabled` does not gate it.
+- `Agent`/`Task` read `prompt`; `SendMessage` reads `message`. Non-string or oversize input is silent (`_language_hint`, `:107-135`).
+- `cjk_share` (`domains/docguard/language.py`) strips fenced code, inline code, URLs, paths, and filenames. After stripping, under 200 non-whitespace characters return `None`.
+- Otherwise it returns CJK / (CJK + Latin words). CJK is U+4E00–U+9FFF and U+3400–U+4DBF.
+- `needs_warning` is true below 0.5.
+- Output: one `hookSpecificOutput.additionalContext` line, no `permissionDecision`. Always returns 0.
+- The text asks for concise Chinese prompts. Code, commits, docs, and reports stay English.
 
-Implemented by proposal `enforce-managed-doc-homes` (TDD, full suite green).
+## Invariants
+
+- A deny affects one tool call, with a reason. Never `exit 2`.
+- Unplaceable strays fail open (`decision.py:45-50`). Citation errors fail open (`guard_doc_write.py:81-84`).
+- The stray guard is `Write`-only (`guard_doc_write.py:89-92`).
+- The guard reads and decides only. Hooks never rebuild the backbone.
+- Migration never clobbers a non-empty file (`migrate.py:347-354`).
+- Language hints only warn, never deny.
+- When enabled, the stray guard denies `writing-plans` output under `docs/superpowers/{plans,specs}`. `plans` and `specs` are not excluded (`constants.py:49`, `:57`).
+- `doc_guard_allow` exempts those paths (`guard_doc_write.py:97`).

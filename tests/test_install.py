@@ -36,6 +36,7 @@ from dummyindex.installer import (
     parse_uninstall_args,
     uninstall,
 )
+from tests.paths import FIXTURES_DIR
 
 
 class _RecordingRunner:
@@ -59,9 +60,7 @@ installer_module = import_module("dummyindex.installer.install")
 
 @pytest.mark.unit
 def test_parse_defaults_user_scope_no_dir() -> None:
-    """v0.34 compatibility break: flagless install now defaults to the
-    universal ``platform="both"`` + ``LinkMode.AUTO`` (spec: symlink-single-
-    source-install) instead of the old claude-only default."""
+    """Flagless install defaults to ``platform="both"`` + ``LinkMode.AUTO``."""
     assert parse_install_args([]) == (
         "user",
         None,
@@ -234,10 +233,8 @@ def test_parse_default_plugin_opt_out_aliases(flag: str) -> None:
 
 @pytest.mark.unit
 def test_parse_install_accepts_dedupe_flag(tmp_path: Path) -> None:
-    """`--dedupe <user|project>` this wave only parses the value — it is not
-    yet acted on (repair/dedupe execution lands in a later wave). Sliced to
-    just (dedupe, force_downgrade) — the tuple now carries a trailing
-    resolved `LinkMode` too (tested separately)."""
+    """`--dedupe <user|project>` parses into the tuple's (dedupe, force_downgrade)
+    slice; the trailing resolved `LinkMode` is tested separately."""
     assert parse_install_args(["--dedupe", "user"])[7:9] == (
         "user",
         False,
@@ -347,17 +344,11 @@ def test_render_skill_agents_platform_has_portable_host_preamble() -> None:
 
 @pytest.mark.unit
 def test_render_skill_strips_test_anchor_markers() -> None:
-    """The real, shipped `skill.md`'s `test-anchor:*` canary markers must not
-    survive `render_skill()` on either host.
+    """`render_skill()` strips the shipped `skill.md`'s `test-anchor:*` markers.
 
-    `tests/cli/test_cli_doc_sync_policy_canary.py` delimits its region-scoped
-    doc-drift canary with `<!-- test-anchor:policy-restatement:begin/end -->`
-    and `<!-- test-anchor:policy-selfapply:begin/end -->` markers in the real
-    `dummyindex/skills/skill.md` (copied verbatim into every install). Those
-    markers are test-only scaffolding, never a managed region any tool
-    parses, so an installed user's `SKILL.md` must carry zero of them —
-    while the policy prose itself (which the markers merely delimit) must
-    still be present untouched.
+    `tests/cli/test_cli_doc_sync_policy_canary.py` uses the
+    `test-anchor:policy-{restatement,selfapply}` markers as test-only scaffolding,
+    so an installed `SKILL.md` carries none of them, but keeps the prose they delimit.
     """
     from dummyindex.installer.common import _skill_src, render_skill
 
@@ -461,14 +452,9 @@ def test_flagless_default_still_refuses_symlinked_agents_with_remediation(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Regression for the `--platform` default flip (claude -> both).
-
-    A flagless `install` on a repo with a symlinked `.agents` skill dir must
-    still refuse (the symlink guard is not weakened by the default flip) but
-    must now name a way out, since under the old claude-only default this
-    repo installed fine and the flip alone must not turn into an
-    unremediated hard failure.
-    """
+    """A flagless `install` with a symlinked `.agents` skill dir still refuses,
+    but names a way out (`--platform claude`): before the default became "both",
+    this repo installed fine."""
     _require_real_symlinks(tmp_path)
     target = tmp_path / "external-agents-directory"
     target.mkdir()
@@ -674,9 +660,7 @@ def test_uninstall_codex_on_linked_layout_sweeps_claude_links_too(
 
     from dummyindex.installer.common import _SIBLING_SKILLS
 
-    # The Claude side had no bytes of its own on a linked layout -- only
-    # links into the `.agents` tree just removed -- so every enumerated
-    # family must be gone AND not merely dangling.
+    # A linked Claude side owns no bytes, so every family is gone, not merely dangling.
     for family in ("dummyindex", *(sib for _sub, sib in _SIBLING_SKILLS)):
         fd = tmp_path / ".claude" / "skills" / family
         assert not fd.exists()
@@ -751,12 +735,7 @@ def test_uninstall_does_not_follow_nested_sibling_directory_symlink(
 
 
 def _require_real_symlinks(tmp_path: Path) -> None:
-    """Skip the calling test when this environment cannot create symlinks.
-
-    Mirrors `tests/test_install_link_primitives.py`'s guard of the same
-    name: only tests that create REAL symlinks to exercise genuine
-    filesystem semantics are guarded this way.
-    """
+    """Skip the calling test when this environment cannot create symlinks."""
     probe = tmp_path / ".uninstall-sweep-capability-probe"
     target = tmp_path / ".uninstall-sweep-capability-target"
     target.mkdir(exist_ok=True)
@@ -769,13 +748,8 @@ def _require_real_symlinks(tmp_path: Path) -> None:
 
 
 def _build_linked_layout(tmp_path: Path) -> tuple[str, ...]:
-    """Build a real, stamped `.agents/skills/<family>` tree for every
-    enumerated family, then create every Claude-side link via
-    `create_family_links` -- the same primitive `install()`'s link-mode
-    wiring will dispatch to in a later wave (Wave 3, install.py; not yet
-    wired as of this test, so tests build the linked shape directly rather
-    than depending on it). Returns the 8 family names, main first.
-    """
+    """Build a stamped `.agents/skills/<family>` tree per family and link the Claude
+    side with `create_family_links`. Returns the 8 family names, main first."""
     from dummyindex.installer.common import _SIBLING_SKILLS, PACKAGE_VERSION
     from dummyindex.installer.link import create_family_links
 
@@ -801,14 +775,8 @@ def _build_linked_layout(tmp_path: Path) -> tuple[str, ...]:
 def test_uninstall_platform_claude_on_linked_layout_removes_every_link(
     tmp_path: Path,
 ) -> None:
-    """LOCKS existing behavior (spec: symlink-single-source-install,
-    Uninstall section, item 2): on a linked layout, `--platform claude`
-    removes exactly the 8 Claude-side links via the existing no-follow
-    removal (`_remove_skill_family`'s `skill_dir.is_symlink(): unlink()` for
-    the main family, `_remove_owned_tree_no_follow` for each sibling,
-    `uninstall.py:110-115`) and leaves the real `.agents` targets fully
-    intact. This locks the logic in place -- it must not change.
-    """
+    """LOCKED: on a linked layout `--platform claude` removes exactly the 8 Claude-side
+    links via the no-follow removal and leaves the real `.agents` targets intact."""
     _require_real_symlinks(tmp_path)
     families = _build_linked_layout(tmp_path)
     claude_root = tmp_path / ".claude" / "skills"
@@ -831,28 +799,16 @@ def test_uninstall_platform_claude_on_linked_layout_removes_every_link(
 def test_uninstall_platform_agents_sweeps_dangling_claude_links_and_spares_foreign(
     tmp_path: Path,
 ) -> None:
-    """After removing the codex family, `uninstall(platform="agents")` must
-    sweep the now-dangling Claude-side links it left behind (spec:
-    symlink-single-source-install, Uninstall section, item 1): removing the
-    real `.agents/skills/<family>` tree turns every dummyindex-owned
-    Claude-side link that pointed at it into a dangling one, and a
-    dummyindex-owned link must never dangle after a dummyindex uninstall. A
-    FOREIGN link occupying one of the 8 family slots is left untouched
-    (item 3), even though its `.agents` sibling directory is still removed
-    like every other selected family -- `--platform agents` never inspects
-    the Claude side to decide whether to remove the codex family.
-    """
+    """`--platform agents` removes every `.agents` tree and sweeps the Claude links
+    it leaves dangling: an owned link must never dangle after uninstall. A FOREIGN
+    link in a family slot survives, though its `.agents` sibling is still removed."""
     _require_real_symlinks(tmp_path)
     families = _build_linked_layout(tmp_path)
     claude_root = tmp_path / ".claude" / "skills"
     agents_root = tmp_path / ".agents" / "skills"
 
-    # Turn ONE family's Claude-side link foreign: replace the healthy link
-    # `create_family_links` made with a link to an unrelated external
-    # directory. Its readlink value no longer matches
-    # `relative_link_value(family)` and it does not resolve to the real
-    # family either, so `classify_family_link` reports FOREIGN, never
-    # OURS_DANGLING -- the sweep must never remove it.
+    # Point ONE family's Claude-side link at an unrelated dir: `classify_family_link`
+    # then reports FOREIGN, never OURS_DANGLING, so the sweep must never remove it.
     foreign_family = "dummyindex-audit"
     assert foreign_family in families  # precondition: a real sibling label
     foreign_link = claude_root / foreign_family
@@ -1085,15 +1041,9 @@ def test_uninstall_project_scope_removes_skill(tmp_path: Path) -> None:
 def test_flagless_install_then_flagless_uninstall_leaves_no_trace(
     tmp_path: Path,
 ) -> None:
-    """v0.34 widened the flagless default on BOTH `install()` and
-    `uninstall()` to `platform="both"` (spec: symlink-single-source-install).
-    Every *other* uninstall test in this module passes an explicit
-    `platform=`, so none of them proves a flagless `uninstall()` actually
-    removes what a flagless `install()` wrote. Enumerate the families
-    (main + the 7 siblings) from `_SIBLING_SKILLS` -- never a `dummyindex*`
-    glob, which would also catch the equip-generated `dummyindex-verify`
-    skill that is not part of this installer's family.
-    """
+    """A flagless `uninstall()` removes what a flagless `install()` wrote; the other
+    uninstall tests all pass `platform=`. Families come from `_SIBLING_SKILLS`, never
+    a `dummyindex*` glob, which would also catch equip's `dummyindex-verify`."""
     from dummyindex.context.output.agents_md import (
         AGENTS_BEGIN_MARKER,
         bootstrap_project_agents_md,
@@ -1137,9 +1087,7 @@ def test_flagless_uninstall_preserves_foreign_file_inside_family_dir(
 
 @pytest.mark.integration
 def test_uninstall_accepts_platform_agents_alias_as_codex(tmp_path: Path) -> None:
-    """`uninstall()` is its own boundary (spec: called directly, not only via
-    `parse_uninstall_args`), so it normalizes the public `agents` spelling to
-    the internal `"codex"` token too."""
+    """`uninstall()` is called directly too, so it also maps `agents` to `"codex"`."""
     install(scope="project", project_dir=tmp_path, platform="codex")
     skill_path = tmp_path / CODEX_SKILL_REL
     assert skill_path.exists()
@@ -1230,7 +1178,7 @@ def test_parse_rejects_unknown_platform(capsys: pytest.CaptureFixture[str]) -> N
     assert "claude|agents|both" in capsys.readouterr().err
 
 
-# ----- --link / --copy tri-state (spec: symlink-single-source-install) ------
+# --- --link / --copy tri-state (spec: symlink-single-source-install)
 
 
 @pytest.mark.unit
@@ -1260,9 +1208,8 @@ def test_parse_link_and_copy_together_is_a_parse_time_rejection(
 def test_parse_link_with_platform_agents_is_a_parse_time_rejection(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """`--link` writes the Claude side of the pair; `--platform agents` has
-    no Claude side to link to, so this combination must be rejected before
-    any install runs (exit 2, not a runtime exit-1 failure)."""
+    """`--link` writes the Claude side, which `--platform agents` lacks, so the pair
+    is rejected at parse time (exit 2), before any install runs."""
     with pytest.raises(SystemExit) as exc:
         parse_install_args(["--link", "--platform", "agents"])
     assert exc.value.code == 2
@@ -1445,11 +1392,8 @@ def test_top_level_uninstall_missing_dir_value_does_not_remove_default_skill(
 def test_top_level_install_forwards_link_mode_and_platform_default(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """`__main__.main()`'s unpack of `parse_install_args`'s tuple into
-    `install(...)` kwargs is otherwise untested — the only install coverage
-    at this layer is `install --help`, which never reaches the unpack. A
-    width mismatch between the tuple and the unpack would be caught by
-    nothing without this test."""
+    """Guards `__main__.main()`'s unpack of `parse_install_args`'s tuple into
+    `install(...)` kwargs: nothing else here catches a tuple-width mismatch."""
     from dummyindex import __main__
 
     captured: dict[str, object] = {}
@@ -1513,8 +1457,7 @@ def test_install_user_scope_uses_home(
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
     monkeypatch.setenv("USERPROFILE", str(fake_home))
-    # Chdir into a clean tmp dir (no .git/) so the v0.13.4 auto-init step
-    # doesn't fire and try to index the test runner's cwd.
+    # A clean cwd (no .git/) keeps auto-init from indexing the test runner's cwd.
     clean_cwd = tmp_path / "cwd"
     clean_cwd.mkdir()
     monkeypatch.chdir(clean_cwd)
@@ -1527,11 +1470,8 @@ def test_install_user_scope_uses_home(
     assert claude_md.exists()
     assert "dummyindex" in claude_md.read_text(encoding="utf-8")
     out = capsys.readouterr().out
-    # Linking is now the default for a fresh MAIN family, so the transcript
-    # says "claude skill linked -> <family dir>" (no per-file path) rather
-    # than "<platform> skill installed -> <SKILL.md path>"; tolerate either
-    # phrasing (a claude-only or copy-fallback path still says "installed"
-    # with the full file path).
+    # A fresh MAIN family links by default ("skill linked -> <family dir>"); a copy
+    # fallback still says "skill installed -> <SKILL.md path>". Accept either.
     assert "skill linked" in out or "skill installed" in out
     assert str(skill_dst) in out or str(skill_dst.parent) in out
     # No .git/ in clean_cwd, so auto-init was skipped and the message says so.
@@ -1588,17 +1528,13 @@ def test_install_codex_user_scope_honors_codex_home_override(
     assert not (fake_home / ".codex").exists()
 
 
-# ----- auto-init added in v0.13.4 -------------------------------------------
-# When `install` is run with a project_dir (or from a cwd) that contains
-# a `.git/`, the install also builds .context/, writes CLAUDE.md, and
-# installs the auto-refresh hooks — so a fresh user gets the full setup in
-# one command instead of needing `install` + `ingest` separately.
+# --- auto-init
+# `install` into a project dir (or cwd) with a `.git/` also builds .context/,
+# writes CLAUDE.md and installs the auto-refresh hooks: full setup in one command.
 
 
 def _make_repo_with_source(target: Path) -> None:
-    """Minimal git repo with one Python source file — enough for `build_all`
-    to produce a non-empty `.context/` without depending on the sample
-    fixture's exact structure."""
+    """Minimal git repo with one Python file: enough for a non-empty `.context/`."""
     target.mkdir(parents=True, exist_ok=True)
     (target / ".git").mkdir()
     # A bare-enough .git/ — build_all only looks for the marker dir; it
@@ -1677,10 +1613,8 @@ def test_install_codex_auto_init_folds_legacy_root_claude_md(
 ) -> None:
     """A codex-only auto-init folds a dummyindex-generated legacy root file.
 
-    The full-build branch passes bootstrap=False for codex installs, so the
-    post-build guarded fold is the only chance to consolidate the dangling
-    root file. The fold must not create Claude integrations beyond the
-    canonical guidance file itself.
+    The full build passes bootstrap=False for codex, so the post-build guarded fold
+    is the only chance to consolidate the root file.
     """
     repo = tmp_path / "repo"
     _make_repo_with_source(repo)
@@ -1710,9 +1644,8 @@ def test_install_codex_enriched_reinstall_folds_legacy_root_claude_md(
 ) -> None:
     """The enriched-preserved branch folds for codex-only reinstalls too.
 
-    Mirrors ``_make_enriched_context`` from
-    ``tests/context/output/test_claude_md_build.py`` locally — cross-module
-    test-helper imports have no precedent in this suite.
+    Inlines ``_make_enriched_context`` (``tests/context/output/test_claude_md_build.py``):
+    the suite has no cross-module test-helper imports.
     """
     from dummyindex.context.build.runner import build_all
 
@@ -1814,15 +1747,9 @@ def test_uninstall_codex_user_scope_keeps_guidance_for_project_scope_skill(
 def test_uninstall_user_scope_flagless_removes_owned_auto_init_guidance(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Matched pair with
-    `test_uninstall_codex_user_scope_keeps_guidance_for_project_scope_skill`:
-    that test locks the NOT-owned case (a project guidance block bootstrapped
-    without an owner survives a user-scope uninstall). This one locks the
-    OWNED case -- a block explicitly stamped `PROJECT_OWNER_USER_AUTO_INIT`
-    (see `uninstall.py` ~lines 206-210) is stripped -- using flagless
-    `install()`/`uninstall()` calls (no `platform=`), which now default to
-    `"both"` on both entry points.
-    """
+    """The OWNED case: a block stamped `PROJECT_OWNER_USER_AUTO_INIT` is stripped by a
+    flagless user-scope uninstall. The NOT-owned pair is
+    `test_uninstall_codex_user_scope_keeps_guidance_for_project_scope_skill`."""
     from dummyindex.context.output.agents_md import (
         PROJECT_OWNER_USER_AUTO_INIT,
         bootstrap_project_agents_md,
@@ -1846,8 +1773,7 @@ def test_uninstall_user_scope_flagless_removes_owned_auto_init_guidance(
 
     uninstall(scope="user")  # flagless: platform="both"
 
-    # The block was the file's only content, so removal deletes it entirely
-    # (mirrors test_uninstall_codex_user_scope_cleans_global_and_owned_auto_init_guidance).
+    # The block was the file's only content, so removal deletes the file.
     assert not project_agents.exists()
     # User-scope uninstall must not touch the project-scope install.
     assert (repo / CODEX_SKILL_REL).exists()
@@ -1940,8 +1866,7 @@ def test_install_auto_init_runs_for_submodule_git_file(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """A submodule's `.git` is a *file* pointing at the superproject's module
-    dir, not a directory. Auto-init must still fire (was the real-world bug:
-    `install` printed "skipped project init" for a valid submodule)."""
+    dir, not a directory; auto-init must still fire."""
     superproject = tmp_path / "super"
     module_dir = superproject / ".git" / "modules" / "backend"
     module_dir.mkdir(parents=True)
@@ -2021,10 +1946,8 @@ def test_install_defaults_writes_config_json(
 ) -> None:
     """`install --defaults` on a git repo writes .context/config.json defaults.
 
-    Flagless install now defaults to ``platform="both"`` (v0.34 compatibility
-    break), so the written default model is the portable ``"current"``, not
-    the old claude-only ``"sonnet"`` — see
-    ``default_config()``'s ``portable_model`` branch.
+    Flagless means ``platform="both"``, so the model is the portable ``"current"``
+    (``default_config()``'s ``portable_model`` branch), not ``"sonnet"``.
     """
     import json
 
@@ -2081,10 +2004,7 @@ def test_install_defaults_never_clobbers_existing_config(
     monkeypatch.setenv("HOME", str(fake_home))
     monkeypatch.setenv("USERPROFILE", str(fake_home))
 
-    # First install writes the defaults. Flagless install defaults to
-    # platform="both" (v0.34 compatibility break), whose portable default
-    # model is "current" (see default_config()'s portable_model branch) —
-    # not the old claude-only "sonnet".
+    # First install writes the defaults (flagless: portable model "current").
     install(scope="project", project_dir=repo, defaults=True)
     config_path = repo / ".context" / "config.json"
     assert config_path.exists()
@@ -2109,13 +2029,8 @@ def test_install_defaults_never_clobbers_existing_config(
 def test_install_no_onboarding_also_writes_config_json(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """`--no-onboarding` is load-bearing: it means "non-interactive, use
-    defaults" just like `--defaults`, so it writes .context/config.json too.
-
-    Flagless install now defaults to platform="both" (v0.34 compatibility
-    break), so the written default model is the portable "current", not the
-    old claude-only "sonnet".
-    """
+    """`--no-onboarding` means "non-interactive, use defaults" like `--defaults`, so
+    it writes .context/config.json too (flagless: portable model "current")."""
     import json
 
     repo = tmp_path / "repo"
@@ -2138,9 +2053,8 @@ def test_install_no_onboarding_also_writes_config_json(
 def test_install_migrates_stale_config_in_place(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """A plain re-install (the `/dummyindex-update` path — no flags) migrates a
-    stale on-disk config.json (pre-v2 schema + legacy `opus-4.7` value) to the
-    current schema/value in place, preserving every user choice."""
+    """A plain re-install (the `/dummyindex-update` path) migrates a pre-v2 config.json
+    with legacy `opus-4.7` in place, preserving every user choice."""
     import json
 
     repo = tmp_path / "repo"
@@ -2185,9 +2099,8 @@ def test_install_migrates_stale_config_in_place(
 def test_install_folds_equipped_plugin_into_wired(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A plain re-install (the `/dummyindex-update` path) folds an equip-installed
-    plugin recorded in equipment.json into config.wired, so a v1→v2 migration
-    never silently drops it from the declared-intent ledger."""
+    """A plain re-install folds an equip plugin from equipment.json into config.wired,
+    so a v1→v2 migration never silently drops it from the declared-intent ledger."""
     import json
 
     from dummyindex.context.domains.equip.enums import (
@@ -2210,8 +2123,7 @@ def test_install_folds_equipped_plugin_into_wired(
     install(scope="project", project_dir=repo, defaults=True)
     context_dir = repo / ".context"
 
-    # A repo equipped (under an older CLI) with an extra plugin recorded in
-    # equipment.json + a stale v1 config that knows nothing about it.
+    # An extra plugin in equipment.json plus a stale v1 config unaware of it.
     write_manifest(
         context_dir,
         EquipmentManifest(
@@ -2287,10 +2199,8 @@ def test_install_copies_sibling_skills(tmp_path: Path, skill_label: str) -> None
 
 @pytest.mark.integration
 def test_install_ships_no_template_files(tmp_path: Path) -> None:
-    """*.tmpl render templates are package data, resolved package-relative by
-    equip's renderer — installing them into repos ships inert files that
-    mislead agents and pollute reconcile/lint surfaces. Skip them; genuinely
-    consumed companions (audit's persona agents/) still ship."""
+    """*.tmpl templates are package data read package-relative, so installed copies
+    would be inert and misleading; real companions (audit's agents/) still ship."""
     install(scope="project", project_dir=tmp_path, skill_only=True)
     skills_root = tmp_path / ".agents" / "skills"
     assert not list(skills_root.rglob("*.tmpl"))
@@ -2336,13 +2246,11 @@ def test_uninstall_removes_update_skill(tmp_path: Path) -> None:
     assert not sib.exists()
 
 
-# ----- C1/C6 P0: install must not destroy a curated index -------------------
+# --- C1/C6 P0: install must not destroy a curated index
 
 
 def _curate_index(repo: Path) -> str:
-    """Rename the first community feature to a named id (flips it INFERRED via
-    the real council op). Returns the new id. Mirrors the curation a user does
-    after the council runs."""
+    """Rename the first community feature via the real council op; return the new id."""
     import json
 
     from dummyindex.context.domains.features import rename_feature
@@ -2439,6 +2347,106 @@ def test_install_auto_init_advances_version_on_curated_index(
     assert meta_after["dummyindex_version"] == PACKAGE_VERSION
 
 
+_RETIRED_EVALS = FIXTURES_DIR / "retired_equipment_evals"
+_CONTEXT_LINE = "  .context/        ->  "
+
+
+def _seed_retired_equipment_evals(repo: Path) -> str:
+    """Seed 7 verbatim v0.36 starter suites + 1 edited suite.
+
+    Returns the edited suite's filename (the one that must be backed up).
+    """
+    names = sorted(p.name for p in _RETIRED_EVALS.glob("*.suite.json"))
+    evals = repo / ".context" / "equipment-evals"
+    evals.mkdir(parents=True)
+    for name in names[:7]:
+        (evals / name).write_bytes((_RETIRED_EVALS / name).read_bytes())
+    edited_name = names[7]
+    edited = json.loads((_RETIRED_EVALS / edited_name).read_text(encoding="utf-8"))
+    edited["cases"][0]["prompt"] += "!"
+    (evals / edited_name).write_text(
+        json.dumps(edited, indent=2) + "\n", encoding="utf-8"
+    )
+    return edited_name
+
+
+@pytest.mark.integration
+def test_install_auto_init_reports_retired_path_migration(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The curated install refresh retires `.context/equipment-evals/` and says
+    so: removed paths capped at 5 + an overflow line, one backed-up line."""
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
+
+    install(scope="project", project_dir=repo)
+    _curate_index(repo)
+    edited_name = _seed_retired_equipment_evals(repo)
+    capsys.readouterr()  # drain first-install output
+
+    install(scope="project", project_dir=repo)
+
+    out = capsys.readouterr().out
+    lines = out.splitlines()
+    removed = [line for line in lines if line.startswith(f"{_CONTEXT_LINE}removed ")]
+    backed_up = [
+        line for line in lines if line.startswith(f"{_CONTEXT_LINE}backed up to ")
+    ]
+    assert len(removed) == 5
+    assert lines.count(f"{_CONTEXT_LINE}… and 3 more removed") == 1
+    assert backed_up == [
+        f"{_CONTEXT_LINE}backed up to .context/_doc_backups/retired/0.37.0/"
+        f"equipment-evals/{edited_name}"
+    ]
+    assert "warning: migration" not in out
+    assert "cache:" not in out
+    assert not (repo / ".context" / "equipment-evals").exists()
+
+
+@pytest.mark.integration
+def test_install_auto_init_warns_when_required_refresh_artifact_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A failed symbol-graph write holds the version stamp back, and the
+    install says so with the cause and the fix instead of reporting success."""
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
+
+    install(scope="project", project_dir=repo)
+    _curate_index(repo)
+    meta_path = repo / ".context" / "meta.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta["dummyindex_version"] = "0.15.0"
+    meta_path.write_text(
+        json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+
+    def _boom(*_args: object, **_kwargs: object) -> None:
+        raise RuntimeError("graph write exploded")
+
+    monkeypatch.setattr("dummyindex.context.build.enriched_refresh.build_graph", _boom)
+    capsys.readouterr()  # drain first-install output
+
+    with pytest.warns(UserWarning, match="symbol-graph refresh failed"):
+        install(scope="project", project_dir=repo)
+
+    out = capsys.readouterr().out
+    assert "version stamp not advanced" in out
+    assert "features/symbol-graph.json failed" in out
+    assert "graph write exploded" in out
+    assert "dummyindex context rebuild --changed" in out
+    meta_after = json.loads(meta_path.read_text(encoding="utf-8"))
+    assert meta_after["dummyindex_version"] == "0.15.0"
+
+
 @pytest.mark.integration
 def test_install_auto_init_full_builds_deterministic_index(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -2458,12 +2466,11 @@ def test_install_auto_init_full_builds_deterministic_index(
     meta_path = repo / ".context" / "meta.json"
     created_before = json.loads(meta_path.read_text(encoding="utf-8"))["created_at"]
 
-    # No curation. Re-install full-builds → created_at is reset by new_meta.
+    # No curation, so re-install full-builds.
     install(scope="project", project_dir=repo)
     created_after = json.loads(meta_path.read_text(encoding="utf-8"))["created_at"]
-    # Deterministic path went through build_all (created_at re-stamped or equal);
-    # the key assertion is that it did NOT take the preserved path, which we
-    # prove by the absence of curated dirs — all features stay community-*.
+    # created_at may be re-stamped or equal; the proof that the preserved path was
+    # skipped is that every feature stays community-*.
     index = json.loads(
         (repo / ".context" / "features" / "INDEX.json").read_text(encoding="utf-8")
     )
@@ -2471,7 +2478,7 @@ def test_install_auto_init_full_builds_deterministic_index(
     assert isinstance(created_after, str) and isinstance(created_before, str)
 
 
-# ----- reviewed default-plugin orchestration -------------------------------
+# --- reviewed default-plugin orchestration
 
 
 def _plugin_settings(repo: Path) -> dict:
@@ -2552,6 +2559,12 @@ def test_install_declares_and_materializes_all_defaults_once(
         "ayghri/i-have-adhd (tracks latest); "
         "reviewed surfaces: skill, opt-in SessionStart shell command hook; "
         "runs code: yes; opt out this run with --no-default-plugins",
+        "default plugin trust -> ponytail@ponytail from "
+        "DietrichGebert/ponytail (tracks latest); "
+        "reviewed surfaces: skills, commands, SessionStart Node command hook, "
+        "SubagentStart Node command hook, UserPromptSubmit Node command hook, "
+        "band UI module with local task ledger; runs code: yes; opt out this run "
+        "with --no-default-plugins",
     )
     for disclosure in expected_trust_disclosures:
         assert disclosure in before_runner
@@ -2751,24 +2764,18 @@ def test_install_explicit_default_opt_out_remains_false(
     assert runner.calls == []
 
 
-# ----- user-scope skill registration: sentinel probe (plan task 11) ---------
-# The idempotency probe (install.py:176) must key off the `_SKILL_REGISTRATION`
-# SENTINEL substring ("**dummyindex** ("), NOT the bare word "dummyindex". A
-# pre-existing ~/.claude/CLAUDE.md may *mention* dummyindex in user prose
-# without ever carrying our managed registration block — that file must still
-# get the block appended. The unique opening of the registration bullet is the
-# sentinel substring asserted below.
+# --- user-scope skill registration: sentinel probe
+# The idempotency probe keys off the `_SKILL_REGISTRATION` sentinel, NOT the bare
+# word "dummyindex": a ~/.claude/CLAUDE.md that only mentions it in prose must
+# still get the block appended.
 
-# The stable, unique opening of the `_SKILL_REGISTRATION` bullet — the exact
-# substring install.py probes for. Asserting on this (not the bare word)
-# pins the fix.
+# The unique opening of the `_SKILL_REGISTRATION` bullet that install.py probes for.
 _SENTINEL = "**dummyindex** ("
 
 
 def _user_scope_clean_cwd(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """Point HOME at a fresh tmp home and chdir into a clean non-git dir so the
-    user-scope `install()` registers in ~/.claude/CLAUDE.md without firing
-    auto-init on the test runner's cwd. Returns the fake HOME path."""
+    """Fake HOME plus a clean non-git cwd, so a user-scope `install()` registers
+    without firing auto-init. Returns the fake HOME."""
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
@@ -2783,9 +2790,8 @@ def _user_scope_clean_cwd(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Pa
 def test_install_user_scope_appends_block_when_bare_word_only(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A ~/.claude/CLAUDE.md that names "dummyindex" in prose but carries no
-    `_SKILL_REGISTRATION` sentinel must get the registration block appended —
-    the bare word must NOT be mistaken for the sentinel (install.py:176)."""
+    """A ~/.claude/CLAUDE.md naming "dummyindex" only in prose still gets the
+    registration block: the bare word is NOT the sentinel."""
     fake_home = _user_scope_clean_cwd(tmp_path, monkeypatch)
     claude_md = fake_home / ".claude" / "CLAUDE.md"
     claude_md.parent.mkdir(parents=True, exist_ok=True)
@@ -2860,8 +2866,7 @@ def test_install_skill_entry_reported_needs_user(
 ) -> None:
     """A ``kind: skill`` wired entry is reported needs-user, never auto-wired.
 
-    The reconcile path classifies a skill entry into ``needs_user`` and the init
-    summary surfaces a ``needs you:`` line on stderr — reported, never prompted.
+    The init summary prints a ``needs you:`` line on stderr; it never prompts.
     """
     from dataclasses import replace
 
@@ -2887,7 +2892,7 @@ def test_install_skill_entry_reported_needs_user(
     assert "some-skill" not in _enabled_plugins(repo)
 
 
-# ----- equip-generated tools are refreshed on (re)install --------------------
+# --- equip-generated tools are refreshed on (re)install
 
 
 @pytest.mark.unit
@@ -2896,11 +2901,8 @@ def test_refresh_equipment_step_noop_when_not_equipped(
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """An indexed-but-unequipped repo (no equipment.json) is a silent no-op.
-
-    The generated-tool refresh must not even attempt `equip refresh` when there is
-    no manifest — no output, no error, and the underlying refresh is never called.
-    """
+    """An indexed-but-unequipped repo (no equipment.json) is a silent no-op that
+    never calls `equip refresh`."""
     from dummyindex.installer.install import _refresh_equipment_step
 
     (tmp_path / ".context").mkdir()  # indexed, but `equip apply` never ran
@@ -2919,11 +2921,8 @@ def test_refresh_equipment_step_refreshes_when_equipped(
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """An equipped repo triggers `equip refresh` against the just-installed templates.
-
-    Proves the install-time wiring: with `equipment.json` present, the step builds
-    fresh renders and calls the hash-baselined `refresh`, reporting what re-rendered.
-    """
+    """With `equipment.json` present, the step builds fresh renders, calls the
+    hash-baselined `refresh` and reports what re-rendered."""
     from dummyindex.context.domains.equip import RefreshReport
     from dummyindex.installer.install import _refresh_equipment_step
 

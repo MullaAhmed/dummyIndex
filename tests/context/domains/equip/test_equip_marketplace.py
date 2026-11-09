@@ -78,13 +78,11 @@ def test_seed_marketplaces_include_official_and_collection():
     assert agency.is_collection is True
 
 
-# ----- seed catalog verified against docs/sources/installable-sources.md -----
-# (2026-06-13 verification pass: existence, marketplace.json presence, trust.)
+# --- seed catalog verified against docs/sources/installable-sources.md
 
 
 def test_seed_drift_fixed_anthropics_skills_is_native_now():
-    # anthropics/skills ships .claude-plugin/marketplace.json — the old
-    # is_collection flag was stale.
+    # anthropics/skills ships .claude-plugin/marketplace.json, so it is native.
     by_repo = {s.repo: s for s in SEED_MARKETPLACES}
     skills = by_repo["anthropics/skills"]
     assert skills.is_collection is False

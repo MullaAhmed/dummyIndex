@@ -1,12 +1,8 @@
 """Pipeline-area enums.
 
-`ConfidenceLevel` is the one closed-alphabet string-constant set used by the
-deterministic backbone. Values are real `str` (via `(str, Enum)`) so they
-round-trip through JSON serialisation without conversion. Python
-3.10-compatible (no `enum.StrEnum`, which lands in 3.11).
-
-Node kinds and edge relations are emitted as free strings at their call
-sites (e.g. `"file"`, `"calls"`, `uses_<callee_name>`), not enumerated here.
+`ConfidenceLevel` is a `(str, Enum)` so values round-trip through JSON
+unchanged; not `enum.StrEnum`, which needs 3.11 (3.10 is supported). Node kinds
+and edge relations stay free strings at their call sites, not enumerated here.
 """
 
 from __future__ import annotations

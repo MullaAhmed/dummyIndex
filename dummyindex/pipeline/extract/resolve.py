@@ -1,12 +1,9 @@
-"""Cross-file import resolution.
+"""Cross-file import resolution, run by `extract()` after the per-file pass.
 
-`extract()` runs the per-file pass first, then calls these to upgrade
-file-level imports into class-level INFERRED edges. Currently:
-
-- `_resolve_cross_file_imports` — Python (uses tree-sitter-python directly
-  to re-parse classes referenced from `from x import Y` statements).
-- `_resolve_cross_file_java_imports` — Java (resolves `import foo.bar.Baz`
-  references to the actual `Baz` class node).
+- `_resolve_cross_file_imports` — Python: `from x import Y` → class-level
+  INFERRED `uses` edges.
+- `_resolve_cross_file_java_imports` — Java: `import foo.bar.Baz` → an
+  `imports` edge to the `Baz` class node.
 """
 
 from __future__ import annotations
@@ -23,19 +20,12 @@ def _resolve_cross_file_imports(
     per_file: list[dict],
     paths: list[Path],
 ) -> list[dict]:
-    """
-    Two-pass import resolution: turn file-level imports into class-level edges.
+    """Two-pass import resolution: turn file-level imports into class-level edges.
 
-    Pass 1 - build a global map: class/function name → node_id, per stem.
-    Pass 2 - for each `from .module import Name`, look up Name in the global
-              map and add a direct INFERRED edge from each class in the
-              importing file to the imported entity.
-
-    This turns:
-        auth.py --imports_from--> models.py          (obvious, filtered out)
-    Into:
-        DigestAuth --uses--> Response  [INFERRED]    (cross-file, interesting!)
-        BasicAuth  --uses--> Request   [INFERRED]
+    Pass 1 maps each stem's public class names (not ``name()`` functions) to
+    node ids. Pass 2, for each ``from .module import Name``, adds an INFERRED
+    ``uses`` edge from every class in the importing file to ``Name``: e.g.
+    ``DigestAuth --uses--> Response`` rather than ``auth.py --imports_from--> models.py``.
     """
     try:
         import tree_sitter_python as tspython

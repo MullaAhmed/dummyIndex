@@ -1,21 +1,10 @@
 """Deterministic signal tags for one GC candidate — no verdict.
 
-``classify`` is **pure**: it reads only the ``Candidate`` fields the enumerator
-already populated (``status`` / ``tracked`` / ``age_days``) plus the workspace's
-own files under ``context_dir``. It never shells git and never imports the
-sibling ``enumerate`` module — git-derived facts (``tracked`` / ``age_days``)
-arrive on the ``Candidate`` and are simply surfaced here.
-
-The council reasons over these tags; ``classify`` assigns no ``Disposition``.
-
-**``orphan-empty`` — the load-bearing correctness note.** A freshly-scaffolded
-proposal's ``spec.md`` is *not* byte-equal to ``_spec_template(title)`` because
-``proposals/store.py:apply_consistency`` injects a ``## Consistency`` block into
-``spec.md`` right after scaffolding. But ``apply_consistency`` never touches
-``plan.md`` or ``checklist.md``. So "scaffolded but never authored" is decided
-precisely off those two files: ``plan.md`` byte-equals ``_plan_template(title)``
-**and** ``checklist.md`` byte-equals ``_checklist_template(title)`` (the title is
-read from ``proposal.json``). ``spec.md`` is deliberately *not* compared.
+``classify`` is pure: it reads the ``Candidate``'s fields plus the workspace's own
+files and never shells git. ``orphan-empty`` compares only ``plan.md`` and
+``checklist.md`` with their scaffold templates (title from ``proposal.json``):
+``proposals/store.py:apply_consistency`` adds a ``## Consistency`` block to
+``spec.md`` right after scaffolding, so ``spec.md`` never byte-matches.
 """
 
 from __future__ import annotations
@@ -36,21 +25,12 @@ from .models import Candidate
 
 
 def classify(candidate: Candidate, context_dir: Path, root: Path) -> tuple[str, ...]:
-    """Return the deterministic signal tags for ``candidate`` (no verdict).
+    """Return the deterministic signal tags for ``candidate``, in this order.
 
-    Tags are emitted in a fixed, deterministic order:
-
-    1. ``status:<value>`` — when ``candidate.status`` is set.
-    2. ``orphan-empty`` — proposals/archived only: ``plan.md`` + ``checklist.md``
-       byte-equal the scaffold templates (``spec.md`` is *not* compared).
-    3. ``checklist-complete`` / ``checklist-partial`` — proposals/archived only,
-       via ``buildloop.parse_checklist`` + ``counts``.
-    4. ``report-written`` — audits only, via ``audit.report_written``.
-    5. ``untracked`` — when ``candidate.tracked`` is False.
-    6. ``age-<n>d`` — when ``candidate.age_days`` is not None.
-
-    ``root`` is accepted for signature symmetry with the rest of the domain;
-    the function reads only ``context_dir`` (it is a pure workspace probe).
+    ``status:<value>``; ``orphan-empty`` and ``checklist-complete`` /
+    ``checklist-partial`` (proposals/archived only); ``report-written`` (audits
+    only); ``untracked``; ``age-<n>d``. ``root`` is unused, accepted for
+    signature symmetry with the rest of the domain.
     """
     signals: list[str] = []
 
@@ -83,9 +63,8 @@ def classify(candidate: Candidate, context_dir: Path, root: Path) -> tuple[str, 
 def _read_title(workspace: Path) -> str:
     """Read the proposal ``title`` from ``proposal.json`` (``""`` if unreadable).
 
-    The templates are parameterised by title, so an unreadable head yields a
-    title of ``""`` — which simply won't byte-match a real scaffold, so the
-    workspace is (correctly) not reported as ``orphan-empty``.
+    ``""`` won't byte-match a real scaffold, so an unreadable head is
+    (correctly) never reported as ``orphan-empty``.
     """
     head = workspace / "proposal.json"
     try:

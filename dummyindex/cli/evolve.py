@@ -1,32 +1,10 @@
-"""`dummyindex context evolve <verb>` — the self-improvement loop CLI.
+"""`dummyindex context evolve <verb>`: the self-improvement loop CLI (wire-only).
 
-Wire-only sibling of ``cli/gc.py``: parse this command's own flag alphabet,
-lazy-import the ``context.domains.evolve`` domain inside ``run`` (the layering
-rule — ``cli`` imports the domain, never the reverse), call a domain function,
-print, return an exit code. Diagnosis lives in the packaged skill. Project
-tests qualify baseline and exact candidate guidance; model improvement remains
-unmeasured.
-
-The six verbs:
-
-- ``harvest [--since DATE] [--sleep] [--json] [--run NAME]`` — collect audit
-  findings, session-memory corrections, reconcile deltas, and transcript
-  adoption misses into ``<run>/harvest.json``. ``--sleep`` is the overnight
-  contract: nothing new → exit 0 having written nothing at all.
-- ``diagnose --run NAME --from-file FILE`` — validate host-authored
-  candidates (structure, scope guard, citation existence; ≤5 candidates,
-  ≤5 target files each) into ``<run>/candidates.jsonl``.
-- ``apply --candidate N --run NAME`` — stage candidate N (0-based line) and
-  run existing project tests; unavailable checks yield verdict
-  ``blocked``, never pass.
-- ``promote --candidate N --run NAME [--override REASON]`` — adopt the gated
-  edit; a blocked verdict requires an explicit override, recorded in
-  ``evolution.jsonl``.
-- ``rollback|discard --candidate N --run NAME`` — revert an adopted edit /
-  drop the staged copy.
-
-Every transition appends exactly one line to ``.context/gc/evolution.jsonl``
-(the committed decision history).
+Core loop: ``harvest`` (``--sleep``: nothing new → exit 0, nothing written), ``diagnose``
+(validate host-authored candidates), ``apply`` (stage + run existing project tests; missing
+checks give ``blocked``, never pass), ``promote`` (a blocked verdict needs ``--override``),
+``rollback``/``discard``; plus ``evidence|learning|rules|experiment|utility``. Diagnosis
+lives in the packaged skill; project tests qualify guidance, model gains stay unmeasured.
 """
 
 from __future__ import annotations
@@ -37,10 +15,11 @@ import sys
 from pathlib import Path
 
 from .common import resolve_context_root, usage_error
+from .evolve_probation import run_attribute, run_probation
 
 _EVOLVE_USAGE = (
     "usage: dummyindex context evolve "
-    "harvest|diagnose|apply|promote|rollback|discard|evidence|learning|rules|experiment|utility ..."
+    "harvest|diagnose|apply|promote|rollback|discard|evidence|learning|rules|experiment|utility|attribute|probation ..."
 )
 
 
@@ -62,12 +41,14 @@ def run(args: list[str]) -> int:
         "rules": _evolve_rules,
         "experiment": _evolve_experiment,
         "utility": _evolve_utility,
+        "attribute": run_attribute,
+        "probation": run_probation,
     }
     handler = handlers.get(verb)
     if handler is None:
         print(
             "error: unknown evolve verb "
-            f"{verb!r} (expected harvest|diagnose|apply|promote|rollback|discard|evidence|learning|rules|experiment|utility)",
+            f"{verb!r} (expected harvest|diagnose|apply|promote|rollback|discard|evidence|learning|rules|experiment|utility|attribute|probation)",
             file=sys.stderr,
         )
         return 2
@@ -114,7 +95,12 @@ def _evolve_learning(args: list[str]) -> int:
     from dummyindex.context.domains.evolve_gate import EvolveError
     from dummyindex.context.domains.evolve_learning import (
         finish_learning,
+        learning_status,
         pending_learning,
+    )
+    from dummyindex.context.domains.proposals.closeout import (
+        learning_exit_code,
+        learning_line,
     )
 
     values, flags, err = _parse_flags(
@@ -154,6 +140,10 @@ def _evolve_learning(args: list[str]) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 1
     print(json.dumps(result, sort_keys=True, indent=2))
+    if isinstance(result, dict):
+        learning = {**result, "status": learning_status(result)}
+        print(learning_line(learning), file=sys.stderr)
+        return learning_exit_code(learning)
     return 0
 
 
@@ -264,7 +254,7 @@ def _evolve_experiment(args: list[str]) -> int:
     return 0
 
 
-# ----- shared helpers --------------------------------------------------------
+# --- shared helpers
 
 
 def _parse_flags(
@@ -349,7 +339,7 @@ def _load_candidate_lines(run_dir: Path) -> list[dict]:
     return lines
 
 
-# ----- verbs -----------------------------------------------------------------
+# --- verbs
 
 
 def _evolve_harvest(args: list[str]) -> int:

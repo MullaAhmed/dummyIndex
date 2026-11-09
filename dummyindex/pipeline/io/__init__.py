@@ -1,13 +1,9 @@
-"""Filesystem-touching pipeline helpers.
+"""Filesystem-touching pipeline helpers, re-exported here from their submodules.
 
 - ``cache`` — content-hash cache for tree-sitter parses.
-- ``detect`` — file-type detection (code / paper / image) and document
-  extraction (PDF / DOCX / XLSX → text).
+- ``detect`` — file-type detection and document extraction (PDF / DOCX / XLSX).
 - ``git`` — submodule/worktree-aware git-repo detection.
-
-Re-exported here so callers can say
-``from dummyindex.pipeline.io import detect, file_hash, save_cached``
-without picking the right submodule.
+- ``paths`` — root-confinement and safe-read-target checks.
 """
 
 from __future__ import annotations

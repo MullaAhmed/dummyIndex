@@ -57,13 +57,17 @@ is agent-invoked.
 
 #### Reviewed default plugins and project policy
 
-Claude and `both` installs declare and best-effort materialize these three
+Claude and `both` installs declare and best-effort materialize these four
 native Claude plugins in project settings:
 
 - `superpowers@claude-plugins-official` from the official marketplace.
 - `caveman@caveman` from `JuliusBrussee/caveman` (tracks the latest upstream
   default branch). Its reviewed surfaces are skills and commands plus
   `SessionStart` and `UserPromptSubmit` Node command hooks (`runs_code=true`).
+  Install writes `.caveman.json` as `{"defaultMode": "manual"}`, so caveman starts inactive.
+  It skips the write when `.caveman.json` or `.caveman/config.json` already exists.
+  It also skips the user home directory, Codex-only installs, and `caveman@caveman` set to `false`.
+  `/caveman` still works. Env var `CAVEMAN_DEFAULT_MODE` overrides the file.
 <!-- test-anchor:policy-selfapply:begin -->
 - `i-have-adhd@i-have-adhd` from `ayghri/i-have-adhd` (tracks the latest
   upstream default branch). Its reviewed surfaces are one skill plus an opt-in
@@ -74,31 +78,43 @@ native Claude plugins in project settings:
   per-prompt reminder are the profile-independent carrier of the behavior and
   stand alone with the plugin absent.
 <!-- test-anchor:policy-selfapply:end -->
+- `ponytail@ponytail` from `DietrichGebert/ponytail` (tracks the latest
+  upstream default branch). Its reviewed surfaces are skills and commands. Its
+  hooks are `SessionStart`, `SubagentStart`, and `UserPromptSubmit` Node
+  command hooks. Also reviewed: a band UI module with local task ledger
+  (`runs_code=true`). The webhook is empty by default. Once a user sets it,
+  every task row leaves the machine. The `SubagentStart` hook injects the
+  ponytail ruleset into every subagent, including dummyindex-dispatched ones.
+  It applies when mode is not `off`; default mode is `full`.
 
 Third-party sources track latest because Claude Code materializes
 marketplaces with `git clone --branch <ref>`, which accepts branch/tag names
-but never a commit SHA — a commit pin can never install. The two third-party
+but never a commit SHA — a commit pin can never install. The three third-party
 records are a narrow reviewed built-in exception; they do not weaken
 `context equip` approval for any other third-party source. Adding or swapping
 a source requires a new source review and release.
 
 <!-- test-anchor:policy-restatement:begin -->
 A Codex-only run creates no `.claude/**` state and invokes no Claude runner.
-Instead, every dummyindex-managed project receives the same always-on
-`caveman`/`i-have-adhd` output policy through its managed project guidance:
-apply it on every reply without waiting for an invocation; lead with the
-outcome or next action, keep prose compact, number multi-step work, suppress
-tangents, restate current state, and preserve technical and safety detail.
-Managed project guidance also requires checking every exposed skill's trigger
-rules before acting and invoking each match without waiting to be asked.
-Explicit user formatting requests and safety requirements win. The policy is
-project-scoped; it is not added to Codex's global guidance.
+Every dummyindex-managed project receives the same always-on output policy
+through its managed project guidance. Apply it on every reply without waiting
+for an invocation. Replies use the `i-have-adhd` shape at minimum verbosity,
+not `caveman` chat voice. Lead with the outcome or next action. Keep prose
+compact.
+Number multi-step work, at most 5 items per group. Suppress tangents, restate
+current state, and preserve technical and safety detail. Subagent prompts and
+SendMessage bodies use concise Chinese with caveman rules. Code, commits, docs,
+and final reports stay English. Repo docs use English caveman style. Before
+acting, compare the request with every exposed skill's trigger rules and invoke
+every match without waiting to be asked. Explicit user formatting requests and
+safety requirements win. The policy is project-scoped; it is not added to
+Codex's global guidance.
 <!-- test-anchor:policy-restatement:end -->
 
 Opt-outs are deliberately separate:
 
 - **One run, all defaults:** `--no-default-plugins` skips reconciliation,
-  marketplace/settings changes, and materialization of all three native
+  marketplace/settings changes, and materialization of all four native
   defaults. `--no-superpowers` remains a compatibility alias with identical
   behavior. Neither flag persists an opt-out or removes the project policy.
 - **Durable, all defaults:** set `default_plugins_enabled` to `false` in
@@ -166,12 +182,23 @@ rendering — a deliberate omission from this feature's scope (no separate
 | `dummyindex context plan-update [path] [--root DIR] [--json]` | Drift report for the SessionStart hook (advisory; markdown to stdout). `--json` swaps it for a stable envelope: `{edited, anchored: {unassigned_new_files, awaiting_enrichment, drifted_features}, suppressed, acked}`. |
 | `dummyindex context reconcile-gate [path] [--root DIR]` | Stop-hook gate (reads hook JSON on stdin). Emits a `decision: block` that blocks session exit **once** when `.context/` is stale after a substantial session, directing the agent to run the scoped council/reconcile + `reconcile-stamp`. Drift-only, scoped, block-once (`stop_hook_active`); silent when fresh / trivial / opted out. **The hook never writes or stamps `.context/`** — the agent does. |
 
+**`check` ratchets and reference checks:**
+
+- `--budget` enforces word-count ratchets in `.context/doc-budget.txt` and `tests/data/skill-budget.txt`.
+- `--style` enforces the style ratchet in `.context/style-budget.txt`. It flags sentences over 20 words and filler words.
+- With no style ratchet, `--style` only reports and prints the seed command. It exits 0.
+- `--refs` lists durable docs that cite `proposals/` or `audits/`. A hit exits 1.
+- `--update-ratchet` needs `--budget` or `--style`. It updates only the named group and only lowers entries. Alone, it exits 2.
+- Word or violation growth, or an unrecorded overage, exits 1.
+
 ### Hooks
 
 | Command | What it does |
 |---------|--------------|
 | `dummyindex context hooks install\|uninstall\|status [path] [--root DIR] [--global]` | Manage the managed Claude Code hooks in `.claude/settings.json`: UserPromptSubmit static output/skill contract **plus bounded skill-correction feedback**, SessionStart drift/memory/GC signal **plus one silent feedback refresh**, Stop handoff nudge **+ reconcile gate**, PreCompact breadcrumb, and PreToolUse `Write` doc guard. `--global` targets `~/.claude/settings.json` so they fire in every repo; a repo's own `--local` install overrides the global one. |
 | `dummyindex context hooks defer-check [path] [--root DIR]` | Exit-code probe used by the global hook guard: exit 0 (defer) when the repo has its own `--local` dummyindex hooks, else exit 1. Prints nothing. |
+
+**PreToolUse language hint:** the PreToolUse matcher is `Write|Edit|MultiEdit|Agent|Task|SendMessage`. For `Agent` and `Task`, the hook reads `prompt`. For `SendMessage`, it reads `message`. Code, URLs, and paths are removed first. Text under 200 characters is then not judged. It warns when the CJK share (CJK characters / (CJK characters + Latin words)) is below 0.5, via `additionalContext`. It never denies, and `doc_guard_enabled` does not turn it off.
 
 **Reconcile-gate opt-out:** set `"auto_council": false` in `.context/config.json` to disable the gate for a repo even when the global hooks are installed (opt-out, not opt-in — absent file/key means enabled).
 

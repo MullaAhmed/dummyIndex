@@ -1,29 +1,10 @@
-"""`dummyindex context wire` — the interactive escalation surface for `wired`.
+"""`dummyindex context wire`: the interactive escalation surface for `wired`.
 
-The headless reconciler (:func:`context.default_plugins.wire_default_plugins`)
-runs inside best-effort, never-blocking ``install``/``ingest`` init: it
-**classifies and reports** every declared ``wired`` entry as satisfied / acted /
-needs-user but NEVER prompts. That leaves the *needs-user* entries unresolved —
-an untrusted plugin that would need ``--yes``, a prior install failure, or a
-``kind=skill`` entry with no enable primitive.
-
-This command is where the prompting lives. It re-classifies ``config.wired``
-READ-ONLY using the SAME shared helper ``status`` uses
-(:func:`context.default_plugins.classify_wired_entry`), then resolves every entry
-that is not already satisfied:
-
-- a declared-but-absent wireable plugin (the **acted** class) is escalated via an
-  injectable prompt seam (:data:`_PROMPT`) — an affirmative answer (or ``--yes``)
-  performs the ``--yes``-equivalent install/enable; a decline leaves it needs-user.
-- a ``kind=skill`` entry (a **needs-user** class) is surfaced as a manual notice —
-  never auto-wired (no skill-enable primitive exists).
-- a malformed plugin target (no ``<plugin>@<marketplace>``) is reported and skipped.
-
-Non-interactive guards keep it from ever hanging a pipe or CI run: ``--yes``
-auto-affirms every plugin (no prompt call), and a non-TTY stdin without
-``--yes`` prints what *would* be prompted and exits 0 instead of blocking on
-``input``. The prompt is the builtin :func:`input` by default but is reached
-ONLY through :data:`_PROMPT`, so tests inject a fake and can never hang.
+The headless reconciler only classifies and reports, never prompting. This re-classifies
+``config.wired`` read-only (``classify_wired_entry``, shared with ``status``) and prompts
+via :data:`_PROMPT` for each untrusted wireable plugin; skills get a manual notice and
+malformed targets are skipped. Never hangs: ``--yes`` affirms without prompting, and a
+non-TTY stdin without ``--yes`` prints what would be prompted and exits 0.
 """
 
 from __future__ import annotations
@@ -72,19 +53,10 @@ def _wire(
 ) -> int:
     """Reconcile ``config.wired`` interactively. Returns the process exit code.
 
-    Read-only classification first (shared with ``status``), then act. The
-    *needs-user* bucket is what this surface resolves:
-
-    - a ``kind=plugin`` entry that needs wiring (declared-but-absent — the
-      ``acted`` bucket, plus any plugin the classifier already flagged) is the
-      one we PROMPT for. An affirmative answer (or ``--yes``) performs the
-      ``--yes``-equivalent install/enable; a decline leaves it needs-user.
-    - a ``kind=skill`` entry is surfaced as a manual notice — never auto-wired
-      (no skill-enable primitive exists).
-    - a malformed plugin target (no ``<plugin>@<marketplace>``) is skipped.
-
-    Never raises out of an unexpected per-entry failure — a wire error is
-    reported and the entry stays needs-user."""
+    Classify read-only first (shared with ``status``), then resolve each unsatisfied
+    entry: prompt for a wireable plugin (``--yes`` or a yes installs it, a decline
+    leaves it needs-user); skills are manual, never auto-wired; malformed targets are
+    skipped. A wire error is reported and leaves the entry needs-user."""
     from dummyindex.context.default_plugins import (
         WiredClass,
         WiredKind,
@@ -115,10 +87,8 @@ def _wire(
     ]
     satisfied = sum(1 for _, c in classified if c is WiredClass.SATISFIED)
 
-    # Entries this surface must resolve: a declared-but-absent (acted) plugin to
-    # PROMPT-and-wire, every needs-user entry (skills → manual, bad target →
-    # skip), and any other plugin the classifier flagged. Anything already
-    # satisfied is left untouched.
+    # Resolve everything not already satisfied: wireable plugins are prompted;
+    # skills and bad targets are surfaced.
     to_resolve = [e for e, c in classified if c is not WiredClass.SATISFIED]
     prompt_plugins = [e for e in to_resolve if _is_wireable_plugin(e)]
 
@@ -221,12 +191,9 @@ def _affirm(prompt: Callable[[str], str], target: str) -> bool:
 def _wire_plugin(out_root: Path, entry: WiredEntry) -> bool:
     """Wire one plugin entry (the ``--yes``-equivalent path). ``True`` on success.
 
-    Reuses the headless reconciler's declaration seam for exactly ``entry``, then
-    passes that same one-entry selection to the target-aware materialisation
-    seam. This is important for both sides of the boundary: reviewed defaults
-    receive their reviewed marketplace declaration, while a custom plugin can
-    never cause unrelated defaults to be installed. Any declaration or install
-    error leaves the entry needs-user (we return ``False``)."""
+    Declaration and materialisation both get the same one-entry selection, so a
+    reviewed default gets its reviewed marketplace and a custom plugin can never
+    install unrelated defaults. Any declaration or install error returns ``False``."""
     from dummyindex.context.default_plugins import (
         _split_target,
         install_default_plugins,

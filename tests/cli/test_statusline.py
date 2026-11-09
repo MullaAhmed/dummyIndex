@@ -1,18 +1,10 @@
 """Tests for ``dummyindex context statusline`` — the cold-path freshness badge.
 
 The per-prompt hot path is a shipped shell/PowerShell wrapper that ``cat``s the
-gitignored badge cache directly (no Python). ``cli/statusline.py`` is the
-**cold-path fallback**: it reads the same cache file (resolved through
-:func:`badge_cache_path`, the single source of truth shared with the
-``plan-update`` writer) and prints it. Because this runs on *every* prompt, the
-contract (spec §5) is absolute: it must **never** crash a user's shell — every
-exception, a missing ``.context/``, a missing cache, or an
-unreadable/malformed cache all collapse to **empty stdout, exit 0**, and it
-never recomputes drift.
-
-These tests pin exactly that. A smoke test also asserts the shipped ``.sh``
-reads the same path and exits 0 when the cache is absent — deliberately light
-(we don't over-test shell).
+badge cache. ``cli/statusline.py`` is the fallback: it prints the cache resolved
+by :func:`badge_cache_path` (shared with ``plan-update``), never recomputes
+drift, and must never crash a shell: any exception, missing ``.context/`` or
+bad cache gives empty stdout, exit 0. The shipped ``.sh`` gets a light smoke test.
 """
 
 from __future__ import annotations

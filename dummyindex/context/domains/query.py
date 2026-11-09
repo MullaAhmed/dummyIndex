@@ -1,29 +1,10 @@
-"""PageIndex-style retrieval over `.context/`.
+"""PageIndex-style retrieval: which features a question touches, and where to look.
 
-`dummyindex context query "..."` answers: "given this question, which
-feature(s) does it touch, and where in the source should I look?"
-
-The implementation is **deterministic — no LLM in the loop.** Same JSON
-the agent walks manually, scored by token overlap with feature names,
-summaries, file paths, and symbol names. The CLI is just a convenience
-wrapper; nothing it returns is unavailable to a tree-walking agent.
-
-Scoring is intentionally simple. Each query token is matched against:
-
-- ``feature.name``       — weight 5
-- ``feature.summary``    — weight 3
-- ``file`` basenames     — weight 2 (+6 more when the token IS the file stem,
-  +1 when it names a directory on the file's path)
-- ``symbol.name``        — weight 1.5, size-normalized, top 5 matches per
-  feature only
-- ``feature_id``         — weight 1 (cheap signal but noisy)
-
-A token matches case-insensitively against either a whole identifier
-(``app == App``) or a substring of a multi-word identifier
-(``parse`` in ``parse_body``). Query tokens are expanded through a small
-synonym map (``config`` → ``settings``, ``route`` → ``url_map``, ...) so
-vocabulary mismatch still matches. Weights and signals were tuned on the
-real-repo benchmark in ``benchmarks/retrieval/``; see its RESULTS.md.
+Deterministic, no LLM: query tokens (stopwords dropped, synonym-expanded) match
+case-insensitively as substrings, IDF-weighted, against feature name (5), summary
+(3), file basenames (2; +6 for the exact stem, +1 for a directory on the path),
+the top 5 size-normalized symbol names (1.5) and ``feature_id`` (1). Nothing it
+returns is unavailable to an agent walking the same JSON.
 """
 
 from __future__ import annotations
@@ -100,11 +81,9 @@ _STOPWORDS: frozenset[str] = frozenset(
 _TOKEN_RE = re.compile(r"[A-Za-z][A-Za-z0-9_]*")
 
 
-# Small hand-built synonym map for query expansion. Retrieval vocabulary
-# (what programmers ask) often differs from identifier vocabulary (what the
-# code calls things): "auth" vs "authentication", "route" vs "url_map".
-# Expanded tokens join the query at full weight; measured as a net win on
-# the retrieval benchmark (benchmarks/retrieval/RESULTS.md).
+# Hand-built synonyms for query expansion: programmers ask "auth"/"route" where the
+# code says "authentication"/"url_map". Expanded tokens join the query at full
+# weight (measured as a net win on the retrieval benchmark).
 _SYNONYMS: dict[str, tuple[str, ...]] = {
     "auth": ("authenticate", "authentication", "credential", "login"),
     "config": ("configuration", "settings", "conf"),
@@ -191,10 +170,8 @@ def _split_camel_and_snake(token: str) -> list[str]:
     # Snake_case: split on underscores.
     if "_" in token:
         pieces.extend(p for p in token.split("_") if p)
-    # CamelCase: split on uppercase-after-lowercase transitions. Capture
-    # trailing digits with their preceding letter run so ``ParseBodyV2``
-    # yields ``Parse``, ``Body``, ``V2`` rather than dropping the version
-    # number on the floor.
+    # CamelCase: trailing digits stay with their letter run, so ``ParseBodyV2``
+    # yields ``Parse``, ``Body``, ``V2`` instead of dropping the version.
     camel_parts = re.findall(r"[A-Z][a-z]+\d*|[a-z]+\d*|[A-Z]+\d*(?![a-z])|\d+", token)
     pieces.extend(camel_parts)
     return pieces
@@ -348,10 +325,7 @@ def query(
             max_bytes,
         )
 
-    # Parse map/symbols.json exactly once, up front. Both the per-feature
-    # symbol index (scoring) and the per-match citation builder draw on it, so
-    # threading the parsed map down avoids re-reading + re-parsing the whole
-    # file for each top-K match.
+    # Parse map/symbols.json once: scoring and each top-K citation build reuse it.
     symbols_by_id = _load_symbols_by_id(context_dir)
     symbols_by_feature, files_by_feature = _index_symbols_by_feature(
         context_dir, feature_entries, symbols_by_id
@@ -545,9 +519,8 @@ def _score_feature(
             for tok in tokens:
                 if tok in sym_l and tok not in matched:
                     matched.append(tok)
-    # Only the strongest few symbol matches add score: a big community
-    # accumulates weak incidental hits on almost any query, and the long
-    # tail of one-token matches was drowning the size normalization.
+    # Only the strongest few symbol matches add score: otherwise a big community's
+    # long tail of weak one-token hits drowns the size normalization.
     contributions.sort(reverse=True)
     score += _SYMBOL_WEIGHT * sum(contributions[:_MAX_SCORING_SYMBOLS]) * size_norm
 
@@ -603,9 +576,8 @@ def _index_symbols_by_feature(
 ]:
     """Group symbols by the feature that owns them.
 
-    Reads `feature.json` per feature for the `members` list, then joins
-    against the pre-parsed `map/symbols.json` map to get readable names. We
-    don't walk every JSON file in features/<id>/ — only feature.json.
+    Joins each `feature.json`'s `members` against the pre-parsed
+    `map/symbols.json` map for readable names; also returns each feature's files.
     """
     out: dict[str, tuple[str, ...]] = {}
     files_out: dict[str, tuple[str, ...]] = {}
@@ -691,8 +663,7 @@ def _symbol_paths(
 ) -> dict[str, tuple[str, tuple[int, int] | None]]:
     """Map ``symbol_name -> (file_path, range)`` for symbols owned by feature_id.
 
-    Joins the feature's `members` against the pre-parsed `map/symbols.json` map
-    so the per-match call no longer re-reads + re-parses the whole symbols file.
+    Joins the feature's `members` against the pre-parsed `map/symbols.json` map.
     """
     out: dict[str, tuple[str, tuple[int, int] | None]] = {}
     feature_json = context_dir / "features" / feature_id / "feature.json"
@@ -725,10 +696,8 @@ def _excerpt_from_feature(
 ) -> str:
     """Pick the most query-relevant paragraph from the feature's markdowns.
 
-    Read order: spec.md → plan.md → concerns.md → README.md → architecture.md
-    → implementation.md → product.md.
-    Within each, find the first paragraph whose lower-cased text contains
-    one of the query tokens. Returns the first hit truncated to budget.
+    Returns the first non-heading paragraph mentioning a query token, scanning
+    ``candidates`` in order, truncated to ``budget``.
     """
     candidates = (
         "spec.md",
@@ -780,7 +749,7 @@ def _shrink_excerpt(text: str, *, target_tokens: int) -> str:
     return text[: char_target - 1].rstrip() + "…"
 
 
-# ----- Markdown renderer (for `dummyindex context query` CLI) ---------------
+# --- Markdown renderer (for `dummyindex context query` CLI)
 
 
 def render_markdown(result: QueryResult) -> str:

@@ -32,6 +32,7 @@ from .common import (
     pull_root_then_positional,
     resolve_root,
 )
+from .library_verbs import read_lesson_file, store_items
 
 
 def _print_refresh_report(report: RefreshReport, *, dry_run: bool) -> None:
@@ -66,7 +67,7 @@ def _print_refresh_report(report: RefreshReport, *, dry_run: bool) -> None:
             print(f"  ⚠ broken     {name}")
 
 
-# ----- verb: status ---------------------------------------------------------
+# --- verb: status
 
 
 def run_status(rest: list[str]) -> int:
@@ -108,7 +109,7 @@ def run_status(rest: list[str]) -> int:
     return 0
 
 
-# ----- verb: refresh --------------------------------------------------------
+# --- verb: refresh
 
 
 def run_refresh(rest: list[str]) -> int:
@@ -136,7 +137,7 @@ def run_refresh(rest: list[str]) -> int:
     return 0
 
 
-# ----- verb: reset ----------------------------------------------------------
+# --- verb: reset
 
 
 def run_reset(rest: list[str]) -> int:
@@ -180,7 +181,7 @@ def run_reset(rest: list[str]) -> int:
     return 0
 
 
-# ----- verb: remove -----------------------------------------------------------
+# --- verb: remove
 
 
 def run_remove(rest: list[str]) -> int:
@@ -230,7 +231,7 @@ def run_remove(rest: list[str]) -> int:
     return 0
 
 
-# ----- verb: uninstall ------------------------------------------------------
+# --- verb: uninstall
 
 
 def run_uninstall(rest: list[str]) -> int:
@@ -260,12 +261,13 @@ def run_uninstall(rest: list[str]) -> int:
     return 0
 
 
-# ----- verb: patch ----------------------------------------------------------
+# --- verb: patch
 
 
 def run_patch(rest: list[str]) -> int:
     item_name, rest = pull_flag_value(rest, "item")
     from_file, rest = pull_flag_value(rest, "from-file")
+    lesson_file, rest = pull_flag_value(rest, "lesson-file")
     project_root, leftover = resolve_root(rest)
     if leftover:
         print(
@@ -284,6 +286,13 @@ def run_patch(rest: list[str]) -> int:
         print(f"error: {err}", file=sys.stderr)
         return 2
 
+    lesson = None
+    if lesson_file is not None:
+        lesson, lesson_err = read_lesson_file(lesson_file)
+        if lesson_err:
+            print(f"error: {lesson_err}", file=sys.stderr)
+            return 2
+
     context_dir = project_root / ".context"
     try:
         manifest = read_manifest(context_dir)
@@ -297,7 +306,7 @@ def run_patch(rest: list[str]) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 1
     print(f"equip patch: {item.name} patched -> {item.path} (v{item.version})")
-    return 0
+    return store_items(project_root, lesson, {item.name})
 
 
 def _read_patch_file(path: Path) -> tuple[str, str, str | None]:
@@ -323,4 +332,4 @@ def _read_patch_file(path: Path) -> tuple[str, str, str | None]:
     return old, new, None
 
 
-# ----- shared render path ---------------------------------------------------
+# --- shared render path

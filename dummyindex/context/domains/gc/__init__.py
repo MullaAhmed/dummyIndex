@@ -8,16 +8,12 @@ of whole doc workspaces. The LLM council judgment lives in the
 
 Public surface (the CLI + skill import target):
 
-- ``Disposition``, ``CandidateKind`` — closed alphabets
+- ``Disposition``, ``CandidateKind``, ``Recommendation`` — closed alphabets
 - ``Candidate``, ``SweepReport``, ``DeleteResult`` — frozen dataclasses
+- ``recommend`` — pure pre-council hint per candidate (``Recommendation`` + reason)
 - ``GcError``, ``GcPathError``, ``GcTargetError`` — typed errors
 - ``DEFAULT_COMMIT_THRESHOLD``, ``ARCHIVE_SENTINEL``, ``GC_STATE_REL``,
-  ``GC_MEMO_REL``, ``PROPOSALS_REL``, ``AUDITS_REL`` — layout constants
-- ``enumerate_candidates``, ``classify`` — candidate discovery + signal tags
-- ``read_gc_anchor``, ``write_gc_anchor``, ``gc_commits_since``,
-  ``anchor_orphaned``, ``should_signal``, ``stamp_gc`` — anchor + throttle
-- ``scan`` — the read-only ``gc status`` composer (enumerate + classify + throttle)
-- ``delete_workspace`` — the bounded destructive op
+  ``GC_MEMO_REL``, ``PROPOSALS_REL``, ``AUDITS_REL`` layout constants.
 """
 
 from __future__ import annotations
@@ -40,9 +36,10 @@ from .constants import (
 )
 from .delete import delete_workspace
 from .enumerate import enumerate_candidates
-from .enums import CandidateKind, Disposition
+from .enums import CandidateKind, Disposition, Recommendation
 from .errors import GcError, GcPathError, GcTargetError
 from .models import Candidate, DeleteResult, SweepReport
+from .recommend import recommend
 from .scan import scan
 from .signals import classify
 
@@ -60,6 +57,7 @@ __all__ = [
     "GcError",
     "GcPathError",
     "GcTargetError",
+    "Recommendation",
     "SweepReport",
     "anchor_orphaned",
     "classify",
@@ -67,6 +65,7 @@ __all__ = [
     "enumerate_candidates",
     "gc_commits_since",
     "read_gc_anchor",
+    "recommend",
     "scan",
     "should_signal",
     "stamp_gc",

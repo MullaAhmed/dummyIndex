@@ -1,15 +1,9 @@
 """Integration: the real build / install paths consolidate a root CLAUDE.md.
 
-The audit's HIGH bug was that a pre-existing ``<root>/CLAUDE.md`` was left
-dangling because neither real build path folded it into the managed setup.
-These tests drive the actual seams — ``build_all(bootstrap=True)``, the context
-``init`` dispatch, and the installer's ``_auto_init_project`` (including its
-``status.enriched`` re-install branch) — over a copied ``SAMPLE_REPO`` and
-assert the unified "fold → single canonical file" end state:
-
-  * root ``./CLAUDE.md`` is gone, and
-  * a single ``.claude/CLAUDE.md`` carries the user's text + exactly ONE
-    managed block.
+Drives ``build_all(bootstrap=True)``, the context ``init`` dispatch, and the
+installer's ``_auto_init_project`` (including its ``status.enriched`` branch)
+over a copied ``SAMPLE_REPO``. End state: root ``./CLAUDE.md`` is gone and one
+``.claude/CLAUDE.md`` carries the user's text plus exactly ONE managed block.
 """
 
 from __future__ import annotations
@@ -114,11 +108,9 @@ def test_init_dispatch_consolidates_root_claude_md(tmp_path, root_factory) -> No
 def _make_enriched_context(target: Path) -> None:
     """Seed a minimal *enriched* .context/ so ``status.enriched`` is True.
 
-    ``enriched_index_status`` reads ``features/INDEX.json`` OR scans the
-    per-feature dirs on disk: any feature dir whose id is NOT ``community-*``
-    proves curation survived. We create one such dir — the minimal real state
-    that drives the ``status.enriched`` branch of ``_auto_init_project`` without
-    monkeypatching the branch.
+    ``enriched_index_status`` treats any feature dir whose id is NOT
+    ``community-*`` as curated, so one such dir reaches the branch without
+    monkeypatching.
     """
     feature_dir = target / ".context" / "features" / "auth-flow"
     feature_dir.mkdir(parents=True)
@@ -132,11 +124,8 @@ def _make_enriched_context(target: Path) -> None:
 def test_enriched_reinstall_consolidates_dangling_root_claude_md(tmp_path) -> None:
     """The ``status.enriched`` re-install branch also consolidates the root file.
 
-    This is the HIGH bug: the enriched-preserved branch of
-    ``_auto_init_project`` previously bootstrapped ``.claude/CLAUDE.md`` directly
-    and never touched a dangling root ``./CLAUDE.md``. We reach the branch with
-    real on-disk state (a curated feature dir), assert it is actually taken, then
-    assert the root file is consolidated away.
+    Reached with real on-disk state (a curated feature dir); the test asserts
+    the branch is taken, then that the root file is consolidated away.
     """
     target = _seed_repo(tmp_path, "enriched_reinstall_target")
 
@@ -157,8 +146,7 @@ def test_enriched_reinstall_consolidates_dangling_root_claude_md(tmp_path) -> No
         "test setup failed to reach the status.enriched branch"
     )
 
-    # Seed a dangling root CLAUDE.md (with user content) that the buggy branch
-    # would have ignored.
+    # Seed a dangling root CLAUDE.md with user content.
     (target / "CLAUDE.md").write_text(_plain_root_claude(), encoding="utf-8")
 
     ok = _auto_init_project(target, no_superpowers=True)

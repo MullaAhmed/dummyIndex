@@ -57,7 +57,7 @@ def _init(
     return tmp_path / ".context" / "fleet" / f"run-{state.run_id}"
 
 
-# ----- init -----------------------------------------------------------------
+# --- init
 
 
 @pytest.mark.unit
@@ -157,7 +157,7 @@ def test_slug_charset_enforced() -> None:
     assert validate_unit_specs([UnitSpec("OK-thing_1")])[0].slug == "ok-thing_1"
 
 
-# ----- intake parsing -------------------------------------------------------
+# --- intake parsing
 
 
 @pytest.mark.unit
@@ -207,7 +207,7 @@ def test_units_from_plans_reads_member_files_and_warns_when_absent(
         units_from_plans(ctx, ["ghost"])
 
 
-# ----- dispatch frontier ----------------------------------------------------
+# --- dispatch frontier
 
 
 def _unit(uid: str, slug: str, paths: tuple[str, ...], status: str = "pending"):
@@ -315,7 +315,7 @@ def test_deterministic_sort_key_priority_then_unit_id() -> None:
     assert [e.unit.id for e in mo] == ["u09", "u04", "u01"]
 
 
-# ----- budget breaker -------------------------------------------------------
+# --- budget breaker
 
 
 @pytest.mark.unit
@@ -358,7 +358,7 @@ def test_checkpoint_unknown_unit_fails_loud(tmp_path: Path) -> None:
         checkpoint(run_dir, "ghost")
 
 
-# ----- RMW concurrency + revision -------------------------------------------
+# --- RMW concurrency + revision
 
 
 @pytest.mark.unit
@@ -401,7 +401,7 @@ def test_lock_timeout_raises_instead_of_writing_blind(
         add_spend(run_dir, "u01", 1.0)
 
 
-# ----- loud failure on corruption -------------------------------------------
+# --- loud failure on corruption
 
 
 @pytest.mark.unit
@@ -468,7 +468,7 @@ def _state_dict_with(state: object, *, unit_overrides: dict) -> str:
     return json.dumps(payload)
 
 
-# ----- merge order ----------------------------------------------------------
+# --- merge order
 
 
 @pytest.mark.unit
@@ -499,3 +499,21 @@ def test_merge_order_cites_disjointness_rationale_and_is_stable() -> None:
     assert [e.landed for e in done_first] == [True, False]
     again = merge_order(_state(units))
     assert [e.unit.id for e in again] == [e.unit.id for e in entries]
+
+
+@pytest.mark.unit
+def test_next_holds_inflight_paths_and_slots() -> None:
+    state = _state(
+        (
+            _unit("u01", "a", ("shared.py",), status="building"),
+            _unit("u02", "b", ("shared.py",)),
+            _unit("u03", "c", ("c.py",)),
+            _unit("u04", "d", ("d.py",)),
+        ),
+        max_parallel=2,
+    )
+    env = next_units(state)
+    assert [u.id for u in env.units] == ["u03"]
+    reasons = dict(env.skipped)
+    assert "intersect" in reasons["u02"]
+    assert reasons["u04"] == "parallel cap reached this round"

@@ -1,17 +1,10 @@
 """Ownership probe for an existing ``.context/`` directory.
 
-dummyindex's de-facto ownership marker is ``.context/meta.json`` carrying a
-``dummyindex_version`` field — every build writes one. Other tools also use a
-``.context/`` folder (docs, plain-markdown agent memory, …); dummyindex must
-only claim and manage a ``.context/`` that carries its own marker, never a
-foreign one.
-
-Tolerant by design: a missing, unreadable, or malformed ``meta.json`` inside a
-non-empty ``.context/`` classifies as FOREIGN (refuse to claim) — it never
-raises. The probe deliberately does *not* reuse the strict
-``context.build.meta.read_meta`` loader: an index written by a **newer**
-dummyindex (higher ``schema_version``) must still read as OURS, and
-``read_meta`` raises on it.
+The marker is ``.context/meta.json`` with a ``dummyindex_version`` field (every
+build writes one); other tools use ``.context/`` too, and dummyindex must never
+claim a foreign one. Never raises: a bad ``meta.json`` in a non-empty dir reads
+FOREIGN. Deliberately not ``context.build.meta.read_meta``, which raises on a
+**newer** ``schema_version`` that must still read as OURS.
 """
 
 from __future__ import annotations
@@ -35,15 +28,10 @@ class ContextOwnership(str, Enum):
 def context_ownership(context_dir: Path) -> ContextOwnership:
     """Classify ``context_dir`` (a ``.context/`` path) by ownership.
 
-    - ``ABSENT`` — the directory is missing or empty: writing creates, never
-      clobbers.
-    - ``OURS`` — ``meta.json`` parses as a JSON object with a
-      ``dummyindex_version`` key.
-    - ``FOREIGN`` — anything else with content: another tool's ``.context/``,
-      or one whose marker can't be read. Callers must not write into it.
-
-    Never raises; unreadable state classifies as FOREIGN (the conservative
-    choice — don't claim what can't be verified).
+    ``ABSENT``: missing or empty (writing creates, never clobbers). ``OURS``:
+    ``meta.json`` is a JSON object with a ``dummyindex_version`` key.
+    ``FOREIGN``: anything else with content, including an unreadable marker;
+    callers must not write into it. Never raises.
     """
     if not context_dir.is_dir():
         return ContextOwnership.ABSENT

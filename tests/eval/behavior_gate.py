@@ -1,66 +1,10 @@
 """Deterministic behavior-gate grader over ``ALWAYS_ON_OUTPUT_POLICY``.
 
-This is the spec's Item 1 (ADOPT) and Item 3 (ADAPT):
 `.context/proposals/repo-adoptions-ponytail-headroom/spec.md`. Ported from
 ``DietrichGebert/ponytail`` (MIT, © 2026 DietrichGebert), following the credit
-idiom at ``tests/eval/test_retrieval_eval.py:11``:
-
-- The **check-per-rule, regex/structure heuristic, never an LLM judge** shape
-  mirrors ponytail's ``CHECKS`` dispatch table and
-  ``module.exports(output, context)`` (``benchmarks/behavior.js:17-54``).
-  ``behavior.js`` dispatches to exactly *one* check per call, keyed by
-  ``context.vars.probe``; this port instead runs all four checks on every
-  response (:func:`grade_response`) and lets the caller — the two-arm harness
-  in task 3 — pick which :class:`BehaviorCheck` is relevant for a given probe.
-- The **known-good / known-lazy-wrong selftest discipline** — "prove every
-  check is correct before any paid run" — mirrors
-  ``benchmarks/robustness-audit.js``'s ``--selftest`` flag (``:1-5``,
-  ``:168-178``): every check gets a reference response that MUST pass and one
-  that MUST fail. Proven in ``test_behavior_gate.py``.
-- The **multiple-reference discipline** — more than one good/bad pair per
-  check, each chosen to exercise one branch of the checker — mirrors
-  ``tests/behavior.test.js`` (the upstream grader's own selftest), which ships
-  two or three passing references per probe (e.g. ``hardware``'s "calibration
-  knob" case and its independent "tuning knobs / reads off" case,
-  ``tests/behavior.test.js:18-31``) rather than one. An adversarial audit of
-  this port's first pass found that a single good/bad pair per check leaves
-  several inert or fall-through code paths undetected; ``behavior_gate_fixtures.json``
-  now ships multiple labelled references per check for exactly that reason.
-
-This module is **pure**: no network, no API key, no model call — a grader
-over a plain ``str``. It scores the OBSERVABLE SHAPE of a response (does the
-first line lead with a concrete artifact or a stated outcome/action, are
-multi-step items numbered sequentially, are quantities specific and not
-outweighed by vague ones, does the response close on a stated next action) —
-never whether the response *talks about* following the rules. A reply that
-recites "I'll be concise" while staying vague, unstructured, and open-ended
-must fail every check, WHETHER OR NOT it backticks the policy's own
-vocabulary while doing so; see the ``trap`` and ``trap_backticked`` fixtures
-in ``behavior_gate_fixtures.json``.
-
-The subject under test is
-``dummyindex.context.output.bootstrap.ALWAYS_ON_OUTPUT_POLICY``
-(``dummyindex/context/output/bootstrap.py:32-52``). Task 3 (the two-arm
-model-dependent run) imports :func:`grade_response`, :func:`grade_batch`, and
-:func:`pass_rate` from this module unchanged.
-
-**``action_first`` is lead-only, by design.** It grades only the first
-non-blank line. A reply whose first line names a real path or leads with a
-stated outcome/action, but whose *body* is otherwise hedging, vague, and
-unstructured, still passes ``action_first`` — the check does not re-inspect
-the rest of the response (``numbered_steps``, ``specific_quantities``, and
-``closing_action`` cover the rest of the shape independently). Task 3 should
-read a small control-arm ``action_first`` pass rate as this lead-only design,
-not as noise or a check that is inert.
-
-**Fence-stripped vs. raw input, by design (not an oversight).** Only
-``_check_numbered_steps`` (via :func:`_is_single_bounded_action`) runs on
-fence-stripped text (:func:`_strip_fenced_code`) — pasted code must not
-smuggle in a bogus numbered/bulleted sequence or inflate the action-verb
-count. ``_check_specific_quantities`` and ``_check_closing_action`` run on
-the raw response: a specific quantity or a closing action can legitimately
-appear inside a backticked command (see the ``marker_and_artifact`` fixture),
-and stripping fences there would throw away real signal for no benefit.
+idiom of ``tests/eval/test_retrieval_eval.py``. Pure, no LLM judge: every response
+gets all four regex/structure checks on its observable shape, and a reply that only
+talks about the rules (the ``trap`` fixtures) must fail every one.
 """
 
 from __future__ import annotations
@@ -77,17 +21,17 @@ class BehaviorGateError(Exception):
 
 
 class UnknownBehaviorCheckError(BehaviorGateError):
-    """Raised when a :class:`BehaviorVerdict` has no recorded result for a
-    requested :class:`BehaviorCheck` (should not happen via :func:`grade_response`,
-    which always populates all four — guards hand-built verdicts)."""
+    """A :class:`BehaviorVerdict` has no result for the requested check.
+
+    :func:`grade_response` always records all four; this guards hand-built verdicts.
+    """
 
 
 class BehaviorCheck(str, Enum):
     """The four observable-shape rules probed from ``ALWAYS_ON_OUTPUT_POLICY``.
 
-    ``dummyindex/context/output/bootstrap.py:32-52`` states these as prose;
-    each member here is the one regex/structure heuristic that checks whether
-    a response's *shape* actually exhibits the rule.
+    The policy states them as prose; each member names the regex/structure
+    heuristic that checks whether a response's shape exhibits the rule.
     """
 
     ACTION_FIRST = "action_first"
@@ -141,9 +85,7 @@ class BehaviorVerdict:
         }
 
 
-# ---------------------------------------------------------------------------
 # Shared shape primitives.
-# ---------------------------------------------------------------------------
 
 
 def _first_nonblank_line(text: str) -> str:
@@ -164,33 +106,20 @@ _FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
 
 
 def _strip_fenced_code(text: str) -> str:
-    """Blank out fenced code regions so list/step counting never credits a
-    pasted file listing, a bibliography, or lorem ipsum inside a code block
-    (D5: ``_check_numbered_steps`` used to count numbered lines anywhere,
-    fenced or not)."""
+    """Blank out fenced code so step counting never credits a pasted listing."""
     return _FENCE_RE.sub(" ", text)
 
 
-# A "concrete artifact" is a line that names something real and checkable —
-# a file:line reference, a path with an extension, a bare dot-extension
-# token (``bootstrap.py``), or a shell-prompt-led command. Deliberately
-# NOT "any backticked span" (D1) and NOT "any line opening with `> `"
-# (D7) — a bare backtick around a policy word, and a markdown blockquote,
-# are both far more common than a real artifact and must not qualify.
+# A "concrete artifact" names something checkable: a file:line, a path with an
+# extension, a bare dot-extension token (``bootstrap.py``) or a ``$ ``-led command.
+# Not any backticked span or ``> `` line: a backticked policy word and a markdown
+# blockquote are far more common than a real artifact.
 _FILE_LINE_RE = re.compile(r"[\w./-]+\.\w{1,10}:\d+")
 _PATH_RE = re.compile(r"\b[\w-]+(?:/[\w.-]+)+\.\w{1,10}\b")
-# A bare dot-extension token, e.g. "pyproject.toml" or "app.py", with no
-# slash. The real exclusions, corrected: it is NOT the extension's "{2,10}"
-# lower bound doing this work (a previous version of this comment wrongly
-# credited it). "e.g."/"i.e." are excluded by the "[\w-]{2,}" PREFIX bound —
-# the "e"/"i" before each dot is only one character, short of the required
-# two. "3.5" is excluded twice over: "3" also fails that same one-character
-# prefix bound, and independently its "5" fails the letters-only
-# "[A-Za-z]{2,10}" extension class (a digit is not a letter at all,
-# regardless of count). A sentence-ending period followed by a capitalized
-# word ("...done. Next steps...") is excluded because the extension class
-# must immediately follow the dot with no space — the space after a real
-# sentence-final period means no candidate extension ever starts there.
+# A bare dot-extension token with no slash ("pyproject.toml"). The 2-char prefix
+# bound excludes "e.g."/"i.e." and "3.5" (which the letters-only extension also
+# excludes), and the extension must touch the dot, so a sentence-final period
+# followed by a space never matches.
 _DOT_EXT_RE = re.compile(r"\b[\w-]{2,}\.[A-Za-z]{2,10}\b")
 
 
@@ -203,17 +132,10 @@ def _has_concrete_artifact(line: str) -> bool:
     )
 
 
-# A shared action-verb vocabulary used by both the action-first (past-tense/
-# imperative lead) and closing-action (imperative next step only, see D-A
-# below) checks. Split by tense — not one flat list — because the two checks
-# need different tenses: action_first's lead may legitimately state either
-# what already happened ("Rolled back...") or what's next ("Run..."), but
-# closing_action must credit only a NEXT action, never a recap of one already
-# done. Past-tense forms are added only to the past set, imperative forms
-# only to the imperative set; ``_ACTION_VERBS``/``_ACTION_ANYWHERE_RE`` (both
-# tenses combined) stay the shared vocabulary for action_first and for
-# counting "how many actions does this describe" in
-# :func:`_is_single_bounded_action`.
+# Action verbs, split by tense: action_first's lead may state what happened
+# ("Rolled back...") or what's next ("Run..."), but closing_action credits only a
+# next action, never a recap. The combined ``_ACTION_VERBS`` serves action_first
+# and the action count in :func:`_is_single_bounded_action`.
 _ACTION_VERBS_PAST = (
     r"ran|rolled back|rolled|fixed|patched|added|removed|refactored|deployed|"
     r"migrated|updated|reverted|restarted|merged|rebased|tagged|pushed|"
@@ -231,40 +153,26 @@ _ACTION_VERBS_IMPERATIVE = (
 _ACTION_VERBS = rf"{_ACTION_VERBS_PAST}|{_ACTION_VERBS_IMPERATIVE}"
 _ACTION_LEAD_RE = re.compile(rf"^(?:{_ACTION_VERBS})\b", re.IGNORECASE)
 _ACTION_ANYWHERE_RE = re.compile(rf"\b(?:{_ACTION_VERBS})\b", re.IGNORECASE)
-# D-A: closing_action's "states a concrete next action" test must credit only
-# an IMPERATIVE verb, and only when it leads the closing line — not a
-# past-tense verb matched anywhere in it. Before this fix, "The patch was
-# merged into main last night." wrongly passed closing_action: "merged" (past
-# tense, describing something already done) matched the old combined
-# any-position ``_ACTION_ANYWHERE_RE``. A past-tense recap is not a next
-# action, whatever position it appears in, so the imperative-only vocabulary
-# is also matched sentence-initially, not searched anywhere in the line.
+# closing_action credits only an imperative verb leading the closing line: a
+# past-tense recap ("The patch was merged...") is not a next action, wherever it sits.
 _IMPERATIVE_ACTION_RE = re.compile(rf"^(?:{_ACTION_VERBS_IMPERATIVE})\b", re.IGNORECASE)
-# An explicit next-step marker ("Next:", "Then:", "Now:", "TODO:") — shared by
-# closing_action (a marker is itself a stated next action) and numbered_steps
-# (a compound "rotate X, then re-run Y" *inside* a single next-step sentence
-# is one forward-looking instruction, not unnumbered past multi-step work;
-# see _text_before_next_marker below).
+# An explicit next-step marker ("Next:", "Then:", "Now:", "TODO:"). closing_action
+# treats it as a stated next action; numbered_steps splits on it, since "rotate X,
+# then re-run Y" after a marker is one forward-looking instruction.
 _NEXT_MARKER_RE = re.compile(r"\b(?:next|then|now|todo)\s*:", re.IGNORECASE)
 
 
 def _text_before_next_marker(text: str) -> str:
-    """The "what already happened" portion of a response, up to (not
-    including) its first explicit next-step marker.
+    """The "what already happened" text, up to the first next-step marker.
 
-    Used only to decide whether PAST work was multi-step and left unnumbered
-    — a compound next-step instruction ("Next: rotate the key, then re-run
-    the job") chains two imperative sub-actions inside ONE forward-looking
-    sentence, which is closing_action's territory, not evidence of numbered
-    multi-step work.
+    Used only to judge whether past work was multi-step and unnumbered; a compound
+    instruction after the marker is closing_action's territory.
     """
     m = _NEXT_MARKER_RE.search(text)
     return text[: m.start()] if m else text
 
 
-# ---------------------------------------------------------------------------
 # Check 1 — action-first: outcome or next action leads; prose follows.
-# ---------------------------------------------------------------------------
 
 _HEDGE_OPENERS = re.compile(
     r"^(i think|i believe|let me|i'll|i will|so|well|sure|okay|certainly|"
@@ -274,6 +182,8 @@ _HEDGE_OPENERS = re.compile(
 )
 
 
+# Lead-only by design: grades the first non-blank line and never re-inspects the
+# body, which the other three checks cover.
 def _check_action_first(response: str) -> tuple[bool, str]:
     first_line = _first_nonblank_line(response)
     if not first_line:
@@ -299,11 +209,8 @@ def _check_action_first(response: str) -> tuple[bool, str]:
     )
 
 
-# ---------------------------------------------------------------------------
-# Check 2 — numbered multi-step work: sequential steps are numbered, not
-# bulleted, not chained in unstructured prose — but a genuinely single-action
-# reply has nothing to number and must not be penalized for it.
-# ---------------------------------------------------------------------------
+# Check 2 — multi-step work is numbered, not bulleted or chained in prose; a
+# single-action reply has nothing to number and must not be penalized.
 
 _NUMBERED_ITEM_RE = re.compile(r"(?m)^\s*(\d+)[.)]\s+\S")
 _BULLET_ITEM_RE = re.compile(r"(?m)^\s*[-*]\s+\S")
@@ -331,60 +238,30 @@ def _longest_consecutive_run(values: Sequence[int]) -> int:
 
 _SINGLE_ACTION_WORD_CAP = 60
 
-# D-D: a second, vocabulary-free multi-step signal. ``_ACTION_VERBS`` is a
-# closed list, so a terse reply built entirely from unlisted verbs ("split",
-# "wiped", "re-pointed", "bounced") has zero recognized action-verb
-# occurrences and would otherwise vacuously pass as a single bounded action —
-# e.g. "Split the module, moved the helpers into a package, and swapped the
-# parser for the new one." This catches the Oxford-comma-style coordinated
-# list shape (">= 2 commas" + a final ", and ..." clause) that a terse
-# multi-step recap typically takes, independent of which verbs it uses.
+# A vocabulary-free multi-step signal: ``_ACTION_VERBS`` is closed, so a terse recap
+# in unlisted verbs ("Split the module, moved the helpers, and swapped the parser.")
+# would pass as a single action. This catches its ">= 2 commas + ', and ...'" shape.
 _COORDINATED_LIST_TAIL_RE = re.compile(r",\s*and\s+\S")
 
 
 def _has_coordinated_action_list(text: str) -> bool:
-    """True when the "what already happened" portion of ``text`` (before any
-    next-step marker — see :func:`_text_before_next_marker`) names >= 3
-    coordinated items via an Oxford-comma-style list ("X, Y, and Z"). Checked
-    only on that portion so the documented ``Next: run X, deploy Y, and
-    announce Z`` exception (a forward-looking list, not unnumbered past
-    multi-step work) is unaffected."""
+    """True when the pre-marker text has >= 2 commas and a ", and ..." tail.
+
+    Pre-marker only, so ``Next: run X, deploy Y, and announce Z`` (a forward-looking
+    list) is unaffected.
+    """
     segment = _text_before_next_marker(text)
     return segment.count(",") >= 2 and bool(_COORDINATED_LIST_TAIL_RE.search(segment))
 
 
 def _is_single_bounded_action(text: str) -> bool:
-    """True when the text is a short, non-hedging, non-rambling description
-    of at most one action.
+    """True when the text is a short, non-hedging description of at most one action.
 
-    Decision (D5): the policy's "number multi-step work" rule is
-    conditional on there BEING multi-step work. A correct, terse,
-    single-action reply — exactly what ``action_first``/``closing_action``
-    elsewhere reward — has nothing to number; scoring it as "failed to
-    number its steps" would be a false negative that punishes compliant
-    behavior and, per the task brief, would suppress the guidance arm in
-    task 3's two-arm run.
-
-    But a response with <= 1 recognized action verb is not automatically a
-    *legitimate* single action — the vocabulary-trap fixture also has zero
-    recognized action verbs while being verbose, hedging, and rambling about
-    multiple undifferentiated things. So this requires ALL of: <= 1
-    action-verb occurrence in the "what already happened" portion (before
-    any explicit next-step marker — a compound "Next: rotate X, then re-run
-    Y" is one forward-looking instruction, not two unnumbered past steps),
-    no coordinated Oxford-comma-style action list naming >= 3 unlisted-verb
-    items (D-D — :func:`_has_coordinated_action_list`; the verb-count guard
-    above only sees verbs from the closed ``_ACTION_VERBS`` vocabulary, so a
-    terse multi-step recap built entirely from unlisted verbs would otherwise
-    slip through it), no vague-quantity filler (``_VAGUE_QUANTITY_RE``), no
-    hedge/preamble opener, and a short response (<= 60 words) — the shape of
-    an actually terse single-action reply, not merely the absence of a
-    recognized verb.
-
-    Each of these four guards is independently load-bearing (an ablation
-    audit found three of the four removable without a test failing): the
-    fixtures file carries a dedicated fixture per guard, each constructed so
-    disabling ONLY that guard flips its fixture from FAIL to wrongly PASS.
+    "Number multi-step work" only applies when there is some, so a terse one-action
+    reply must pass. Few recognized verbs is not enough (the vocabulary trap has
+    none), so all must hold: <= 1 action verb before any next-step marker, no
+    coordinated list, no vague quantity, no hedge opener, <= 60 words. Each guard
+    is pinned by a fixture that wrongly passes if only that guard is disabled.
     """
     if len(_ACTION_ANYWHERE_RE.findall(_text_before_next_marker(text))) > 1:
         return False
@@ -398,10 +275,9 @@ def _is_single_bounded_action(text: str) -> bool:
 
 
 def _check_numbered_steps(response: str) -> tuple[bool, str]:
-    # Fence-stripped, unlike _check_specific_quantities/_check_closing_action
-    # below, which grade the raw response — see the module docstring's
-    # "Fence-stripped vs. raw input" note for why this asymmetry is
-    # deliberate, not an oversight.
+    # Fence-stripped so pasted code can't smuggle in steps or verbs. The quantity
+    # and closing checks grade the raw response on purpose: a backticked command
+    # can carry a real quantity or next action.
     stripped = _strip_fenced_code(response)
     numbers = _numbered_step_values(stripped)
     bullets = len(_BULLET_ITEM_RE.findall(stripped))
@@ -428,9 +304,7 @@ def _check_numbered_steps(response: str) -> tuple[bool, str]:
     )
 
 
-# ---------------------------------------------------------------------------
 # Check 3 — specific quantities over vague ones, weighed against each other.
-# ---------------------------------------------------------------------------
 
 # Named units, spaced or attached ("10ms", "10 milliseconds").
 _SPECIFIC_UNIT_RE = re.compile(
@@ -438,17 +312,11 @@ _SPECIFIC_UNIT_RE = re.compile(
     r"min(?:ute)?s?|sec(?:ond)?s?|days?)\b",
     re.IGNORECASE,
 )
-# Bare-seconds shorthand ("42s", "11s") — no space, no "sec" prefix. Excludes
-# a bare year-decade shape ("1980s", "2020s") via _YEAR_DECADE_RE below, so
-# the ambiguous lone "s" unit can't be tricked into reading a decade as a
-# duration (D6).
+# Bare-seconds shorthand ("42s"); _YEAR_DECADE_RE keeps "1980s" from reading as a duration.
 _SPECIFIC_BARE_SECONDS_RE = re.compile(r"\b\d+(?:\.\d+)?s\b")
 _YEAR_DECADE_RE = re.compile(r"\A(?:19|20)\d{2}s\Z")
-# Generalized "number + plural noun" (D6: replaces the closed unit-noun list
-# that scored "12 dependencies" as "no quantity"). The noun's stem must be
-# >= 4 letters before the trailing "s" — otherwise short function words that
-# happen to end in "s" ("this", "is", "was", "less") false-positive on any
-# adjacent number ("10:30 this morning" must not read as a quantity).
+# "Number + plural noun" ("12 dependencies"). The stem needs >= 4 letters before the
+# "s", so a number before "this" or "less" never reads as a quantity.
 _SPECIFIC_COUNT_NOUN_RE = re.compile(r"\b\d+(?:\.\d+)?\s+[a-zA-Z]{4,}s\b")
 # Comparative counts ("5 instead of 3", "2 vs 4") — a bare number pair is a
 # specific quantity even with no unit noun attached.
@@ -487,10 +355,8 @@ def _check_specific_quantities(response: str) -> tuple[bool, str]:
             f"uses a vague quantity instead of a specific one: {vague_matches[0].group(0)!r}",
         )
     if vague_count > specific_count:
-        # D6/D4: a lone specific number buried among several vague ones must
-        # not pass — "prefer specific over vague" is a comparison, not a
-        # one-hit-and-done check. This is what makes _VAGUE_QUANTITY_RE
-        # load-bearing rather than decorative.
+        # "Prefer specific over vague" is a comparison: a lone number among more
+        # vague ones fails.
         return (
             False,
             f"{specific_count} specific quantity/quantities outweighed by "
@@ -499,18 +365,14 @@ def _check_specific_quantities(response: str) -> tuple[bool, str]:
     return True, f"gives a specific quantity: {specific_matches[0].group(0)!r}"
 
 
-# ---------------------------------------------------------------------------
-# Check 4 — one concrete closing action: a stated next step, not merely a
-# trailing artifact (D2).
-# ---------------------------------------------------------------------------
+# Check 4 — the closing line states a next step, not merely a trailing artifact.
 
 _VAGUE_CLOSE_RE = re.compile(
     r"\b(let me know if|hope (this|that) helps|feel free to|happy to help|"
     r"glad to assist|don't hesitate|reach out if|any (other )?questions)\b",
     re.IGNORECASE,
 )
-# _NEXT_MARKER_RE is defined above, alongside the shared action-verb
-# vocabulary — numbered_steps needs it too (_text_before_next_marker).
+# _NEXT_MARKER_RE is defined above, since numbered_steps uses it too.
 
 
 def _check_closing_action(response: str) -> tuple[bool, str]:
@@ -523,8 +385,7 @@ def _check_closing_action(response: str) -> tuple[bool, str]:
             f"ends with a vague pleasantry, not a concrete action: {last_line[:70]!r}",
         )
     if last_line.startswith("```") or last_line.startswith(">"):
-        # D2/D7: a trailing code fence and a markdown blockquote caveat both
-        # read as "concrete" under a bare artifact test but state no action.
+        # A trailing fence or blockquote caveat looks "concrete" but states no action.
         return (
             False,
             f"closing line is a code fence/blockquote, not a stated action: "
@@ -546,9 +407,7 @@ _CHECK_FUNCS: dict[BehaviorCheck, Callable[[str], tuple[bool, str]]] = {
 }
 
 
-# ---------------------------------------------------------------------------
 # Public surface — task 3 imports these unchanged.
-# ---------------------------------------------------------------------------
 
 
 def grade_response(response: str) -> BehaviorVerdict:

@@ -1,13 +1,10 @@
-"""Tests for ``context/domains/gc/anchor.py`` — the committed GC anchor and
-the commit-throttled fire-once signal.
+"""Tests for ``gc/anchor.py`` — the committed GC anchor and fire-once signal.
 
 The storage split is the spine of these tests: the *anchor* lives in the
 COMMITTED ``.context/gc/state.json`` (``GC_STATE_REL``), while the per-session
 fire-once memo lives in the GITIGNORED ``.context/cache/gc-nudge-state.json``
-(``GC_MEMO_REL``). They are distinct files and must never be conflated.
-
-Real throwaway ``git init`` repos under ``tmp_path`` exercise the throttle;
-off-git cases assert the graceful no-op contract (never a raise).
+(``GC_MEMO_REL``); never conflate them. Throwaway ``git init`` repos exercise
+the throttle; off-git cases assert the graceful no-op contract (never a raise).
 """
 
 from __future__ import annotations
@@ -19,6 +16,7 @@ from pathlib import Path
 
 import pytest
 
+from dummyindex.context.domains.gc import scan
 from dummyindex.context.domains.gc.anchor import (
     anchor_orphaned,
     gc_commits_since,
@@ -58,7 +56,7 @@ def _context_dir(root: Path) -> Path:
     return ctx
 
 
-# ----- read / write round-trip ---------------------------------------------
+# --- read / write round-trip
 
 
 @pytest.mark.unit
@@ -110,7 +108,7 @@ def test_read_gc_anchor_none_when_anchor_key_not_a_string(tmp_path: Path) -> Non
     assert read_gc_anchor(ctx) is None
 
 
-# ----- gc_commits_since -----------------------------------------------------
+# --- gc_commits_since
 
 
 @pytest.mark.unit
@@ -139,7 +137,7 @@ def test_gc_commits_since_none_when_no_anchor_recorded(tmp_path: Path) -> None:
     assert gc_commits_since(ctx, tmp_path) is None
 
 
-# ----- should_signal: threshold edge ----------------------------------------
+# --- should_signal: threshold edge
 
 
 @pytest.mark.unit
@@ -173,7 +171,7 @@ def test_should_signal_false_just_under_threshold(tmp_path: Path) -> None:
     assert should_signal(ctx, tmp_path, "S", threshold=4) is False
 
 
-# ----- should_signal: fire-once memo ----------------------------------------
+# --- should_signal: fire-once memo
 
 
 @pytest.mark.unit
@@ -228,14 +226,13 @@ def test_should_signal_under_threshold_does_not_mark_memo(tmp_path: Path) -> Non
     assert should_signal(ctx, tmp_path, "S", threshold=3) is True  # now over
 
 
-# ----- storage split: committed anchor vs gitignored memo -------------------
+# --- storage split: committed anchor vs gitignored memo
 
 
 @pytest.mark.unit
 def test_storage_split_distinct_paths_for_anchor_and_memo(tmp_path: Path) -> None:
-    # The anchor is written under gc/ (committed); the fire-once memo is written
-    # under cache/ (gitignored). After a signal both files exist at DISTINCT
-    # paths — the storage-split invariant.
+    # Storage-split invariant: after a signal the anchor (gc/, committed) and the
+    # memo (cache/, gitignored) both exist at DISTINCT paths.
     _init_repo(tmp_path)
     ctx = _context_dir(tmp_path)
     (tmp_path / "a.py").write_text("x = 0\n", encoding="utf-8")
@@ -252,7 +249,6 @@ def test_storage_split_distinct_paths_for_anchor_and_memo(tmp_path: Path) -> Non
     assert anchor_path.exists()
     assert memo_path.exists()
     assert anchor_path != memo_path
-    # Same-named files would defeat the split; assert the rel-paths differ.
     assert GC_STATE_REL != GC_MEMO_REL
     assert GC_STATE_REL.split("/")[0] == "gc"
     assert GC_MEMO_REL.split("/")[0] == "cache"
@@ -277,7 +273,7 @@ def test_signal_now_is_injectable(tmp_path: Path) -> None:
     assert "S" in memo
 
 
-# ----- stamp_gc -------------------------------------------------------------
+# --- stamp_gc
 
 
 @pytest.mark.unit
@@ -318,7 +314,7 @@ def test_stamp_gc_honours_explicit_to(tmp_path: Path) -> None:
     assert gc_commits_since(ctx, tmp_path) == 1
 
 
-# ----- anchor_orphaned ------------------------------------------------------
+# --- anchor_orphaned
 
 
 @pytest.mark.unit
@@ -355,9 +351,88 @@ def test_anchor_orphaned_false_when_no_anchor_recorded(tmp_path: Path) -> None:
 
 @pytest.mark.unit
 def test_anchor_orphaned_false_off_git(tmp_path: Path) -> None:
-    # Git absent → cannot be "orphaned by a rewrite"; the off-git no-op contract
-    # keeps this False rather than reading a recorded-but-uncountable sha as
-    # orphaned.
+    # Off git nothing can be orphaned by a rewrite, so an uncountable recorded
+    # sha reads False, not orphaned.
     ctx = _context_dir(tmp_path)
     write_gc_anchor(ctx, "0123456789abcdef0123456789abcdef01234567")
     assert anchor_orphaned(ctx, tmp_path) is False
+
+
+# ----- orphaned anchor fires the nudge (C6) ---------------------------------
+
+_UNKNOWN_SHA = "0123456789abcdef0123456789abcdef01234567"
+
+
+def _orphaned_repo(root: Path) -> Path:
+    _init_repo(root)
+    ctx = _context_dir(root)
+    (root / "a.py").write_text("x = 1\n", encoding="utf-8")
+    _commit_all(root, "init")
+    write_gc_anchor(ctx, _UNKNOWN_SHA)
+    return ctx
+
+
+@pytest.mark.unit
+def test_should_signal_orphaned_anchor_fires_once_per_session(tmp_path: Path) -> None:
+    ctx = _orphaned_repo(tmp_path)
+    assert should_signal(ctx, tmp_path, "s1") is True
+    assert should_signal(ctx, tmp_path, "s1") is False
+
+
+@pytest.mark.unit
+def test_should_signal_orphaned_blank_session_never_suppresses(tmp_path: Path) -> None:
+    ctx = _orphaned_repo(tmp_path)
+    assert should_signal(ctx, tmp_path, "") is True
+    assert should_signal(ctx, tmp_path, "") is True
+
+
+@pytest.mark.unit
+def test_should_signal_no_anchor_is_false(tmp_path: Path) -> None:
+    _init_repo(tmp_path)
+    ctx = _context_dir(tmp_path)
+    (tmp_path / "a.py").write_text("x = 1\n", encoding="utf-8")
+    _commit_all(tmp_path, "init")
+    assert should_signal(ctx, tmp_path, "s1") is False
+
+
+@pytest.mark.unit
+def test_anchor_orphaned_false_on_shallow_clone(tmp_path: Path) -> None:
+    src = tmp_path / "src"
+    src.mkdir()
+    _init_repo(src)
+    (src / "a.py").write_text("x = 1\n", encoding="utf-8")
+    first = _commit_all(src, "init")
+    (src / "a.py").write_text("x = 2\n", encoding="utf-8")
+    _commit_all(src, "second")
+
+    dst = tmp_path / "dst"
+    subprocess.run(
+        ["git", "clone", "--depth", "1", src.as_uri(), str(dst)],
+        check=True,
+        capture_output=True,
+    )
+    assert _git(dst, "rev-parse", "--is-shallow-repository").strip() == "true"
+
+    ctx = _context_dir(dst)
+    write_gc_anchor(ctx, first)  # the first commit is absent from the shallow clone
+    assert anchor_orphaned(ctx, dst) is False
+    assert should_signal(ctx, dst, "s1") is False
+
+
+@pytest.mark.unit
+def test_scan_orphaned_reports_signal_and_recommendation(tmp_path: Path) -> None:
+    ctx = _orphaned_repo(tmp_path)
+    workspace = ctx / "proposals" / "demo"
+    workspace.mkdir(parents=True)
+    (workspace / "proposal.json").write_text(
+        json.dumps({"slug": "demo", "title": "Demo", "status": "planned"}),
+        encoding="utf-8",
+    )
+    (workspace / "checklist.md").write_text("- [x] a\n", encoding="utf-8")
+
+    report = scan(ctx, tmp_path)
+    assert report.should_signal is True
+    assert report.anchor_orphaned is True
+    demo = next(c for c in report.candidates if c.slug == "demo")
+    assert demo.recommendation == "close"
+    assert demo.reason

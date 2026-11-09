@@ -1,27 +1,10 @@
 """Fill the shipped ``*.md.tmpl`` templates with project values.
 
-Templates live in the equip skill package (``dummyindex/skills/equip/templates/``)
-and are located package-relative so rendering works pre-install (tests) and
-post-install (the copied package) alike. The templates carry these slots:
-
-- ``{{stack}}`` — the dominant stack label (e.g. ``python``). Drives the
-  implementer/tester identifiers and every template's prose ("this **python**
-  repository").
-- ``{{proj}}`` — the project slug (e.g. ``backend``). Drives the *identifier*
-  surfaces (frontmatter ``name:`` + H1) of the reviewer agent and verify skill,
-  so they match the filename + manifest ``subagent_type`` the catalog emits and
-  resolve by name in Claude Code.
-- ``{{conventions}}`` — a newline list of the repo's convention docs under
-  ``.context/conventions/`` (so the tool's prompt cites the real spine).
-- ``{{context_root}}`` — the relative path to ``.context/`` (always
-  ``.context`` today; a slot so a future non-root context dir stays correct).
-- ``{{test_command}}`` / ``{{lint_command}}`` / ``{{typecheck_command}}`` /
-  ``{{format_command}}`` — the literal shell commands the detected toolchain
-  runs; each falls back to a readable placeholder when not detected.
-- ``{{framework}}`` — the dominant detected framework, or a placeholder.
-
-Rendering also stamps :data:`GENERATED_SENTINEL` so a later run recognises its
-own output for the never-clobber check (see :mod:`.safety`).
+Templates resolve package-relative (``dummyindex/skills/equip/templates/``) so
+rendering works pre- and post-install. Slots: ``{{stack}}``, ``{{proj}}``,
+``{{conventions}}``, ``{{context_root}}``, the four ``{{*_command}}`` slots and
+``{{framework}}``. Rendering stamps :data:`GENERATED_SENTINEL` so a later run
+recognises its own output for the never-clobber check (see :mod:`.safety`).
 """
 
 from __future__ import annotations
@@ -85,22 +68,11 @@ def render_template(
 ) -> str:
     """Return the template's text with every slot filled.
 
-    ``stack`` is the dominant stack label (drives the implementer/tester
-    identifiers and all prose); ``proj`` is the project slug (drives the
-    reviewer/verify ``name:`` + H1 identifier so they match the filename and
-    manifest ``subagent_type``). A template that never references ``{{proj}}`` is
-    unaffected by it.
-
-    The toolchain slots (``test_command`` / ``lint_command`` /
-    ``typecheck_command`` / ``format_command`` / ``framework``) default to a
-    human-readable "(none detected)" / "the project's stack" placeholder when
-    ``None``, so a template that references a slot the caller didn't supply still
-    renders cleanly (no dangling ``{{...}}``). A template that never references a
-    slot is unaffected.
-
-    Raises :class:`TemplateError` if the named template is missing from the
-    shipped package (an incomplete build) — equip refuses rather than writing a
-    half-rendered tool.
+    ``stack`` drives the implementer/tester identifiers and all prose; ``proj``
+    the reviewer/verify ``name:`` + H1, so they match the filename and
+    ``subagent_type``. ``None`` toolchain slots get a readable placeholder (no
+    dangling ``{{...}}``). Raises :class:`TemplateError` when the template is
+    missing or unreadable, rather than write a half-rendered tool.
     """
     text = _load_template(template_name)
     conventions_block = _format_conventions(conventions, context_root)
@@ -126,13 +98,10 @@ def render_template(
 def set_frontmatter_version(text: str, version: str) -> str:
     """Sync the version line inside a leading YAML frontmatter block.
 
-    The manifest is the version source of truth (spec §7); this keeps the
-    artifact's frontmatter in step whenever a lifecycle/evolution write bumps
-    it. Claude agent templates retain their legacy top-level ``version`` field;
-    portable Agent Skills store it at ``metadata.version``. Only the first
-    version line *within* the leading ``---`` block is touched — a ``version``
-    occurring in the body is never rewritten. Text without frontmatter (or
-    without a version line) is returned unchanged.
+    The manifest is the version source of truth (spec §7). Agent templates keep
+    a top-level ``version``; Agent Skills nest it at ``metadata.version``. Only
+    the first version line inside the leading ``---`` block is rewritten, never
+    one in the body. Text without frontmatter or a version line is unchanged.
     """
     if not text.startswith("---\n"):
         return text

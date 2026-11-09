@@ -1,4 +1,4 @@
-"""`dummyindex context equip <verb>` — the codified, evolving toolkit engine.
+"""`dummyindex context equip <verb>`: the codified, evolving toolkit engine (wire-only).
 
 Verb surface (spec §9). ``apply`` is an EXPLICIT verb — a bare ``equip`` (a
 help/discovery probe) no longer applies; it prints usage and exits 2 so a probe
@@ -6,7 +6,7 @@ never mutates the repo. The sole verbless carve-out is the read-only
 ``equip --dry-run`` preview (writes nothing). The schema version equip records
 is :data:`dummyindex.context.domains.equip.SCHEMA_VERSION` (currently v4):
 
-    equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--json]
+    equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--source [--yes]] [--json]
     equip add-specialist CAPABILITY [--root DIR] [--dry-run] [--json]
     equip discover ["query"] [--repo OWNER/NAME] [--root DIR] [--json]
     equip install <plugin>@<marketplace> [--yes] [--scope project|local|user] [--root DIR]
@@ -17,6 +17,8 @@ is :data:`dummyindex.context.domains.equip.SCHEMA_VERSION` (currently v4):
     equip uninstall [--root DIR] [--dry-run]
     equip patch --item NAME --from-file F [--root DIR]
     equip verify <plugin>@<marketplace>
+    equip reuse CAPABILITY_ID [--force] [--root DIR]
+    (apply / patch accept --lesson-file F to store specialists in the library)
 
 Wire-only: every handler parses its flags locally, calls the equip domain
 (detect → catalog → render | adopt → apply files + settings hooks → manifest,
@@ -65,6 +67,7 @@ from dummyindex.context.domains.equip import (
     wire_hooks,
     write_manifest,
 )
+from dummyindex.context.domains.equip.lifecycle.status import is_sourced
 from dummyindex.context.domains.preflight import PreflightReport
 from dummyindex.installer.common import normalize_platform_arg
 
@@ -82,7 +85,9 @@ from .common import (
 )
 from .discover import run_discover
 from .install import run_install
+from .library_verbs import read_lesson_file, run_reuse, store_items
 from .plugin_state import run_verify
+from .source import source_rendered
 from .verbs import (
     run_patch,
     run_refresh,
@@ -92,15 +97,14 @@ from .verbs import (
     run_uninstall,
 )
 
-# ----- dispatch -------------------------------------------------------------
+# --- dispatch
 
 
 def run(args: list[str]) -> int:
-    """Parse the verb, route to its handler. ``apply`` is now EXPLICIT.
+    """Parse the verb, route to its handler.
 
-    A verbless invocation no longer silently applies (a help/discovery probe
-    must never mutate the repo). The one carve-out is the read-only
-    ``--dry-run`` plan, which writes nothing — that keeps working verbless.
+    A verbless call refuses (a help/discovery probe must never mutate the repo),
+    except the read-only ``--dry-run`` plan.
     """
     verb, rest = _split_verb(args)
     if verb is None:
@@ -131,6 +135,8 @@ def run(args: list[str]) -> int:
         return run_install(rest)
     if verb is EquipVerb.VERIFY:
         return run_verify(rest)
+    if verb is EquipVerb.REUSE:
+        return run_reuse(rest)
     # Unreachable: _split_verb only returns a member or raises via the caller.
     print(f"error: unknown equip verb {verb!r}", file=sys.stderr)  # pragma: no cover
     return 2  # pragma: no cover
@@ -139,21 +145,17 @@ def run(args: list[str]) -> int:
 _VERB_REQUIRED_MESSAGE = (
     "error: `equip` requires an explicit verb; did you mean `equip apply`?\n"
     "  verbs: apply | add-specialist | status | refresh | reset | remove | "
-    "uninstall | patch | discover | install | verify\n"
+    "uninstall | patch | discover | install | verify | reuse\n"
     "  (verbless `equip --dry-run` still previews; run "
     "`dummyindex context equip --help` for usage)"
 )
 
 
 def _split_verb(args: list[str]) -> tuple[EquipVerb | None, list[str]]:
-    """Peel a leading verb token off ``args``.
+    """Peel a leading :class:`EquipVerb` token off ``args``.
 
-    The first token is a verb only when it matches an :class:`EquipVerb` member.
-    Returns ``None`` for the verb when there is no leading verb (bare ``equip``,
-    ``equip <path>``, ``equip --dry-run`` …) — apply is no longer the silent
-    default, because a help/discovery probe must never mutate the repo. The
-    caller decides what to do with the verbless case (refuse, or honour the
-    read-only ``--dry-run`` carve-out).
+    The verb is ``None`` when there is none (bare ``equip``, ``equip <path>``,
+    ``equip --dry-run`` …); the caller refuses or honours the ``--dry-run`` carve-out.
     """
     if args:
         try:
@@ -163,7 +165,7 @@ def _split_verb(args: list[str]) -> tuple[EquipVerb | None, list[str]]:
     return None, list(args)
 
 
-# ----- verb: apply ----------------------------------------------------------
+# --- verb: apply
 
 
 def run_apply(rest: list[str]) -> int:
@@ -172,11 +174,20 @@ def run_apply(rest: list[str]) -> int:
     proposal, rest = pull_flag_value(rest, "for-proposal")
     specialist, rest = pull_flag_value(rest, "specialist")
     platform, rest = pull_flag_value(rest, "platform")
+    lesson_file, rest = pull_flag_value(rest, "lesson-file")
+    source, rest = pull_bool_flag(rest, "source")
+    yes, rest = pull_bool_flag(rest, "yes")
     try:
         platform = normalize_platform_arg(platform or "agents")
     except ValueError:
         print("error: --platform must be claude|agents|both", file=sys.stderr)
         return 2
+    lesson = None
+    if lesson_file is not None:
+        lesson, lesson_err = read_lesson_file(lesson_file)
+        if lesson_err:
+            print(f"error: {lesson_err}", file=sys.stderr)
+            return 2
     project_root, leftover = resolve_root(rest)
     if leftover:
         print(f"error: unknown argument(s) for `equip`: {leftover}", file=sys.stderr)
@@ -189,14 +200,21 @@ def run_apply(rest: list[str]) -> int:
             return 2
         explicit_specialists = (specialist,)
 
-    return _run_apply(
+    applied: set[str] = set()
+    code = _run_apply(
         project_root,
         dry_run=dry_run,
         as_json=as_json,
         proposal=proposal,
         explicit_specialists=explicit_specialists,
         platform=platform,
+        applied=applied,
+        source=source,
+        approve=yes,
     )
+    if code == 0 and not dry_run:
+        code = store_items(project_root, lesson, applied)
+    return code
 
 
 def run_add_specialist(rest: list[str]) -> int:
@@ -262,6 +280,9 @@ def _run_apply(
     proposal: str | None,
     explicit_specialists: tuple[str, ...],
     platform: str = "codex",
+    applied: set[str] | None = None,
+    source: bool = False,
+    approve: bool = False,
 ) -> int:
     """Shared apply pipeline for ``apply`` and ``add-specialist``."""
     context_dir = project_root / ".context"
@@ -354,13 +375,24 @@ def _run_apply(
             and not profile_has_frontend(profile)
             and not any(Capability.FRONTEND in a.capabilities for a in decision.adopt)
         ):
-            # Make the stack-consistency skip visible (audit C7): the plan text
-            # asked for frontend, but the repo shows no frontend evidence.
+            # Make the stack-consistency skip visible: the plan text asked for
+            # frontend, but the repo shows no frontend evidence.
             print(
                 "note: proposal mentions frontend work but the stack shows no "
                 "frontend — skipped the Frontend Developer adoption (the "
                 "generic implementer covers it)"
             )
+    if source:
+        rendered, _ = source_rendered(
+            rendered,
+            prior,
+            project_root=project_root,
+            profile=profile,
+            proj=proj,
+            conventions=conventions,
+            approve=approve,
+            out=sys.stderr if as_json else sys.stdout,
+        )
     if dry_run:
         return _apply_dry_run(
             rendered,
@@ -379,6 +411,7 @@ def _run_apply(
         context_dir=context_dir,
         as_json=as_json,
         native_claude=platform in ("claude", "both"),
+        applied=applied,
     )
 
 
@@ -417,7 +450,20 @@ def _apply_dry_run(
         print(json.dumps(payload, indent=2))
         return 0
     print("equip plan (--dry-run, nothing written):")
+    prior_by_name = {i.name: i for i in (prior.items if prior else ())}
     for item, rel_path, _content in rendered:
+        previous = prior_by_name.get(item.name)
+        if (
+            previous is not None
+            and project_root is not None
+            and is_sourced(previous)
+            and classify_item(project_root, previous) is ItemState.PRISTINE
+        ):
+            print(
+                f"  keep    {item.kind.value:6} {item.name}  ->  {rel_path} "
+                "(sourced, kept)"
+            )
+            continue
         print(f"  write   {item.kind.value:6} {item.name}  ->  {rel_path}")
     for adopt in decision.adopt:
         where = adopt.path or "(registry specialist)"
@@ -442,17 +488,14 @@ def _apply_write(
     context_dir: Path,
     as_json: bool,
     native_claude: bool = False,
+    applied: set[str] | None = None,
 ) -> int:
     """Write generated files (USER_MODIFIED-safe), wire hooks, MERGE the manifest.
 
-    ``prior`` is the manifest read once by the caller (so the specialist-carry-
-    forward decision and the never-clobber baselines come from the same read).
-
-    The manifest write is a merge, never a rebuild (never-silently-drop): any
-    prior record this run does not re-derive — marketplace plugins, vendored
-    files, adopted specialists, even a generated record under a stale name —
-    is carried forward verbatim. A re-derived adoption or hook record replaces
-    its prior same-name record exactly once.
+    ``prior`` is read once by the caller so carry-forward and never-clobber baselines
+    agree. The manifest is merged, never rebuilt: every prior record this run does not
+    re-derive (marketplace, vendored, adopted, stale-named generated) carries forward
+    verbatim; a re-derived adoption or hook record replaces its same-name prior once.
     """
     prior_by_name = {i.name: i for i in prior.items}
 
@@ -502,16 +545,20 @@ def _apply_write(
                         f"({state.value}, preserved)"
                     )
                 continue
-            if state is ItemState.PRISTINE and is_evolved(prior_item):
-                # Sanctioned patch-evolution: content intentionally differs
-                # from a fresh render — regenerating would wipe the patches.
+            if state is ItemState.PRISTINE and (
+                is_evolved(prior_item) or is_sourced(prior_item)
+            ):
+                # Sanctioned patch-evolution or upstream sourcing: content
+                # intentionally differs from a fresh render; regenerating wipes it.
                 evolved.append(item.name)
                 written.append(prior_item)
                 if not as_json:
-                    print(
-                        f"  keep    {item.name}  ->  {rel_path} "
-                        f"(evolved v{prior_item.version}, kept)"
+                    label = (
+                        "sourced, kept"
+                        if is_sourced(prior_item)
+                        else f"evolved v{prior_item.version}, kept"
                     )
+                    print(f"  keep    {item.name}  ->  {rel_path} ({label})")
                 continue
             # MISSING or PRISTINE(non-evolved): (re)write + (re)baseline,
             # carrying any prior refresh-bumped version forward (the manifest
@@ -587,10 +634,8 @@ def _apply_write(
         if not as_json:
             print(f"  write   {item.name}  ->  {rel_path}")
 
-    # Adopted specialists: manifest records only, never written to disk.
-    # Dedupe by name against this run's rendered set — a generated item and a
-    # re-derived adoption of the same name must never coexist (the generated
-    # record wins; the duplicate-frontend-reviewer defect).
+    # Adopted specialists: manifest records only, never written to disk. A generated
+    # item and a re-derived adoption of one name must never coexist: generated wins.
     seen = {i.name for i in written}
     adopted: list[str] = []
     for adopt in decision.adopt:
@@ -685,6 +730,10 @@ def _apply_write(
             if warning:
                 adapter_warnings.append(warning)
                 print(f"warning: {warning}", file=sys.stderr)
+
+    if applied is not None:
+        applied.update(files_written)
+        applied.update(adopted)
 
     if as_json:
         payload = {

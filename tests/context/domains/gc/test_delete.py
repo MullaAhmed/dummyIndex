@@ -1,13 +1,10 @@
 """Unit tests for ``gc.delete.delete_workspace`` — the bounded destructive op.
 
-Security-sensitive: this is the only GC verb that removes data. Every guard in
-the ladder (slug → sentinel → realpath → liveness → recoverability → rmtree)
-has a refusal test here, and each refusal asserts that **nothing was deleted**.
-
-Fixtures build a synthetic ``.context/`` under ``tmp_path`` (never this repo's
-mutable contents). The recoverability guard reads ``git ls-files``, so the
-tracked/untracked cases use a real ``git init`` repo under ``tmp_path`` — the
-one place a real ``git`` is genuinely required to exercise the behaviour.
+Security-sensitive: the only GC verb that removes data. Every guard (slug →
+sentinel → realpath → liveness → recoverability → rmtree) has a refusal test
+asserting **nothing was deleted**. Fixtures are a synthetic ``.context/`` under
+``tmp_path`` (never this repo's); the recoverability guard reads ``git
+ls-files``, so those cases need a real ``git init`` repo there.
 """
 
 from __future__ import annotations
@@ -35,7 +32,7 @@ _CHECKLIST_PARTIAL = (
 )
 
 
-# ----- helpers --------------------------------------------------------------
+# --- helpers
 
 
 def _git(repo_root: Path, *args: str) -> None:
@@ -89,7 +86,7 @@ def _commit_all(repo_root: Path) -> None:
     _git(repo_root, "commit", "-q", "-m", "fixture")
 
 
-# ----- happy path -----------------------------------------------------------
+# --- happy path
 
 
 @pytest.mark.unit
@@ -167,6 +164,89 @@ def test_retirement_guards_execute_under_shared_project_lock(
     assert not workspace.exists()
 
 
+# ----- dry-run: same guards, no lock, no delete -----------------------------
+
+
+@pytest.mark.unit
+def test_dry_run_reports_would_delete_without_removing(tmp_path: Path) -> None:
+    context_dir = _init_repo(tmp_path)
+    workspace = _write_proposal(context_dir, "live-feature")
+    _commit_all(context_dir.parent)
+
+    result = delete_workspace(
+        context_dir, kind=CandidateKind.PROPOSAL, slug="live-feature", dry_run=True
+    )
+
+    assert result.would_delete is True
+    assert result.deleted is False
+    assert workspace.is_dir()
+
+
+@pytest.mark.unit
+def test_dry_run_refuses_receipt_less_material_proposal(tmp_path: Path) -> None:
+    context_dir = _init_repo(tmp_path)
+    workspace = _write_proposal(context_dir, "material-work")
+    (workspace / "notes.md").write_text(
+        "# Notes\n\nReal design notes that need a closeout receipt.\n",
+        encoding="utf-8",
+    )
+    _commit_all(context_dir.parent)
+
+    with pytest.raises(
+        GcTargetError, match="knowledge review/closeout receipt required"
+    ):
+        delete_workspace(
+            context_dir,
+            kind=CandidateKind.PROPOSAL,
+            slug="material-work",
+            dry_run=True,
+        )
+
+    assert workspace.is_dir()
+
+
+@pytest.mark.unit
+def test_dry_run_does_not_take_project_lock(tmp_path: Path) -> None:
+    from dummyindex.context.domains.evolve_promotion import project_lock
+
+    context_dir = _init_repo(tmp_path)
+    workspace = _write_proposal(context_dir, "live-feature")
+    _commit_all(context_dir.parent)
+
+    with project_lock(context_dir.parent):
+        result = delete_workspace(
+            context_dir,
+            kind=CandidateKind.PROPOSAL,
+            slug="live-feature",
+            dry_run=True,
+        )
+        assert result.would_delete is True
+        with pytest.raises(GcTargetError, match="writer.*retry"):
+            delete_workspace(
+                context_dir,
+                kind=CandidateKind.PROPOSAL,
+                slug="live-feature",
+            )
+
+    assert workspace.is_dir()
+
+
+@pytest.mark.unit
+def test_dry_run_untracked_target_is_refused_not_would_delete(tmp_path: Path) -> None:
+    context_dir = _init_repo(tmp_path)
+    workspace = _write_proposal(context_dir, "scratch")
+    # Never committed -> untracked.
+
+    result = delete_workspace(
+        context_dir, kind=CandidateKind.PROPOSAL, slug="scratch", dry_run=True
+    )
+
+    assert result.refused is True
+    assert result.would_delete is False
+    assert result.deleted is False
+    assert workspace.is_dir()
+
+
 # ----- guard 1: slug validation (out-of-charset traversal) ------------------
 
 
@@ -191,7 +271,7 @@ def test_traversal_slug_raises_audit_slug_error_for_audit_kind(tmp_path: Path) -
         delete_workspace(context_dir, kind=CandidateKind.AUDIT, slug="../../etc")
 
 
-# ----- guard 2: sentinel reject (the critical _archive case) ----------------
+# --- guard 2: sentinel reject (the critical _archive case)
 
 
 @pytest.mark.unit
@@ -222,7 +302,7 @@ def test_leading_underscore_slug_raises_gc_target_error(tmp_path: Path) -> None:
     assert sentinel.exists()
 
 
-# ----- guard 3: realpath containment (symlink escape) -----------------------
+# --- guard 3: realpath containment (symlink escape)
 
 
 @pytest.mark.unit
@@ -255,7 +335,7 @@ def test_symlinked_path_escaping_root_raises_gc_path_error(tmp_path: Path) -> No
     assert (outside / "precious.txt").exists()
 
 
-# ----- guard 4: liveness (in_progress / partial checklist) ------------------
+# --- guard 4: liveness (in_progress / partial checklist)
 
 
 @pytest.mark.unit
@@ -321,7 +401,7 @@ def test_partial_checklist_proposal_deleted_with_force_partial(
     assert not workspace.exists()
 
 
-# ----- guard 5: recoverability (git-tracked vs untracked) -------------------
+# --- guard 5: recoverability (git-tracked vs untracked)
 
 
 @pytest.mark.unit
@@ -360,7 +440,7 @@ def test_untracked_workspace_deleted_with_allow_untracked(tmp_path: Path) -> Non
     assert not workspace.exists()
 
 
-# ----- missing dir: idempotent no-op (NOT an error) -------------------------
+# --- missing dir: idempotent no-op (NOT an error)
 
 
 @pytest.mark.unit

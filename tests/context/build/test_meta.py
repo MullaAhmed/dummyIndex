@@ -87,18 +87,42 @@ def test_read_meta_missing_file_raises(tmp_repo: Path) -> None:
 
 
 @pytest.mark.unit
-def test_read_meta_future_schema_version_raises(tmp_repo: Path) -> None:
+def test_new_meta_writes_schema_2(tmp_repo: Path) -> None:
+    assert SCHEMA_VERSION == 2
+    assert new_meta(tmp_repo, dummyindex_version="0.0.0-test").schema_version == 2
+
+
+@pytest.mark.unit
+def test_read_meta_still_loads_schema_v1(tmp_repo: Path) -> None:
     path = tmp_repo / ".context" / "meta.json"
     path.parent.mkdir(parents=True)
     path.write_text(
-        '{"schema_version": 9999, "dummyindex_version": "x", '
+        '{"schema_version": 1, "dummyindex_version": "0.37.0", '
+        '"created_at": "2026-01-01T00:00:00+00:00", '
+        '"updated_at": "2026-01-01T00:00:00+00:00", '
+        '"root": "."}',
+        encoding="utf-8",
+    )
+    loaded = read_meta(path)
+    assert loaded.schema_version == 1
+    assert loaded.dummyindex_version == "0.37.0"
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("version", [SCHEMA_VERSION + 1, 9999])
+def test_read_meta_future_schema_version_raises(tmp_repo: Path, version: int) -> None:
+    path = tmp_repo / ".context" / "meta.json"
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        f'{{"schema_version": {version}, "dummyindex_version": "x", '
         '"created_at": "2026-01-01T00:00:00+00:00", '
         '"updated_at": "2026-01-01T00:00:00+00:00", '
         '"root": "/tmp"}',
         encoding="utf-8",
     )
-    with pytest.raises(ValueError, match="newer"):
+    with pytest.raises(ValueError, match="newer than this dummyindex build") as err:
         read_meta(path)
+    assert "upgrade dummyindex" in str(err.value)
 
 
 @pytest.mark.unit

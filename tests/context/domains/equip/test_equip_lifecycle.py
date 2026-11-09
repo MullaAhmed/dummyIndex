@@ -1,15 +1,14 @@
-"""Tests for the hash-baselined equip lifecycle (spec §7).
+"""Tests for the hash-baselined equip lifecycle.
 
-Origin-hash baselines decide what is safe to evolve: a generated file whose disk
-hash still equals its recorded ``origin_hash`` is PRISTINE (safe to refresh); a
-changed hash is USER_MODIFIED (skipped forever); an absent file is MISSING.
-``refresh`` re-renders only PRISTINE-and-stale items and re-baselines them;
-``reset`` restores one item; ``uninstall`` removes only our pristine files + our
-settings hook + the manifest, leaving user-modified files and user hooks.
+Disk hash == recorded ``origin_hash`` is PRISTINE (safe to refresh); a changed
+hash is USER_MODIFIED (skipped forever); an absent file is MISSING. ``refresh``
+re-renders and re-baselines only PRISTINE-and-stale items; ``reset`` restores
+one; ``uninstall`` removes our pristine files, our hook and the manifest only.
 """
 
 from __future__ import annotations
 
+import dataclasses
 from pathlib import Path
 
 import pytest
@@ -31,13 +30,14 @@ from dummyindex.context.domains.equip.enums import (
 )
 from dummyindex.context.domains.equip.lifecycle.status import (
     classify_item,
+    is_sourced,
     refresh,
     reset,
     status,
     uninstall,
 )
 
-# ----- fixture helpers ------------------------------------------------------
+# --- fixture helpers
 
 _IMPL_REL = ".claude/agents/python-implementer.md"
 _VERIFY_REL = ".claude/skills/proj-verify/SKILL.md"
@@ -65,7 +65,7 @@ def _item(name: str, rel: str, body: str) -> EquipmentItem:
 
 
 def _equipped_fixture(root: Path) -> EquipmentManifest:
-    """Apply a 2-item toolkit + a settings hook directly (no CLI; Phase 2)."""
+    """Apply a 2-item toolkit + a settings hook directly (no CLI)."""
     write_text_atomic(root / _IMPL_REL, _IMPL_BODY)
     write_text_atomic(root / _VERIFY_REL, _VERIFY_BODY)
     hook_body = {
@@ -101,7 +101,7 @@ def _manifest_item(manifest: EquipmentManifest, name: str) -> EquipmentItem:
     return next(i for i in manifest.items if i.name == name)
 
 
-# ----- classify + refresh ---------------------------------------------------
+# --- classify + refresh
 
 
 @pytest.mark.integration
@@ -159,7 +159,7 @@ def test_refresh_dry_run_writes_nothing(tmp_path: Path) -> None:
     assert "NEW" not in (root / _IMPL_REL).read_text(encoding="utf-8")
 
 
-# ----- reset ----------------------------------------------------------------
+# --- reset
 
 
 @pytest.mark.integration
@@ -175,7 +175,7 @@ def test_reset_rebaselines(tmp_path: Path) -> None:
     assert classify_item(root, item) is ItemState.PRISTINE
 
 
-# ----- uninstall ------------------------------------------------------------
+# --- uninstall
 
 
 @pytest.mark.integration
@@ -228,7 +228,7 @@ def test_uninstall_dry_run_keeps_everything(tmp_path: Path) -> None:
     assert (root / ".context" / EQUIPMENT_REL).exists()
 
 
-# ----- status ---------------------------------------------------------------
+# --- status
 
 
 @pytest.mark.integration
@@ -243,7 +243,7 @@ def test_status_reports_states(tmp_path: Path) -> None:
     assert states["proj-verify"] is ItemState.PRISTINE
 
 
-# ----- evolved-item protection (sanctioned patches survive refresh) ---------
+# --- evolved-item protection (sanctioned patches survive refresh)
 
 
 def test_is_evolved_detects_patch_level() -> None:
@@ -346,9 +346,8 @@ def test_wire_hooks_scrubs_legacy_unsuffixed_sentinel(tmp_path: Path) -> None:
     assert f"{EQUIP_SENTINEL}:PostToolUse" in commands[0]  # the new keying
 
 
-# ----- adopted entries are visible in status (audit 2026-06-13, C2-P2) -------
-# Status used to skip INSTALLED items entirely, so hand-deleting an adopted
-# record produced byte-identical status output — the absence was invisible.
+# --- adopted entries are visible in status
+# INSTALLED items get a status row, so hand-deleting an adopted record is visible.
 
 
 def _adopted_registry_item() -> EquipmentItem:
@@ -442,8 +441,8 @@ def test_status_cli_json_includes_adopted_rows(tmp_path: Path, capsys) -> None:
 def test_status_cli_empty_manifest_message_covers_all_kinds(
     tmp_path: Path, capsys
 ) -> None:
-    # Quick win: the empty message said 'no generated items' even though the
-    # manifest tracks adopted/marketplace/vendored records too.
+    # The manifest tracks adopted/marketplace/vendored records too, so the empty
+    # message must not say 'no generated items'.
     from dummyindex.cli.equip import run as run_equip
     from dummyindex.context.domains.equip import SCHEMA_VERSION, write_manifest
 
@@ -461,10 +460,8 @@ def test_status_cli_empty_manifest_message_covers_all_kinds(
 def test_read_manifest_unknown_enum_raises_equiperror_not_valueerror(
     tmp_path: Path,
 ) -> None:
-    """Forward-compat: a manifest carrying a kind/source this version doesn't
-    know (e.g. written by a newer dummyindex) must surface as EquipError — the
-    error every caller already catches — not a bare ValueError that crashes the
-    audit roster and every equip verb with a raw traceback."""
+    """Forward-compat: an unknown kind/source (e.g. from a newer dummyindex)
+    raises EquipError, which every caller catches, not a bare ValueError."""
     import json
 
     from dummyindex.context.domains.equip import EquipError, read_manifest
@@ -490,3 +487,93 @@ def test_read_manifest_unknown_enum_raises_equiperror_not_valueerror(
     )
     with pytest.raises(EquipError):
         read_manifest(ctx)
+
+
+# ----- sourced items (upstream-adopted body, origin pinned) -----------------
+
+_UPSTREAM_BODY = "---\nname: python-implementer\nversion: 1.0.0\n---\nupstream body\n"
+_SHA = "a" * 40
+
+
+def _sourced_item(root: Path) -> EquipmentItem:
+    write_text_atomic(root / _IMPL_REL, _UPSTREAM_BODY)
+    return dataclasses.replace(
+        _item("python-implementer", _IMPL_REL, _UPSTREAM_BODY),
+        origin_repo="o/r",
+        origin_ref=_SHA,
+        marketplace="ecc",
+    )
+
+
+@pytest.mark.unit
+def test_is_sourced_requires_generated_and_origin_ref() -> None:
+    base = _item("python-implementer", _IMPL_REL, _IMPL_BODY)
+    assert is_sourced(dataclasses.replace(base, origin_ref=_SHA)) is True
+    assert is_sourced(base) is False
+    vendored = dataclasses.replace(
+        base, source=EquipmentSource.VENDORED, origin_ref=_SHA
+    )
+    assert is_sourced(vendored) is False
+
+
+@pytest.mark.integration
+def test_refresh_skips_sourced_items(tmp_path: Path) -> None:
+    from dummyindex.context.domains.equip import read_manifest
+
+    root = tmp_path
+    item = _sourced_item(root)
+    write_manifest(
+        root / ".context",
+        EquipmentManifest(schema_version=2, items=(item,)),
+    )
+    before = (root / _IMPL_REL).read_bytes()
+    # A different fresh template must not overwrite the upstream body.
+    report = refresh(
+        root, fresh_renders={"python-implementer": _IMPL_BODY.replace("body", "tpl")}
+    )
+    assert "python-implementer" in report.skipped_evolved
+    assert "python-implementer" not in report.refreshed
+    assert (root / _IMPL_REL).read_bytes() == before
+    assert read_manifest(root / ".context").items[0] == item
+
+
+@pytest.mark.integration
+def test_reset_restores_template_and_clears_origin(tmp_path: Path) -> None:
+    from dummyindex.context.domains.equip import read_manifest
+
+    root = tmp_path
+    item = dataclasses.replace(
+        _sourced_item(root),
+        mechanism="vendor",
+        invariants=("x",),
+        package_sha256="e" * 64,
+    )
+    manifest = EquipmentManifest(schema_version=2, items=(item,))
+    write_manifest(root / ".context", manifest)
+    fresh_item = dataclasses.replace(
+        _item("python-implementer", _IMPL_REL, _IMPL_BODY),
+        invariants=("a", "b"),
+        package_sha256="f" * 64,
+    )
+    out = reset(
+        root,
+        manifest,
+        "python-implementer",
+        fresh_render=_IMPL_BODY,
+        fresh_item=fresh_item,
+    )
+    assert out.origin_repo is None
+    assert out.origin_ref is None
+    assert out.marketplace is None
+    assert out.mechanism is None
+    assert out.invariants == ("a", "b")
+    assert out.package_sha256 == "f" * 64
+    disk = (root / _IMPL_REL).read_text(encoding="utf-8")
+    assert disk == _IMPL_BODY.replace("version: 1.0.0", "version: 1.1.0")
+    assert "upstream body" not in disk
+    persisted = _manifest_item(read_manifest(root / ".context"), "python-implementer")
+    assert persisted.origin_ref is None
+    assert persisted.origin_repo is None
+    assert persisted.marketplace is None
+    assert persisted.invariants == ("a", "b")
+    assert persisted.package_sha256 == "f" * 64

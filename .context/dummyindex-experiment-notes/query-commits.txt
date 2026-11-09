@@ -1,0 +1,17 @@
+﻿e1e1cd2 perf: query autoresearch trial 35: Use the zero-score truthiness check because all scoring weights are positive and the scorer never su
+6ec2538 perf: query autoresearch trial 34: Type _build_match as always returning QueryMatch and remove the dead caller branch for None.
+92c63c6 perf: query autoresearch trial 31: Remove the redundant 40-token lower clamp from match shrinking because query only calls _build_match
+7ed1d57 perf: query autoresearch trial 27: Express the positive token-count floor with integer division or one; this removes max-call overhead
+e85ecf9 perf: query autoresearch trial 26: Use the raw remaining budget before its existing less-than-80 exit; max(0, ...) cannot affect any va
+e4c9a75 perf: query autoresearch trial 24: Skip resolving the supplied context directory on every query; pathlib joins and reads work from rela
+3e119df perf: query autoresearch trial 20: Avoid truth-testing the files field before its existing list type check; JSON empty lists are alread
+8f8ea7d perf: query autoresearch trial 19: Collect indexed symbol names with one generator expression instead of a temporary append list; retai
+db856cf perf: query autoresearch trial 18: Build symbol_id-to-record mapping with a guarded dict comprehension instead of a manual output-dict
+4286bf8 perf: query autoresearch trial 14: Select the eight best symbol hits with nsmallest instead of sorting every hit before truncation; bro
+cba08b5 perf: query autoresearch trial 12: Count symbol token matches by summing boolean membership results directly instead of filtering a gen
+04b79e3 perf: query autoresearch trial 11: Keep only symbol names in the per-feature scoring index; scoring never reads their paths, so droppin
+a84293c perf: query autoresearch trial 5: Avoid statting every candidate markdown before opening it in _excerpt_from_feature; caught OSError a
+f3cdd8e perf: query autoresearch trial 4: Let _symbol_paths read feature.json directly and catch OSError instead of statting first; top matche
+cf46efd perf: query autoresearch trial 3: Remove the preliminary exists() check for map/symbols.json because read_text is already inside an OS
+9ab5e24 perf: query autoresearch trial 2: Skip the existence stat before reading each feature.json in the symbol-index pass; the existing OSEr
+042e301 perf: query autoresearch trial 1: Resolve only each feature member from the parsed symbol map instead of building a second full symbol

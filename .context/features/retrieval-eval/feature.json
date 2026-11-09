@@ -1,15 +1,16 @@
 {
-  "schema_version": 1,
+  "confidence": "INFERRED",
+  "entry_points": [],
   "feature_id": "retrieval-eval",
+  "files": [
+    "tests/eval/BASELINE.md",
+    "tests/eval/__init__.py",
+    "tests/eval/retrieval_fixtures.json",
+    "tests/eval/test_retrieval_eval.py"
+  ],
+  "flow_ids": [],
   "kind": "community",
-  "name": "Correctness-gated retrieval eval",
-  "summary": "Deterministic benchmark over the SAMPLE_REPO index gating context-query retrieval on hit-rate@3 + MRR against a committed baseline, with a negative control proving the gate is non-vacuous.",
   "members": [
-    "run_eval_ensure_index",
-    "run_eval_ensure_repo",
-    "run_eval_feature_files",
-    "run_eval_gold_matches",
-    "run_eval_main",
     "test_retrieval_eval_expected_rank",
     "test_retrieval_eval_feature_vocab",
     "test_retrieval_eval_indexed_repo",
@@ -22,11 +23,6 @@
     "test_retrieval_eval_test_retrieval_eval_gate"
   ],
   "files": [
-    "benchmarks/retrieval/RESULTS.md",
-    "benchmarks/retrieval/questions.json",
-    "benchmarks/retrieval/questions_holdout2.json",
-    "benchmarks/retrieval/questions_holdout3.json",
-    "benchmarks/retrieval/run_eval.py",
     "tests/eval/BASELINE.md",
     "tests/eval/__init__.py",
     "tests/eval/retrieval_fixtures.json",

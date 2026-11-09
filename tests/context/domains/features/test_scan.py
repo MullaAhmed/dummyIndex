@@ -1,15 +1,10 @@
 """`features/graph.json` schema v2 — the curated codebase scan.
 
-Covers the three halves of the artifact:
-
-- **models** — frozen dataclasses serialize to the wire shape, omitting
-  every optional field that was never set (the viewer and the authoring
-  prompt both read a tight object).
-- **seed** — the deterministic backbone `scaffold_features` writes before
-  any model has curated it: one `service` node per feature, `entry` nodes
-  from flows, cross-feature `calls` edges, all inside the caps.
-- **validate** — the boundary check the authoring prompt loops against.
-  A curated scan is model-authored, so it is untrusted input.
+- **models** serialize to the wire shape, omitting every unset optional field.
+- **seed** is the deterministic backbone `scaffold_features` writes: one
+  `service` node per feature, `entry` nodes from flows, cross-feature `calls`
+  edges, all inside the caps.
+- **validate** is the boundary check; a model-authored scan is untrusted input.
 """
 
 from __future__ import annotations
@@ -43,7 +38,7 @@ from dummyindex.context.enums import (
 )
 from dummyindex.pipeline.enums import ConfidenceLevel
 
-# ----- fixtures --------------------------------------------------------------
+# --- fixtures
 
 
 def _feature(
@@ -100,7 +95,7 @@ def _minimal_payload() -> dict:
     ).to_dict()
 
 
-# ----- models ----------------------------------------------------------------
+# --- models
 
 
 @pytest.mark.unit
@@ -187,7 +182,7 @@ def test_seeded_scan_is_marked_extracted_not_inferred() -> None:
     assert payload["confidence"] == ConfidenceLevel.EXTRACTED
 
 
-# ----- seed ------------------------------------------------------------------
+# --- seed
 
 
 @pytest.mark.unit
@@ -358,7 +353,7 @@ def test_seed_leaves_the_ai_surface_for_the_model_to_fill() -> None:
     assert scan.top_integrations == ()
 
 
-# ----- the rank-driven seed --------------------------------------------------
+# --- the rank-driven seed
 
 
 def _rank(scores: dict[str, float]) -> SeedRank:
@@ -462,7 +457,7 @@ def test_rank_driven_seed_is_byte_reproducible() -> None:
     assert [n["id"] for n in first["graph"]["nodes"]] == ["b", "a"]
 
 
-# ----- validate --------------------------------------------------------------
+# --- validate
 
 
 @pytest.mark.unit
@@ -603,18 +598,15 @@ def test_violations_carry_a_json_path_the_author_can_act_on() -> None:
     assert violation.path == "graph.nodes[1].kind"
 
 
-# ----- symbolRef / evidence (schema-v2 extension) -----------------------------
+# --- symbolRef / evidence (schema-v2 extension)
 #
-# Additive only: a scan written before these fields existed carries neither,
-# and must keep validating byte-for-byte. When a symbolRef is present it is
-# checked against the id universe of the extraction artifacts — but only when
-# those artifacts are actually on disk; their absence is a warning, never an
-# error, because the scan itself is not wrong.
+# Additive: scans without these fields still validate. A symbolRef is checked only
+# when the extraction artifacts are on disk; absent artifacts warn, never error.
 
 
 @pytest.mark.unit
 def test_caps_match_the_ranked_seed_budget() -> None:
-    """The A3 contract: 120 nodes / 240 edges, doubled from schema-v2's launch."""
+    """The ranked-seed budget: 120 nodes / 240 edges."""
     assert MAX_SCAN_NODES == 120
     assert MAX_SCAN_EDGES == 240
 
@@ -695,12 +687,10 @@ def test_structural_violations_default_to_error_severity() -> None:
     assert violation.severity == ScanViolationSeverity.ERROR
 
 
-# ----- cross-feature edges from the call graph -------------------------------
+# --- cross-feature edges from the call graph
 #
-# Flows are the obvious edge signal and the unreliable one: council stage 4
-# discards most of them by design ("expect 15-25 of ~75 to survive"), and a
-# fully enriched repo can end with none — leaving a seed of disconnected
-# boxes. The call graph is always there, so it carries the edges.
+# Council stage 4 discards most flows by design, so an enriched repo can end with
+# none; the always-present call graph carries the edges instead.
 
 
 def _link(src: str, dst: str, relation: str = "calls") -> dict:

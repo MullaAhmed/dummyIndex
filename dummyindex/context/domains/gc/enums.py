@@ -27,3 +27,15 @@ class CandidateKind(str, Enum):
     AUDIT = "audit"
     ORPHAN_SCAFFOLD = "orphan_scaffold"
     ARCHIVED = "archived"
+
+
+class Recommendation(str, Enum):
+    """Pre-council hint a candidate carries from ``scan``.
+
+    Not a verdict: the council's ``Disposition`` is the decision of record.
+    """
+
+    DELETE = "delete"
+    CLOSE = "close"
+    REVIEW = "review"
+    KEEP = "keep"

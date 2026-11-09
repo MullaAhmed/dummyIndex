@@ -1,0 +1,206 @@
+﻿diff --git a/dummyindex/context/domains/query.py b/dummyindex/context/domains/query.py
+index f15bc5e..1402093 100644
+--- a/dummyindex/context/domains/query.py
++++ b/dummyindex/context/domains/query.py
+@@ -23,6 +23,7 @@ A token matches case-insensitively against either a whole identifier
+ 
+ from __future__ import annotations
+ 
++import heapq
+ import json
+ import re
+ from dataclasses import dataclass, replace
+@@ -214,7 +215,7 @@ _MAX_SYMBOL_HITS_KEPT = 8  # how many matching symbols per feature to surface
+ 
+ def estimate_tokens(text: str) -> int:
+     """Rough token estimate — char-count / 4 with a floor of 1."""
+-    return max(1, len(text) // _CHARS_PER_TOKEN)
++    return len(text) // _CHARS_PER_TOKEN or 1
+ 
+ 
+ def query(
+@@ -236,7 +237,6 @@ def query(
+         raise ValueError("query must be at most 2048 UTF-8 bytes")
+     if not 1 <= top_k <= 100 or budget_tokens < 1:
+         raise ValueError("top_k must be 1..100 and budget_tokens must be positive")
+-    context_dir = context_dir.resolve()
+     features_index = context_dir / "features" / "INDEX.json"
+     if not features_index.exists():
+         raise FileNotFoundError(features_index)
+@@ -296,13 +296,11 @@ def query(
+     used = 0
+     truncated = False
+     for fs in scored[:top_k]:
+-        remaining = max(0, budget_tokens - used)
++        remaining = budget_tokens - used
+         if remaining < 80:  # not enough room for a useful block
+             truncated = True
+             break
+         match = _build_match(context_dir, fs, tokens, symbols_by_id, budget=remaining)
+-        if match is None:
+-            continue
+         matches.append(match)
+         used += match.estimated_tokens
+         if used >= budget_tokens:
+@@ -347,7 +345,7 @@ def _score_feature(
+     entry: dict[str, Any],
+     tokens: tuple[str, ...],
+     *,
+-    symbols_for_feature: tuple[tuple[str, str], ...],
++    symbols_for_feature: tuple[str, ...],
+ ) -> FeatureScore | None:
+     """Score one feature against the query tokens. Returns None when zero."""
+     feature_id = str(entry.get("feature_id", "") or "")
+@@ -375,7 +373,7 @@ def _score_feature(
+             matched.append(tok)
+ 
+     # File-basename hits.
+-    files = entry.get("files") or []
++    files = entry.get("files")
+     if not isinstance(files, list):
+         files = []
+     for fp in files:
+@@ -390,9 +388,9 @@ def _score_feature(
+ 
+     # Symbol hits.
+     symbol_hits: list[tuple[str, int]] = []
+-    for sym_name, _sym_path in symbols_for_feature:
++    for sym_name in symbols_for_feature:
+         sym_l = sym_name.lower()
+-        tok_count = sum(1 for tok in tokens if tok in sym_l)
++        tok_count = sum(tok in sym_l for tok in tokens)
+         if tok_count:
+             score += _SYMBOL_WEIGHT * tok_count
+             symbol_hits.append((sym_name, tok_count))
+@@ -400,11 +398,15 @@ def _score_feature(
+                 if tok in sym_l and tok not in matched:
+                     matched.append(tok)
+ 
+-    if score == 0:
++    if not score:
+         return None
+ 
+-    symbol_hits.sort(key=lambda kv: (-kv[1], kv[0]))
+-    top_symbols = tuple(s for s, _ in symbol_hits[:_MAX_SYMBOL_HITS_KEPT])
++    top_symbols = tuple(
++        name
++        for name, _ in heapq.nsmallest(
++            _MAX_SYMBOL_HITS_KEPT, symbol_hits, key=lambda kv: (-kv[1], kv[0])
++        )
++    )
+ 
+     # Files cap — feature.json can carry hundreds; the score block only
+     # needs enough to be navigable.
+@@ -429,59 +431,47 @@ def _load_symbols_by_id(context_dir: Path) -> dict[str, dict[str, Any]]:
+     both the per-feature symbol index and the citation builder use. Missing or
+     malformed files yield an empty map — callers degrade gracefully.
+     """
+-    out: dict[str, dict[str, Any]] = {}
+     symbols_json = context_dir / "map" / "symbols.json"
+-    if not symbols_json.exists():
+-        return out
+     try:
+         payload = json.loads(symbols_json.read_text(encoding="utf-8"))
+     except (OSError, json.JSONDecodeError):
+-        return out
+-    for s in payload.get("symbols", []) or []:
+-        if not isinstance(s, dict):
+-            continue
+-        sid = s.get("symbol_id") or s.get("node_id")
+-        if isinstance(sid, str):
+-            out[sid] = s
+-    return out
++        return {}
++    return {
++        sid: symbol
++        for symbol in payload.get("symbols", []) or []
++        if isinstance(symbol, dict)
++        and isinstance((sid := symbol.get("symbol_id") or symbol.get("node_id")), str)
++    }
+ 
+ 
+ def _index_symbols_by_feature(
+     context_dir: Path,
+     feature_entries: list[dict[str, Any]],
+     symbols_by_id: dict[str, dict[str, Any]],
+-) -> dict[str, tuple[tuple[str, str], ...]]:
++) -> dict[str, tuple[str, ...]]:
+     """Group symbols by the feature that owns them.
+ 
+     Reads `feature.json` per feature for the `members` list, then joins
+-    against the pre-parsed `map/symbols.json` map to get readable names +
+-    paths. We don't walk every JSON file in features/<id>/ — only feature.json.
++    against the pre-parsed `map/symbols.json` map to get readable names. We
++    don't walk every JSON file in features/<id>/ — only feature.json.
+     """
+-    by_member: dict[str, tuple[str, str]] = {}
+-    for sid, s in symbols_by_id.items():
+-        name = s.get("name")
+-        path = s.get("path") or ""
+-        if isinstance(name, str):
+-            by_member[sid] = (name, path if isinstance(path, str) else "")
+-
+-    out: dict[str, tuple[tuple[str, str], ...]] = {}
++    out: dict[str, tuple[str, ...]] = {}
+     for entry in feature_entries:
+         fid = entry.get("feature_id")
+         if not isinstance(fid, str):
+             continue
+         feature_json = context_dir / "features" / fid / "feature.json"
+-        if not feature_json.exists():
+-            continue
+         try:
+             payload = json.loads(feature_json.read_text(encoding="utf-8"))
+         except (OSError, json.JSONDecodeError):
+             continue
+         members = payload.get("members") or []
+-        pairs: list[tuple[str, str]] = []
+-        for m in members:
+-            if isinstance(m, str) and m in by_member:
+-                pairs.append(by_member[m])
+-        out[fid] = tuple(pairs)
++        out[fid] = tuple(
++            name
++            for m in members
++            if isinstance(m, str)
++            and isinstance((name := symbols_by_id.get(m, {}).get("name")), str)
++        )
+     return out
+ 
+ 
+@@ -492,7 +482,7 @@ def _build_match(
+     symbols_by_id: dict[str, dict[str, Any]],
+     *,
+     budget: int,
+-) -> QueryMatch | None:
++) -> QueryMatch:
+     """Render an excerpt + citations for one scored feature."""
+     feat_dir = context_dir / "features" / fs.feature_id
+     citations: list[Citation] = []
+@@ -521,7 +511,7 @@ def _build_match(
+     estimated = estimate_tokens(text_for_estimate)
+     if estimated > budget:
+         # Shrink the excerpt — citations + header are non-negotiable.
+-        excerpt = _shrink_excerpt(excerpt, target_tokens=max(40, budget // 2))
++        excerpt = _shrink_excerpt(excerpt, target_tokens=budget // 2)
+         text_for_estimate = (
+             f"## {fs.name}\n{fs.summary or ''}\n{excerpt}\n"
+             + "\n".join(f"- {c.path}" for c in citations)
+@@ -548,8 +538,6 @@ def _symbol_paths(
+     """
+     out: dict[str, tuple[str, tuple[int, int] | None]] = {}
+     feature_json = context_dir / "features" / feature_id / "feature.json"
+-    if not feature_json.exists():
+-        return out
+     try:
+         feature_payload = json.loads(feature_json.read_text(encoding="utf-8"))
+     except (OSError, json.JSONDecodeError):
+@@ -596,8 +584,6 @@ def _excerpt_from_feature(
+     char_budget = max(80, budget * _CHARS_PER_TOKEN)
+     for name in candidates:
+         path = feat_dir / name
+-        if not path.exists():
+-            continue
+         try:
+             text = path.read_text(encoding="utf-8", errors="ignore")
+         except OSError:

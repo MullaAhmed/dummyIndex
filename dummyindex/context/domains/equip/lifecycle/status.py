@@ -1,25 +1,10 @@
 """Hash-baselined lifecycle: status / refresh / reset / uninstall (spec §7).
 
-Every generated, file-backed item carries an ``origin_hash`` baseline. The
-lifecycle compares the file's current hash to that baseline to decide what is
-safe to touch:
-
-- :func:`classify_item` — PRISTINE (hash matches) / USER_MODIFIED (differs) /
-  MISSING (absent). The hash is the authority; the in-body sentinel is only a
-  human marker.
-- :func:`status` — classify every generated item; report ``(name, state,
-  version)``.
-- :func:`refresh` — re-render only PRISTINE items whose fresh render differs,
-  re-baseline + minor-bump them; USER_MODIFIED is skipped forever.
-- :func:`reset` — restore one item to its fresh (pristine) render, re-baseline +
-  minor-bump (the explicit escape hatch).
-- :func:`uninstall` — delete PRISTINE generated files + our settings hook
-  entries + the manifest; USER_MODIFIED files are kept and reported.
-
-Adopted items (``path==""``) and the record-only hook item
-(``path==".claude/settings.json"``) carry no origin-hash baseline and are
-excluded from every disk operation here — the hook is removed via
-:func:`remove_hook_entries`, never file deletion.
+A file's hash vs its ``origin_hash`` decides what is safe to touch (the in-body
+sentinel is only a human marker). :func:`refresh` and :func:`uninstall` rewrite or
+delete only PRISTINE item files; :func:`reset` restores one even if modified (the
+escape hatch). Adopted items (``path==""``) and the record-only settings hook have no
+baseline; the hook is removed by sentinel, never by file deletion.
 """
 
 from __future__ import annotations
@@ -135,20 +120,19 @@ def is_evolved(item: EquipmentItem) -> bool:
         return False
 
 
+def is_sourced(item: EquipmentItem) -> bool:
+    """True when a generated item was adopted from an upstream skill (origin pinned)."""
+    return item.source == EquipmentSource.GENERATED and item.origin_ref is not None
+
+
 def classify_item(root: Path, item: EquipmentItem) -> ItemState:
     """Classify a generated item against its recorded ``origin_hash``.
 
-    The hash is the authority: equal ⇒ PRISTINE, absent ⇒ MISSING. When the hash
-    differs the file is user-owned; the *canary* then refines that verdict using
-    ``item.invariants`` — load-bearing convention substrings the tool must keep:
-
-    - no invariants ⇒ ``USER_MODIFIED`` (byte-identical to the pre-canary
-      behaviour, so the two new states are unreachable);
-    - every invariant still present on disk ⇒ ``CUSTOMIZED`` (a benign edit);
-    - at least one invariant gone ⇒ ``INVARIANT_BROKEN`` (an alarm).
-
-    All three are *user-owned* (:func:`is_user_owned`) — callers never overwrite,
-    re-baseline, or delete them.
+    Equal hash ⇒ PRISTINE, absent ⇒ MISSING, unreadable ⇒ USER_MODIFIED. A
+    differing hash is user-owned; the canary refines it via ``item.invariants``:
+    none ⇒ ``USER_MODIFIED``, all present ⇒ ``CUSTOMIZED``, any gone ⇒
+    ``INVARIANT_BROKEN``. Callers never overwrite, re-baseline or delete any of
+    the three (:func:`is_user_owned`).
     """
     target = root / item.path
     if not target.is_file():
@@ -184,15 +168,14 @@ def is_user_owned(state: ItemState) -> bool:
 
 
 def status(root: Path, manifest: EquipmentManifest) -> StatusReport:
-    """Classify every tracked item: generated + vendored by origin-hash,
-    marketplace items by whether their ``enabledPlugins`` key is still set,
-    and adopted (INSTALLED) items by bare presence — a registry pointer
-    (``path==""``) is ADOPTED, a path-backed adoption is ADOPTED while its
-    file exists and MISSING when gone. Adopted rows carry no baseline, but
-    making them visible means deleting (or corrupting) one changes the status
-    output instead of being silently invisible. Also flag marketplace plugin
-    items that carry no usage playbook in ``grounded_in`` — they are wired but
-    undocumented."""
+    """Classify every tracked item.
+
+    Generated + vendored items by origin-hash, marketplace items by whether
+    their ``enabledPlugins`` key is still set, adopted (INSTALLED) items by
+    presence: a registry pointer (``path==""``) is ADOPTED, a path-backed one
+    turns MISSING when its file is gone. Also lists marketplace items with no
+    usage playbook in ``grounded_in`` (wired but undocumented).
+    """
     rows: list[tuple[str, ItemState, str | None]] = []
     missing_playbook: list[str] = []
     for item in manifest.items:
@@ -258,17 +241,16 @@ def refresh(
             skipped_missing.append(item.name)
             new_items.append(item)
             continue
-        # PRISTINE-but-evolved: content intentionally differs from the template
-        # (sanctioned patches) — regenerating would wipe the evolution. Keep.
-        if is_evolved(item):
+        # PRISTINE-but-evolved or sourced: content differs from the template
+        # (patches / upstream body) — regenerating would wipe it. Keep. Must
+        # precede the fresh-render comparison or the template overwrites sourced text.
+        if is_evolved(item) or is_sourced(item):
             skipped_evolved.append(item.name)
             new_items.append(item)
             continue
-        # PRISTINE: re-render only if the fresh render actually differs.
-        # Compare version-normalized — the disk content carries the item's
-        # current version in its frontmatter, the raw template render carries
-        # 1.0.0; without normalizing, every previously-refreshed item would
-        # look permanently stale.
+        # PRISTINE: re-render only if the fresh render differs, compared at the
+        # item's version: disk carries it in frontmatter, the raw render 1.0.0,
+        # so an unnormalized compare makes every refreshed item look stale.
         if fresh is None:
             unchanged.append(item.name)
             new_items.append(item)
@@ -346,11 +328,20 @@ def reset(
     write_text_atomic(root / target_item.path, out)
     from ..identity import capability_metadata
 
+    extra: dict = {}
+    if is_sourced(target_item):
+        # Discarding the upstream body also drops its pin and restores template invariants.
+        extra.update(
+            origin_repo=None, origin_ref=None, marketplace=None, mechanism=None
+        )
+        if fresh_item is not None:
+            extra["invariants"] = fresh_item.invariants
     rebaselined = dataclasses.replace(
         target_item,
         origin_hash=content_hash(out),
         version=bumped,
         **(capability_metadata(fresh_item) if fresh_item is not None else {}),
+        **extra,
     )
     new_items = tuple(rebaselined if i.name == name else i for i in manifest.items)
     write_manifest(root / ".context", dataclasses.replace(manifest, items=new_items))
@@ -393,11 +384,10 @@ def uninstall(
 
             remove_native_adapter(root, item)
 
-    # Marketplace items: disable each plugin + drop every referenced marketplace
-    # from the settings file it was wired into (``item.path``; scope-aware — a
-    # full uninstall removes the whole ledger, so no other item can still need a
-    # shared marketplace entry). A malformed settings.json is left untouched
-    # rather than clobbered.
+    # Marketplace items: disable each plugin and drop its marketplace from the
+    # settings file it was wired into (``item.path``). A full uninstall removes
+    # the whole ledger, so no item can still need a shared entry. A malformed
+    # settings.json is left untouched rather than clobbered.
     to_remove: dict[Path, set[str]] = {}
     for item in manifest.items:
         if item.source != EquipmentSource.MARKETPLACE:

@@ -2,8 +2,7 @@
 
 ``context/claude_settings.py`` holds the preserve-or-refuse settings reader, the
 idempotent hook installer (keyed by an in-body sentinel comment), the sentinel
-remover, and the atomic JSON writer — extracted from ``context/hooks.py`` so both
-the auto-refresh hook and equip's format hook share one proven implementation.
+remover, and the atomic JSON writer, shared by the auto-refresh and equip hooks.
 """
 
 from __future__ import annotations
@@ -143,8 +142,7 @@ def test_refresh_preserves_user_hook_co_located_in_managed_entry(
     tmp_path: Path,
 ) -> None:
     """A user hook added INSIDE the managed entry's hooks array must survive a
-    refresh-in-place when the canonical body changes (the v0.25.0 drop bug).
-    """
+    refresh-in-place when the canonical body changes."""
     sp = tmp_path / ".claude" / "settings.json"
     install_hook_entry(sp, "Stop", _body("S1", "echo old\n"), sentinel="S1")
 

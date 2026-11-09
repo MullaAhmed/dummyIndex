@@ -1,10 +1,8 @@
 """Frozen dataclasses for the audit artifact.
 
-An audit workspace lives at ``.context/audits/<slug>/``. ``audit.json`` carries
-the structured head (``AuditConfig``); ``catalog.json`` carries the persona
-catalog the skill picks the panel from; the findings + report are markdown the
-agents author. Python only models the structured heads — the *auditing* is the
-agents, not a deterministic computation here.
+A workspace lives at ``.context/audits/<slug>/``: ``audit.json`` holds the
+structured head (``AuditConfig``) and ``catalog.json`` the persona menu; findings
+and report are agent-authored markdown, so only the structured heads are modelled.
 """
 
 from __future__ import annotations
@@ -70,16 +68,11 @@ class AuditConfig:
 class PersonaCard:
     """One catalog entry, parsed from a persona markdown file's frontmatter.
 
-    ``persona_id`` is the filename stem (e.g. ``security``); ``subagent_type``
-    is the real Claude Code agent the skill dispatches via the Task tool;
-    ``triggers`` are free-text hints the skill weighs when picking the panel.
-
-    ``requested_subagent_type`` is set only when roster resolution
-    (``catalog.resolve_catalog``) rewrote the shipped ``subagent_type``
-    because the named global persona isn't installed in the repo — it
-    preserves the original intent label so the skill can still prefer it when
-    the live agent list turns out to carry it (e.g. a user-scope agent the
-    project-scope scan can't see).
+    ``persona_id`` is the filename stem (e.g. ``security``); ``subagent_type`` is
+    the Claude Code agent the skill dispatches via the Task tool; ``triggers`` are
+    free-text hints for picking the panel. ``requested_subagent_type`` keeps a
+    shipped name ``catalog.resolve_catalog`` rewrote as uninstalled, so the skill
+    can still prefer it if the live agent list has it (e.g. a user-scope agent).
     """
 
     persona_id: str

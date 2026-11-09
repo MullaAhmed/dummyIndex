@@ -42,7 +42,7 @@ def _write_files_map(context_dir: Path, languages: list[str | None]) -> None:
     )
 
 
-# ----- stack detection ------------------------------------------------------
+# --- stack detection
 
 
 @pytest.mark.unit
@@ -86,7 +86,7 @@ def test_detect_stack_surfaces_frameworks_from_manifest(tmp_path: Path) -> None:
     assert "FastAPI" in profile.frameworks
 
 
-# ----- toolchain detection --------------------------------------------------
+# --- toolchain detection
 
 
 @pytest.mark.unit
@@ -102,8 +102,8 @@ def test_detect_stack_python_toolchain_with_uv(tmp_path: Path) -> None:
     assert profile.test_runner == "pytest"
     assert profile.test_command == "uv run pytest -q"
     assert profile.linter == "ruff"
-    # spec §2: uv-managed python commands run via the venv. Format is the
-    # exception (spec §5, hook-shell, bare + binary-guarded).
+    # uv-managed python commands run via the venv; format is the exception
+    # (a bare, binary-guarded hook-shell command).
     assert profile.lint_command == "uv run ruff check ."
     assert profile.type_checker == "mypy"
     assert profile.typecheck_command == "uv run mypy ."
@@ -154,7 +154,7 @@ def test_detect_stack_empty_repo_toolchain_all_none(tmp_path: Path) -> None:
     assert profile.format_command is None
 
 
-# ----- render ----------------------------------------------------------------
+# --- render
 
 
 @pytest.mark.unit
@@ -187,7 +187,7 @@ def test_render_empty_conventions_still_grounds(tmp_path: Path) -> None:
     assert ".context" in body
 
 
-# ----- render v2: toolchain slots + version frontmatter ---------------------
+# --- render v2: toolchain slots + version frontmatter
 
 _ALL_TEMPLATES = (
     IMPLEMENTER_TEMPLATE,
@@ -266,7 +266,7 @@ def test_reviewer_references_conventions_and_concerns() -> None:
     assert "concerns.md" in body
 
 
-# ----- render v3: {proj}- identifier vs {stack} prose -----------------------
+# --- render v3: {proj}- identifier vs {stack} prose
 
 
 def _frontmatter_name(body: str) -> str:
@@ -373,7 +373,11 @@ def test_three_way_identity_for_standard_generated_set() -> None:
         "python-tester": "python",
         "backend-reviewer": "backend",
         "backend-verify": "backend",
-    } | {f"backend-{t.name_suffix}": "backend" for t in SPECIALIST_TEMPLATES.values()}
+    } | {
+        f"backend-{t.name_suffix}": "backend"
+        for t in SPECIALIST_TEMPLATES.values()
+        if t.dimension is None  # dimensioned ones are signal-gated (none here)
+    }
     seen: set[str] = set()
     for item, rel_path, content in rendered:
         seen.add(item.name)
@@ -430,7 +434,7 @@ def test_shared_formatter_uses_named_changed_paths_while_hook_stays_native(
     assert "<changed-paths>" not in decision.hooks[0].command
 
 
-# ----- manifest schema ------------------------------------------------------
+# --- manifest schema
 
 
 @pytest.mark.unit
@@ -454,7 +458,7 @@ def test_manifest_roundtrip_matches_schema() -> None:
     assert isinstance(back.items[0].capabilities, tuple)
 
 
-# ----- manifest schema v3 ---------------------------------------------------
+# --- manifest schema v3
 
 
 @pytest.mark.unit
@@ -520,7 +524,7 @@ def test_v1_manifest_loads_tolerantly() -> None:
     assert manifest.items[0].version is None
 
 
-# ----- content hashing ------------------------------------------------------
+# --- content hashing
 
 
 @pytest.mark.unit
@@ -532,7 +536,7 @@ def test_content_hash_stable_and_prefixed() -> None:
     assert content_hash("y") != h1
 
 
-# ----- safety: never clobber ------------------------------------------------
+# --- safety: never clobber
 
 
 @pytest.mark.unit
@@ -554,7 +558,7 @@ def test_is_safe_to_write_user_file(tmp_path: Path) -> None:
     assert is_safe_to_write(p) is False
 
 
-# ----- CLI: equip end to end ------------------------------------------------
+# --- CLI: equip end to end
 
 
 def _project(tmp_path: Path, languages: list[str | None]) -> Path:
@@ -605,8 +609,7 @@ def test_equip_writes_manifest_with_schema(tmp_path: Path) -> None:
 
 @pytest.mark.integration
 def test_equip_wires_format_hook_when_formatter_present(tmp_path: Path) -> None:
-    # v2 (spec §5): apply now WRITES the PostToolUse format hook into
-    # settings.json (the MVP's record-only behaviour is gone). Spec wins.
+    # apply WRITES the PostToolUse format hook into settings.json.
     root = _project(tmp_path, ["python"])
     (root / "pyproject.toml").write_text("[tool.ruff]\n", encoding="utf-8")
     rc = run_equip(["apply", "--platform", "claude", str(root)])
@@ -618,7 +621,7 @@ def test_equip_wires_format_hook_when_formatter_present(tmp_path: Path) -> None:
     hooks = [i for i in data["items"] if i["kind"] == "hook"]
     assert hooks and hooks[0]["name"] == "ruff-format"
     assert hooks[0]["capabilities"] == ["format"]
-    # the hook IS written to settings.json now, with our sentinel.
+    # the hook is in settings.json, with our sentinel.
     settings = root / ".claude" / "settings.json"
     assert settings.exists()
     blob = settings.read_text(encoding="utf-8")
@@ -662,7 +665,7 @@ def test_equip_rejects_unknown_args(tmp_path: Path) -> None:
     assert rc == 2
 
 
-# ----- Task 9: v2 apply pipeline (catalog set, hooks, baselines) ------------
+# --- apply pipeline (catalog set, hooks, baselines)
 
 
 def _equipped(tmp_path: Path, *, formatter: bool = True) -> Path:
@@ -810,14 +813,14 @@ def test_apply_dry_run_json_stdout_is_pure_json(tmp_path: Path, capsys) -> None:
 
 @pytest.mark.integration
 def test_reapply_preserves_user_modified_generated_file(tmp_path: Path) -> None:
-    """REGRESSION (handoff §critical): a hand-edited generated file (sentinel
-    still present) must NOT be clobbered on re-apply. The gate is classify_item
-    against the recorded baseline, not is_safe_to_write (which sees the sentinel
-    and would say 'safe to overwrite').
+    """A hand-edited generated file (sentinel still present) survives re-apply.
+
+    The gate is classify_item against the recorded baseline, not
+    is_safe_to_write, which sees the sentinel and would allow an overwrite.
     """
     root = _equipped(tmp_path)
     agent = root / ".context" / "equipment" / "python-implementer.md"
-    # Hand-edit: APPEND (keep the sentinel) so we exercise the real bug.
+    # APPEND so the sentinel stays and is_safe_to_write alone would say "safe".
     edited = agent.read_text(encoding="utf-8") + "\n<!-- USER TWEAK: keep me -->\n"
     agent.write_text(edited, encoding="utf-8")
 
@@ -832,7 +835,7 @@ def test_reapply_preserves_user_modified_generated_file(tmp_path: Path) -> None:
     assert "python-implementer" in {i["name"] for i in data["items"]}
 
 
-# ----- Task 9/10: per-proposal scoping --------------------------------------
+# --- per-proposal scoping
 
 
 def test_for_proposal_missing_slug_exits_2(tmp_path: Path) -> None:
@@ -843,8 +846,7 @@ def test_for_proposal_missing_slug_exits_2(tmp_path: Path) -> None:
 
 @pytest.mark.integration
 def test_for_proposal_generates_db_specialist_file(tmp_path: Path) -> None:
-    # database has a template → a real, file-backed specialist is GENERATED
-    # (no longer a manifest-only Data Engineer pointer).
+    # database has a template → a real, file-backed specialist is GENERATED.
     root = _project(tmp_path, ["python"])
     prop = root / ".context" / "proposals" / "add-db"
     prop.mkdir(parents=True)
@@ -869,10 +871,12 @@ def test_for_proposal_generates_db_specialist_file(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
-def test_for_proposal_adopts_frontend_when_no_template(tmp_path: Path) -> None:
-    # frontend has NO template → the registry's Frontend Developer is adopted
-    # manifest-only (the unchanged "no template → adopt" fallback), no file.
-    # The stack must show frontend evidence (audit C7: backend repos skip it).
+def test_for_proposal_generates_frontend_pair_on_frontend_stack(
+    tmp_path: Path,
+) -> None:
+    # frontend IS template-backed: a frontend-evidenced stack GENERATES the
+    # procedure + domain pair (files); the registry Frontend Developer is not
+    # adopted. (audit C7: backend repos get neither.)
     root = _project(tmp_path, ["javascript", "javascript"])
     prop = root / ".context" / "proposals" / "add-ui"
     prop.mkdir(parents=True)
@@ -885,19 +889,22 @@ def test_for_proposal_adopts_frontend_when_no_template(tmp_path: Path) -> None:
     data = json.loads(
         (root / ".context" / "equipment.json").read_text(encoding="utf-8")
     )
-    installed = [i for i in data["items"] if i["source"] == "installed"]
-    assert any("frontend" in (i.get("capabilities") or []) for i in installed)
-    # adopted, never written as a file
-    assert not list((root / ".context" / "equipment").glob("*frontend*"))
+    assert not [i for i in data["items"] if i["source"] == "installed"]
+    generated = [
+        i
+        for i in data["items"]
+        if i["source"] == "generated" and "frontend" in (i.get("capabilities") or [])
+    ]
+    assert sorted(i["dimension"] for i in generated) == ["domain", "procedure"]
+    assert len(list((root / ".context" / "equipment").glob("*frontend*"))) == 2
 
 
 @pytest.mark.integration
 def test_for_proposal_backend_stack_skips_frontend_adoption(
     tmp_path: Path, capsys
 ) -> None:
-    # REGRESSION (audit C7): a pure-backend repo whose plan text mentions 'UI'
-    # must NOT adopt 'Frontend Developer' — and the skip is announced, not
-    # silent.
+    # A pure-backend repo whose plan mentions 'UI' must NOT adopt 'Frontend
+    # Developer', and the skip is announced, not silent.
     root = _project(tmp_path, ["python", "python"])
     prop = root / ".context" / "proposals" / "add-mcp"
     prop.mkdir(parents=True)
@@ -917,7 +924,7 @@ def test_for_proposal_backend_stack_skips_frontend_adoption(
     assert "frontend" in out and "skipped" in out  # the visible skip notice
 
 
-# ----- Task 10: verb surface ------------------------------------------------
+# --- verb surface
 
 
 def test_bare_equip_is_apply(tmp_path: Path) -> None:
@@ -1040,7 +1047,7 @@ def test_verb_patch_requires_item_and_file(tmp_path: Path) -> None:
     assert run_equip(["patch", "--root", str(root)]) == 2
 
 
-# ----- frontmatter version sync helper ---------------------------------------
+# --- frontmatter version sync helper
 
 
 def test_set_frontmatter_version_replaces_only_frontmatter_line() -> None:

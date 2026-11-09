@@ -1,17 +1,10 @@
 """Anti-regression guard for shipped skill + generated-doc prose.
 
-These tests grep the SHIPPED skill sources (``dummyindex/skills/**``) and the
-generated-doc templates for strings the C10 docs-alignment pass removed or
-added. They are deliberately string-level: their whole point is to fail loudly
-if a known-bad remedy ("run ``dummyindex install --scope user``"), a phantom
-CLI verb ("``dummyindex --recouncil``" presented as a command), or a stale
-schema version ("(v2)") ever reappears in a skill, and to lock in the
-correctness fixes (the binding ``— via`` gate, the read-only reconcile
-description, the version-pinning update arg, the feature.json/INDEX.json field
-contract).
-
-Markdown-only changes are enforced by prose; that is exactly what these guards
-verify. They do not touch Wave-3's ``tests/cli/test_cli_doc_sync.py``.
+Deliberately string-level greps over ``dummyindex/skills/**`` and the generated-doc
+templates: they fail if a known-bad remedy (``install --scope user``), a phantom CLI
+verb (``dummyindex --recouncil``) or a stale schema version ("(v2)") reappears, and
+pin the correctness fixes (the binding ``— via`` gate, read-only reconcile, the
+update skill's version pin, the feature.json/INDEX.json field contract).
 """
 
 from __future__ import annotations
@@ -21,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from dummyindex.context.domains import docbudget
 from dummyindex.context.output.bootstrap import generate_managed_block
 from dummyindex.context.output.instructions import (
     PLAYBOOK_IDS,
@@ -54,15 +48,10 @@ def _installed_skill_sources() -> tuple[tuple[str, str], ...]:
 def test_installed_skill_frontmatter_is_agent_skills_portable() -> None:
     """Keep shipped entry points on the interoperable Agent Skills surface.
 
-    ``allowed-tools: Read, Write, Bash, Task`` is Claude-specific metadata and
-    its comma-separated value is not part of the open Agent Skills contract.
-    Tool availability is owned by the active host, so each shared entry point
-    carries only the required discovery metadata.
-
-    Frontmatter ``name`` must also match the skill's **installed directory
-    label** — the same label ``_SIBLING_SKILLS`` maps each source dir to
-    (``skills/plan/`` -> ``dummyindex-plan``, etc.); the top-level ``skill.md``
-    is the primary skill and installs as bare ``dummyindex``.
+    Frontmatter is only ``name`` + ``description``: ``allowed-tools`` is
+    Claude-specific and tool availability belongs to the host. ``name`` must match
+    the installed directory label from ``_SIBLING_SKILLS`` (``skills/plan/`` ->
+    ``dummyindex-plan``); the top-level ``skill.md`` installs as bare ``dummyindex``.
     """
     sibling_labels = dict(_SIBLING_SKILLS)
     for rel, text in _installed_skill_sources():
@@ -105,11 +94,8 @@ def test_installed_skill_frontmatter_is_agent_skills_portable() -> None:
 
 @pytest.mark.unit
 def test_skill_bodies_name_the_portable_host_path() -> None:
-    """The host-language sweep generalized the old binary "Codex path" /
-    "Codex branch" labels to a named **portable host path** (covering the
-    skill-native-hosts and generic-fallback behavior classes) so the split
-    reads past one product. Pin the sentinel wording so a future edit can't
-    silently regress a skill body back to Codex-only phrasing."""
+    """Pin the "portable host path" wording so no skill body regresses to the old
+    Codex-only "Codex path" / "Codex branch" labels."""
     sentinel = "portable host path"
     targets = (
         "skill.md",
@@ -130,14 +116,12 @@ def test_skill_bodies_name_the_portable_host_path() -> None:
     )
 
 
-# --- Known-bad strings must never reappear in any shipped skill --------------
+# --- Known-bad strings must never reappear in any shipped skill
 
 
 @pytest.mark.unit
 def test_no_install_scope_user_skew_remedy() -> None:
-    """The version-skew banner used to prescribe a blunt reinstall as the fix.
-    `install` is non-destructive now, but the banner must point at the
-    diagnosis verb + /dummyindex-update, never `install --scope user`."""
+    """No shipped skill contains `install --scope user`, the old version-skew fix."""
     offenders = [
         rel
         for rel, text in _all_skill_markdown().items()
@@ -192,7 +176,7 @@ def test_no_stale_equipment_schema_version_in_skills() -> None:
     assert not offenders, f"stale equipment schema version in skill(s): {offenders}"
 
 
-# --- Version-skew banner points at the safe diagnose-then-fix path -----------
+# --- Version-skew banner points at the safe diagnose-then-fix path
 
 
 @pytest.mark.unit
@@ -210,7 +194,7 @@ def test_skew_banners_point_at_diagnosis_verb() -> None:
         )
 
 
-# --- build skill: binding `— via` gate + non-dispatchable main-session items -
+# --- build skill: binding `— via` gate + non-dispatchable main-session items
 
 
 def _build_skill() -> str:
@@ -233,9 +217,7 @@ def test_build_skill_verify_demands_tool_provenance() -> None:
 
 @pytest.mark.unit
 def test_build_skill_excludes_consumer_specific_canvas_gate() -> None:
-    """The hand-edit in the consumer repo embedded a project-specific
-    canvas-to-code provenance gate; the GENERIC rule was folded upstream but
-    the project-specific paths must NOT ship in the package skill."""
+    """A consumer repo's project-specific canvas-to-code gate must NOT ship here."""
     text = _build_skill()
     assert "canvas-to-code" not in text
     assert ".canvas-to-code/state" not in text
@@ -250,7 +232,7 @@ def test_build_skill_marks_gate_and_main_session_undispatchable() -> None:
     assert "never" in text.lower()
 
 
-# --- build-dispatch-fanout-fix: two-class via rule + models disclosure -------
+# --- build-dispatch-fanout-fix: two-class via rule + models disclosure
 
 
 def _plan_skill() -> str:
@@ -293,7 +275,7 @@ def test_build_skill_documents_models_disclosure_and_route() -> None:
     assert "invocation >\n     proposal > unset" in text
 
 
-# --- gc skill: non-dispatchable gates, ordered contract, no bare delete ------
+# --- gc skill: non-dispatchable gates, ordered contract, no bare delete
 
 
 def _gc_skill() -> str:
@@ -302,9 +284,8 @@ def _gc_skill() -> str:
 
 @pytest.mark.unit
 def test_gc_skill_marks_confirm_and_gate_non_dispatchable() -> None:
-    """The user-confirm step (step 4) and the dogfood GATE must both be pinned
-    as human decisions, never handed to a subagent. Mirrors
-    `test_build_skill_marks_gate_and_main_session_undispatchable`."""
+    """The user-confirm step (step 4) and the dogfood GATE are pinned as human
+    decisions, never handed to a subagent."""
     text = _gc_skill()
     # The non-dispatchable / human-decision markers must be present.
     assert "non-dispatchable" in text
@@ -322,9 +303,8 @@ def test_gc_skill_marks_confirm_and_gate_non_dispatchable() -> None:
 
 @pytest.mark.unit
 def test_gc_skill_documents_ordered_contract() -> None:
-    """The skill must document the ordered pipeline so a future edit that
-    reorders or drops the confirm gate fails. Assert the key ordered tokens
-    appear AND in the correct relative order."""
+    """The pipeline's key tokens appear, in order, so a reorder or a dropped confirm
+    gate fails."""
     text = _gc_skill()
     ordered_tokens = (
         "gc status",
@@ -337,9 +317,7 @@ def test_gc_skill_documents_ordered_contract() -> None:
     # Each token must be present.
     for token in ordered_tokens:
         assert token in text, f"ordered-contract token missing: {token!r}"
-    # And the one-line contract must carry them in order. Find the contract
-    # line (the `→`-joined pipeline summary) and assert the tokens are ordered
-    # within it — a reorder of the pipeline must fail this test.
+    # And in order on the one-line `→`-joined pipeline summary.
     contract_lines = [
         line
         for line in text.splitlines()
@@ -364,20 +342,12 @@ def test_gc_skill_states_never_a_bare_delete_sentinel() -> None:
 
 @pytest.mark.unit
 def test_gc_skill_no_runnable_gc_delete_without_yes() -> None:
-    """Every *runnable* `gc delete` invocation in the skill must carry `--yes`
-    or be explicitly described as a dry-run. This is the real guard behind the
-    "Never show a bare `gc delete`" sentinel: it checks each occurrence rather
-    than trusting the prose.
+    """Every runnable `gc delete` in the skill carries `--yes` or says dry-run.
 
-    A line is treated as a runnable invocation when `gc delete` is immediately
-    followed by a flag-like token (`--…`) or a backslash line-continuation —
-    i.e. an actual command synopsis or shell line. Prose/pipeline references
-    (e.g. the `→`-joined contract summary, or "`gc delete` already updated …")
-    do not pretype a command and are exempt; a line that itself marks the
-    invocation a dry-run is also fine.
+    The real guard behind the "Never show a bare `gc delete`" sentinel. A line is
+    runnable when `gc delete` is followed, past any args, by a `--flag` or a
+    trailing backslash; prose such as the `→` contract summary is exempt.
     """
-    # `gc delete` followed (allowing a quoted-word or arg) by a `--flag` or a
-    # trailing backslash continuation == a runnable command synopsis.
     invocation = re.compile(r"gc delete\b[^\n`]*?(--\w|\\\s*$)")
     offenders: list[str] = []
     for line in _gc_skill().splitlines():
@@ -394,6 +364,21 @@ def test_gc_skill_no_runnable_gc_delete_without_yes() -> None:
         "runnable `gc delete` invocation(s) lack `--yes` and are not marked a "
         f"dry-run: {offenders}"
     )
+
+
+@pytest.mark.unit
+def test_gc_skill_batch_sweep_phrases() -> None:
+    """Pin the recommendation-driven batch-sweep phrases in the gc skill."""
+    text = _gc_skill()
+    for phrase in (
+        "one batch table",
+        "one explicit confirmation",
+        "excluded from the batch",
+        "gc closeout --draft",
+        "blocked at delete",
+        "ran, found nothing to retire",
+    ):
+        assert phrase in text, f"batch-sweep phrase missing: {phrase!r}"
 
 
 # --- plan skill: agent-availability resolution + open-decisions rule ---------
@@ -426,10 +411,23 @@ def test_build_delegates_selected_capability_and_policy_on_every_host() -> None:
     assert "read `role_path`" in text
     assert "include the full capability mandate" in text
     assert "policies actually selected in this session" in text
-    assert "Ponytail is selected and exposed" in text
-    assert "never silently install or assume it" in text
     assert "Never stop solely because Claude equipment is missing" in text
     assert "sanctioned seam on every host" in text
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("skill", ["build", "plan", "equip"])
+def test_skills_apply_ponytail_by_default_and_never_install_silently(
+    skill: str,
+) -> None:
+    """Ponytail is default-on when exposed; the old selected-and-exposed gate is gone."""
+    text = " ".join(
+        (_SKILLS_DIR / skill / "SKILL.md").read_text(encoding="utf-8").split()
+    )
+    assert "Ponytail applies by default when exposed" in text
+    assert "`SubagentStart` hook already injects it" in text
+    assert "Never silently install it" in text
+    assert "Ponytail is selected" not in text
 
 
 @pytest.mark.unit
@@ -472,7 +470,7 @@ def test_plan_skill_says_read_before_editing() -> None:
     assert "never replace unread content blindly" in text
 
 
-# --- equip skill: shared capability ownership --------------------------
+# --- equip skill: shared capability ownership
 
 
 def _equip_skill() -> str:
@@ -489,7 +487,7 @@ def test_equip_uses_real_project_checks_and_hash_owned_learning() -> None:
     assert "equip benchmark" not in text
 
 
-# --- update skill: version pinning -------------------------------------------
+# --- update skill: version pinning
 
 
 @pytest.mark.unit
@@ -503,10 +501,8 @@ def test_update_skill_documents_version_pinning() -> None:
 
 @pytest.mark.unit
 def test_update_skill_documents_generated_tool_refresh() -> None:
-    """The update skill must document that `install` also refreshes the repo's
-    equip-generated tools (agents/skills/specialists) — so a future edit that drops
-    the behaviour fails. Names `equip refresh`, the never-clobber / USER_MODIFIED
-    guarantee, and the equipped-only guard."""
+    """The update skill documents that `install` also refreshes equip-generated
+    tools: `equip refresh`, the never-clobber guarantee and the equipped-only guard."""
     text = (_SKILLS_DIR / "update" / "SKILL.md").read_text(encoding="utf-8")
     assert "equip refresh" in text
     assert "generated" in text
@@ -518,7 +514,7 @@ def test_update_skill_documents_generated_tool_refresh() -> None:
     assert "skipped" in text
 
 
-# --- trivial-filter doc: where the count fields live -------------------------
+# --- trivial-filter doc: where the count fields live
 
 
 @pytest.mark.unit
@@ -532,7 +528,7 @@ def test_trivial_filter_doc_locates_count_fields_in_index_json() -> None:
     assert "len()" in text
 
 
-# --- generated-doc templates: correct update-path contract -------------------
+# --- generated-doc templates: correct update-path contract
 
 
 @pytest.mark.unit
@@ -548,8 +544,7 @@ def test_how_to_use_describes_reconcile_as_read_only() -> None:
 @pytest.mark.unit
 def test_how_to_use_drops_blanket_no_handedit_rule() -> None:
     h = generate_how_to_use_md()
-    # The old absolute claim must be gone; in-session feature-doc edits are
-    # now sanctioned.
+    # In-session feature-doc edits are sanctioned, so the absolute claim is gone.
     assert "All files are regenerated on rebuild" not in h
 
 
@@ -574,12 +569,11 @@ def test_managed_block_describes_reconcile_correctly() -> None:
     assert "writes nothing" in m or "read-only" in m
     assert "reconcile-stamp" in m
     assert "user wins" in m.lower()
-    # The old false claim ("folds new/changed code into the curated taxonomy"
-    # as a property of `reconcile` itself) must be gone.
+    # The false claim that `reconcile` itself folds code into the taxonomy is gone.
     assert "reconcile` folds" not in m
 
 
-# --- codebase-scan council doc: ranked-seed editing contract ------------------
+# --- codebase-scan council doc: ranked-seed editing contract
 
 
 def _scan_council_doc() -> str:
@@ -588,9 +582,8 @@ def _scan_council_doc() -> str:
 
 @pytest.mark.unit
 def test_codebase_scan_doc_edits_the_ranked_seed() -> None:
-    """The authoring procedure is EDIT-the-ranked-shortlist, not invent-from-
-    scratch: the seed is PageRank-ranked (proposal A2) and the old "keep maybe
-    a third of its nodes" framing must never come back."""
+    """Authors EDIT the PageRank-ranked shortlist, not invent from scratch; the old
+    "keep maybe a third" framing must never come back."""
     text = _scan_council_doc()
     assert "ranked shortlist" in text
     assert "edit the ranked shortlist" in text.lower()
@@ -599,9 +592,8 @@ def test_codebase_scan_doc_edits_the_ranked_seed() -> None:
 
 @pytest.mark.unit
 def test_codebase_scan_doc_requires_symbol_ref_and_evidence() -> None:
-    """Every repo-owned node needs a resolvable `symbolRef`; every node needs
-    `evidence` with the EXTRACTED-verbatim / INFERRED-reshaped semantics
-    (proposal A3). Groups are grounded in `graph-communities.json`."""
+    """Repo-owned nodes need a `symbolRef`, every node EXTRACTED/INFERRED
+    `evidence`; groups are grounded in `graph-communities.json`."""
     text = _scan_council_doc()
     assert "`symbolRef`" in text
     assert "`evidence`" in text
@@ -626,9 +618,8 @@ def test_codebase_scan_doc_carries_current_caps() -> None:
 
 @pytest.mark.unit
 def test_codebase_scan_doc_keeps_strong_sections() -> None:
-    """The rewrite is a revision, not a restart: AI-surface hunting, the
-    scan-check loop, the load-bearing INFERRED warning, and the skip logic
-    all survive."""
+    """AI-surface hunting, the scan-check loop, the load-bearing warning and the
+    skip logic all survive the rewrite."""
     text = _scan_council_doc()
     assert "## Finding the AI surface" in text
     assert "## Skip logic" in text
@@ -646,9 +637,8 @@ def test_skill_md_scan_phase_matches_current_caps() -> None:
 
 @pytest.mark.unit
 def test_playbooks_pair_rebuild_with_reconcile_for_new_files() -> None:
-    """A playbook closer must not present bare `rebuild --changed` as the whole
-    re-index story when the task adds files — it must point at the reconcile
-    procedure too."""
+    """A playbook that names `rebuild --changed` also points at reconcile, which
+    new files need."""
     for pid in PLAYBOOK_IDS:
         body = generate_playbook_md(pid)
         if "rebuild --changed" not in body:
@@ -659,7 +649,7 @@ def test_playbooks_pair_rebuild_with_reconcile_for_new_files() -> None:
         )
 
 
-# --- fleet skill: red-flag rules + zero hardcoded identifiers ----------------
+# --- fleet skill: red-flag rules + zero hardcoded identifiers
 
 
 def _fleet_skill() -> str:
@@ -668,10 +658,8 @@ def _fleet_skill() -> str:
 
 @pytest.mark.unit
 def test_fleet_skill_carries_resume_from_state_and_foreground_rules() -> None:
-    """The two scar-tissue red flags the fleet skill exists to prevent: an
-    uncommitted/lost run state (resume MUST come from committed artifacts,
-    never transcripts) and agents reporting unverified success (foreground
-    verification is mandatory). Mirrors the per-skill grep guards above."""
+    """The fleet skill's two red flags: resume MUST come from committed artifacts,
+    never transcripts, and success is verified in the foreground."""
     text = _fleet_skill()
     # Resume-from-state-only rule.
     assert "Resume-from-state only" in text or "resume from" in text.lower()
@@ -691,9 +679,7 @@ def test_fleet_skill_carries_resume_from_state_and_foreground_rules() -> None:
 
 @pytest.mark.unit
 def test_fleet_skill_has_no_hardcoded_project_identifiers() -> None:
-    """Every repo/team/tracker name must come from the run manifest or flags.
-    The tool's own name is fine; any real-world project, person, or product
-    reference in the shipped skill is not."""
+    """Repo/team/tracker names come from the run manifest or flags, never the skill."""
     text = _fleet_skill()
     for banned in (
         "BOS-Mono",
@@ -704,3 +690,59 @@ def test_fleet_skill_has_no_hardcoded_project_identifiers() -> None:
         "dummyindex/fleet-runner",  # a specific proposal slug
     ):
         assert banned not in text, f"fleet SKILL.md hardcodes {banned!r}"
+
+
+# --- knowledge-lifecycle: word-budget ratchets + placement / no-live-test rules
+
+_SKILL_RATCHET = REPO_ROOT / "tests" / "data" / "skill-budget.txt"
+_CONTEXT_RATCHET = REPO_ROOT / ".context" / "doc-budget.txt"
+
+
+@pytest.mark.unit
+def test_packaged_skill_word_counts_within_ratchet() -> None:
+    ratchet = docbudget.read_ratchet(_SKILL_RATCHET)
+    violations = docbudget.check(REPO_ROOT, ratchet, docbudget.BudgetGroup.SKILLS)
+    assert not violations, (
+        "packaged skill(s) over word budget: "
+        f"{[(v.path, v.words, v.limit) for v in violations]}"
+    )
+
+
+@pytest.mark.unit
+def test_skill_ratchet_covers_every_packaged_skill_without_stale_entries() -> None:
+    ratchet = docbudget.read_ratchet(_SKILL_RATCHET)
+    packaged = {
+        path.relative_to(REPO_ROOT).as_posix()
+        for path in _SKILLS_DIR.glob("*/SKILL.md")
+    }
+    entries = {name for name in ratchet if name.endswith("/SKILL.md")}
+    assert not packaged - entries, (
+        f"skill(s) missing from skill-budget.txt: {sorted(packaged - entries)}"
+    )
+    assert not entries - packaged, (
+        f"stale skill-budget.txt entries: {sorted(entries - packaged)}"
+    )
+
+
+@pytest.mark.unit
+def test_primary_skill_documents_placement_rule() -> None:
+    text = (_SKILLS_DIR / "skill.md").read_text(encoding="utf-8")
+    assert "## Placement rule" in text
+
+
+@pytest.mark.unit
+def test_plan_skill_carries_no_live_testing_rule() -> None:
+    text = _plan_skill()
+    assert "No live-testing items" in text
+    assert "live-ok" in text
+
+
+@pytest.mark.unit
+def test_context_doc_budget_ratchet_exists_and_passes() -> None:
+    assert _CONTEXT_RATCHET.is_file(), ".context/doc-budget.txt is missing"
+    ratchet = docbudget.read_ratchet(_CONTEXT_RATCHET)
+    violations = docbudget.check(REPO_ROOT, ratchet, docbudget.BudgetGroup.CONTEXT)
+    assert not violations, (
+        "context doc(s) over word budget: "
+        f"{[(v.path, v.words, v.limit) for v in violations]}"
+    )

@@ -39,9 +39,8 @@ _PROSE_WHITELIST: frozenset[str] = frozenset(
     }
 )
 
-# Identifiers from frameworks the project consumes but doesn't define.
-# These will never appear in the project's AST yet they're legitimate
-# references in docs — don't flag them broken.
+# Framework identifiers the project uses but never defines: legitimate doc refs
+# that will never appear in its AST.
 _FRAMEWORK_WHITELIST: frozenset[str] = frozenset(
     {
         # Claude Code tool names.
@@ -72,10 +71,8 @@ _FRAMEWORK_WHITELIST: frozenset[str] = frozenset(
         "TaskUpdate",
         "TaskGet",
         "TaskList",
-        # dummyindex's own .context/ schema — generated artifacts that
-        # don't appear in any project AST, but are real and stable.
-        # Filenames + JSON field names users reference when documenting
-        # how dummyindex builds .context/.
+        # dummyindex's own .context/ artifact names: real and stable, but in
+        # no project AST.
         "tree.json",
         "meta.json",
         "feature.json",
@@ -103,7 +100,7 @@ _FRAMEWORK_WHITELIST: frozenset[str] = frozenset(
         "_enrich_plan.json",
         "_structural-plan.json",
         "_structural-log.json",
-        # Per-feature council audit trail (v0.14 sequential pipeline).
+        # Per-feature council audit trail.
         "01-dev-draft.md",
         "02-architect-notes.md",
         "10-critiques.md",
@@ -166,15 +163,11 @@ _FRAMEWORK_WHITELIST: frozenset[str] = frozenset(
 def looks_like_code_ref(token: str) -> bool:
     """Heuristic: does this backtick token name code, not prose?
 
-    Conservative — we'd rather miss some refs than flag English prose
-    in backticks as broken. Accepted shapes:
-
-    - file path with extension (``app.py``, ``docs/x.md``)
-    - dotted identifier (``foo.bar``, ``App.run()``)
-    - function call (``helper()``)
-    - snake_case (``make_app``) — multiple-word lowercase identifier
-    - CamelCase / TitleCase identifier with at least one lowercase letter
-      that starts with uppercase (``App``, ``MyClass``)
+    Conservative — better to miss refs than flag backticked English as broken.
+    Accepts a file path with extension (``docs/x.md``), dotted identifier
+    (``App.run()``), call (``helper()``), snake_case (``make_app``), CamelCase, or
+    a capitalized word with a lowercase letter (``App``); never a token with a
+    space or one in ``_PROSE_WHITELIST``.
     """
     t = token.strip()
     if not t or len(t) > 160 or t.lower() in _PROSE_WHITELIST:
@@ -191,10 +184,8 @@ def looks_like_code_ref(token: str) -> bool:
         return True
     if _CAMEL_RE.match(t):
         return True
-    # Capitalized single word (e.g. `App`) — accept if it's >=2 chars,
-    # starts uppercase, and has at least one lowercase letter. This
-    # catches single-name class references without grabbing every
-    # English noun (whitelist + length filter handles edge cases).
+    # Capitalized single word (`App`): catches single-name class refs; the
+    # whitelist and length filter keep most English nouns out.
     if (
         len(t) >= 2
         and t[0].isupper()
@@ -301,21 +292,11 @@ def find_broken_refs(
 ) -> tuple[str, ...]:
     """Return refs that don't match any current symbol, file, or known name.
 
-    Match precedence:
-
-    1. Exact-path match against ``file_paths``.
-    2. Sub-path-suffix match (``api/users.py`` matches
-       ``src/api/users.py``).
-    3. Basename match (``runner.py`` matches ``foo/runner.py``).
-    4. Normalized-symbol match against ``symbol_names`` (strips ``()`` and
-       leading ``.``).
-    5. Dotted-tail match (``parser.parse_body`` matches when
-       ``parse_body`` is a known symbol).
-    6. ``_FRAMEWORK_WHITELIST`` — Claude Code tools, hook events, etc.
-    7. ``extra_names`` — caller-supplied superset (e.g. JSON keys harvested
-       from repo .json files, words from doc titles, etc.). This is the
-       hook for projects whose docs cite schema field names that aren't
-       Python/JS symbols.
+    A ref matches if it is in ``file_paths`` (or, with a ``/``, suffixes one); its
+    basename is a file basename; its ``()``/leading-``.``-stripped form or that
+    form's dotted tail is in ``symbol_names`` or ``extra_names`` (caller-supplied,
+    e.g. harvested JSON keys); or the ref, basename, stripped form or tail is in
+    ``_FRAMEWORK_WHITELIST``.
     """
     file_basenames: frozenset[str] = frozenset(p.rsplit("/", 1)[-1] for p in file_paths)
     broken: list[str] = []
@@ -345,19 +326,16 @@ def _ref_matches(
     if base in file_basenames:
         return True
     if base in _FRAMEWORK_WHITELIST:
-        # Whitelist hit via the basename — `map/files.json` resolves
-        # because `files.json` is whitelisted, even when the path-set
-        # doesn't include the file (e.g. .context/ artifacts on first
-        # build).
+        # `map/files.json` resolves via its whitelisted basename even when the
+        # path-set lacks it (e.g. .context/ artifacts on a first build).
         return True
     norm = _normalize_symbol(ref)
     if norm in symbol_names or norm in extra_names:
         return True
     if norm in _FRAMEWORK_WHITELIST:
         return True
-    # Dotted name (foo.bar.baz / foo.bar() / Class.method) — accept if the
-    # rightmost segment exists; that's the part most likely to be a real
-    # symbol the AST extractor captured.
+    # Dotted name: accept if the rightmost segment (the part the AST extractor
+    # most likely captured) is known.
     if "." in norm:
         tail = norm.rsplit(".", 1)[-1]
         if tail in symbol_names or tail in extra_names:

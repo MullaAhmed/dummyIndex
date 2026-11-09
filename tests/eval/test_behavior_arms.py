@@ -1,34 +1,10 @@
-"""Opt-in two-arm behavior-gate run — plan.md task 3
-(`.context/proposals/repo-adoptions-ponytail-headroom/plan.md`).
+"""Opt-in two-arm behavior-gate run: the suite's only model-dependent test.
 
-This is the **only** model-dependent test in the suite (spec.md's stated
-risk). It shells out to the real ``claude`` CLI, costs real tokens, and takes
-several minutes — it must never run as part of a plain ``pytest -q``.
-
-**The opt-in gate, and why it is provably inert by default.** This module is
-skipped at COLLECTION time (``pytest.skip(..., allow_module_level=True)``)
-before the line that imports ``tests.eval.behavior_arms`` even executes,
-whenever ``DUMMYINDEX_BEHAVIOR_ARMS`` is not exactly ``"1"``. A skipped
-module's test functions are never called, so
-:func:`tests.eval.behavior_arms.run_two_arm` — the only function in this
-harness that shells out — is never invoked. This is not merely "the test
-reports skipped"; it is checkable independently of pytest's own bookkeeping:
-running the default suite with ``claude`` removed from ``PATH`` still passes
-(see the verification transcript this task recorded), which would be
-impossible if this module's CLI calls executed unconditionally. The
-``behavior_arms`` pytest marker (registered in ``pyproject.toml``) documents
-the same opt-in on the collection side, for ``pytest -m`` filtering.
-
-Run it explicitly with::
-
-    DUMMYINDEX_BEHAVIOR_ARMS=1 uv run pytest tests/eval/test_behavior_arms.py -q -s
-
-The acceptance (plan.md task 3): the control arm fails the gates, the
-guidance arm passes, and the measured delta is recorded next to
-``tests/eval/BASELINE.md``. If a real run does not clear that bar, this test
-is written to report the actual numbers and fail loudly — never to have its
-thresholds adjusted after the fact to force a green result (task brief:
-"DO NOT tune the grader or cherry-pick probes to force it").
+It shells out to the real ``claude`` CLI and costs real tokens, so unless
+``DUMMYINDEX_BEHAVIOR_ARMS`` is exactly ``"1"`` the module skips at collection,
+before ``tests.eval.behavior_arms`` is imported. Run it with
+``DUMMYINDEX_BEHAVIOR_ARMS=1 uv run pytest tests/eval/test_behavior_arms.py -q -s``.
+A miss fails loudly with the real numbers; never retune the thresholds to pass.
 """
 
 from __future__ import annotations
@@ -61,9 +37,8 @@ _REPEATS = 3
 
 @pytest.mark.integration
 def test_two_arm_behavior_gate() -> None:
-    """Run every probe across both arms ``_REPEATS`` times, grade every
-    response with the unchanged task 2 grader, and assert the plan.md task 3
-    acceptance: the control arm fails the gates, the guidance arm passes."""
+    """Run every probe across both arms ``_REPEATS`` times; assert guidance beats
+    control, the control arm fails the gates and the guidance arm passes them."""
     results = run_two_arm(PROBES, repeats=_REPEATS)
     report = build_report(results, PROBES)
 

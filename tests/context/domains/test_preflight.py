@@ -30,7 +30,7 @@ def _write(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
-# ----- inventory ------------------------------------------------------------
+# --- inventory
 
 
 @pytest.mark.unit
@@ -195,7 +195,7 @@ def test_git_clean_detection(tmp_path: Path) -> None:
 @pytest.mark.unit
 def test_submodule_git_file_reports_repo(tmp_path: Path) -> None:
     """A submodule's `.git` is a pointer *file*, not a directory — preflight
-    must still report it as a git repo (the old `.is_dir()` check said False)."""
+    must still report it as a git repo."""
     (tmp_path / ".git").write_text(
         "gitdir: ../.git/modules/backend\n", encoding="utf-8"
     )
@@ -203,7 +203,7 @@ def test_submodule_git_file_reports_repo(tmp_path: Path) -> None:
     assert report.is_git_repo is True
 
 
-# ----- .context ownership ----------------------------------------------------
+# --- .context ownership
 
 
 def _write_dummyindex_meta(context_dir: Path) -> None:
@@ -289,7 +289,7 @@ def test_context_ownership_probe_enum(tmp_path: Path) -> None:
     assert context_ownership(context_dir) is ContextOwnership.OURS
 
 
-# ----- git optional locks -----------------------------------------------------
+# --- git optional locks
 
 
 @pytest.mark.unit
@@ -322,7 +322,7 @@ def test_git_status_suppresses_optional_locks(tmp_path: Path, monkeypatch) -> No
     assert len(env) > 1
 
 
-# ----- render ---------------------------------------------------------------
+# --- render
 
 
 @pytest.mark.unit
@@ -375,7 +375,7 @@ def test_render_states_context_ownership(tmp_path: Path) -> None:
     assert "- .context: present, dummyindex-owned" in owned_md
 
 
-# ----- CLI ------------------------------------------------------------------
+# --- CLI
 
 
 @pytest.mark.integration

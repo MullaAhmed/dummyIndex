@@ -1,0 +1,282 @@
+{
+  "discarded": {
+    "plan.md": "Accepted contracts are implemented in code and folded into the reconciled feature docs (equip, lesson, doc-budget, managed-doc-homes, proposals, build-loop, evolution); no separate transfer needed",
+    "spec.md": "Accepted contracts are implemented in code and folded into the reconciled feature docs (equip, lesson, doc-budget, managed-doc-homes, proposals, build-loop, evolution); no separate transfer needed"
+  },
+  "disposition": "completed",
+  "evidence": [],
+  "items": {},
+  "kind": "proposal",
+  "ownership": {
+    "changed_paths": [
+      {
+        "path": "dummyindex/cli/build_loop/dispatch.py",
+        "sha256": "b4972ae24c37017994bfda197059105f38a393f38da4ace7de58b034f6a7cbe1"
+      },
+      {
+        "path": "dummyindex/cli/build_loop/waves.py",
+        "sha256": "a40e1d519bf0eaad9ce3c214e4cc80e896ca3056b4c89d4a6cccc9ddd1224a32"
+      },
+      {
+        "path": "dummyindex/cli/check.py",
+        "sha256": "16f6ead373f601fec7abd6998a36688b0ffe0d6f31bb16109c8710752159f9ff"
+      },
+      {
+        "path": "dummyindex/cli/equip/dispatch.py",
+        "sha256": "6ca6b58b0db6fca43e8af5b4ff5fa11d3fb6118f68a1ea67a27d1c3353b2b022"
+      },
+      {
+        "path": "dummyindex/cli/equip/library_verbs.py",
+        "sha256": "8802fc614ca2ede0d3505904f9f98140718bcbc5a5fbb7cd8cb7d1f46cc041ea"
+      },
+      {
+        "path": "dummyindex/cli/equip/verbs.py",
+        "sha256": "cbfe7ac2c2ee904cd3871f97305744cbd2a3536c9721bae60fb6cc0cf616e6b7"
+      },
+      {
+        "path": "dummyindex/cli/evolve.py",
+        "sha256": "b319b5e173527f819d130e12abe3a91bc7e5bffd3c0646e00cd6c1e39dd23e9e"
+      },
+      {
+        "path": "dummyindex/cli/gc.py",
+        "sha256": "048d230037f8518bc614c0d800b2af06ffe8200807e9b4f7b9df28c943bb323d"
+      },
+      {
+        "path": "dummyindex/cli/guard_doc_write.py",
+        "sha256": "55852b0a35705b4d65f2a19d0136ddb626921a1462ef4c776ff1eda4c59d288d"
+      },
+      {
+        "path": "dummyindex/cli/help.py",
+        "sha256": "68728e0915daaed33b3891a16638d1019330da7404a005fe0b9243e4d04a4e32"
+      },
+      {
+        "path": "dummyindex/context/domains/buildloop/checklist_lint.py",
+        "sha256": "8fdff3ec5ae40de852c9ca566797527718ad052edcc338682ac874be110eaa44"
+      },
+      {
+        "path": "dummyindex/context/domains/buildloop/mapping.py",
+        "sha256": "09d18261c182c17f8cd3894e75b4ae6602c3a214bd34973fa261f7c20b535a0d"
+      },
+      {
+        "path": "dummyindex/context/domains/docbudget/__init__.py",
+        "sha256": "3f51070a2a2f6f15555a3bb7079c125392c9c074e3fdcdd77eac2ee9a1d07991"
+      },
+      {
+        "path": "dummyindex/context/domains/docbudget/constants.py",
+        "sha256": "b3e01187fb3643591e7b3e59bad0192274baf1e82f05f56a6e62d4a6ea6007e3"
+      },
+      {
+        "path": "dummyindex/context/domains/docbudget/enums.py",
+        "sha256": "4cf885701402086c7437c4e3c58fe1f44ebe8660e68a4a34241df1f2ef4a6bf7"
+      },
+      {
+        "path": "dummyindex/context/domains/docbudget/models.py",
+        "sha256": "a7cd33a1b22dce2008d06e0ab69225de0d1a871c99546038929088fd99cc1338"
+      },
+      {
+        "path": "dummyindex/context/domains/docbudget/ratchet.py",
+        "sha256": "c4101465071e89a69e7ec14c1ca0bc4c091176fb7da0b1a4b1be94588ae0eef5"
+      },
+      {
+        "path": "dummyindex/context/domains/docguard/citations.py",
+        "sha256": "897423d11edb299aae28cf269dc61a1fa4a770788c9fc117d10cdcc61a33fc57"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/constants.py",
+        "sha256": "a0aa44752e46ef601b146e10ed3e2c6e86e38faa88a89fc30828b4f296f27552"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/enums.py",
+        "sha256": "e3c4dc1b0f88f8865ee310611eeb58962f81317cc181a0880aa312d6b966514b"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/generate/adopt.py",
+        "sha256": "ecea1a34bd373738a7b4676a07058c4cfa6adbb3a8b2424091c0a9dd2f671734"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/generate/catalog.py",
+        "sha256": "002033a5432f3159dceba0bb7a7b750f8905d229ea41e42ba912c887a2ec060e"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/generate/plan.py",
+        "sha256": "a4bc179897417d8fe8c344386821b85e607f7014ca8373b4d38e56652529f899"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/generate/specialists.py",
+        "sha256": "4795c54b5af83b60de193240d8bfcb2f5325c436a1df53df0eea8c8d443d27f5"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/identity.py",
+        "sha256": "9fb00c3773002c6cda0d6d26587bf10ed12a95cee19500e33362eb2123a3c56c"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/lifecycle/library.py",
+        "sha256": "3d561908ac62238c47ddacefa08af43809ae7fd8dd357bac5d149c7afca74022"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/models.py",
+        "sha256": "4e4bef4b000fff7f69968f7349dae73d7ed5432c87c832aa68836285d3286d50"
+      },
+      {
+        "path": "dummyindex/context/domains/evolve_learning.py",
+        "sha256": "2d1e901c5120cde70e3c5ea1d74e50858f1fa26a0e0559f4c6f5335ba9853eaa"
+      },
+      {
+        "path": "dummyindex/context/domains/lesson/__init__.py",
+        "sha256": "d7bde2e2f7b9835697dbe4d25d913a100ba00039d2043e7b001b452c9c138479"
+      },
+      {
+        "path": "dummyindex/context/domains/lesson/enums.py",
+        "sha256": "0f1e191379b5eb1cc59d253892db432b1e64ba622923626abd8fc44a5a65f7d2"
+      },
+      {
+        "path": "dummyindex/context/domains/lesson/models.py",
+        "sha256": "393073dfa1a0bbf731234c38ad3717051565fac7ea7bb7a3b5254ce0483a9786"
+      },
+      {
+        "path": "dummyindex/context/domains/memory/miner/__init__.py",
+        "sha256": "428333808ba8af88fde3cfd44c34ee5940f1f9b56ff396f485ef682d55efac1b"
+      },
+      {
+        "path": "dummyindex/context/domains/proposals/closeout.py",
+        "sha256": "0e8a2091d718d421df5cde2d614b501200279014dfec890e066579e66ca9dfab"
+      },
+      {
+        "path": "dummyindex/context/domains/proposals/retirement.py",
+        "sha256": "8b4ecd7d329bbce71e4d947f10c51c4f38b39840b4c4e51064b07928541f4c08"
+      },
+      {
+        "path": "dummyindex/context/domains/proposals/store.py",
+        "sha256": "40557ba48eb10479cb93fbbb81efa6e9614b1f02fc8296bcd46d2b806c3e5597"
+      },
+      {
+        "path": "dummyindex/context/hooks.py",
+        "sha256": "0f6d69bcc5fbb54a3ebb67ed3d933cd5f101e7e7907c5c94c620da29da249bf1"
+      },
+      {
+        "path": "dummyindex/installer/link/__init__.py",
+        "sha256": "162979cc5821271b3a7cd81c59a60870c19283d551e6908e7229725ccbe0fe18"
+      },
+      {
+        "path": "dummyindex/skills/audit/SKILL.md",
+        "sha256": "276ffacb5ffcd7852f392f77c1a46404941d3e97065a831d8f09f6f1f2bc715f"
+      },
+      {
+        "path": "dummyindex/skills/audit/closeout.md",
+        "sha256": "47ef6b7f07d9b95fa670848dc6650534688394ebab0a552bb964b1865b2d3fdd"
+      },
+      {
+        "path": "dummyindex/skills/equip/SKILL.md",
+        "sha256": "232326334bb64aec8971ed90d1beb48af3d24937a584925238029ab84b78c7f9"
+      },
+      {
+        "path": "dummyindex/skills/equip/templates/api-domain-agent.md.tmpl",
+        "sha256": "696a4137cf8fcb50bae4ac70ea1d93d8c286156fc303b11f600c6e0587654245"
+      },
+      {
+        "path": "dummyindex/skills/equip/templates/api-procedure-agent.md.tmpl",
+        "sha256": "782f7741923ad06c3162a75ae137718f46ffbc11c74c570e837e1fab0e8443ab"
+      },
+      {
+        "path": "dummyindex/skills/equip/templates/ci-domain-agent.md.tmpl",
+        "sha256": "e6ae30f1f7bc1e5129bdc15c64b26f20950d2668a494d5b5391c0092f075c156"
+      },
+      {
+        "path": "dummyindex/skills/equip/templates/ci-procedure-agent.md.tmpl",
+        "sha256": "712a96254d4efc5ead2fe029a759c33cbe1c22bcabe14097effc1e47e1b93286"
+      },
+      {
+        "path": "dummyindex/skills/equip/templates/frontend-domain-agent.md.tmpl",
+        "sha256": "2b71232370e0150fd6e659288f5c037fa2da5038e02e1905067c9b1bc0467ff2"
+      },
+      {
+        "path": "dummyindex/skills/equip/templates/frontend-procedure-agent.md.tmpl",
+        "sha256": "c300394231bafc71bc5dfdbf540ea4933275ab895042afd39065bfc0b5308f4a"
+      },
+      {
+        "path": "dummyindex/skills/equip/templates/migration-domain-agent.md.tmpl",
+        "sha256": "b3375c1c7c474f0a271c22dfe86e12252e125d65619b3d3a69b77367440e2df7"
+      },
+      {
+        "path": "dummyindex/skills/equip/templates/migration-procedure-agent.md.tmpl",
+        "sha256": "690c58304223dd2f7dd7362a50d212444faaa76d61c8878c7556161ec06e9a9c"
+      },
+      {
+        "path": "dummyindex/skills/plan/SKILL.md",
+        "sha256": "c901bf71d22ffc419219fb991554599a4af12d8be6f65b6156f0be461e457ada"
+      },
+      {
+        "path": "dummyindex/skills/skill.md",
+        "sha256": "7bafc43e0b458c389e44109507929a286aea225a429ad4c3cf60bbde9593e47a"
+      }
+    ],
+    "reconciled_paths": [
+      "dummyindex/cli/build_loop/dispatch.py",
+      "dummyindex/cli/build_loop/waves.py",
+      "dummyindex/cli/check.py",
+      "dummyindex/cli/equip/dispatch.py",
+      "dummyindex/cli/equip/library_verbs.py",
+      "dummyindex/cli/equip/verbs.py",
+      "dummyindex/cli/evolve.py",
+      "dummyindex/cli/gc.py",
+      "dummyindex/cli/guard_doc_write.py",
+      "dummyindex/cli/help.py",
+      "dummyindex/context/domains/buildloop/checklist_lint.py",
+      "dummyindex/context/domains/buildloop/mapping.py",
+      "dummyindex/context/domains/docbudget/__init__.py",
+      "dummyindex/context/domains/docbudget/constants.py",
+      "dummyindex/context/domains/docbudget/enums.py",
+      "dummyindex/context/domains/docbudget/models.py",
+      "dummyindex/context/domains/docbudget/ratchet.py",
+      "dummyindex/context/domains/docguard/citations.py",
+      "dummyindex/context/domains/equip/constants.py",
+      "dummyindex/context/domains/equip/enums.py",
+      "dummyindex/context/domains/equip/generate/adopt.py",
+      "dummyindex/context/domains/equip/generate/catalog.py",
+      "dummyindex/context/domains/equip/generate/plan.py",
+      "dummyindex/context/domains/equip/generate/specialists.py",
+      "dummyindex/context/domains/equip/identity.py",
+      "dummyindex/context/domains/equip/lifecycle/library.py",
+      "dummyindex/context/domains/equip/models.py",
+      "dummyindex/context/domains/evolve_learning.py",
+      "dummyindex/context/domains/lesson/__init__.py",
+      "dummyindex/context/domains/lesson/enums.py",
+      "dummyindex/context/domains/lesson/models.py",
+      "dummyindex/context/domains/memory/miner/__init__.py",
+      "dummyindex/context/domains/proposals/closeout.py",
+      "dummyindex/context/domains/proposals/retirement.py",
+      "dummyindex/context/domains/proposals/store.py",
+      "dummyindex/context/hooks.py",
+      "dummyindex/installer/link/__init__.py",
+      "dummyindex/skills/audit/SKILL.md",
+      "dummyindex/skills/audit/closeout.md",
+      "dummyindex/skills/equip/SKILL.md",
+      "dummyindex/skills/equip/templates/api-domain-agent.md.tmpl",
+      "dummyindex/skills/equip/templates/api-procedure-agent.md.tmpl",
+      "dummyindex/skills/equip/templates/ci-domain-agent.md.tmpl",
+      "dummyindex/skills/equip/templates/ci-procedure-agent.md.tmpl",
+      "dummyindex/skills/equip/templates/frontend-domain-agent.md.tmpl",
+      "dummyindex/skills/equip/templates/frontend-procedure-agent.md.tmpl",
+      "dummyindex/skills/equip/templates/migration-domain-agent.md.tmpl",
+      "dummyindex/skills/equip/templates/migration-procedure-agent.md.tmpl",
+      "dummyindex/skills/plan/SKILL.md",
+      "dummyindex/skills/skill.md"
+    ],
+    "session_id": null,
+    "task_id": "proposal:knowledge-lifecycle-harness2"
+  },
+  "pending_verification": [],
+  "resolved_verification": {},
+  "schema_version": 1,
+  "slug": "knowledge-lifecycle-harness2",
+  "source_commit": "0f6e3393af2314abcc5ee50ca9d149ec1a851daa",
+  "state": "implemented",
+  "superseded": {},
+  "transfers": [],
+  "workspace_files": {
+    "checklist.md": "d048853ba424c947ebac9746f2997f9d65924a1f4b0d535666815e78af894de9",
+    "plan.md": "e255b7571cf70ab37f9e15ec3fa602ffd4c9d7b5e9f386ab024a6a7040cb4eca",
+    "proposal.json": "af3441e4aba65f9b1d411a23f2066f9d00fb6ac87bf66f4fabc7a32427817cc9",
+    "spec.md": "0fc76fffed1c14cce08ba402886261c16d96e96585f57f054a1013b1c14a83a4"
+  }
+}

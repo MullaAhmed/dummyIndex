@@ -14,7 +14,7 @@ import pytest
 
 from dummyindex.cli import dispatch, resolve_context_root
 
-# ----- pure-function tests ---------------------------------------------------
+# --- pure-function tests
 
 
 @pytest.mark.unit
@@ -66,7 +66,7 @@ def test_scope_outside_cwd_uses_scope(tmp_path: Path) -> None:
     assert out_root == foo.resolve()
 
 
-# ----- end-to-end via dispatch ----------------------------------------------
+# --- end-to-end via dispatch
 
 
 @pytest.mark.integration

@@ -1,18 +1,23 @@
-"""`dummyindex context gc <verb>` — the context-hygiene GC CLI (wire-only).
+"""`dummyindex context gc <verb>`: the context-hygiene GC CLI (wire-only).
 
-Sub-dispatches the first positional verb (``status|delete|stamp|signal``) the
-same way ``cli/audit.py`` dispatches ``start|show``: parse this command's own
+Sub-dispatches the first positional verb (``status|delete|closeout|stamp|signal``)
+the same way ``cli/audit.py`` dispatches ``start|show``: parse this command's own
 flag alphabet, lazy-import the ``context.domains.gc`` domain *inside* ``run``
 (the layering rule — ``cli`` imports the domain, never the reverse), call a
 domain function, print, and return an exit code. No business logic lives here;
 the sweep / anchor / delete logic all sits in ``context/domains/gc/``.
 
-The four verbs:
+The five verbs:
 
-- ``status [--json] [--root DIR]`` — read-only sweep report (``gc.scan``).
+- ``status [--json] [--root DIR]`` — read-only sweep report (``gc.scan``), each
+  candidate with its recommendation and reason.
 - ``delete --kind proposal|audit (--slug S|--path P) [--yes] [--allow-untracked]
-  [--force-partial] [--root DIR]`` — without ``--yes`` a dry-run that deletes
-  nothing; with ``--yes`` the bounded ``gc.delete_workspace``.
+  [--force-partial] [--root DIR]`` — without ``--yes`` a dry-run that runs the
+  full guard ladder and deletes nothing; with ``--yes`` the bounded
+  ``gc.delete_workspace``.
+- ``closeout --kind proposal|audit --slug S (--manifest FILE | --draft)`` —
+  ``--draft`` writes a manifest draft under ``.context/cache/gc/``; ``--manifest``
+  applies a filled one.
 - ``stamp [--to SHA] [--root DIR]`` — advance the committed GC anchor.
 - ``signal [--json] [--root DIR]`` — the SessionStart throttle probe (consumes
   the per-session fire-once memo via ``gc.should_signal``).
@@ -22,15 +27,17 @@ from __future__ import annotations
 
 import json
 import sys
+from collections.abc import Iterable
 from pathlib import Path
+from typing import Any
 
 from .common import resolve_context_root, usage_error
 
-_GC_USAGE = "usage: dummyindex context gc status|delete|stamp|signal ..."
+_GC_USAGE = "usage: dummyindex context gc status|delete|closeout|stamp|signal ..."
 
 
 def run(args: list[str]) -> int:
-    """`dummyindex context gc status|delete|stamp|signal ...`.
+    """`dummyindex context gc status|delete|closeout|stamp|signal ...`.
 
     ``-h``/``--help`` is intercepted at the dispatcher (``cli/__init__``), so it
     never reaches here.
@@ -50,35 +57,54 @@ def run(args: list[str]) -> int:
     if verb == "signal":
         return _gc_signal(rest)
     print(
-        f"error: unknown gc verb {verb!r} (expected status|delete|stamp|signal)",
+        f"error: unknown gc verb {verb!r} (expected status|delete|closeout|stamp|signal)",
         file=sys.stderr,
     )
     return 2
 
 
 def _gc_closeout(args: list[str]) -> int:
+    """`gc closeout --kind K --slug S (--manifest FILE | --draft) [--root DIR]`."""
+    from dummyindex.context.domains.audit import AuditSlugError
     from dummyindex.context.domains.proposals import (
         CloseoutError,
         ProposalSlugError,
         closeout_from_file,
+        write_draft,
+    )
+    from dummyindex.context.domains.proposals.closeout import (
+        failed_record_path,
+        learning_exit_code,
+        learning_line,
     )
 
     values, flags, err = _parse_flags(
-        args, value_keys={"root", "kind", "slug", "manifest"}, bool_keys={"json"}
+        args,
+        value_keys={"root", "kind", "slug", "manifest"},
+        bool_keys={"json", "draft"},
+    )
+    usage = (
+        "closeout requires --kind proposal|audit --slug S (--manifest FILE | --draft)"
     )
     if (
         err
         or values.get("kind") not in {"proposal", "audit"}
         or not values.get("slug")
-        or not values.get("manifest")
+        or ("draft" in flags) == bool(values.get("manifest"))
     ):
-        return usage_error(
-            "gc",
-            err or "closeout requires --kind proposal|audit --slug S --manifest FILE",
-        )
+        return usage_error("gc", err or usage)
     context_dir, missing = _context_dir(values.get("root"))
     if missing:
         return _missing_context(context_dir)
+    if "draft" in flags:
+        try:
+            draft = write_draft(context_dir, values["kind"], values["slug"])
+        except (CloseoutError, ProposalSlugError, AuditSlugError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        print(f"context gc closeout (draft): {draft}")
+        print("  fill transfers or discard reasons, then gc closeout --manifest <path>")
+        return 0
     try:
         receipt = closeout_from_file(
             context_dir, values["kind"], values["slug"], Path(values["manifest"])
@@ -86,12 +112,16 @@ def _gc_closeout(args: list[str]) -> int:
     except (CloseoutError, ProposalSlugError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
+    learning = receipt.get("learning")
     print(
         json.dumps(receipt, indent=2)
         if "json" in flags
-        else f"context gc closeout: {values['kind']} {values['slug']} ({receipt['state']})"
+        else f"context gc closeout: {values['kind']} {values['slug']} ({receipt['state']}); "
+        + learning_line(
+            learning, failed_record_path(context_dir, values["kind"], values["slug"])
+        )
     )
-    return 0
+    return learning_exit_code(learning)
 
 
 def _gc_status(args: list[str]) -> int:
@@ -119,10 +149,10 @@ def _gc_status(args: list[str]) -> int:
 def _gc_delete(args: list[str]) -> int:
     """`gc delete --kind K (--slug S|--path P) [--yes] [...]`.
 
-    Without ``--yes``: prints the dry-run target and deletes nothing (exit 0).
-    With ``--yes``: runs the bounded ``delete_workspace`` and prints the result.
-    A recoverability *refusal* still exits 0 (a guard outcome, not a usage
-    error); a slug / sentinel / path / liveness violation maps to exit 2.
+    Without ``--yes``: a dry-run that runs the same guards as ``--yes`` and
+    reports the verdict; it deletes nothing. With ``--yes``: the bounded
+    ``delete_workspace``. A recoverability *refusal* exits 0 (a guard outcome,
+    not a usage error); a guard error maps to exit 2.
     """
     from dummyindex.context.domains.audit import AuditSlugError
     from dummyindex.context.domains.gc import (
@@ -164,11 +194,6 @@ def _gc_delete(args: list[str]) -> int:
         return _missing_context(context_dir)
 
     target_label = f"--slug {slug}" if slug else f"--path {path}"
-    if "yes" not in flags:
-        print(f"context gc delete (dry-run): would delete {kind.value} {target_label}")
-        print("  pass --yes to delete (nothing removed)")
-        return 0
-
     try:
         result = delete_workspace(
             context_dir,
@@ -177,12 +202,16 @@ def _gc_delete(args: list[str]) -> int:
             path=path,
             allow_untracked="allow-untracked" in flags,
             force_partial="force-partial" in flags,
+            dry_run="yes" not in flags,
         )
     except (ProposalSlugError, AuditSlugError, GcTargetError, GcPathError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
-    if result.deleted:
+    if result.would_delete:
+        print(f"context gc delete (dry-run): would delete {kind.value} {target_label}")
+        print("  pass --yes to delete (nothing removed)")
+    elif result.deleted:
         print(f"context gc delete: removed {kind.value} {target_label}")
     elif result.refused:
         print(f"context gc delete: refused — {result.reason}")
@@ -239,14 +268,20 @@ def _gc_signal(args: list[str]) -> int:
         print(json.dumps({"should_signal": fire}))
         return 0
     if fire:
-        from dummyindex.context.domains.gc import gc_commits_since
+        from dummyindex.context.domains.gc import anchor_orphaned, gc_commits_since
 
-        count = gc_commits_since(context_dir, context_dir.parent)
-        print(f"{count} commits since last hygiene sweep — run /dummyindex-gc")
+        if anchor_orphaned(context_dir, context_dir.parent):
+            print(
+                "GC anchor orphaned (history rewrite) — run /dummyindex-gc, "
+                "then gc stamp --to HEAD"
+            )
+        else:
+            count = gc_commits_since(context_dir, context_dir.parent)
+            print(f"{count} commits since last hygiene sweep — run /dummyindex-gc")
     return 0
 
 
-# ----- status rendering -----------------------------------------------------
+# --- status rendering
 
 
 def _status_payload(report: object) -> dict:
@@ -261,9 +296,12 @@ def _status_payload(report: object) -> dict:
                 "signals": list(c.signals),
                 "tracked": c.tracked,
                 "age_days": c.age_days,
+                "recommendation": c.recommendation,
+                "reason": c.reason,
             }
             for c in report.candidates  # type: ignore[attr-defined]
         ],
+        "summary": _recommendation_counts(report.candidates),  # type: ignore[attr-defined]
         "anchor": report.anchor,  # type: ignore[attr-defined]
         "commits_since": report.commits_since,  # type: ignore[attr-defined]
         "threshold": report.threshold,  # type: ignore[attr-defined]
@@ -275,10 +313,18 @@ def _status_payload(report: object) -> dict:
 def _print_status(report: object) -> None:
     """Human-readable `gc status` table."""
     candidates = report.candidates  # type: ignore[attr-defined]
-    print(f"context gc status: {len(candidates)} candidate(s)")
+    counts = _recommendation_counts(candidates)
+    if counts["delete"] + counts["close"] + counts["review"] == 0:
+        print("context gc status: ran, nothing to retire")
+    else:
+        print(
+            f"context gc status: {len(candidates)} candidate(s): "
+            f"{counts['delete']} delete, {counts['close']} close, "
+            f"{counts['review']} review, {counts['keep']} keep"
+        )
     for c in candidates:
         signals = ", ".join(c.signals) or "(none)"
-        print(f"  {c.kind.value:9} {c.slug}")
+        print(f"  {c.kind.value:9} {c.slug}  -> {c.recommendation}: {c.reason}")
         print(f"    {c.rel_path}  [{signals}]")
     anchor = report.anchor or "(unset)"  # type: ignore[attr-defined]
     commits = report.commits_since  # type: ignore[attr-defined]
@@ -295,7 +341,17 @@ def _print_status(report: object) -> None:
         )
 
 
-# ----- helpers --------------------------------------------------------------
+# --- helpers
+
+
+def _recommendation_counts(candidates: Iterable[Any]) -> dict[str, int]:
+    """Per-recommendation tally (`delete|close|review|keep`) over candidates."""
+    from dummyindex.context.domains.gc import Recommendation
+
+    return {
+        r.value: sum(1 for c in candidates if c.recommendation == r.value)
+        for r in Recommendation
+    }
 
 
 def _resolve_kind(kind_raw: str, candidate_kind: type) -> object | None:

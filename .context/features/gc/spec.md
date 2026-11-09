@@ -2,25 +2,10 @@
 
 `confidence: EXTRACTED`
 
-GC enumerates disposable proposal/audit workspaces and reports objective status,
-completion, age and tracking signals. The active host judges usefulness and
-obtains deletion confirmation. `context gc delete` is a dry run without `--yes`.
-Source: `dummyindex/cli/gc.py:119`, `dummyindex/context/domains/gc/signals.py:38`,
-`dummyindex/skills/gc/SKILL.md:1`.
+GC enumerates only `proposals/` and `audits/`. It reports signals and a pre-council `Recommendation` (delete, close, review, keep). `Disposition` stays council verdict. Host confirms deletion. Source: `dummyindex/context/domains/gc/recommend.py:18`.
 
-Deletion guards validate the slug, reject sentinel containers, enforce realpath
-containment, protect in-flight proposals and preserve untracked recoverability.
-They then require knowledge closeout when material remains. Durable inbound
-references, changed workspace hashes, interrupted closeout intents or missing
-accepted text/fixtures block retirement. `force_partial` and `allow_untracked`
-do not bypass this knowledge guard. Source: `dummyindex/context/domains/gc/delete.py:65`,
-`dummyindex/context/domains/proposals/retirement.py:143`.
+Guards block retirement on durable references, changed hashes, interrupted closeout, missing fixtures. `force_partial` and `allow_untracked` never bypass knowledge guard. Dry run, without `--yes`, runs the same guards without lock or `rmtree`. The reference scan skips `.context/INDEX.md` and `.context/fleet/` run state. Source: `dummyindex/context/domains/gc/delete.py:178`, `dummyindex/context/domains/gc/delete.py:188`, `dummyindex/context/domains/proposals/retirement.py:108`.
 
-Accepted knowledge transfers into existing durable homes before retirement;
-completed closed work may then be deleted without losing reusable fixtures or
-pending live verification. Empty scaffolds without unique material retain the
-existing GC path. Audit reports use the same predelete transfer boundary.
-Source: `dummyindex/context/domains/proposals/closeout.py:30`, `dummyindex/context/domains/proposals/retirement.py:178`.
+`gc closeout --draft` writes under `.context/cache/gc/`, never overwrites. Unedited drafts fail; blank discard reasons rejected. Source: `dummyindex/context/domains/proposals/draft.py:49`, `dummyindex/context/domains/proposals/closeout.py:172`.
 
-The commit throttle and session memo only nudge a sweep; they never delete or
-classify work as obsolete. Source: `dummyindex/context/domains/gc/anchor.py:95`.
+Orphaned anchor nudges once per session; shallow clones stay silent. Evolution files under `.context/gc/` are never listed or deleted. Future cleanup adds `Candidate` rows with new `CandidateKind`. Source: `dummyindex/context/domains/gc/anchor.py:94`, `dummyindex/context/domains/gc/scan.py:43`, `dummyindex/context/domains/gc/enumerate.py:36`, `dummyindex/context/domains/gc/models.py:18`, `dummyindex/context/domains/gc/enums.py:23`.

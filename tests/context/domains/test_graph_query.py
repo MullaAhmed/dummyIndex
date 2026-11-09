@@ -1,11 +1,9 @@
 """Unit tests for `context.domains.graph_query` on a synthetic node-link fixture.
 
-The fixture mirrors the real `features/symbol-graph.json` wire shape:
-undirected node-link JSON where every link carries the true direction in
-``_src``/``_tgt`` (networkx normalises ``source``/``target``), a ``relation``,
-and a per-link ``source_file``/``source_location`` site. The fixture
-deliberately scrambles ``source``/``target`` so a loader that reads them
-instead of ``_src``/``_tgt`` fails these tests.
+Mirrors `features/symbol-graph.json`: undirected node-link JSON whose links carry
+the true direction in ``_src``/``_tgt`` (networkx normalises ``source``/``target``),
+a ``relation`` and a ``source_file``/``source_location`` site. ``source``/``target``
+are scrambled, so a loader reading them instead of ``_src``/``_tgt`` fails.
 """
 
 from __future__ import annotations
@@ -136,7 +134,7 @@ def graph(tmp_path: Path, request: pytest.FixtureRequest) -> SymbolGraph:
     return load_symbol_graph(write_graph(tmp_path, sharded=request.param))
 
 
-# ----- loading --------------------------------------------------------------
+# --- loading
 
 
 @pytest.mark.unit
@@ -164,7 +162,7 @@ def test_non_node_link_payload_raises_typed_error(tmp_path: Path) -> None:
         load_symbol_graph(tmp_path / ".context")
 
 
-# ----- rationale_for docstring co-location -----------------------------------
+# --- rationale_for docstring co-location
 
 
 def _write_minimal_graph(root: Path, nodes: list[dict], links: list[dict]) -> Path:
@@ -188,10 +186,9 @@ def _write_minimal_graph(root: Path, nodes: list[dict], links: list[dict]) -> Pa
 def test_rationale_docstring_skips_cross_file_node(tmp_path: Path) -> None:
     """A rationale_for link from a DIFFERENT file must not attach its docstring.
 
-    Node-id collisions between same-basename files can link a rationale node
-    in file B to a symbol in file A. The citation edge still belongs in the
-    digraph (the citation is correct); the docstring attachment must not
-    happen (precision over recall — attach nothing rather than a wrong doc).
+    Same-basename node-id collisions can link file B's rationale to file A's
+    symbol. The edge stays in the digraph; the docstring is not attached
+    (attach nothing rather than a wrong doc).
     """
     file_a = str(tmp_path / "src" / "a.py")
     file_b = str(tmp_path / "src" / "b.py")
@@ -246,8 +243,7 @@ def test_rationale_docstring_colocation_beats_min_id_tie_break(
             file_type="rationale",
         ),
     ]
-    # Precondition: without the co-location guard the lower id wins the
-    # existing min-src-id tie-break, which is the cross-file node here.
+    # Precondition: the min-src-id tie-break alone would pick the cross-file node.
     assert "rationale_0_cross" < "rationale_9_colo"
     links = [
         _link("rationale_0_cross", "sym_a", "rationale_for", file_b, "L1"),
@@ -259,7 +255,7 @@ def test_rationale_docstring_colocation_beats_min_id_tie_break(
     assert graph.docstrings["sym_a"] == "Co-located docstring that must win."
 
 
-# ----- symbol resolution ----------------------------------------------------
+# --- symbol resolution
 
 
 @pytest.mark.unit
@@ -317,7 +313,7 @@ def test_resolve_never_returns_a_rationale_node(graph: SymbolGraph) -> None:
         resolve_symbol(graph, "Entry point of the app.")
 
 
-# ----- callers-of / callees-of ----------------------------------------------
+# --- callers-of / callees-of
 
 
 @pytest.mark.unit
@@ -353,7 +349,7 @@ def test_callers_of_zero_callers_is_a_valid_answer(graph: SymbolGraph) -> None:
     assert not result.truncated
 
 
-# ----- impact ---------------------------------------------------------------
+# --- impact
 
 
 @pytest.mark.unit
@@ -381,7 +377,7 @@ def test_impact_limit_truncates_and_reports_total(graph: SymbolGraph) -> None:
     assert result.truncated
 
 
-# ----- path -----------------------------------------------------------------
+# --- path
 
 
 @pytest.mark.unit
@@ -411,7 +407,7 @@ def test_path_never_routes_through_rationale_edges(graph: SymbolGraph) -> None:
     assert result.rows == ()
 
 
-# ----- neighbors ------------------------------------------------------------
+# --- neighbors
 
 
 @pytest.mark.unit
@@ -435,7 +431,7 @@ def test_neighbors_two_hops_excludes_rationale_nodes(graph: SymbolGraph) -> None
     assert depths["app_main"] == 2
 
 
-# ----- dead-code ------------------------------------------------------------
+# --- dead-code
 
 
 @pytest.mark.unit
@@ -469,7 +465,7 @@ def test_dead_code_limit_truncates(graph: SymbolGraph) -> None:
     assert result.truncated
 
 
-# ----- community ------------------------------------------------------------
+# --- community
 
 
 @pytest.mark.unit
@@ -501,12 +497,11 @@ def test_community_by_symbol_name_falls_back_to_its_community(
 def test_community_by_slug_reads_graph_communities_artifact(
     tmp_path: Path,
 ) -> None:
-    """The slug resolves against the *real* A2 wire shape.
+    """The slug resolves against the *real* wire shape.
 
-    ``rollup_communities`` deliberately drops the partition int from the
-    card, so the reader must recover it from the card's members — an
-    artifact fixture with a synthetic ``community`` key would false-green
-    a reader that only probes for an int that never rides the wire.
+    ``rollup_communities`` drops the partition int from the card, so the reader
+    must recover it from the card's members; a fixture with a synthetic
+    ``community`` key would false-green.
     """
     context_dir = write_graph(tmp_path)
     graph = load_symbol_graph(context_dir)
@@ -564,7 +559,7 @@ def test_community_unknown_id_is_empty(graph: SymbolGraph) -> None:
     assert result.total == 0
 
 
-# ----- wire format + rendering ----------------------------------------------
+# --- wire format + rendering
 
 
 @pytest.mark.unit

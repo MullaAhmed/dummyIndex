@@ -1,18 +1,10 @@
 """Frozen dataclasses for the curated codebase scan (`features/graph.json`).
 
-Data only, `to_dict()` next to the class, tuples for collections — the same
-contract as `features/models.py`.
-
-Two wire-shape rules the serializers exist to enforce:
-
-- **Optional means absent.** A field that was never set is omitted from the
-  JSON rather than emitted as `null`. The scan is read by a model (which
-  pays for every token) and by the viewer (which branches on presence), so
-  a node with nothing but the required trio is exactly three keys wide.
-- **camelCase on the wire, snake_case in Python.** `source_ref` →
-  `sourceRef`, `from_id` → `from`, `top_models` → `topModels`. `from` is a
-  Python keyword and can't be a field name at all, which is what forces the
-  split; the rest follow it for consistency.
+Same contract as `features/models.py`. Two wire rules the serializers enforce:
+**optional means absent** — unset fields are omitted, not `null`, since a model
+pays per token and the viewer branches on presence; and **camelCase on the
+wire** (`source_ref` → `sourceRef`, `from_id` → `from`), forced by `from`
+being a Python keyword.
 """
 
 from __future__ import annotations
@@ -59,17 +51,10 @@ class ScanChip:
 class ScanNode:
     """One box on the map.
 
-    `sub` is the one-line qualifier under the label (`/api/chat`,
-    `streamText`, `12 near-identical scrapers`). `detail` is the sentence
-    revealed on click. `source_ref` is `path` or `path:line` so a teammate
-    can jump to the code — set it on everything the repo owns.
-
-    `symbol_ref` (wire: `symbolRef`) pins the box to the extraction layer:
-    a `features/symbol-graph.json` node id or a `graph-communities.json`
-    community id, checked for referential integrity by `validate_scan`.
-    `evidence` is a `ScanEvidence` value — `EXTRACTED` if the node survived
-    from the seed verbatim, `INFERRED` if the authoring stage added or
-    reshaped it. Both are optional so pre-extension scans stay valid.
+    `sub` is the qualifier under the label, `detail` the click-text, `source_ref`
+    `path[:line]`. `symbol_ref` pins the box to a `symbol-graph.json` node or
+    `graph-communities.json` slug (checked by `validate_scan`); `evidence` is
+    `EXTRACTED` (seed verbatim) or `INFERRED` (authored). Both optional.
     """
 
     id: str
