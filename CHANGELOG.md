@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.38.1 (2026-11-10)
+
+### Fixed
+
+- **context:** keep source-less stub nodes distinct when their ids collide
+
 ## 0.38.0 (2026-11-09)
 
 ### Added
