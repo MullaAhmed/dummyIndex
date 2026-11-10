@@ -206,7 +206,12 @@ def _identity_plan(
         for keys in groups.values():
             if len(keys) <= 1:
                 continue
-            if any(not _internal_source(records[key]["path"]) for key in keys):
+            # Source-less stubs (unresolved names whose slugs coincide, such as
+            # `_Base` and `Base`) have no path to disagree about, so they are kept
+            # apart by content hash like internal definitions. A foreign path or
+            # URI, or a mix of sourced and source-less records, is still refused.
+            paths = [records[key]["path"] for key in keys]
+            if any(paths) and not all(_internal_source(path) for path in paths):
                 raise ValueError(
                     "Portable graph node ID collision has an opaque/external definition"
                 )
