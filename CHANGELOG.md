@@ -1,5 +1,69 @@
 # Changelog
 
+## 0.38.0 (2026-11-09)
+
+### Added
+
+- **release:** beta channel from development; fix upgrade hygiene; trim comments (#27)
+- **release:** publish betas from development
+- **check:** add --style ratchet and agent language hint
+- **policy:** add three-way language policy foundations
+- **equip:** wire apply --source/--yes with sourced keep, docs and skill guide
+- **equip:** orchestrate seed, skills.sh and GitHub sourcing for specialists
+- **equip:** add pure skill scan, rank, and sourced-body compose
+- **equip:** add skill sourcing adapters, sourced lifecycle guard, overlay template
+- **evolve:** add attribute and probation verbs, session-start block, probation protocol
+- **probation:** route chat learning into local probation with promote and demote
+- **probation:** add sync, session block and yield report
+- **probation:** add pure routing, followed-check and eligibility rules
+- **probation:** add state, item model and local store units
+- **plugins:** ship ponytail as 4th reviewed default with default-on mandate
+- **hooks:** observe evolution evidence from an async Stop hook
+- **observe:** add stage-2 attribution API and rewire scan_hosts
+- **cli:** gc status recommendations, guarded dry-run and closeout --draft
+- **observe:** add local evidence ledger and Claude transcript importer
+- **gc:** nudge on orphaned anchor and fill scan recommendations
+- **observe:** add keyed ids, hostile-text scan and evidence records
+- **gc:** add recommend, guarded delete dry-run and closeout draft
+- **knowledge-lifecycle:** wave 4 ratchet files and acceptance
+- **knowledge-lifecycle:** wave 3 CLI surfaces, skill text, docs
+- **knowledge-lifecycle:** wave 2 wiring
+- **knowledge-lifecycle:** wave 1 standalone modules
+
+### Fixed
+
+- **merge:** keep fleet curated docs under ratchet after development merge
+- **merge:** keep PR24 curated docs under ratchet after development merge
+- **versioning:** parse and order PEP 440 pre-releases
+- close gaps found by live smoke tests
+- **closeout:** skip fleet run state in durable-reference scan
+- **equip:** harden upstream scan against split injection markers
+- **probation:** keep promoted state when the event log write fails
+- **probation:** sync before promote, lock session block state, close demoted predictions
+- **fleet:** in-flight units hold their paths and parallel slots
+- **gc:** skip generated INDEX.md in durable refs; add recommendation scaffolding
+- **guard:** check post-edit text so split citations are denied
+- **equip:** reject unsafe capability ids on every platform
+- **upgrade:** clean retired .context artifacts and orphan graph shards
+
+### Changed
+
+- **instructions:** caveman-style generated playbook bodies
+
+### Documentation
+
+- **context:** compress curated docs to caveman style
+- **context:** reconcile fleet run-0001 features
+- **context:** compress policy docs and fold in language policy
+- **context:** fold specialist sourcing into equip feature docs
+- **evolution:** reconcile feature docs with chat probation lifecycle
+- **context:** point concerns line base at 7a70cf4
+- **context:** reconcile 8 features after upgrade-hygiene + comment trim (anchor 7a70cf4)
+- **gc:** recommendation-driven batch sweep in skill, playbook and spec
+- **proposals:** plan fleet run units
+- **context:** reconcile knowledge-lifecycle features
+- **proposals:** plan knowledge-lifecycle-harness2
+
 ## 0.37.0 (2026-11-06)
 
 Maintenance release.
