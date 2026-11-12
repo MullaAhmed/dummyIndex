@@ -42,6 +42,8 @@ Prints JSON: `{"persona_id": "...", "subagent_type": "...", "framework": "..."}`
 
 The dev writes `spec.md` + `plan.md` via `section-write` and logs completion.
 
+When you write `.context/` documents, follow the Writing standard in `00-overview.md` (ASD-STE100). After you write, run `dummyindex context check --style`.
+
 ## Doc-evidence directive (include verbatim)
 
 > Catalogued prose docs carry `confidence` (high/medium/low) and `broken_refs`.

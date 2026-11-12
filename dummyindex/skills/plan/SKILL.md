@@ -42,6 +42,8 @@ A `.context/proposals/<slug>/` folder with four files:
 
 5. **Flesh out `plan.md`** — ordered tasks, each naming the exact file path(s) it touches. Where a task can reuse an existing symbol, cite it by name from `.context/map/symbols.json` (and the feature it lives in). Prefer reuse over net-new code.
 
+   When you write `.context/` documents, follow the Writing standard in `../council/00-overview.md` (ASD-STE100). After you write, run `dummyindex context check --style`.
+
 6. **Map tasks to the shared capabilities and available native tools.** Before the plan
    hardens, decide how each task gets executed. There are **two tag
    classes**, and they must never be mixed:
