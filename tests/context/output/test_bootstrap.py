@@ -211,8 +211,9 @@ def test_generated_block_is_short_pointer() -> None:
     assert body.count(ALWAYS_ON_OUTPUT_POLICY) == 1
     assert body.count(ALWAYS_ON_SKILL_POLICY) == 1
     # Must stay small — duplicating navigation rules in CLAUDE.md was the bug
-    # the shrink fixed. Be generous with the cap but enforce a ceiling.
-    assert len(body.splitlines()) <= 10, (
+    # the shrink fixed. The STE policy is split into short paragraphs (style
+    # lint), which adds blank lines, so the ceiling allows for them.
+    assert len(body.splitlines()) <= 20, (
         f"managed block is {len(body.splitlines())} lines; should stay terse"
     )
 
