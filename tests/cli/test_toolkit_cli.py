@@ -217,3 +217,18 @@ def test_utf16_mcp_json_is_malformed_config_envelope_not_traceback(
     assert run(["list", "--scope", "project", "--root", str(root)]) == 1
     doc = json.loads(_stdout(capsys))
     assert doc["error"]["code"] == "malformed_config"
+
+
+def test_list_json_with_settings_symlinked_outside_scope_exits_zero(
+    root: Path, tmp_path: Path, capsys
+) -> None:
+    outside = tmp_path / "outside-settings.json"
+    outside.write_text('{"enabledPlugins": {"codex@m": true}}', encoding="utf-8")
+    (root / ".claude").mkdir()
+    try:
+        (root / ".claude" / "settings.json").symlink_to(outside)
+    except OSError:
+        pytest.skip("this environment cannot create file symlinks")
+    assert run(["list", "--json", "--root", str(root)]) == 0
+    doc = json.loads(_stdout(capsys))
+    assert "items" in doc

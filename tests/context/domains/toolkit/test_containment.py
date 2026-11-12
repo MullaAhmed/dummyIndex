@@ -198,7 +198,7 @@ def test_symlinked_mcp_file_escaping_root_is_refused(
             config_file=_server(tmp_path),
         )
     assert exc.value.code == "path_escape"
-    assert (outside / "settings.json").read_text(encoding="utf-8") == "{}"
+    assert outside.read_text(encoding="utf-8") == "{}"
 
 
 def test_context_dir_redirected_outside_root_blocks_the_stash(
