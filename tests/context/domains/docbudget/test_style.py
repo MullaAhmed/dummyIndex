@@ -237,3 +237,42 @@ def _write_doc(tmp_path: Path, text: str) -> Path:
     p = tmp_path / "doc.md"
     p.write_text(text, encoding="utf-8")
     return p
+
+
+@pytest.mark.unit
+def test_blockquote_two_lines_split_into_two_sentences() -> None:
+    text = "> One short sentence here.\n> Another short sentence here.\n"
+    assert lint_text(text) == ()
+    assert _rules("> One sentence here.\n> Two sentence here.\n") == []
+
+
+@pytest.mark.unit
+def test_blockquote_seven_sentences_is_one_long_paragraph() -> None:
+    text = "\n".join(f"> Sentence number {i} here." for i in range(7)) + "\n"
+    assert _rules(text) == ["long-paragraph"]
+
+
+@pytest.mark.unit
+def test_blockquote_blank_quote_line_breaks_paragraph() -> None:
+    sentences = [f"> Sentence number {i} here." for i in range(6)]
+    text = "\n".join(sentences + [">"] + sentences) + "\n"
+    assert _rules(text) == []
+
+
+@pytest.mark.unit
+def test_blockquote_heading_skipped() -> None:
+    assert lint_text("> ## Heading, don't\n") == ()
+
+
+@pytest.mark.unit
+def test_nested_blockquote_split_and_counted() -> None:
+    text = "> > One short sentence here.\n> > Another short sentence here.\n"
+    assert lint_text(text) == ()
+    text7 = "\n".join(f"> > Sentence number {i} here." for i in range(7)) + "\n"
+    assert _rules(text7) == ["long-paragraph"]
+
+
+@pytest.mark.unit
+def test_blockquote_list_item_is_separate_unit() -> None:
+    assert lint_text(f"> - {LONG_21}\n") != ()
+    assert lint_text("> - Short item.\n> - Other short item.\n") == ()
