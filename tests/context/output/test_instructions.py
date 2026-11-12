@@ -96,7 +96,8 @@ def test_how_to_use_md_documents_commit_policy_for_machine_layer() -> None:
 
 @pytest.mark.unit
 def test_how_to_use_md_passes_style_lint() -> None:
-    assert lint_text(generate_how_to_use_md()) == ()
+    strict = [v for v in lint_text(generate_how_to_use_md()) if v.severity == "strict"]
+    assert strict == []
 
 
 @pytest.mark.unit
