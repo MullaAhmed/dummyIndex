@@ -550,9 +550,10 @@ Rules:
    explicitly — `run as run_rebuild`). A handful of modules pull a single
    helper from a sibling (`refresh` → `migrate.migrate_legacy_layout`,
    `reconcile_gate` → `memory.read_hook_stdin`, `statusline` →
-   `plan_update.badge_cache_path`). The spirit holds: each reuses one named
-   thing, not another subcommand's business logic. New work should still
-   reach for `cli/common.py` first.
+   `plan_update.badge_cache_path`).
+
+   The spirit holds: each reuses one named thing, not another subcommand's
+   business logic. New work should still reach for `cli/common.py` first.
 4. **Subcommand names live in `ContextSubcommand`** (a `StrEnum`), not as
    bare strings in the dispatcher.
 
