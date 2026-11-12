@@ -27,6 +27,11 @@ def _citations(text: str) -> set[str]:
     return {_normalize(m.group(0)) for m in DISPOSABLE_REF.finditer(text)}
 
 
+def citations(text: str) -> set[str]:
+    """Disposable-workspace citations in ``text`` (`/`-normalized)."""
+    return _citations(text)
+
+
 def added_citations(old: str, new: str) -> list[str]:
     """Citations present in ``new`` but absent from ``old`` (sorted, `/`-normalized)."""
     return sorted(_citations(new) - _citations(old))
