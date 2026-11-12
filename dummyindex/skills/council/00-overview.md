@@ -2,7 +2,7 @@
 
 How dummyindex turns deterministic feature scaffolding into rich, agent-authored
 documentation. Spec-kit-shaped: layered artifacts, one author per layer, one
-artifact per step. Stages are ordered *within* a feature; *across* features the
+artifact per step. Stages are ordered *within* a feature. *Across* features, the
 pipeline runs in parallel (see 22-parallel-dispatch.md). No synthesis step.
 
 ## The pattern
@@ -98,9 +98,9 @@ Phase 4: dummyindex context refresh-indexes
 | `agents/critic-product.md` | `general-purpose` (no PM-specific type) |
 
 **Why specialist subagent types:** Anthropic's specialists carry domain reflexes
-(Backend Architect reaches for bounded contexts; Security Engineer thinks
-adversarially). The persona markdown supplies the `.context/` output contract;
-the specialist supplies the reflexes. Both stack.
+(Backend Architect reaches for bounded contexts. Security Engineer thinks
+adversarially). The persona markdown supplies the `.context/` output contract.
+The specialist supplies the reflexes. Both stack.
 
 ### The dev picker
 
