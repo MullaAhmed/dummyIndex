@@ -133,3 +133,23 @@ def test_optional_fields_are_dropped_when_wrong_type(tmp_path: Path) -> None:
     (item,) = list_features(tmp_path)["features"]
     assert item["summary"] == ""
     assert "file_count" not in item
+
+
+@pytest.mark.unit
+def test_ambiguous_confidence_and_underscore_id_are_listed(tmp_path: Path) -> None:
+    _write_index(
+        tmp_path,
+        {
+            "schema_version": 1,
+            "features": [
+                _entry(feature_id="auth_flow", name="Auth flow", confidence="INFERRED"),
+                _entry(feature_id="unsure", name="Unsure", confidence="AMBIGUOUS"),
+            ],
+        },
+    )
+    payload = list_features(tmp_path)
+    assert [(f["feature_id"], f["confidence"]) for f in payload["features"]] == [
+        ("auth_flow", "INFERRED"),
+        ("unsure", "AMBIGUOUS"),
+    ]
+    assert payload["skipped"] == 0
