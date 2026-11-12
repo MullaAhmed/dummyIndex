@@ -37,6 +37,8 @@ Write a handoff so the next session continues cleanly. You were here — write i
 6. **Promote durable facts.** Move any cross-session fact or key moment worth keeping verbatim into
    `core-memories.md` as a bullet (prefix a standout moment with `IDENTITY CANDIDATE:`).
 
+   When you write `.context/` documents, follow the Writing standard in `../council/00-overview.md` (ASD-STE100). After you write, run `dummyindex context check --style`.
+
 7. Say **"Saved."** — nothing else.
 
 ## Rules

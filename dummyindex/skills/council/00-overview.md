@@ -134,3 +134,19 @@ and show progress.
 - `concerns.md` — the RISKS (data integrity, security, product gaps).
 - `council/` audit trail — the dev draft, the architect's changes, raw critiques.
 - `flows/` — narrated call sequences.
+
+## Writing standard
+
+Write every persisted `.context/` document to ASD-STE100. Follow these rules:
+
+- Write one topic for each sentence.
+- Use at most 20 words for each sentence.
+- Use at most 6 sentences for each paragraph.
+- Use active voice and simple tenses.
+- Keep the articles.
+- Do not use contractions, semicolons, or -ing verb forms.
+- Use at most 3 nouns in a noun cluster.
+- Each word has one sense.
+- Put technical names in backticks.
+
+The single source of this text is `STE_DOC_STANDARD` in `dummyindex/context/output/bootstrap.py`. After you write a document, run `dummyindex context check --style`.

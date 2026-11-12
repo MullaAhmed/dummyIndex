@@ -138,6 +138,8 @@ Re-read the report (`reconcile --json`) so you act on the current state:
 `$dummyindex --recouncil` re-runs the whole
 repo — the opposite of a scoped reconcile.
 
+When you write `.context/` documents, follow the Writing standard in `00-overview.md` (ASD-STE100). After you write, run `dummyindex context check --style`.
+
 ### 4. Stamp — advance the anchor
 
 Before stamping, run `dummyindex context check --style`.

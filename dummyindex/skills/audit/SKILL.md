@@ -29,6 +29,8 @@ Read all findings and rebuttals. Deduplicate claims about the same issue. Keep o
 
 Write `.context/audits/<slug>/report.md` with a 3–5 line executive summary, findings by severity and verdict, unresolved disagreements, and any lesson that was deferred or found already covered. Finish it before the closeout inventory; do not edit it afterward.
 
+When you write `.context/` documents, follow the Writing standard in `../council/00-overview.md` (ASD-STE100). After you write, run `dummyindex context check --style`.
+
 ## 5. Close out one reusable lesson
 
 For confirmed findings, consider at most one concise, new, reusable rule: a contract supported by audited source and independently verified behavior, not a suggested fix. A confirmed helper contract may be reusable while the caller bug is open; do not imply it is fixed. Skip covered lessons, update an ID, or supersede an obsolete managed rule; preserve owner text. Include only meaningful existing tests. No supported novel rule: omit `learning_reflection`. No applicable test: submit with no tests; the gate records `evaluated/blocked` without promotion.

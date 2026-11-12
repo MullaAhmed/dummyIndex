@@ -159,6 +159,8 @@ reference.
      `dummyindex context reconcile-stamp` to advance the anchor. The loop is
      closed once `.context/` reflects — and is anchored to — the code you built.
 
+     When you write `.context/` documents, follow the Writing standard in `../council/00-overview.md` (ASD-STE100). After you write, run `dummyindex context check --style`.
+
 6b. **Scoped maintenance — auto-recouncil defaults ON.** Apply the closing
    phase to this task's recorded changed paths and their owning features.
    Read `dummyindex context reconcile`, then reconcile/enrich only that delta.

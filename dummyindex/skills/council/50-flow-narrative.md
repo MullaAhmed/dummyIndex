@@ -53,6 +53,8 @@ live in `agents/dev.md`.
 > one-paragraph narrative (entry / trigger / step-by-step / return / failure
 > modes — see `agents/dev.md`).
 >
+> When you write `.context/` documents, follow the Writing standard in `00-overview.md` (ASD-STE100). After you write, run `dummyindex context check --style`.
+>
 > Log each decision:
 > ```bash
 > dummyindex context council-log \

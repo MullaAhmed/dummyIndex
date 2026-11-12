@@ -112,6 +112,8 @@ Prompt template (adapt per section):
 >   file, and a root `CONVENTIONS.md`. **Read these before authoring.**
 > - Source files (read them — don't speculate).
 >
+> When you write `.context/` documents, follow the Writing standard in `00-overview.md` (ASD-STE100). After you write, run `dummyindex context check --style`.
+>
 > ## Reconcile, don't re-derive
 >
 > - If a stated rule exists for this topic, **build on it**: cite the rule and
