@@ -31,7 +31,7 @@ Flat list of every symbol in the codebase:
 }
 ```
 
-Search by `name` (exact or substring). Case-sensitive by default; case-insensitive if needed.
+Search by `name` (exact or substring). Matching is case-sensitive by default. Use case-insensitive matching if needed.
 
 ## Step 2 — When multiple matches
 
@@ -61,9 +61,9 @@ Read(file_path="<absolute>/app/auth/jwt.py", offset=42, limit=46)
 
 - Could be in a language without tree-sitter coverage (the LLM-fallback extraction may have missed it).
 - Could be dynamically generated.
-- Could be in a file that's gitignored or in `.dummyindexignore`.
+- Could be in a file that is gitignored or in `.dummyindexignore`.
 
-Fall back to a targeted grep, but only after confirming `map/symbols.json` doesn't have it:
+Fall back to a targeted grep, but only after confirming `map/symbols.json` does not have it:
 
 ```
 grep -rn "def validate_jwt\|class ValidateJwt" <repo>/
@@ -78,14 +78,14 @@ dummyindex context graph callers-of app_auth_validate_jwt --limit 20
 dummyindex context graph neighbors app_auth_validate_jwt --hops 1 --limit 20
 ```
 
-`callers-of` follows incoming `calls`; `neighbors` also exposes other relation
+`callers-of` follows incoming `calls`. `neighbors` also exposes other relation
 kinds, including `uses`. Results cite definitions and edge sites. Both commands
 read legacy JSON or a sharded graph transparently. Do not load the full artifact
 into the conversation or interpret a storage manifest as an empty graph.
 
 Programmatic consumers use
 `dummyindex.export.storage.read_graph_payload(path)` to reconstruct the logical
-node-link payload. Original direction is `_src` / `_tgt`; undirected NetworkX
+node-link payload. Original direction is `_src` / `_tgt`. Undirected NetworkX
 `source` / `target` ordering is not call direction.
 
 ## When to use this vs. feature lookup
@@ -99,4 +99,4 @@ Often you do both: feature lookup first to understand context, then symbol looku
 
 - ❌ Grepping the source tree for symbols before checking `map/symbols.json`.
 - ❌ Loading `map/symbols.json` and dumping the whole list into context — filter to relevant ones first.
-- ❌ Trusting a `parent_id` chain without confirming the file path actually exists (stale index possibility — `dummyindex context check`).
+- ❌ Trusting a `parent_id` chain without confirming the file path exists (stale index possibility — `dummyindex context check`).
