@@ -122,6 +122,14 @@ def safe_target(base: Path, *parts: str) -> Path:
     return target
 
 
+def read_target(base: Path, *parts: str) -> Path:
+    """``base / parts`` for reads: traversal is refused, symlinks are followed."""
+    for part in parts:
+        if not part or part in (".", "..") or any(c in part for c in _BAD_PART_CHARS):
+            raise ToolkitError("path_escape", f"path part {part!r} is not allowed")
+    return base.joinpath(*parts)
+
+
 def check_out_dir(out_dir: Path, root: Path) -> Path:
     """The terminal bundle folder must be absolute and must not sit in ``.context/``."""
     if not out_dir.is_absolute():
