@@ -87,5 +87,36 @@ def test_protected_tokens_returns_counter_of_negations():
 
 
 @pytest.mark.unit
+def test_bare_path_line_citation_outside_code_is_protected():
+    diff = diff_tokens("See x.py:12 for it.", "See x.py for it.")
+    assert "x.py:12" in diff.lost
+
+
+@pytest.mark.unit
+def test_curly_apostrophe_contractions_keep_negation_count():
+    assert diff_tokens("It can’t run.", "It cannot run.").lost == ()
+    assert diff_tokens("I don’t know.", "I do not know.").lost == ()
+
+
+@pytest.mark.unit
+def test_removed_heading_marker_is_lost():
+    diff = diff_tokens("## Usage\n\nText.\n", "Text.\n")
+    assert "##" in diff.lost
+
+
+@pytest.mark.unit
+def test_added_negation_warns_without_failing():
+    diff = diff_tokens("Check it.", "Do not check it.")
+    assert diff.lost == ()
+    assert "not" in diff.added
+
+
+@pytest.mark.unit
+def test_tilde_fence_content_is_protected():
+    diff = diff_tokens("~~~\nprint(1)\n~~~\n", "~~~\nprint(2)\n~~~\n")
+    assert "print(1)" in diff.lost
+
+
+@pytest.mark.unit
 def test_public_citations_wraps_regex():
     assert citations("see proposals/foo-bar/spec.md") == {"proposals/foo-bar/"}

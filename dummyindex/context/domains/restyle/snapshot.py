@@ -9,7 +9,9 @@ from .constants import CONTRACTION_SPECIALS, NEGATION_WORDS
 from .errors import TokenLossError
 from .models import TokenDiff
 
-_FENCE = re.compile(r"```(.*?)```", re.DOTALL)
+_APOS = "['’]"
+# Backtick or tilde fence (CommonMark); group 2 is the body.
+_FENCE = re.compile(r"(`{3}|~{3})(.*?)\1", re.DOTALL)
 _INLINE_CODE = re.compile(r"`([^`\n]+)`")
 _HEADING = re.compile(r"^(#{1,6})\s", re.MULTILINE)
 _LINK_TARGET = re.compile(r"\]\(([^)\s]+)\)")
@@ -19,12 +21,13 @@ _NUMERAL = re.compile(r"\d+(?:[.,]\d+)*")
 _NEGATION = re.compile(
     r"\b(?:" + "|".join(NEGATION_WORDS) + r")\b", re.IGNORECASE
 )
-_NT_CONTRACTION = re.compile(r"\b(\w+)n['’]t\b", re.IGNORECASE)
+_NT_CONTRACTION = re.compile(rf"\b(\w+)n{_APOS}t\b", re.IGNORECASE)
 
 
 def _expand_contractions(text: str) -> str:
     for short, full in CONTRACTION_SPECIALS:
-        text = re.sub(rf"\b{re.escape(short)}\b", full, text, flags=re.IGNORECASE)
+        pattern = re.escape(short).replace("'", _APOS)
+        text = re.sub(rf"\b{pattern}\b", full, text, flags=re.IGNORECASE)
     return _NT_CONTRACTION.sub(r"\1 not", text)
 
 
@@ -35,7 +38,7 @@ def protected_tokens(text: str) -> Counter[str]:
     link target, `path:line` citation, numeral, and negation word (lower-cased).
     """
     tokens: Counter[str] = Counter()
-    tokens.update(block.strip() for block in _FENCE.findall(text))
+    tokens.update(m.group(2).strip() for m in _FENCE.finditer(text))
     outside_fences = _FENCE.sub("\n", text)
     tokens.update(code.strip() for code in _INLINE_CODE.findall(outside_fences))
     tokens.update(m.group(1) for m in _HEADING.finditer(outside_fences))
