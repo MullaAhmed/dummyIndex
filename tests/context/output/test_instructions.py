@@ -100,6 +100,15 @@ def test_how_to_use_md_passes_style_lint() -> None:
 
 
 @pytest.mark.unit
+def test_how_to_use_md_keeps_backbone_naming_and_no_feature_fact() -> None:
+    """Regression (T7c): the rewrite must keep `naming` in the deterministic
+    backbone list and the 'new code in no feature' meaning."""
+    text = generate_how_to_use_md()
+    assert "(map, tree, `naming`, source-docs)" in text
+    assert "new code in no feature" in text
+
+
+@pytest.mark.unit
 def test_write_how_to_use_md_atomic(tmp_path: Path) -> None:
     out = tmp_path / ".context" / "HOW_TO_USE.md"
     write_how_to_use_md(out)
