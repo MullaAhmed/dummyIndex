@@ -188,7 +188,16 @@ def _print_style_details(root: Path, rel: str) -> None:
     from dummyindex.context.domains.docbudget import lint_text
 
     for v in lint_text((root / rel).read_text(encoding="utf-8")):
-        print(f"{rel}:{v.line}: {v.rule}: {v.excerpt}")
+        if v.severity == "strict":
+            print(f"{rel}:{v.line}: {v.rule}: {v.excerpt}")
+
+
+def _print_advice(root: Path, rel: str) -> None:
+    from dummyindex.context.domains.docbudget import lint_text
+
+    for v in lint_text((root / rel).read_text(encoding="utf-8")):
+        if v.severity == "advice":
+            print(f"advice: {rel}:{v.line}: {v.rule}: {v.excerpt}")
 
 
 def _run_ratchet_check(
@@ -202,6 +211,8 @@ def _run_ratchet_check(
     from dummyindex.context.domains.docbudget import (
         BudgetGroup,
         read_ratchet,
+        read_ratchet_ruleset,
+        reseed_stale_style,
         write_ratchet,
     )
     from dummyindex.context.domains.docbudget import (
@@ -213,6 +224,7 @@ def _run_ratchet_check(
     from dummyindex.context.domains.docbudget import (
         update_ratchet as run_update,
     )
+    from dummyindex.context.domains.docbudget.constants import STE_RULESET_VERSION
 
     rc = 0
     checked = False
@@ -220,6 +232,11 @@ def _run_ratchet_check(
         is_style = group is BudgetGroup.STYLE
         unit = "violations" if is_style else "words"
         ratchet_path = root / rel
+        stale = (
+            is_style
+            and ratchet_path.is_file()
+            and (read_ratchet_ruleset(ratchet_path) < STE_RULESET_VERSION)
+        )
         if is_style and not update and not ratchet_path.is_file():
             for path, count in budget_scan(root, group).items():
                 if count:
@@ -229,14 +246,29 @@ def _run_ratchet_check(
                 "dummyindex context check --style --update-ratchet"
             )
             continue
+        if stale and not update:
+            print(
+                f"style ratchet is ruleset {read_ratchet_ruleset(ratchet_path)}; "
+                f"current is {STE_RULESET_VERSION}. re-seed with: "
+                "dummyindex context check --style --update-ratchet"
+            )
+            continue
         try:
             ratchet = read_ratchet(ratchet_path)
         except ValueError as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 2
+        if update and stale:
+            reseed_stale_style(root, ratchet_path)
+            print(f"{rel}: re-seeded at ruleset {STE_RULESET_VERSION}")
+            continue
         if update:
             result = run_update(root, ratchet, group)
-            write_ratchet(ratchet_path, result.ratchet)
+            write_ratchet(
+                ratchet_path,
+                result.ratchet,
+                STE_RULESET_VERSION if is_style else None,
+            )
             print(
                 f"{rel}: {len(result.ratchet)} entries, {len(result.lowered)} lowered"
             )
@@ -253,6 +285,9 @@ def _run_ratchet_check(
             if is_style:
                 _print_style_details(root, v.path)
             rc = 1
+        if is_style:
+            for path in budget_scan(root, group):
+                _print_advice(root, path)
     if rc == 0 and checked and not update:
         print(f"context check {flag}: ok")
     return rc
