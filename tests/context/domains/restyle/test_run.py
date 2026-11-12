@@ -270,3 +270,46 @@ def test_status_wraps_run_status(ctx: Path) -> None:
     assert report["total"] == 2
     assert report["pending"] == 2
     assert report["complete"] is False
+
+
+@pytest.fixture
+def wide_ctx(tmp_path: Path) -> Path:
+    """Every tier: curated units (feature, PROJECT, architecture, playbook, convention), and the rest."""
+    context = tmp_path / ".context"
+    for rel in (
+        "features/auth/plan.md",
+        "PROJECT.md",
+        "architecture/overview.md",
+        "playbooks/x.md",
+        "conventions/testing.md",
+        "conventions/naming.md",
+        "HOW_TO_USE.md",
+        "equipment/a.md",
+        "proposals/p/spec.md",
+        "audits/a/report.md",
+        "session-memory/now.md",
+    ):
+        _write(context / rel, f"# {rel}\n\nThe tool doesn't run.\n")
+    _meta(tmp_path)
+    return context
+
+
+@pytest.mark.unit
+def test_plan_units_cover_every_curated_tier(wide_ctx: Path) -> None:
+    result = plan(wide_ctx)
+    assert [u.unit_id for u in result.units] == [
+        "PROJECT.md",
+        "architecture/overview.md",
+        "auth",
+        "conventions/testing.md",
+        "playbooks/x.md",
+    ]
+    assert result.doc_count == 5
+
+
+@pytest.mark.unit
+def test_project_doc_unit_runs_begin_to_done(wide_ctx: Path) -> None:
+    begin(wide_ctx, all_units=True, max_units=None, force=False)
+    result = done(wide_ctx, "PROJECT.md")
+    assert result.unit_id == "PROJECT.md"
+    assert [doc for doc, _ in result.strict] == ["PROJECT.md"]
