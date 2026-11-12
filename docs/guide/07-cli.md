@@ -116,7 +116,7 @@ with the outcome or next action. Keep prose compact. Number multi-step work, at 
 items per group. Suppress tangents, restate current state, and preserve technical
 and safety detail. Subagent prompts and SendMessage bodies use concise Chinese
 with caveman rules. Code, commits, docs, and final reports stay English. Repo
-docs use English caveman style. Before acting, compare the request with every
+docs follow ASD-STE100. Before acting, compare the request with every
 exposed skill's trigger rules and invoke every match without waiting to be asked.
 Explicit user formatting requests and safety requirements win. The policy is not
 written to Codex's global guidance.
