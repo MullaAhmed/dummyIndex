@@ -21,7 +21,8 @@ You bring all three to the latest GitHub version in one pass, **non-destructivel
 
 ## Hard rules
 
-- **Never** trigger the council, `reconcile`, or a full re-ingest. The only `.context/` write allowed is the deterministic backbone rebuild that `dummyindex install` runs on a git repo. Curated taxonomy (feature names, abstracts, conventions, audits) is left untouched.
+- **Never** run the council, `reconcile`, or a full re-ingest. **Never** change the taxonomy (feature names, abstracts, conventions, audits).
+- The only `.context/` writes allowed are two. The first is the deterministic backbone rebuild that `dummyindex install` runs on a git repo. The second is the in-place prose rewrite of step 5. Rewrite curated prose only through `dummyindex context restyle`.
 - **Never** pass `--break-system-packages` or `sudo`. Match the install method that's already there.
 - **Stop on the first failed step** and report the failing command's output. A half-updated install (new CLI, stale skills) is worse than a clean failure.
 - **Idempotent.** Stop only when the CLI, every applicable selected host/scope
@@ -190,12 +191,33 @@ Report the installed immutable commit, version, scope and any preserved source
 mismatch. Never call a partial or customized installation fully coherent merely
 because its version stamps agree. A failed required step stops the update;
 optional native-adapter limitations remain visible. No council or production
-live-test step belongs in this update. Finish with a compact before→after table:
+live-test step belongs in this update.
+
+### 5. Restyle context prose
+
+Run this step only on a curated index. Skip it when `dummyindex context restyle plan`
+prints `already restyled`. Skip it also when `plan` prints `nothing to restyle`.
+
+1. Run `dummyindex context restyle plan`. Show its estimate to the user.
+2. Run `dummyindex context restyle begin --all`.
+3. Run `dummyindex context restyle next`. It prints one unit, its doc paths and a rewrite brief.
+4. Give each unit to one subagent. Pass the brief verbatim and the doc paths.
+5. When the subagent finishes, run `dummyindex context restyle done <unit>`.
+6. When `done` refuses, it names each lost or changed token. Send the subagent back with those tokens. The subagent restores them exactly and the unit runs `done` again. Never force a pass.
+7. Repeat steps 3 to 6 until `next` reports no unit left. Then run `dummyindex context restyle stamp`.
+
+A refused restyle does not undo steps 1 to 4. Resume an unfinished run with `dummyindex context restyle status`.
+
+Finish with a compact before→after table:
 
 ```
 dummyindex updated: 0.22.0 → 0.23.0
   CLI package     0.22.0 → 0.23.0  ✓
   skill family    0.22.0 → 0.23.0  ✓  (<host>, <scope>)
-  this repo       0.22.0 → 0.23.0  ✓  (.context/ backbone refreshed, curated content untouched)
+  this repo       0.22.0 → 0.23.0  ✓  (.context/ backbone refreshed, taxonomy untouched)
   context layout  removed N retired file(s), backed up M  (+ any `warning: migration …` verbatim)
+  context prose  restyled N doc(s) (ASD-STE100 ruleset N)
 ```
+
+When step 5 does not finish, the last row reads instead:
+`  context prose  restyle pending — resume: dummyindex context restyle status`

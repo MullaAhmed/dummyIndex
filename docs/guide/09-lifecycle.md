@@ -237,6 +237,24 @@ dummyindex context rebuild --changed
   leaves new files unassigned. `--full` forces a destructive re-cluster (discards
   curated taxonomy) and is gated behind an explicit warning.
 
+## Update — `/dummyindex-update` (version layers and prose)
+
+The update skill moves three layers to one version: the CLI, the skill family and
+the repo stamp. It runs five steps:
+
+1. Resolve the target version and install the CLI at one immutable commit.
+2. Run `dummyindex install`. It refreshes the deterministic backbone only.
+3. Refresh the skill family and the managed repo wiring.
+4. Verify every layer with `dummyindex context check --versions`.
+5. Restyle curated prose with `dummyindex context restyle`. This step runs on a
+   curated index only. It skips when `restyle plan` prints `already restyled`.
+
+Step 5 rewrites prose in place. It never changes the taxonomy.
+
+It never runs the council, `reconcile` or a full re-ingest. Each unit passes a token
+check. A failed unit stays failed until its tokens match. A refused unit does not undo
+steps 1 to 4. Resume an unfinished run with `dummyindex context restyle status`.
+
 ## Reconcile — the genuine update (v0.15.3)
 
 The non-destructive update path the user-facing "keep `.context/` current" promise
