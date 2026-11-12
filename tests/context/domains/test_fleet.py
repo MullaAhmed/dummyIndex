@@ -292,3 +292,49 @@ def test_estimate_run_survives_missing_tree(tmp_path: Path) -> None:
     estimates = estimate_run(context_dir, ("auth",), "light")
     assert estimates["features"][0]["estimate_nodes"] == 0
     assert estimates["total_units"] > 0
+
+
+# --- run kind (restyle shares the fleet state machine)
+
+
+@pytest.mark.unit
+def test_legacy_state_without_kind_reads_as_maintain(tmp_path: Path) -> None:
+    run_dir = tmp_path / ".context" / FLEET_DIR_REL / "maintain-20260101-000000"
+    run_dir.mkdir(parents=True)
+    (run_dir / "state.json").write_text(
+        json.dumps({"anchor_sha": None, "features": []}), encoding="utf-8"
+    )
+    loaded = load_run(run_dir)
+    assert loaded.kind == "maintain"
+    assert loaded.to_dict()["kind"] == "maintain"
+
+
+@pytest.mark.unit
+def test_create_restyle_run_uses_restyle_prefix_and_stores_kind(
+    tmp_path: Path,
+) -> None:
+    context_dir = tmp_path / ".context"
+    run = create_run(
+        context_dir,
+        ("auth",),
+        kind="restyle",
+        stages_for_feature={"auth": ((1, "restyle"),)},
+    )
+    assert run.kind == "restyle"
+    assert run.run_dir.name.startswith("restyle-")
+    assert run.run_dir.parent.name == FLEET_DIR_REL
+    raw = json.loads((run.run_dir / "state.json").read_text(encoding="utf-8"))
+    assert raw["kind"] == "restyle"
+    assert load_run(run.run_dir).kind == "restyle"
+
+
+@pytest.mark.unit
+def test_find_and_resolve_split_runs_by_kind(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    maintain = _make_run(tmp_path)
+    restyle = create_run(context_dir, ("auth",), kind="restyle")
+
+    assert find_newest_run(context_dir) == maintain.run_dir
+    assert find_newest_run(context_dir, kind="restyle") == restyle.run_dir
+    assert resolve_run_dir(context_dir, None) == maintain.run_dir
+    assert resolve_run_dir(context_dir, None, kind="restyle") == restyle.run_dir
