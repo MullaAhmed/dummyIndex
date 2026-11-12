@@ -250,3 +250,17 @@ def test_create_in_nonexistent_parent_dir(tmp_path: Path) -> None:
     bootstrap_claude_md(nested)
     assert nested.exists()
     assert _wrote_block(nested.read_text(encoding="utf-8"))
+
+
+@pytest.mark.unit
+def test_repo_docs_follow_ste_not_caveman_in_policy_and_reminder() -> None:
+    from dummyindex.context.output.bootstrap import (
+        ALWAYS_ON_TURN_REMINDER,
+        STE_DOC_STANDARD,
+    )
+
+    assert "ASD-STE100" in ALWAYS_ON_OUTPUT_POLICY
+    assert STE_DOC_STANDARD in ALWAYS_ON_OUTPUT_POLICY
+    assert "caveman style" not in ALWAYS_ON_OUTPUT_POLICY
+    assert "Repo docs follow ASD-STE100" in ALWAYS_ON_TURN_REMINDER
+    assert "caveman style" not in ALWAYS_ON_TURN_REMINDER

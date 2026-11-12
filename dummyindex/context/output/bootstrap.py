@@ -23,6 +23,16 @@ class UnbalancedMarkersError(ValueError):
     """Raised when CLAUDE.md has malformed dummyindex markers."""
 
 
+# Writing standard for every persisted repo doc. Checked by `check --style`.
+STE_DOC_STANDARD = (
+    "Repo docs follow ASD-STE100. Write one topic for each sentence. Use at most "
+    "20 words for each sentence and at most 6 sentences for each paragraph. Use "
+    "active voice and simple tenses. Keep the articles. Do not use contractions, "
+    "semicolons or -ing verb forms. Use at most 3 nouns in a noun cluster and one "
+    "meaning for each word. Put technical names in backticks. Check the text with "
+    "`dummyindex context check --style`."
+)
+
 # Self-contained on purpose: `i-have-adhd` ships `disable-model-invocation: true`
 # and its SessionStart hook is inert without a per-profile opt-in, so behavior must
 # not depend on either plugin being installed. Never shorten this to "use the
@@ -48,9 +58,8 @@ ALWAYS_ON_OUTPUT_POLICY = (
     "clarifying question only on real ambiguity.\n\n"
     "Language: subagent prompts and SendMessage bodies use concise Chinese "
     "with caveman rules. Code, commits, PRs, docs, and final reports stay "
-    "English. Payload stays verbatim. Docs written into the repo use English "
-    "caveman style, at most 20 words per sentence. This overrides caveman's "
-    "plain-prose rule for persisted text. "
+    "English. Payload stays verbatim. "
+    f"{STE_DOC_STANDARD} "
     "This policy holds for the whole session. It does not lapse after several "
     "turns or when the topic changes. When you are unsure whether it still "
     "applies, it does. It yields to an explicit user formatting request and to "
@@ -87,7 +96,7 @@ ALWAYS_ON_TURN_REMINDER = (
     "detail verbatim. End with one next action only when work remains. Apply "
     "this directly; `i-have-adhd` cannot be model-invoked. Subagent prompts and "
     "SendMessage bodies use concise Chinese; code, commits, docs, and final "
-    "reports stay English. Repo docs use English caveman style. Before "
+    "reports stay English. Repo docs follow ASD-STE100. Before "
     "responding or acting, inspect every currently available skill's trigger "
     "rules and invoke each match. A user-named skill is mandatory. Route "
     "dummyindex requests through the matching `dummyindex-*` workflow. Tool, "

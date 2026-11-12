@@ -321,3 +321,13 @@ def test_injected_write_failure_leaves_root_intact(
     assert root.exists()  # root left intact when canonical write failed
     assert "Important user content." in root.read_text(encoding="utf-8")
     assert not _canonical(tmp_path).exists()
+
+
+@pytest.mark.unit
+def test_managed_claude_block_names_ste_not_caveman_docs(tmp_path: Path) -> None:
+    from dummyindex.context.output.bootstrap import bootstrap_claude_md
+
+    text = bootstrap_claude_md(tmp_path / "CLAUDE.md")
+    body = " ".join(text.split())
+    assert "ASD-STE100" in body
+    assert "caveman style" not in body
