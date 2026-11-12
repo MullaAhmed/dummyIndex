@@ -415,6 +415,29 @@ One-command assembly of the maintenance runbook (`rebuild --changed` → `reconc
 
 - Counts done/pending/skipped, elapsed time, the labelled heuristic remaining estimate, plus the run's anchor and mode. Always exit 0.
 
+## Restyle loop (`restyle plan|begin|next|done|stamp|status`)
+
+ASD-STE100 rewrite of curated `features/` and `conventions/` docs. The CLI is deterministic: it snapshots each unit, checks the rewrite, and records the ruleset. The host skill rewrites each unit between `next` and `done`. No LLM calls here.
+
+- `plan` is read-only. It lists units with doc, strict and advice counts. It prints `already restyled (ruleset N)` once stamped, or `nothing to restyle` on an index without curated docs.
+- `begin --all` or `begin --max-units N` starts a run. An unbounded run needs `--all`. `begin` refuses (exit 1) while a run is unfinished, and `--force` starts a new run after a stamp.
+- `next` prints the next unit, its doc paths and the rewrite brief. It prints a completion hint when all units are done.
+- `done <unit>` checks the unit against its snapshot. It exits 1 and names each doc and token when a protected token is lost. Otherwise it prints the remaining strict violations and `advice:` lines, and warns about new protected tokens.
+- `stamp` records the ruleset in `meta.json` once every unit is done.
+- `status` reports unit counts for the run.
+
+### `dummyindex context restyle plan [--json] [--root DIR]`
+
+### `dummyindex context restyle begin --all | --max-units N [--force] [--json] [--root DIR]`
+
+### `dummyindex context restyle next [--run NAME] [--json] [--root DIR]`
+
+### `dummyindex context restyle done <unit> [--run NAME] [--json] [--root DIR]`
+
+### `dummyindex context restyle stamp [--run NAME] [--json] [--root DIR]`
+
+### `dummyindex context restyle status [--run NAME] [--json] [--root DIR]`
+
 ## Council (called by skill procedures)
 
 ### `dummyindex context section-write [--root DIR] --feature X --section NAME --from-file PATH`

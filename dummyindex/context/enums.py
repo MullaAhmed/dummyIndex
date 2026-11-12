@@ -147,6 +147,7 @@ class ContextSubcommand(str, Enum):
     AUDIT_LOG = "audit-log"
     GC = "gc"
     MAINTAIN = "maintain"
+    RESTYLE = "restyle"
     FLEET = "fleet"
     STATUS = "status"
     WIRE = "wire"
