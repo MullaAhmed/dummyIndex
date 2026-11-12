@@ -22,7 +22,7 @@
         "properties": {
           "feature_id": {
             "type": "string",
-            "pattern": "^[a-z0-9][a-z0-9-]*$",
+            "pattern": "^[a-z0-9][a-z0-9_-]*$",
             "description": "Stable kebab-case id. The GUI keys group frames on this value."
           },
           "name": {
@@ -38,7 +38,7 @@
             "minimum": 0
           },
           "confidence": {
-            "enum": ["EXTRACTED", "INFERRED"],
+            "enum": ["EXTRACTED", "INFERRED", "AMBIGUOUS"],
             "description": "Values observed in INDEX.json. Extend this enum only with a schema_version bump."
           },
           "kind": {

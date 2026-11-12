@@ -10,13 +10,15 @@ counted in ``skipped``; they never fail the whole listing.
 from __future__ import annotations
 
 import json
-import re
 from pathlib import Path
 from typing import Any
 
+from dummyindex.context.domains.features.errors import FeatureRenameError
+from dummyindex.context.domains.features.helpers import _validate_feature_id
+from dummyindex.pipeline.enums import ConfidenceLevel
+
 SUPPORTED_SCHEMA_VERSION = 1
-CONFIDENCE_VALUES: frozenset[str] = frozenset({"EXTRACTED", "INFERRED"})
-_FEATURE_ID = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+CONFIDENCE_VALUES: frozenset[str] = frozenset(level.value for level in ConfidenceLevel)
 
 
 class FeaturesListError(Exception):
@@ -94,7 +96,7 @@ def _feature_item(entry: object) -> dict[str, Any] | None:
     name = entry.get("name")
     confidence = entry.get("confidence")
     member_count = _count(entry.get("member_count"))
-    if not isinstance(feature_id, str) or not _FEATURE_ID.match(feature_id):
+    if not isinstance(feature_id, str) or not _is_feature_id(feature_id):
         return None
     if not isinstance(name, str) or not name:
         return None
@@ -120,6 +122,14 @@ def _feature_item(entry: object) -> dict[str, Any] | None:
         if value is not None:
             item[key] = value
     return item
+
+
+def _is_feature_id(value: str) -> bool:
+    """True when ``value`` is already in the canonical form ``_validate_feature_id`` accepts."""
+    try:
+        return _validate_feature_id(value) == value
+    except FeatureRenameError:
+        return False
 
 
 def _count(value: object) -> int | None:

@@ -33,7 +33,7 @@ def _check_jsonschema(instance: dict, schema_name: str) -> None:
     jsonschema.validate(instance, schema, format_checker=jsonschema.FormatChecker())
 
 
-_FEATURE_ID = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+_FEATURE_ID = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 
 
 def _validate_features(document: dict) -> None:
@@ -46,7 +46,7 @@ def _validate_features(document: dict) -> None:
         assert isinstance(feature["name"], str) and feature["name"]
         assert isinstance(feature["summary"], str)
         assert type(feature["member_count"]) is int and feature["member_count"] >= 0
-        assert feature["confidence"] in {"EXTRACTED", "INFERRED"}
+        assert feature["confidence"] in {"EXTRACTED", "INFERRED", "AMBIGUOUS"}
     _check_jsonschema(document, "features-list.json")
 
 
