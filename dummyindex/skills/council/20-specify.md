@@ -29,12 +29,12 @@ Prints JSON: `{"persona_id": "...", "subagent_type": "...", "framework": "..."}`
 
 1. Read `agents/dev.md`.
 2. Substitute the `{{framework}}` slot with dev-pick's `framework`.
-3. Fill the `{{framework_docs}}` slot via the Context7 protocol in
-   `council/55-context7.md` — resolve the library ids for the framework + the
-   libraries this feature actually imports, fetch focused docs, and paste the
+3. Fill the `{{framework_docs}}` slot through the Context7 protocol in
+   `council/55-context7.md`. Resolve the library ids for the framework + the
+   libraries that this feature imports. Fetch focused docs, and paste the
    verbatim excerpts in. **If no Context7 MCP server is exposed (any `*context7*`
    namespace — see `council/55-context7.md`), leave the slot
-   empty and fall back** — the dev reasons single-shot from the source. The
+   empty and fall back**. The dev then reasons single-shot from the source. The
    `.context/` artifacts have the same shape either way.
 4. Build the prompt: persona body (with both slots filled) + feature context
    (feature.json + source file list) + the doc-evidence directive verbatim.
@@ -78,9 +78,10 @@ dummyindex context council-log --feature <id> --stage 1 --agent dev --status com
 
 ## Failure handling
 
-If the dev returns `failed` or `spec.md`/`plan.md` are missing: log the failure,
-surface to the user ("dev failed for <id>; re-run with `--recouncil <id>`"), and
-move to the next feature. Stages 2/3 for this feature don't run without a plan.
+If the dev returns `failed`, or if `spec.md`/`plan.md` are missing, log the
+failure. Surface it to the user ("dev failed for <id>. Re-run with
+`--recouncil <id>`"). Then move to the next feature. Stages 2/3 for this feature
+do not run without a plan.
 
 ## Output
 

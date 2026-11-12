@@ -26,7 +26,7 @@ dummyindex context dev-pick --feature <id>
 ```
 
 Dispatch with the returned `subagent_type` (fallback `Senior Developer`). Pass
-the flow-refinement prompt below; the full discard criteria + narrative template
+the flow-refinement prompt below. The full discard criteria + narrative template
 live in `agents/dev.md`.
 
 > You are the **{{framework}} dev**, refining flows for feature `<feature_id>`.
@@ -68,7 +68,7 @@ On a backend with ~75 deterministic flows: expect 15–25 to survive. The rest a
 private helpers, enum classes, and BFS over-reach.
 
 The dev's `plan.md` (from stage 1, architect-revised in stage 2) often
-**references** the kept flow IDs by their narrative title, so this stage closes
+**references** the kept flow IDs by their narrative title. This stage thus closes
 the loop.
 
 ## Logging
