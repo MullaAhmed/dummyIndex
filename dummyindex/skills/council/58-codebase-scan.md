@@ -98,9 +98,13 @@ These keep every scan readable. `scan-check` enforces them, so breaking one is a
 - **`evidence`** goes on every node, with one of two values. `EXTRACTED` means the node survived from the seed **verbatim** (same id, label, kind). `INFERRED` means you added, renamed, merged, or otherwise reshaped it. Renaming a seed node flips it to `INFERRED`. That is the point. The flag records exactly where judgment entered the map, and the viewer renders the two values distinctly.
 - **One node per agent** when there are ≤ 10 agents. Merge only when they are numerous and near-identical, and then say so in `sub` (`"12 near-identical scrapers"`). Chain them with `agent → agent` edges when one feeds the next.
 - **`kind`** is one of these values. `entry` (trigger / route / page / CLI / webhook), `cron` (scheduled job, queue worker), `agent`, `model`, and `tool` come first. `service` (internal business-logic module the project owns), `store` (DB / cache / index), and `external` (3rd-party API) come last.
-- **`group`** (≤ 24 chars) tags related nodes into one labelled stack. Every group must map to a community card in `graph-communities.json` or to a feature in `features/INDEX.json`. Use a feature when one card is too fine-grained. The display name can read better than the slug ("Billing", not `billing-charge-invoice`). The membership must still match a grouping the code has. Do not invent a grouping the graph cannot back. At 40–80 nodes, use roughly 4–8 groups of 3–8 nodes. Leave hub-and-spoke nodes ungrouped. A group's first node picks its column, so write the group in reading order.
+- **`group`** (≤ 24 chars) tags related nodes into one labelled stack. Every group must map to a community card in `graph-communities.json` or to a feature in `features/INDEX.json`. Use a feature when one card is too fine-grained. The display name can read better than the slug ("Billing", not `billing-charge-invoice`). The membership must still match a grouping the code has. Do not invent a grouping the graph cannot back.
+
+  At 40–80 nodes, use roughly 4–8 groups of 3–8 nodes. Leave hub-and-spoke nodes ungrouped. A group's first node picks its column, so write the group in reading order.
 - **Lengths.** Node `label` ≤ 28, `sub` ≤ 40, edge `label` ≤ 24, `detail` ≤ 200, `sourceRef` ≤ 120, `symbolRef` ≤ 120.
-- **Edge `kind`** is one of `calls` / `reads` / `writes` / `triggers`. Set it on every edge. The viewer reveals it when a flow is traced. The seed knows only `triggers` and `calls`. So part of the edit is re-verbing. A service that persists becomes `writes`. One that loads an artifact becomes `reads`. Add an edge `label` only when a specific phrase says more than the verb ("charges on trial end"). **Put the business logic on edges.** Labels always show, so a map where every edge is labelled is a map nobody reads.
+- **Edge `kind`** is one of `calls` / `reads` / `writes` / `triggers`. Set it on every edge. The viewer reveals it when a flow is traced. The seed knows only `triggers` and `calls`. So part of the edit is re-verbing.
+
+  A service that persists becomes `writes`. One that loads an artifact becomes `reads`. Add an edge `label` only when a specific phrase says more than the verb ("charges on trial end"). **Put the business logic on edges.** Labels always show, so a map where every edge is labelled is a map nobody reads.
 - **`domain`** is a bare favicon host, such as `openai.com`, `anthropic.com`, `exa.ai`, or `clickhouse.com`. It has no scheme and no path. Add it to anything a recognizable company or product owns. Omit it for internal nodes (entries, crons, services, internal tools). Use the product domain for models (`gemini.google.com` for Gemini, `claude.ai` for Claude).
 - **`sourceRef`** is the repo path, plus `:line` where a line is meaningful. Put one on every node the repo owns. It lets a teammate jump from the map to the code. Take exact lines from `map/symbols.json`. Do not guess.
 - **`detail`** is one sentence that says what the node does. It shows on click.
@@ -121,7 +125,9 @@ These keep every scan readable. `scan-check` enforces them, so breaking one is a
    dummyindex context scan-check
    ```
 
-   It prints every violation in one pass. Each one has a JSON path (`graph.nodes[7].kind: 'microservice' is not one of entry, cron, …`). That includes any `symbolRef` that does not resolve. Warnings print but do not fail. One example is a check that could not run. It has no extraction artifact on disk to resolve refs against. Re-run until it exits `0`.
+   It prints every violation in one pass. Each one has a JSON path (`graph.nodes[7].kind: 'microservice' is not one of entry, cron, …`). That includes any `symbolRef` that does not resolve.
+
+   Warnings print but do not fail. One example is a check that could not run. It has no extraction artifact on disk to resolve refs against. Re-run until it exits `0`.
 7. Re-render the viewer around the finished scan:
 
    ```bash
