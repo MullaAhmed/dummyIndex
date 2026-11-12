@@ -544,6 +544,28 @@ def test_update_skill_restyle_gate_and_report_lines() -> None:
     )
 
 
+@pytest.mark.unit
+def test_update_skill_layers_at_target_still_run_restyle_check() -> None:
+    """Idempotent exit must still run the step 5 gate before it ends."""
+    text = " ".join(
+        (_SKILLS_DIR / "update" / "SKILL.md").read_text(encoding="utf-8").split()
+    )
+    assert "run the step 5 check" in text
+    assert "Stop only when step 5 skips" in text
+    assert "`already restyled`" in text
+    assert "`nothing to restyle`" in text
+
+
+@pytest.mark.unit
+def test_update_skill_taxonomy_rule_lists_names_ids_and_file_sets() -> None:
+    """Taxonomy is feature names, ids and file sets. Conventions are rewritten by restyle."""
+    text = " ".join(
+        (_SKILLS_DIR / "update" / "SKILL.md").read_text(encoding="utf-8").split()
+    )
+    assert "change the taxonomy (feature names, feature IDs, file sets)" in text
+    assert "abstracts, conventions, audits" not in text
+
+
 # --- trivial-filter doc: where the count fields live
 
 
