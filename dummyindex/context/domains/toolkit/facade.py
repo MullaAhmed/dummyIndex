@@ -183,7 +183,8 @@ def toolkit_install(
     """Two-step install. ``runner`` is the GitHub/claude seam (tests inject one)."""
     if kind is None or source is None:
         raise ToolkitError("invalid_argument", "install needs --kind and --source")
-    effective_scope = scope or "project"
+    # Plugins are user-scope only (see install.build_plan); other kinds default to project.
+    effective_scope = scope or ("user" if kind == "plugin" else "project")
     if preview and yes:
         raise ToolkitError("usage", "use either --preview or --yes, not both")
     seam = runner or default_runner
