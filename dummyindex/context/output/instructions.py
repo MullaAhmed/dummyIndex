@@ -86,7 +86,9 @@ The code is the source of truth. If the index disagrees with a file, trust the f
 
 ## Feature-oriented navigation
 
-The `features/` folder is the **behavioral** view. The `tree.json` file is the structural view. Start at `features/INDEX.json` when asked how something works or what a flow does. Each feature points to its own `feature.json` and `flows/<flow-id>.json`, so answer from the index, not from grep. Folder names get renamed during enrichment, but `feature_id` stays stable. Always navigate by ID.
+The `features/` folder is the **behavioral** view. The `tree.json` file is the structural view. Start at `features/INDEX.json` when asked how something works or what a flow does. The `features/INDEX.json` file points to the `feature.json` file of each feature. It also points to `flows/<flow-id>.json`. Answer from the index, not from grep.
+
+Folder names get renamed during enrichment, but `feature_id` stays stable. Always navigate by ID.
 
 ## What gets committed and why
 
@@ -120,7 +122,7 @@ Disposition is decisive deletion. Distill nothing. Keep nothing around in case. 
 
 Deletion always needs user confirmation. Until you confirm, the sweep deletes nothing. The sweep deletes dead **docs** directly.
 
-**Trivially-dead code** is a private symbol with zero callers that passes every exclusion guard. It takes the normal implementer and tester path. Keep it only if the full suite stays green.
+**Trivially-dead code** is a private symbol with zero callers that passes every exclusion guard. It takes the normal implementer and tester path. Remove it only if the full suite stays green.
 
 Anything broader routes to a new proposal. It is never removed automatically. GC never edits or removes source code directly.
 

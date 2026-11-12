@@ -110,6 +110,16 @@ def test_how_to_use_md_keeps_backbone_naming_and_no_feature_fact() -> None:
 
 
 @pytest.mark.unit
+def test_how_to_use_md_keeps_gc_removal_and_index_pointer_facts() -> None:
+    """Regression (T7d): dead code is removed only if the suite stays green,
+    and `features/INDEX.json` (not each feature) points to `feature.json`."""
+    text = generate_how_to_use_md()
+    assert "Remove it only if" in text
+    assert "Keep it only if" not in text
+    assert "The `features/INDEX.json` file points to the `feature.json` file of each feature" in text
+
+
+@pytest.mark.unit
 def test_write_how_to_use_md_atomic(tmp_path: Path) -> None:
     out = tmp_path / ".context" / "HOW_TO_USE.md"
     write_how_to_use_md(out)
