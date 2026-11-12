@@ -16,12 +16,12 @@ The revision is a judgment call, so when available it runs as explicit revisable
 steps:
 
 > If your runtime exposes `mcp__sequentialthinking_*`, dispatch this stage with
-> `mcp__sequentialthinking_sequentialthinking__sequentialthinking`: **identify**
-> what to sharpen in the dev's draft → **propose** changes → **check** each
-> against `map/symbols.json` (does the symbol exist with that signature?) →
-> **revise**. Otherwise fall back to single-shot reasoning. The `.context/`
-> artifacts have the same shape either way — only the quality of the reasoning
-> changes.
+> `mcp__sequentialthinking_sequentialthinking__sequentialthinking`. The steps
+> are: **identify** what to sharpen in the dev's draft → **propose** changes →
+> **check** each against `map/symbols.json` → **revise**. The check asks: does
+> the symbol exist with that signature? Without the MCP, fall back to
+> single-shot reasoning. The `.context/` artifacts have the same shape either
+> way — only the quality of the reasoning changes.
 
 The step-by-step audit trail lands in `council/02-architect-notes.md` (below),
 whether or not the MCP ran.
@@ -31,12 +31,12 @@ When you write `.context/` documents, follow the Writing standard in `00-overvie
 ## Dispatch
 
 Single Task subagent. Read `subagent_type` from `agents/architect.md`
-frontmatter — it's `Backend Architect`. Build the prompt: the architect persona
+frontmatter — it is `Backend Architect`. Build the prompt: the architect persona
 body + the draft `plan.md` + the doc-evidence directive verbatim.
 
 The architect's mandate (full detail in `agents/architect.md` Job B):
 
-- Sharpen bounded context; strip non-load-bearing detail.
+- Sharpen bounded context. Strip non-load-bearing detail.
 - Name patterns explicitly (repository, dispatcher, port/adapter, …).
 - Make dependencies visible (upstream / downstream / cycles).
 - Promote unstated decisions into explicit "decided X because Y".
@@ -73,7 +73,7 @@ dummyindex context council-log --feature <id> --stage 2 --agent architect --stat
 
 ## Failure handling
 
-If the architect fails: the dev's `plan.md` survives as the finalised plan; log
+If the architect fails, the dev's `plan.md` survives as the finalised plan. Log
 the failure and proceed to stage 3 (critics read whatever `plan.md` exists).
 
 ## Output

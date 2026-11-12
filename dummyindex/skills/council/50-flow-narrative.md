@@ -26,35 +26,39 @@ dummyindex context dev-pick --feature <id>
 ```
 
 Dispatch with the returned `subagent_type` (fallback `Senior Developer`). Pass
-the flow-refinement prompt below; the full discard criteria + narrative template
+the flow-refinement prompt below. The full discard criteria + narrative template
 live in `agents/dev.md`.
 
 > You are the **{{framework}} dev**, refining flows for feature `<feature_id>`.
->
+
 > Below are the deterministic flows detected for this feature. For each, decide
 > **keep** or **discard**.
->
+
 > ## Discard criteria
->
+
 > - Entry point is a private helper (`_`-prefixed) — discard.
+
 > - Entry point is an enum class or type alias — discard.
+
 > - Trace is 1 step (no meaningful sequence) — discard.
+
 > - Trace is > 100 steps across many files — discard (mis-detected breadth).
+
 > - The sequence is trivial getter/setter chaining — discard.
->
+
 > ## Action
->
+
 > **Discard:**
 > ```bash
 > dummyindex context flow-remove --feature <feature_id> --flow <flow_id>
 > ```
->
+
 > **Keep:** overwrite `features/<feature_id>/flows/<flow_id>.md` with a
 > one-paragraph narrative (entry / trigger / step-by-step / return / failure
 > modes — see `agents/dev.md`).
->
+
 > When you write `.context/` documents, follow the Writing standard in `00-overview.md` (ASD-STE100). After you write, run `dummyindex context check --style`.
->
+
 > Log each decision:
 > ```bash
 > dummyindex context council-log \
@@ -68,7 +72,7 @@ On a backend with ~75 deterministic flows: expect 15–25 to survive. The rest a
 private helpers, enum classes, and BFS over-reach.
 
 The dev's `plan.md` (from stage 1, architect-revised in stage 2) often
-**references** the kept flow IDs by their narrative title, so this stage closes
+**references** the kept flow IDs by their narrative title. This stage thus closes
 the loop.
 
 ## Logging

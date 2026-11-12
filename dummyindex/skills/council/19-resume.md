@@ -44,9 +44,9 @@ for critic in relevant_critics_in_mode:
 
 ## What invalidates the skip
 
-Aggregate source hash. If the feature's files have changed since the council
-ran, **every stage** for that feature re-runs (no per-stage hashing — too
-brittle).
+Aggregate source hash. If the feature's files changed after the council ran,
+**every stage** for that feature re-runs. There is no per-stage hashing, because
+it is too brittle.
 
 Hash storage: write `features/<id>/.hash` after stage 3 completes:
 
@@ -69,25 +69,25 @@ feature.
 
 - The structural review pre-stage. Always runs at the start of a
   non-`--recouncil`-targeted run (unless the user has only 1–2 features).
-- `refresh-indexes` after the council. Cheap; always reconciles.
+- `refresh-indexes` after the council. It is cheap, and it always reconciles.
 
 ## Failure semantics
 
 If `latest_status(...) == "failed"`:
 
 - The agent is re-dispatched on the next council run.
-- If it fails again, surface to the user — don't loop.
+- If it fails again, surface it to the user. Do not loop.
 - Three consecutive failures → mark the feature `confidence: AMBIGUOUS` and move
   on.
 
 ## Audit visibility
 
-Agents inspecting `_council-log.json` directly is the path to a per-feature
-progress view.
+Agents get a per-feature progress view when they inspect `_council-log.json`
+directly.
 
 ## Resumption under parallel dispatch
 
 `council-batch --next` recomputes the earliest incomplete stage from the
-per-feature logs on every call, so resuming an interrupted parallel run needs no
-special handling — re-run the loop in 22-parallel-dispatch.md and it picks up at
-the exact stage each feature stopped.
+per-feature logs on every call. An interrupted parallel run thus resumes with no
+special handling. Re-run the loop in 22-parallel-dispatch.md. It picks up at the
+exact stage where each feature stopped.

@@ -1,10 +1,10 @@
 # Stage 3 — `/critique` (critics file concerns, mode-gated)
 
-> **Parallel dispatch:** the critic roster is now resolved deterministically by
-> mode (light = none; standard = `critic-security`; deep = database + security +
-> product) — see 22-parallel-dispatch.md. The CLI emits one unit per
-> (feature, critic); dispatch them in parallel with the rest of the stage-3
-> batch. The mode-relevance pruning below applies only when re-running a single
+> **Parallel dispatch:** the CLI now resolves the critic roster deterministically
+> by mode (light = none, standard = `critic-security`, deep = database +
+> security + product). See 22-parallel-dispatch.md. The CLI emits one unit per
+> (feature, critic). Dispatch them in parallel with the rest of the stage-3
+> batch. The mode-relevance pruning below applies only when you re-run a single
 > feature by hand (`--recouncil <id>`).
 
 Critics read the **finalised `plan.md`** with one question: *is anything wrong,
@@ -48,7 +48,7 @@ No essays — bullets and table entries only.
 
 For each relevant critic:
 
-1. Read `agents/critic-<domain>.md`; take `subagent_type` from its frontmatter.
+1. Read `agents/critic-<domain>.md`. Take `subagent_type` from its frontmatter.
 2. Build the prompt: persona body + finalised `plan.md` + the doc-evidence
    directive verbatim.
 3. Dispatch `Task`. The critic writes its section into `concerns.md` (via
