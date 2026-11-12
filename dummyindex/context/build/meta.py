@@ -38,6 +38,7 @@ class Meta:
     symbol_count: int = 0
     config: dict[str, Any] = field(default_factory=dict)
     indexed_commit: str | None = None  # git HEAD at index time; None off-git
+    restyled_ruleset: int | None = None  # ruleset version the docs were restyled under
 
     def with_updates(self, **changes: Any) -> Meta:
         current = asdict(self)
@@ -88,6 +89,7 @@ def read_meta(path: Path) -> Meta:
         symbol_count=int(raw.get("symbol_count", 0)),
         config=dict(raw.get("config", {})),
         indexed_commit=_opt_str(raw.get("indexed_commit")),
+        restyled_ruleset=_opt_int(raw.get("restyled_ruleset")),
     )
 
 
@@ -99,6 +101,11 @@ def _opt_str(value: Any) -> str | None:
     dummyindex). Never raises.
     """
     return value if isinstance(value, str) and value else None
+
+
+def _opt_int(value: Any) -> int | None:
+    """Coerce a meta field to an int, else None. Booleans are not ints here."""
+    return value if isinstance(value, int) and not isinstance(value, bool) else None
 
 
 def write_meta(path: Path, meta: Meta) -> None:
