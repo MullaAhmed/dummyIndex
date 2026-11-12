@@ -12,3 +12,6 @@ CONTRACTION_SPECIALS = (
     ("won't", "will not"),
     ("shan't", "shall not"),
 )
+
+# Per-run snapshot file, kept under the gitignored cache folder with the originals.
+SNAPSHOT_NAME = "snapshot.json"
