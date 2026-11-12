@@ -514,6 +514,36 @@ def test_update_skill_documents_generated_tool_refresh() -> None:
     assert "skipped" in text
 
 
+@pytest.mark.unit
+def test_update_skill_restyle_runs_after_verify_step() -> None:
+    """`context restyle` sits in a numbered step after `### 4. Verify the result`."""
+    text = (_SKILLS_DIR / "update" / "SKILL.md").read_text(encoding="utf-8")
+    step_re = re.compile(r"^### (\d+)\. (.+)$", re.MULTILINE)
+    heads = [(int(m.group(1)), m.group(2), m.start()) for m in step_re.finditer(text)]
+    verify = [n for n, title, _ in heads if title == "Verify the result"]
+    assert verify, "update SKILL.md lost its 'Verify the result' step"
+    restyle_steps = []
+    for idx, (num, _title, start) in enumerate(heads):
+        end = heads[idx + 1][2] if idx + 1 < len(heads) else len(text)
+        if "context restyle" in text[start:end]:
+            restyle_steps.append(num)
+    assert restyle_steps, "no update step names `context restyle`"
+    assert all(num > verify[0] for num in restyle_steps), (
+        f"`context restyle` in step(s) {restyle_steps}, not after verify step {verify[0]}"
+    )
+
+
+@pytest.mark.unit
+def test_update_skill_restyle_gate_and_report_lines() -> None:
+    text = (_SKILLS_DIR / "update" / "SKILL.md").read_text(encoding="utf-8")
+    assert "already restyled" in text
+    assert "context prose  restyled N doc(s) (ASD-STE100 ruleset N)" in text
+    assert (
+        "context prose  restyle pending — resume: dummyindex context restyle status"
+        in text
+    )
+
+
 # --- trivial-filter doc: where the count fields live
 
 
