@@ -23,11 +23,11 @@ from dummyindex.context.enums import DOC_CONFIDENCE_ORDER
 _HOW_TO_USE = """\
 # How to use `.context/`
 
-Canonical machine-readable context for AI agents (Claude Code, Cursor, Codex, Aider). dummyIndex generates it. The deterministic backbone (map, tree, conventions, source-docs) refreshes via `dummyindex context rebuild --changed`. That preserves curated feature docs. It never re-clusters an enriched index.
+Canonical machine-readable context for AI code agents (Claude Code, Cursor, Codex, Aider). dummyIndex generates it. The deterministic backbone (map, tree, `naming`, source-docs) refreshes via `dummyindex context rebuild --changed`. That preserves curated feature docs. It never re-clusters an enriched index.
 
 Curated content (feature `spec.md`/`plan.md`/`concerns.md`, conventions) updates through reconcile. `dummyindex context reconcile` reports the delta: read-only, **writes nothing**. Then run `/dummyindex --recouncil` on Claude or `$dummyindex --recouncil` on Codex. The skill places new files and re-enriches drifted features. Finish with `dummyindex context reconcile-stamp` to advance the commit anchor.
 
-Bounded retrieval: `dummyindex context query` and `dummyindex context graph`. Default cap is 16,000 bytes. The symbol graph may be a manifest over `symbol-graph.parts/`. Use the shared reader or graph CLI, not plain node-link JSON. Collision-affected IDs change when a new duplicate definition enters the scan. Unresolved references list candidates.
+Bounded retrieval: `dummyindex context query` and `dummyindex context graph`. Default cap is 16,000 bytes. The symbol graph may be a manifest over `symbol-graph.parts/`. Use the shared reader or graph CLI, not plain node-link JSON. Collision-affected IDs change when a new definition that conflicts enters the scan. Unresolved references list candidates.
 
 ## Read this folder *first* for any non-trivial work
 
@@ -51,11 +51,11 @@ Before you grep, read files, or ask the user for context, consult these in order
 
 ## Retrieval principle: walk the tree, don't grep
 
-This index uses **PageIndex-style retrieval**, which reasons over the tree. Procedure for any non-trivial question:
+This index uses **PageIndex-style, reason-based retrieval**. Procedure for any non-trivial question:
 
 1. **(Optional fast first cut)** Run `dummyindex context query "<task or question>"`. It scores each feature by token overlap with its name, summary, files and symbols. It prints top-K with cited markdown excerpts: a deterministic ranked shortlist, no LLM. Use it to pick features to open. Then continue to reason. Add `--top-k N` to widen, `--json` for machine output.
 2. Read `features/INDEX.json`, the table of contents. `coverage.json` accounts for indexed files, file-only navigation, unassigned source and excluded paths with reasons. It also records source ownership, extraction status and identity ambiguities. Query output caps at 16,000 UTF-8 bytes. Set `--max-bytes N` to bound it.
-3. Reason over names and summaries. Pick 1–3 features the task touches. The `query` score is a hint, not the verdict. Reason over the TOC yourself.
+3. Reason over names and summaries. Pick 1–3 features the task touches. The `query` rank is a hint, not the verdict. Reason over the TOC yourself.
 4. Read the chosen `feature.json` and `spec.md`.
 5. Drill into `plan.md` (implementation) and `concerns.md` (risks).
 6. Follow `path:range` citations to source to verify.
@@ -64,25 +64,29 @@ This index uses **PageIndex-style retrieval**, which reasons over the tree. Proc
 
 ## Concrete examples
 
-**Asked to add a new feature?** Read `playbooks/add-feature.md`. Check for duplicates in `map/symbols.json`. Mirror the structure of a similar feature, found through `tree.json`, and honor `conventions/naming.md`. Write tests first.
+**Asked to add a new feature?** Read `playbooks/add-feature.md`. Check for duplicates in `map/symbols.json`. Mirror the structure of a feature already in the repo, found through `tree.json`, and honor `conventions/naming.md`. Write tests first.
 
 **Asked to find or modify something specific?** Do not grep blindly. `map/symbols.json` lists every symbol's `path:range`. Load it once, find the match, jump to the code.
 
 **Asked an architectural question?** Start with `PROJECT.md` and `architecture/overview.md`. Most questions answer themselves at that level. Drill into `tree.json` only for finer detail.
 
-**Rename or refactor?** `map/symbols.json` lists every site to consider. Combine with conventional grep for callers.
+**For a rename or refactor?** `map/symbols.json` lists every site to consider. Combine with conventional grep for callers.
 
 ## When the index is wrong
 
 The code is the source of truth. If the index disagrees with a file, trust the file. Then fix the index by the path that matches what is stale:
 
 - **Stale deterministic artefacts** (moved or renamed symbol, new or deleted file, out-of-date `map/` or `tree.json`): run `dummyindex context rebuild --changed`. It re-hashes every source file and refreshes only changed deterministic bits. On a curated index it **preserves feature taxonomy and enrichment**. It does **not** touch `features/<id>/*.md` or re-cluster. It never undoes curated work.
-- **Stale or absent feature docs** cover drifted specs, plans and concerns. `rebuild --changed` does **not** fix these. Edit the doc in-session by hand. Or run `dummyindex context reconcile`, which shows the delta, writes nothing, and never re-clusters. Then run `/dummyindex --recouncil` on Claude or `$dummyindex --recouncil` on Codex. Finish with `dummyindex context reconcile-stamp`.
+- **Stale or absent feature docs** cover drifted specs, plans and concerns, and new code in no feature. `rebuild --changed` does **not** fix these.
+  - Edit the doc in-session by hand. See Conventions for agents.
+  - Or run `dummyindex context reconcile`. It shows the delta. It only reads, and it **writes nothing**. It does not re-cluster, so it is safe any time.
+  - Then run `/dummyindex --recouncil` on Claude or `$dummyindex --recouncil` on Codex. The skill places new files and enriches drifted features.
+  - Finish with `dummyindex context reconcile-stamp`.
 - **When your explicit instruction contradicts a `.context/` spec or plan, you win.** Code and user intent are the source of truth. Note the divergence and proceed. Flag it so a later reconcile folds it in.
 
 ## Feature-oriented navigation
 
-The `features/` folder is the **behavioral** view. The `tree.json` file is the structural view. Start at `features/INDEX.json` when asked how something works or what a flow does. Each feature points to its own `feature.json` and `flows/<flow-id>.json`, so answer from the index, not from grep. Folder names can change during enrichment, but `feature_id` stays stable. Always navigate by ID.
+The `features/` folder is the **behavioral** view. The `tree.json` file is the structural view. Start at `features/INDEX.json` when asked how something works or what a flow does. Each feature points to its own `feature.json` and `flows/<flow-id>.json`, so answer from the index, not from grep. Folder names get renamed during enrichment, but `feature_id` stays stable. Always navigate by ID.
 
 ## What gets committed and why
 
@@ -108,7 +112,7 @@ The committed layout, top-down:
 
 dummyindex generates per-task workspaces: `.context/proposals/<slug>/` (plan artifacts) and `.context/audits/<slug>/` (argue-and-audit panels). Workspaces are **disposable**. Superseded plans, abandoned scaffolds and long-fixed audits mislead the next agent. The **context-hygiene GC** retires them.
 
-**Generated docs are garbage-collected: deleted, not archived.** There is no `_archive/` tier. The old `proposals/_archive/` convention is a delete candidate.
+**Generated docs are garbage-collected: deleted, not archived.** There is no `_archive/` tier from now on. The old `proposals/_archive/` convention is itself a delete candidate.
 
 Disposition is decisive deletion. Distill nothing. Keep nothing around in case. A `done`-but-still-relevant plan stays. Only genuinely **stale / superseded / dead / no-longer-useful** docs go.
 
@@ -116,15 +120,15 @@ Disposition is decisive deletion. Distill nothing. Keep nothing around in case. 
 
 Deletion always needs user confirmation. Until you confirm, the sweep deletes nothing. The sweep deletes dead **docs** directly.
 
-**Trivially-dead code** is a private symbol with zero callers that passes every exclusion guard. It takes the normal implementer and tester path. The full suite must stay green.
+**Trivially-dead code** is a private symbol with zero callers that passes every exclusion guard. It takes the normal implementer and tester path. Keep it only if the full suite stays green.
 
 Anything broader routes to a new proposal. It is never removed automatically. GC never edits or removes source code directly.
 
-**When the nudge fires.** The nudge uses a commit-count throttle, not a clock. When at least N commits (default 10) land since the last GC anchor, Claude's SessionStart hook prints the nudge.
+**When the nudge fires.** The nudge uses a commit-count throttle, not a clock. When at least N commits (default 10) land since the last GC anchor, Claude's SessionStart hook prints a one-line nudge.
 
 The nudge reads `N commits since last hygiene sweep — run /dummyindex-gc`. Codex installs no dummyindex GC hook. Invoke `$dummyindex-gc` explicitly. The sweep stamps a fresh anchor to reset the counter. Either skill runs on demand at any time.
 
-**Deterministic commands:** `dummyindex context gc`, four verbs. Order of use: see `playbooks/gc-context.md`.
+**Deterministic CLI:** `dummyindex context gc`, four verbs. Order of use: see `playbooks/gc-context.md`.
 
 | Verb | What it does |
 |---|---|
