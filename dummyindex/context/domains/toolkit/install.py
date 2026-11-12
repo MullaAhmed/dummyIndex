@@ -193,23 +193,14 @@ def _plugin_plan(
         )
     validate_name(catalog.name)
     key = f"{plugin}@{catalog.name}"
-    argv_install = (
-        "claude",
-        "plugin",
-        "install",
-        key,
-        "--marketplace",
-        parsed.repo,
-        "--scope",
-        "user",
-        "--json",
-    )
+    argv_add = ("claude", "plugin", "marketplace", "add", parsed.repo, "--scope", "user")
+    argv_install = ("claude", "plugin", "install", key, "--scope", "user")
     argv_disable = ("claude", "plugin", "disable", key, "--scope", "user", "--json")
     return (
         key,
         "plugin",
         None,
-        (argv_install, argv_disable),
+        (argv_add, argv_install, argv_disable),
         entry,
         catalog.name,
         trusted,
@@ -382,7 +373,7 @@ def _run_plugin_commands(plan: Plan, runner: Runner) -> None:
                 f"plugin {plan.name} IS installed and may still be enabled: "
                 f"`claude plugin install` succeeded but `claude plugin disable` failed "
                 f"(exit {res.returncode}): {detail}. To turn it off, run "
-                f"`dummyindex toolkit disable --kind plugin {plan.name}`.",
+                f"`dummyindex toolkit disable --kind plugin {plan.name} --scope user`.",
             )
         raise ToolkitError(
             "install_failed",

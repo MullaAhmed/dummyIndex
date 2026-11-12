@@ -13,6 +13,7 @@ from dummyindex.context.domains.toolkit import (
     ToolkitError,
     toolkit_install,
     toolkit_list,
+    toolkit_mutate,
 )
 from tests.context.domains.toolkit.helpers import (
     MCP_TEXT,
@@ -256,17 +257,8 @@ def test_plugin_preview_uses_the_equip_blast_radius_and_two_argv_commands(
     )
     assert prev["name"] == "lint@mkt"
     assert prev["commands"] == [
-        [
-            "claude",
-            "plugin",
-            "install",
-            "lint@mkt",
-            "--marketplace",
-            "owner/repo",
-            "--scope",
-            "user",
-            "--json",
-        ],
+        ["claude", "plugin", "marketplace", "add", "owner/repo", "--scope", "user"],
+        ["claude", "plugin", "install", "lint@mkt", "--scope", "user"],
         ["claude", "plugin", "disable", "lint@mkt", "--scope", "user", "--json"],
     ]
     assert prev["blast_radius"]["runs_code"] is True
@@ -304,7 +296,36 @@ def test_plugin_apply_runs_install_then_disable_and_never_enables(
     assert result["enabled"] is False
     assert result["name"] == "lint@official"
     claude_calls = [c for c in gh.calls if c[:2] == ["claude", "plugin"]]
-    assert [c[2] for c in claude_calls] == ["install", "disable"]
+    assert [c[2] for c in claude_calls] == ["marketplace", "install", "disable"]
+    assert claude_calls[0] == [
+        "claude",
+        "plugin",
+        "marketplace",
+        "add",
+        "anthropics/claude-plugins-official",
+        "--scope",
+        "user",
+    ]
+    assert claude_calls[1] == [
+        "claude",
+        "plugin",
+        "install",
+        "lint@official",
+        "--scope",
+        "user",
+    ]
+
+
+def test_plugin_install_without_scope_defaults_to_user(root: Path, home: Path) -> None:
+    gh = FakeGh(
+        catalogs={"owner/repo": plugin_catalog("mkt", "lint", hooks=False)},
+        commit_sha=SHA_A,
+    )
+    prev = toolkit_install(
+        "plugin", "github:owner/repo/lint", root=root, home=home, preview=True, runner=gh
+    )
+    assert prev["blast_radius"]["scope"] == "user"
+    assert prev["commands"][1][-2:] == ["--scope", "user"]
 
 
 def test_plugin_apply_reports_a_failing_claude_command(root: Path, home: Path) -> None:
@@ -415,11 +436,27 @@ def test_disable_failure_after_install_says_the_plugin_is_installed(
         )
     assert exc.value.code == "partial_install"
     assert "IS installed" in exc.value.message
-    assert "dummyindex toolkit disable --kind plugin lint@mkt" in exc.value.message
+    assert (
+        "dummyindex toolkit disable --kind plugin lint@mkt --scope user"
+        in exc.value.message
+    )
     assert [c[2] for c in gh.calls if c[:2] == ["claude", "plugin"]] == [
+        "marketplace",
         "install",
         "disable",
     ]
+
+
+def test_project_mutate_without_scope_still_defaults_to_project(
+    root: Path, home: Path, tmp_path: Path
+) -> None:
+    cfg = tmp_path / "srv.json"
+    cfg.write_text(json.dumps({"command": "node", "args": []}), encoding="utf-8")
+    added = toolkit_mutate(
+        "add", "srv", root=root, home=home, kind="mcp", config_file=cfg
+    )
+    assert added["item"]["scope_warning"] is True
+    assert (root / ".mcp.json").exists()
 
 
 def test_plugin_catalog_name_must_be_a_safe_name(root: Path, home: Path) -> None:
