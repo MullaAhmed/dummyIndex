@@ -4,9 +4,10 @@
 
 # dummyindex
 
-The persistent context engine for a repo. A Claude Code and OpenAI Codex skill
-family that turns any codebase into a `.context/` folder agents can navigate
-without broad grepping — deterministic AST extraction plus a multi-agent
+The persistent context engine for a repo.
+A Claude Code and OpenAI Codex skill family turns any codebase into a `.context/` folder.
+Agents can navigate that folder without broad grepping.
+The skill family uses deterministic AST extraction plus a multi-agent
 council (dev, architect, critics) that fills in the judgment.
 
 ```bash
@@ -23,16 +24,18 @@ cd /path/to/your/repo
 ```
 
 The bootstrap is the only time you need the terminal. After that, use slash
-commands in Claude Code or `$skill-name` mentions in Codex; the Python CLI is
-the deterministic backbone those skills invoke.
+commands in Claude Code or `$skill-name` mentions in Codex.
+The Python CLI is the deterministic backbone those skills invoke.
 
 After the first run, both hosts receive durable instructions to consult
 `.context/` before searching source broadly. Claude uses dummyindex-managed
-hooks and `.claude/CLAUDE.md`; Codex uses the active project instruction file
-(`AGENTS.override.md`, `AGENTS.md`, or a configured fallback) and native skill
-discovery. Codex has its own hook surface, but dummyindex does not install into
+hooks and `.claude/CLAUDE.md`. Codex uses the active project instruction file
+(`AGENTS.override.md`, `AGENTS.md`, or a configured fallback). Codex also uses
+native skill discovery.
+
+Codex has its own hook surface, but dummyindex does not install into
 it today. For fallback names and the byte limit, dummyindex reads Codex's
-platform system config, then user config, then the root `.codex/config.toml`
+platform system config, then user config. Then it reads the root `.codex/config.toml`
 only when the persistent user config explicitly trusts that project via
 `[projects."<absolute-root>"].trust_level`. It cannot observe a session's
 selected profile, `-c` overrides, or nested launch-directory config layers.
@@ -46,23 +49,24 @@ dummyindex runs in two modes per repo. **Setup mode** (one-time) builds
 audits, and cleans generated context through the installed skill family.
 
 The workflow bodies are shared. Installed Codex copies include a compatibility
-header that maps Claude's Task/Agent vocabulary to Codex `explorer`, `worker`,
-and `default` subagents; maps skill calls to `$name`; and uses the active Codex
-model through `--model current`. The core index, plan, build, memory, audit, and
-GC workflows work without Claude state. Both hosts prepare and use the same
-capability bodies under `.context/equipment/`, registered in `equipment.json`.
-Claude can add thin native discovery references with `equip apply --platform claude`;
-default preparation creates no new Claude setup. Both hosts can delegate through
-native agents without a manifest and pass selected policy mandates to their workers.
+header. The header maps Claude's Task/Agent vocabulary to Codex `explorer`,
+`worker`, and `default` subagents. It maps skill calls to `$name`. It uses the
+active Codex model through `--model current`. The core index, plan, build,
+memory, audit, and GC workflows work without Claude state.
+
+Both hosts prepare and use the same capability bodies under `.context/equipment/`,
+registered in `equipment.json`.
+Claude can add thin native discovery references with `equip apply --platform claude`.
+Default preparation creates no new Claude setup.
+Both hosts can delegate through native agents without a manifest and pass selected policy mandates to their workers.
 
 On Claude, managed hooks add a PreToolUse document guard, SessionStart
-drift/memory/GC signals, and a Stop reconcile nudge. On Codex, durable
-active-instruction-file guidance and explicit `$dummyindex*` workflows provide
-the same core context lifecycle without claiming that Claude hook definitions
-are active.
+drift/memory/GC signals, and a Stop reconcile nudge.
+On Codex, durable active-instruction-file guidance and explicit `$dummyindex*` workflows provide the same core context lifecycle.
+They do so without claiming that Claude hook definitions are active.
 
-Core principle: dummyindex stays the spine — deterministic commands manage
-context and state, while the active host's dispatched agents do judgment and
+Core principle: dummyindex stays the spine.
+Deterministic commands manage context and state, while the active host's dispatched agents do judgment and
 production-code work.
 
 ---
@@ -79,10 +83,10 @@ dummyindex install                   # flagless = universal + linked (default)
 Betas are cut from `development` and are opt-in:
 `pip install --user --pre dummyindex` (or `uv tool install --prerelease allow dummyindex`).
 
-A flagless install is **universal by default**: one real `.agents/skills`
-tree, plus one relative symlink per skill family on the Claude side — so a
-single install works in Claude Code, Codex, Cursor, and Gemini CLI with no
-further flags. `CLAUDE.md` and `AGENTS.md` are both written.
+A flagless install is **universal by default**.
+It creates one real `.agents/skills` tree, plus one relative symlink per skill family on the Claude side.
+A single install therefore works in Claude Code, Codex, Cursor, and Gemini CLI with no further flags.
+`CLAUDE.md` and `AGENTS.md` are both written.
 
 ```
 ~/.agents/skills/dummyindex/          # real files — the portable rendering
@@ -91,47 +95,50 @@ further flags. `CLAUDE.md` and `AGENTS.md` are both written.
 ~/.claude/skills/dummyindex-plan  -> ../../.agents/skills/dummyindex-plan
 ```
 
-Links always point `.claude → .agents`, never the reverse: `.agents` is the
-portable rendering, and Claude Code is the only host that reads *only*
-`.claude`, so it's the one side that gets symlinked.
+Links always point `.claude → .agents`, never the reverse.
+`.agents` is the portable rendering.
+Claude Code is the only host that reads *only* `.claude`.
+So `.claude` is the one side that gets symlinked.
 
-Narrow to one host with `--platform claude` or `--platform agents` (real
-trees on both sides, no linking — there's nothing to link to):
+Narrow to one host with `--platform claude` or `--platform agents`.
+Both sides get real trees, with no linking, because there is nothing to link to:
 
 ```bash
 dummyindex install --platform claude # ~/.claude/skills/dummyindex*/
 dummyindex install --platform agents # ~/.agents/skills/dummyindex*/
 ```
 
-`--platform agents` is the platform-agnostic selector — the same
-`.agents/skills` family is discoverable by Codex, Cursor, Copilot CLI,
-OpenCode, Amp, Gemini CLI, Goose, Pi, Cline, and other Agent-Skills/AGENTS.md
-harnesses. `--platform codex` still works as a **deprecated alias**: it
-prints one deprecation warning and renders byte-identical skill trees.
+`--platform agents` is the platform-agnostic selector.
+The same `.agents/skills` family is discoverable by Codex, Cursor, Copilot CLI,
+OpenCode, Amp, Gemini CLI, Goose, Pi, and Cline.
+Other Agent-Skills and `AGENTS.md` harnesses can discover it too.
+`--platform codex` still works as a **deprecated alias**: it prints one deprecation warning and renders byte-identical skill trees.
 
-Linking is a tri-state. The default (no flag) is **AUTO**: link when
-possible, otherwise fall back to writing real, duplicated trees with a
-warning. `--copy` opts out for one run — always writes real, duplicated
-trees under both `.claude/skills` and `.agents/skills`, exactly like every
-release before this one. `--link` is the **strict** form: it errors instead
-of silently falling back to copy when the Claude side can't be symlinked.
+Linking is a tri-state.
+The default (no flag) is **AUTO**: link when possible, otherwise fall back to writing real, duplicated trees with a warning.
+`--copy` opts out for one run.
+It always writes real, duplicated trees under both `.claude/skills` and `.agents/skills`, exactly like every release before this one.
 
-**Updating dummyindex migrates duplicated repos automatically.** A plain
-`dummyindex install` — the same command `/dummyindex-update` runs — detects
-an existing duplicated layout (real trees under both `.claude/skills` and
-`.agents/skills`) or a claude-only layout, and converts every proven Claude
-copy to a link in that same run, printing a `claude skill migrated -> ...`
-line per family the first time. This happens even when both copies already
-carry the same version stamp — repair alone would leave those alone, but
-migration forces the conversion. After that first run, the layout is already
-linked and reinstalls are quiet.
+`--link` is the **strict** form.
+It errors instead of silently falling back to copy when the Claude side cannot be symlinked.
 
-Windows: on a checkout with `core.symlinks=false`, or without Developer Mode
-enabled, AUTO falls back to copy mode with a warning — the install still
-succeeds and both hosts still work. A materialized-link placeholder (a plain
-file standing in for the symlink, the shape that checkout produces) is
-recovered by running `git config core.symlinks true` and re-checking out the
-repo; the next `dummyindex install` then replaces it with a real link.
+**Updating dummyindex migrates duplicated repos automatically.** A plain `dummyindex install` runs the same command as `/dummyindex-update`.
+It detects an existing duplicated layout (real trees under both `.claude/skills` and `.agents/skills`) or a claude-only layout.
+It converts every proven Claude copy to a link in that same run.
+It prints a `claude skill migrated -> ...` line per family the first time.
+
+This happens even when both copies already carry the same version stamp.
+Repair alone would leave those alone, but migration forces the conversion.
+After that first run, the layout is already linked and reinstalls are quiet.
+
+On a Windows checkout with `core.symlinks=false`, or without Developer Mode
+enabled, AUTO falls back to copy mode with a warning. The install still succeeds
+and both hosts still work.
+
+A materialized-link placeholder is a plain file that stands in for the symlink.
+That checkout produces this shape.
+Recover it by running `git config core.symlinks true` and re-checking out the repo.
+The next `dummyindex install` then replaces it with a real link.
 
 Per-repo (no global state):
 
@@ -155,27 +162,35 @@ dummyindex uninstall --platform agents
 # add --scope project [--dir PATH], or use --platform both
 ```
 
-Uninstall removes the whole named family directories it installed — the main
-skill plus its 7 siblings — under `.claude/skills/` and/or `.agents/skills/`
-at the target scope, so don't store your own files inside
-`.claude/skills/dummyindex*/` or `.agents/skills/dummyindex*/`; they won't
-survive an uninstall. Narrowing removal with `--platform agents` on a linked
-layout also sweeps the now-dangling Claude-side links and prints the exact
-`dummyindex install --platform claude` command to restore that surface,
-since the Claude side was only ever links into the tree that command just
+Uninstall removes the whole named family directories it installed: the main
+skill plus its 7 siblings.
+They sit under `.claude/skills/` and/or `.agents/skills/`
+at the target scope.
+Do not store your own files inside
+`.claude/skills/dummyindex*/` or `.agents/skills/dummyindex*/`.
+Files stored there do not survive an uninstall.
+
+Narrowing removal with `--platform agents` on a linked
+layout also sweeps the now-dangling Claude-side links.
+It also prints the exact
+`dummyindex install --platform claude` command to restore that surface.
+The reason: the Claude side was only ever links into the tree that command
 removed.
 
-Rerunning `install` also **repairs** stale copies an older dummyindex version
-left behind (stale preambles, stale managed guidance blocks), scoped to the
-platform(s) and scope you selected — everything else is reported with the
-exact command to fix it. A duplicate copy at both user and project scope is
-reported, never deleted, unless you pass `--dedupe user|project`; a copy
-stamped newer than the running package is left alone unless you pass
-`--force-downgrade`. A foreign symlinked family dir — one dummyindex didn't
-create — is always refused; a dummyindex-owned link (the linked layout
-itself) is recognized and left in place or healed, never mistaken for a
-stray duplicate. See
-[docs/COMMANDS.md](docs/COMMANDS.md#platform-selector-repair-on-reinstall-and-dedupe)
+Rerunning `install` also **repairs** stale copies an older dummyindex version left behind.
+The repair covers stale preambles and stale managed guidance blocks, scoped to the
+platform(s) and scope you selected.
+Everything else is reported with the exact command to fix it.
+
+A duplicate copy at both user and project scope is reported, never deleted,
+unless you pass `--dedupe user|project`.
+A copy stamped newer than the running package is left alone unless you pass
+`--force-downgrade`.
+
+A foreign symlinked family dir is always refused, since dummyindex did not create it.
+A dummyindex-owned link, which is the linked layout itself, is recognized and left in place or healed.
+It is never mistaken for a stray duplicate.
+See [docs/COMMANDS.md](docs/COMMANDS.md#platform-selector-repair-on-reinstall-and-dedupe)
 for the full contract.
 
 Cursor already reads `.claude/agents/` natively, so a repo's
@@ -199,10 +214,13 @@ The same workflows have host-native spellings:
 | Update | `/dummyindex-update` | `$dummyindex-update` |
 
 In Codex you can also open `/skills` and select any installed dummyindex skill.
-dummyindex installs Agent Skills rather than custom prompts, so
-`$dummyindex-plan` is the supported equivalent of the Claude slash invocation.
+Because dummyindex installs Agent Skills rather than custom prompts, `$dummyindex-plan` is the supported equivalent of the Claude slash invocation.
 
-CLI — the **agent's** deterministic backbone (no LLM cost). The skill and council run these; you don't type them by hand. The only terminal commands a human runs are the `install` bootstrap above. Shown here for transparency:
+CLI — the **agent's** deterministic backbone (no LLM cost).
+The skill and council run these.
+You do not type them by hand.
+The only terminal commands a human runs are the `install` bootstrap above.
+Shown here for transparency:
 
 ```bash
 dummyindex ingest . --platform agents # build .context/ + active Codex/Cursor/etc. project guidance
@@ -216,7 +234,7 @@ dummyindex context --help            # full command list
 ---
 
 Token usage reads Claude Code transcripts and is therefore Claude-only. The
-Claude install includes `/tokens`; a Codex-only install does not create it.
+Claude install includes `/tokens`. A Codex-only install does not create it.
 Codex already provides `/status` for current context/session tokens and
 `/usage` for account usage.
 
