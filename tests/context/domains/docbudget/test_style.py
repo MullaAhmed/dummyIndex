@@ -150,6 +150,27 @@ def test_six_sentences_pass() -> None:
 
 
 @pytest.mark.unit
+def test_ordered_list_marker_is_not_a_sentence() -> None:
+    six = "3. Run it. Read it. Check it. Keep it. Ship it. Tag it.\n"
+    assert lint_text(six) == ()
+    seven = "3. Run it. Read it. Check it. Keep it. Ship it. Tag it. Done.\n"
+    (v,) = lint_text(seven)
+    assert v.rule == "long-paragraph"
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("marker", ["1)", "-", "*", "+"])
+def test_list_marker_variants_are_not_sentences(marker: str) -> None:
+    six = f"{marker} Run it. Read it. Check it. Keep it. Ship it. Tag it.\n"
+    assert lint_text(six) == ()
+
+
+@pytest.mark.unit
+def test_numbers_in_body_do_not_split() -> None:
+    assert lint_text("Rule 5.1 says it. Version 3.2 is out.\n") == ()
+
+
+@pytest.mark.unit
 def test_long_paragraph_backticked_passes() -> None:
     text = " ".join(f"`Item {i} runs fast.`" for i in range(7)) + "\n"
     assert lint_text(text) == ()
