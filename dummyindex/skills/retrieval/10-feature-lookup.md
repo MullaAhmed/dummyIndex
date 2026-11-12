@@ -12,14 +12,14 @@ The agent has a task or question. Examples:
 
 ## Step 0 — (Optional) Rank features against the task
 
-Run `dummyindex context query "<task>"` for a deterministic shortlist: it scores every
-feature by token overlap with the task and prints the top-K with cited excerpts. It's a
-fast hint for *which* features to open — reason over the result, then continue with Step 1.
+Run `dummyindex context query "<task>"` for a deterministic shortlist. It scores every
+feature by token overlap with the task. It prints the top-K with cited excerpts. It is a
+fast hint for *which* features to open. Reason over the result, then continue with Step 1.
 Skip it and go straight to the TOC if you already know the feature.
 
 ## Step 1 — Read `features/INDEX.json`
 
-It's small (a few KB even on a 100-feature repo). Read the whole thing in one go.
+It is small (a few KB even on a 100-feature repo). Read the whole thing in one go.
 
 ```json
 {
@@ -42,7 +42,7 @@ It's small (a few KB even on a 100-feature repo). Read the whole thing in one go
 
 ## Step 2 — Reason
 
-Look at the names + summaries. Pick the features whose summary semantically matches the task. Use the counts as a tiebreaker (bigger features have more surface area; smaller features are focused).
+Look at the names + summaries. Pick the features whose summary semantically matches the task. Use the counts as a tiebreaker (bigger features have more surface area, and smaller features are focused).
 
 Examples:
 
@@ -51,7 +51,7 @@ Examples:
 - **Task: "audit auth"** → `authentication`. Optionally `users` (identity).
 - **Task: "multi-tenant user model"** → `users` + `tenancy` + every feature that mentions `user_id`.
 
-Pick 1–3 features. **Don't pick more than 5** — re-evaluate if you're tempted.
+Pick 1–3 features. **Do not pick more than 5** — re-evaluate if you are tempted.
 
 ## Step 3 — Read each chosen feature's `feature.json`
 
@@ -95,13 +95,13 @@ Based on the task:
 
 ## Step 6 — When the docs disagree with the code
 
-If a feature's `confidence` is `INFERRED` but the source has clearly changed since the council ran, the SessionStart drift report will have flagged it — but hooks never rebuild on their own. Refresh the deterministic backbone yourself:
+If a feature's `confidence` is `INFERRED`, the SessionStart drift report flags it when the source clearly changed after the council. Hooks never rebuild on their own. Refresh the deterministic backbone yourself:
 
 ```bash
 dummyindex context check --auto-refresh --quiet
 ```
 
-This is also the case to flag: "the docs claim X but `path:line` shows Y — please advise / I'll rebuild."
+This is also the case to flag: "the docs claim X but `path:line` shows Y — please advise / I will rebuild."
 
 ## Anti-patterns
 
