@@ -7,6 +7,7 @@ snapshot (original text, ``mtime_ns``) lives in ``cache/restyle/<run>/``. Only
 
 from __future__ import annotations
 
+import fnmatch
 import json
 import os
 import shutil
@@ -55,7 +56,19 @@ __all__ = [
     "status",
 ]
 
-_CURATED_PREFIXES = (".context/features/", ".context/conventions/")
+# Curated tier of the STYLE scope (C2). ratchet.py keeps one flat glob list, so the
+# curated split lives here. Generated naming.md stays out.
+_CURATED_GLOBS = (
+    "features/*/spec.md",
+    "features/*/plan.md",
+    "features/*/concerns.md",
+    "features/*/flows/*.md",
+    "conventions/*.md",
+    "playbooks/*.md",
+    "PROJECT.md",
+    "architecture/*.md",
+)
+_GENERATED_DOCS = ("conventions/naming.md",)
 _META_REL = "meta.json"
 _CONTEXT_PREFIX = ".context/"
 _BRIEF = (
@@ -297,12 +310,16 @@ def status(context_dir: Path, run: str | None = None) -> dict[str, Any]:
 
 
 def _curated_units(context_dir: Path) -> dict[str, tuple[str, ...]]:
-    """Unit id -> its docs. A feature groups its docs; each convention is its own unit."""
+    """Unit id -> its docs. A feature groups its docs; each other curated doc is its own unit."""
     units: dict[str, list[str]] = {}
     for rel in scan(context_dir.parent, BudgetGroup.STYLE):
-        if not rel.startswith(_CURATED_PREFIXES):
+        if not rel.startswith(_CONTEXT_PREFIX):
             continue
         inner = rel[len(_CONTEXT_PREFIX) :]
+        if inner in _GENERATED_DOCS or not any(
+            fnmatch.fnmatchcase(inner, pat) for pat in _CURATED_GLOBS
+        ):
+            continue
         unit_id = inner.split("/")[1] if inner.startswith("features/") else inner
         units.setdefault(unit_id, []).append(inner)
     return {uid: tuple(docs) for uid, docs in sorted(units.items())}
