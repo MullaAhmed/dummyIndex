@@ -26,6 +26,8 @@ steps:
 The step-by-step audit trail lands in `council/02-architect-notes.md` (below),
 whether or not the MCP ran.
 
+When you write `.context/` documents, follow the Writing standard in `00-overview.md` (ASD-STE100). After you write, run `dummyindex context check --style`.
+
 ## Dispatch
 
 Single Task subagent. Read `subagent_type` from `agents/architect.md`
