@@ -9,9 +9,8 @@ the run is reported as ``backup_path``. Every write is atomic.
 Secrets: the stash (``disabled.json``) and the backups hold full MCP server
 definitions, which can carry tokens in ``env`` or ``headers``. Both live under
 ``.context/toolkit/`` (project) or ``<claude>/toolkit/`` (user) and must never be
-committed. ``.context/toolkit/`` is not yet in the managed ``.context/.gitignore``
-(that list is built in ``context/build/upgrade.py``, outside this domain); until it
-is, a repo that runs ``toolkit`` must ignore it by hand.
+committed. Before a project write, the managed ``.context/.gitignore`` is brought
+up to date so ``/toolkit/`` is ignored; user scope lives outside any repo.
 """
 
 from __future__ import annotations
@@ -24,6 +23,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from ...build.upgrade import ensure_context_gitignore
 from ..atomic_io import write_text_atomic
 from .constants import PROJECT_STASH_DIR, STASH_FILE, USER_STASH_DIR
 from .errors import ToolkitError
@@ -107,6 +107,14 @@ def _stamp() -> str:
     return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
 
 
+def _guard_toolkit_dir(path: Path) -> None:
+    """Ignore ``.context/toolkit/`` before writing under ``path``; no-op outside ``.context/``."""
+    for parent in (path, *path.parents):
+        if parent.name == ".context":
+            ensure_context_gitignore(parent)
+            return
+
+
 @dataclass
 class WriteSession:
     """One CLI run. Backs up each host file once, before its first write.
@@ -126,6 +134,8 @@ class WriteSession:
         if not path.exists():
             return
         folder = self.backup_dir or path.parent
+        if self.backup_dir is not None:
+            _guard_toolkit_dir(folder)
         folder.mkdir(parents=True, exist_ok=True)
         stamp = _stamp()
         dest = folder / f"{path.name}.bak-{stamp}"
@@ -141,6 +151,7 @@ class WriteSession:
 def preserve_skill(layout: Layout, live: Path, name: str) -> Path:
     """Copy a live single-file skill's SKILL.md into the backups before it is deleted."""
     folder = safe_target(layout.backup_root(), "skills", name)
+    _guard_toolkit_dir(folder)
     folder.mkdir(parents=True, exist_ok=True)
     dest = folder / f"SKILL.md.bak-{_stamp()}"
     counter = 1
@@ -185,6 +196,7 @@ def read_stash(layout: Layout) -> list[dict[str, Any]]:
 
 
 def write_stash(layout: Layout, items: list[dict[str, Any]]) -> None:
+    _guard_toolkit_dir(layout.stash_path())
     write_text_atomic(
         layout.stash_path(),
         json.dumps({"schema_version": 1, "items": items}, indent=2) + "\n",
