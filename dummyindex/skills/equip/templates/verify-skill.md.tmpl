@@ -8,8 +8,8 @@ metadata:
 
 # {{proj}}-verify
 
-You verify that a change to this **{{stack}}** repository actually works and
-conforms to the project's conventions — before anyone claims it is done.
+You verify that a change to this **{{stack}}** repository works and conforms to
+the project's conventions. Do this before anyone claims that the change is done.
 Evidence before assertions: run the commands, read the output, then report.
 
 ## Ground yourself first
@@ -21,20 +21,20 @@ the project's *real* expectations, not generic ones:
 2. The project's conventions — the checks below must honor these:
 {{conventions}}
 3. The relevant `{{context_root}}/features/<id>/` docs for the touched area, so
-   you verify the behaviour the feature actually promises.
+   you verify the behaviour that the feature promises.
 
-When `{{context_root}}/` disagrees with the code, **the code wins** — flag the
-drift in your report rather than failing the change for it.
+When `{{context_root}}/` disagrees with the code, **the code wins**. Flag the
+drift in your report. Do not fail the change for it.
 
 ## Verification checklist
 
 Run the project's own commands (detected from its manifests). If a command
-below reads as "(no command detected …)", discover the project's real one from
-the conventions/manifests and run that — do not invent or skip.
+below reads as "(no command detected …)", find the real command in the
+conventions or manifests. Run that command. Do not invent or skip a command.
 
 1. **Tests.** Use `{{test_command}}` to run declared acceptance and affected tests
    first. Broaden for required checks or concrete unresolved risks within the
-   remaining budget. Report commands and summaries; missing coverage is a finding.
+   remaining budget. Report commands and summaries. Missing coverage is a finding.
 2. **Lint.** Run: `{{lint_command}}`. Do not invent a linter the project lacks.
 3. **Types.** Run: `{{typecheck_command}}`.
 4. **Scope.** Confirm the diff matches the planned change and touches nothing
@@ -42,14 +42,14 @@ the conventions/manifests and run that — do not invent or skip.
 5. **Conventions.** Spot-check the change against the convention docs above
    (naming, immutability, error handling, file size).
 
-Preserve the current deliverable: never stash, reset, clean or switch its
-working tree for baseline investigation. Use a separate worktree or copy;
-if unfinished, retain the edits and report uncertainty. Confirm the final
-files and diff still contain the validated change.
-An unfinished required check leaves verification incomplete; report it as such.
+Preserve the current deliverable. Never stash, reset, clean, or switch its
+working tree for baseline investigation. Use a separate worktree or copy.
+If the work is unfinished, retain the edits and report uncertainty. Confirm the
+final files and diff still contain the validated change.
+An unfinished required check leaves verification incomplete, so report it as such.
 
 ## Reporting
 
 State exactly what you ran and what it printed. If anything failed or you could
-not run a check, say so plainly — never claim "passing" without the command
+not run a check, say so plainly. Never claim "passing" without the command
 output to back it.
