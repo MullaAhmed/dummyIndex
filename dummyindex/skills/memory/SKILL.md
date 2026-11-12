@@ -11,7 +11,7 @@ Write a handoff so the next session continues cleanly. You were here — write i
 
 ## Steps
 
-1. **Locate the store** at `<repo>/.context/session-memory/`. If it's missing, create it:
+1. **Locate the store** at `<repo>/.context/session-memory/`. If it is missing, create it:
    ```bash
    dummyindex context memory init
    ```
@@ -34,8 +34,8 @@ Write a handoff so the next session continues cleanly. You were here — write i
    tighten that `## YYYY-MM-DD` section to one compact paragraph. Heavily compress anything pushed
    into `archive.md`.
 
-6. **Promote durable facts.** Move any cross-session fact or key moment worth keeping verbatim into
-   `core-memories.md` as a bullet (prefix a standout moment with `IDENTITY CANDIDATE:`).
+6. **Promote durable facts.** Move any cross-session fact or key moment worth keeping into
+   `core-memories.md` as a bullet. Copy it verbatim. Prefix a standout moment with `IDENTITY CANDIDATE:`.
 
    When you write `.context/` documents, follow the Writing standard in `../council/00-overview.md` (ASD-STE100). After you write, run `dummyindex context check --style`.
 
@@ -43,7 +43,7 @@ Write a handoff so the next session continues cleanly. You were here — write i
 
 ## Rules
 
-- Under ~20 lines of actual writing. Forward-looking — the next session doesn't care about the journey.
+- Under ~20 lines of actual writing. Forward-looking — the next session does not care about the journey.
 - Specific: file paths, PR numbers, branch names.
-- If there's nothing meaningful to hand off, append `No active work.` to `now.md` and stop.
-- Never delete prior entries; the roller relocates, it doesn't erase.
+- If there is nothing meaningful to hand off, append `No active work.` to `now.md` and stop.
+- Never delete prior entries. The roller relocates them. It does not erase them.
