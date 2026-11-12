@@ -2,7 +2,7 @@
 
 The canonical reference for *how* this codebase is organised and *how* code
 in it is written. Adapted from the BOS Backend conventions doc for a
-**synchronous Python CLI tool** — sections that assumed HTTP/JWT/Postgres
+**synchronous Python CLI tool**. Sections that assumed HTTP/JWT/Postgres
 /async have been replaced by their CLI-equivalents, dropped, or marked
 N/A with rationale.
 
@@ -11,10 +11,10 @@ Hierarchy of authority:
 1. **Code wins.** When this doc disagrees with code, the code is right.
    Open a PR to fix the doc.
 2. **`.context/`** — the live, machine-generated index. When it disagrees
-   with the code, the code wins; rebuild the index.
+   with the code, the code wins. Rebuild the index.
 3. **This file** — the long form, with examples and rationale.
 4. **Host guidance** — `.claude/CLAUDE.md` on Claude or the active Codex
-   project instruction file; short and points agents at `.context/` first.
+   project instruction file. It is short and points agents at `.context/` first.
 
 ## Table of contents
 
@@ -253,12 +253,15 @@ file:
 - `<area>/models.py` — frozen dataclasses (data only, no behaviour).
 
 **Module filenames never carry a leading underscore.** Privacy lives at
-two levels only: the package boundary (what `__init__.py` re-exports is
-public; everything else is internal) and the function level (`_name` for
-private-to-module helpers). A `common.py` or `helpers.py` that isn't
-re-exported is already private; spelling it `_common.py` restated that
-in every import. When a domain outgrows a flat folder (≳ 10 modules),
-nest it by concern the way `context/domains/equip/` does.
+two levels only: the package boundary and the function level. The package
+boundary is what `__init__.py` re-exports. Re-exported names are public.
+Everything else is internal. The function level uses `_name` for
+private-to-module helpers.
+
+A `common.py` or `helpers.py` that is not re-exported is already private.
+Spelling it `_common.py` restated that in every import. When a domain
+outgrows a flat folder (≳ 10 modules), nest it by concern the way
+`context/domains/equip/` does.
 
 ---
 
@@ -283,9 +286,8 @@ usage      → (stdlib only)
 | `pipeline` | stdlib + third-party (networkx, tree-sitter) | `analysis`, `context` |
 | `usage` | stdlib only | `context`, `pipeline`, `analysis` |
 
-> `usage/` is a standalone domain at the bottom of the tree: it reads Claude
-> Code's own transcripts under `~/.claude/projects/` for `dummyindex usage`
-> and has nothing to do with `.context/`, so it imports only the stdlib. Its
+> `usage/` is a standalone domain at the bottom of the tree. It reads Claude
+> Code's own transcripts under `~/.claude/projects/` for `dummyindex usage`. It has nothing to do with `.context/`, so it imports only the stdlib. Its
 > CLI boundary lives in `__main__` (`_run_usage`), mirroring `install`
 > (whose logic lives in `installer/`, with `__main__` only dispatching).
 
@@ -316,13 +318,13 @@ prints/exits. No business logic in the dispatcher.
 | Token reporting over Claude Code transcripts (`dummyindex usage`) | `usage/<file>.py` |
 | Bundled markdown shipped with the skill (incl. slash commands) | `skills/...` |
 
-**The trap:** if a module merely *uses* a domain, that doesn't make it part
+**The trap:** if a module merely *uses* a domain, that does not make it part
 of that domain. Ask: "would a sibling domain need this same thing if it
-had the same requirement?" — if yes, it's cross-cutting.
+had the same requirement?" — if yes, it is cross-cutting.
 
 Worked example. The graph renderer in `export/graph.py` is consumed by
 both `context/build/graph.py` and the features scaffolder. It lives in
-its own top-level `export/` because it's transport-shaped (graph →
+its own top-level `export/` because it is transport-shaped (graph →
 bytes), not feature-shaped.
 
 ---
@@ -334,9 +336,9 @@ Two independent rules — **whichever fires first wins.**
 ### A. Split by concern (always)
 
 Inside a package, separate files for separate concerns even when each file
-would be tiny. A 30-line `enums.py` is correct; a 200-line file mixing
-enums, dataclasses, free functions, and a builder class is wrong even
-under the size threshold.
+would be tiny. A 30-line `enums.py` is correct. A 200-line file that mixes
+enums, dataclasses, free functions, and a builder class is wrong. This is
+true even under the size threshold.
 
 | File | Holds |
 |---|---|
@@ -348,8 +350,8 @@ under the size threshold.
 
 Canonical layouts:
 
-- Multi-language extractor: `pipeline/extract/{__init__,config,common,resolve,generic,language_configs,…}.py` — extraction is parametric (one `_extract_generic` driver in `generic.py`, per-language `_<LANG>_CONFIG` in `language_configs.py`, thin wrappers under `languages/`), not one hand-written module per language
-- Graph exporter: `export/{__init__,common,graph}.py` (promoted to top-level; only `to_json` survives — `to_html` + `_html_assets.py` were removed as dead code, and the live HTML viewer is `context/output/viewer.py`)
+- Multi-language extractor: `pipeline/extract/{__init__,config,common,resolve,generic,language_configs,…}.py` — extraction is parametric. One `_extract_generic` driver lives in `generic.py`, per-language `_<LANG>_CONFIG` instances live in `language_configs.py`, and thin wrappers sit under `languages/`. It is not one hand-written module per language
+- Graph exporter: `export/{__init__,common,graph}.py` . It was promoted to top-level. Only `to_json` survives. `to_html` + `_html_assets.py` were removed as dead code. The live HTML viewer is `context/output/viewer.py`.
 - Feature builder: `context/domains/features/{__init__,constants,models,errors,helpers,builder,ops,render,indexes,docs}.py`
 
 ### B. Split by size
@@ -387,7 +389,7 @@ smell — extract `models.py`, `enums.py`, sibling per-concern files.
   `is_*`/`has_*`/`should_*`.
 - Path-typed parameters are `path`, `root`, `out_path`, `cache_root` —
   never `p`, `dir`, `file`.
-- Loop indices: `i`, `j` only in tight numeric loops; otherwise name the
+- Loop indices: `i`, `j` only in tight numeric loops. Otherwise name the
   thing (`for row in rows`, `for node_id in nodes`).
 
 ### 5.3 Pydantic-style suffixes are **not used here** (no HTTP boundary)
@@ -400,8 +402,8 @@ names dataclasses after the thing they represent (`Feature`, `Flow`,
 
 Module, class, function, and variable names use **generic / protocol-
 neutral** language. Reserve the third-party brand for the few wire/file
-literals where the spec requires the brand to appear (e.g. an Obsidian
-canvas key, a Neo4j Cypher keyword).
+literals. Use the brand there when the spec requires it to appear.
+For example, an Obsidian canvas key or a Neo4j Cypher keyword.
 
 | Layer | Convention | Example |
 |---|---|---|
@@ -414,8 +416,8 @@ canvas key, a Neo4j Cypher keyword).
 
 ## 6. Constants must be enums
 
-If a value has a fixed set of options, it is an `Enum` (or `StrEnum` /
-`IntEnum`) — not a bare string, not a `Literal`, not a tuple, not a dict
+If a value has a fixed set of options, it is an `Enum` (or `StrEnum` or
+`IntEnum`). It is not a bare string, not a `Literal`, not a tuple, and not a dict
 of magic strings.
 
 ### 6.1 Three locations, three purposes
@@ -430,8 +432,8 @@ of magic strings.
 ### 6.2 String-valued enums for on-disk artefacts
 
 Every value that lands in a JSON/Markdown file as a string is a string-valued
-enum — `(str, Enum)` (Python 3.10 has no `enum.StrEnum`) — so `.value` is
-wire-compatible with the artefact format on disk.
+enum. Use `(str, Enum)` as the base, because Python 3.10 has no `enum.StrEnum`.
+So `.value` is wire-compatible with the artefact format on disk.
 
 ```python
 class ConfidenceLevel(str, Enum):
@@ -447,8 +449,8 @@ If the schema changes, mirror it here in the same commit.
 ### 6.3 Lookup sets are `frozenset`s
 
 Immutable, hashable, defined once. Node kinds and edge relations are emitted as
-raw strings at their call sites (the enum forms were dropped when they went
-unused), so their membership tests are raw-string `frozenset`s:
+raw strings at their call sites. The enum forms were dropped when they went
+unused. So their membership tests are raw-string `frozenset`s:
 
 ```python
 HIERARCHY_RELATIONS = frozenset({"folder_contains", "contains", "method"})
@@ -464,15 +466,15 @@ yes, make it an enum now.
 
 ## 7. Every data class is frozen
 
-This is the adapted form of BOS §7. The BOS rule says "every model is
-Pydantic, every model is frozen." This codebase has **no HTTP boundary
+This is the adapted form of BOS §7. The BOS rule says every model is
+Pydantic and every model is frozen. This codebase has **no HTTP boundary
 and no user-input validation surface**, so Pydantic adds runtime cost
 without payoff. The rule here:
 
 1. **`@dataclass(frozen=True)`** for every data class.
 2. **No exceptions outside `tests/`** — every Feature, Flow, Meta,
    DocEntry, BuildResult is frozen.
-3. **Behaviour goes elsewhere.** Data classes hold data; a sibling
+3. **Behaviour goes elsewhere.** Data classes hold data. A sibling
    `<domain>/builder.py` or service class holds the logic that produces
    them.
 
@@ -492,7 +494,7 @@ class Flow:
 ```
 
 **Use `tuple[...]` not `list[...]`** for collection fields on a frozen
-class. Lists are mutable; freezing the container hides that.
+class. Lists are mutable. Freezing the container hides that.
 
 ### 7.1 Mutable defaults
 
@@ -544,12 +546,12 @@ Rules:
    args, `1` runtime failure.
 3. **Subcommands prefer not to import each other.** Shared helpers live in
    `cli/common.py`. In practice this is a narrow, real exception rather than a
-   clean invariant: `check` re-runs `rebuild` (aliasing the entrypoint
-   explicitly — `run as run_rebuild`), and a handful of modules pull a single
+   clean invariant. `check` re-runs `rebuild` (aliasing the entrypoint
+   explicitly — `run as run_rebuild`). A handful of modules pull a single
    helper from a sibling (`refresh` → `migrate.migrate_legacy_layout`,
    `reconcile_gate` → `memory.read_hook_stdin`, `statusline` →
-   `plan_update.badge_cache_path`). The spirit holds — each reuses one named
-   thing, not another subcommand's business logic — but new work should still
+   `plan_update.badge_cache_path`). The spirit holds: each reuses one named
+   thing, not another subcommand's business logic. New work should still
    reach for `cli/common.py` first.
 4. **Subcommand names live in `ContextSubcommand`** (a `StrEnum`), not as
    bare strings in the dispatcher.
@@ -605,8 +607,8 @@ context/domains/equip/errors.py       # EquipError → TemplateError, ResetError
 context/domains/gc/errors.py          # GcError → GcPathError, GcTargetError
 ```
 
-Larger areas root a base exception (`EquipError`, `ProposalError`, `GcError`)
-and subclass per condition, so a caller can catch the whole family or one case.
+Larger areas root a base exception (`EquipError`, `ProposalError`, `GcError`).
+They subclass per condition. A caller can then catch the whole family or one case.
 
 Rules:
 
@@ -614,7 +616,7 @@ Rules:
    subclass so callers can `except FeatureRenameError`.
 2. **Carry context as kwargs on the exception**, accessible via attrs.
 3. **The CLI dispatcher catches typed exceptions** and maps them to exit
-   codes + stderr lines. Inner code raises; the CLI translates.
+   codes + stderr lines. Inner code raises. The CLI translates.
 
 ---
 
@@ -657,19 +659,19 @@ sprinkle `logging.getLogger(__name__)` calls ad-hoc.
 ## 13. Security
 
 - The tool **reads** the user's filesystem but never executes code from
-  it. Tree-sitter parses source into an AST; nothing from the scanned repo
-  is ever `eval`'d, imported, or run.
+  it. Tree-sitter parses source into an AST. Nothing from the scanned repo
+  is ever passed to `eval`, imported, or run.
 - No network calls, no credentials, no secrets. If a future feature needs
-  a network call (e.g. pushing to a remote graph DB), credentials come from
-  explicit function args / env vars, never hardcoded.
+  a network call, credentials come from explicit function args or env vars.
+  For example, pushing to a remote graph DB needs them. They are never hardcoded.
 - **HTML output is the only injection surface.** The single HTML artefact is
   `.context/features/graph.html`, assembled by `render_viewer_html()` in
   `context/output/viewer/`. Its input — the codebase scan — is *model*-authored,
-  not just AST-derived, so treat it as untrusted at both boundaries:
+  not merely AST-derived, so treat it as untrusted at both boundaries:
   - **Server side (Python).** The scan is embedded as a
-    `<script type="application/json">` data island so the file opens over
-    `file://` with no server and no network. `_embed()` rewrites `</` → `<\/`
-    (a valid JSON escape for `/`) and `<!--`, because the HTML tokenizer ends a
+    `<script type="application/json">` data island. This lets the file open over
+    `file://` with no server and no network. The `_embed()` helper rewrites `</` → `<\/`
+    (a valid JSON escape for `/`) and `<!--`. It does so because the HTML tokenizer ends a
     script at the first literal `</` regardless of what JSON thinks. That is
     the only place Python writes scan-derived text into the document.
   - **Client side (JS).** Scan strings reach the DOM only via the viewer's own
