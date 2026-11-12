@@ -1,9 +1,9 @@
 # Commands
 
-Every dummyindex command in one place — **slash commands** in Claude Code,
-equivalent **`$skill-name` mentions** in Codex, and the CLI commands the active
-agent runs as its deterministic backbone. The only terminal commands a human
-runs are the one-time install bootstrap.
+This page lists every dummyindex command in one place.
+Each command is available as a **slash command** in Claude Code and as an equivalent **`$skill-name` mention** in Codex.
+The active agent also runs CLI commands as its deterministic backbone.
+The only terminal commands a human runs are the one-time install bootstrap.
 
 For the long-form description of each CLI command and all its flags, see
 [guide/07-cli.md](guide/07-cli.md). This page is the quick reference.
@@ -36,10 +36,15 @@ also lists them through `/skills`.
 
 ## CLI commands (the agent's backbone)
 
-**The agent runs these, not you.** No LLM cost — the deterministic backbone the
-skill and council invoke to move bytes around atomically. Listed here for
-transparency, not as a human workflow; your interface is the slash commands above.
-The one exception is the **Install** bootstrap below, which a human runs once in a
+**The agent runs these, not you.** They have no LLM cost.
+They are the deterministic backbone that the
+skill and council invoke to move bytes around atomically.
+
+They are listed here for
+transparency, not as a human workflow.
+Your interface is the slash commands above.
+The one exception is the **Install** bootstrap below.
+A human runs it once in a
 terminal to put the skill in place.
 
 `dummyindex --help` / `dummyindex context --help` print the authoritative,
@@ -64,6 +69,7 @@ native Claude plugins in project settings:
 - `caveman@caveman` from `JuliusBrussee/caveman` (tracks the latest upstream
   default branch). Its reviewed surfaces are skills and commands plus
   `SessionStart` and `UserPromptSubmit` Node command hooks (`runs_code=true`).
+
   Install writes `.caveman.json` as `{"defaultMode": "manual"}`, so caveman starts inactive.
   It skips the write when `.caveman.json` or `.caveman/config.json` already exists.
   It also skips the user home directory, Codex-only installs, and `caveman@caveman` set to `false`.
@@ -71,44 +77,54 @@ native Claude plugins in project settings:
 <!-- test-anchor:policy-selfapply:begin -->
 - `i-have-adhd@i-have-adhd` from `ayghri/i-have-adhd` (tracks the latest
   upstream default branch). Its reviewed surfaces are one skill plus an opt-in
-  `SessionStart` shell command hook (`runs_code=true`). The hook injects the
-  full rules only when a per-profile `.i-have-adhd-always` flag exists, and the
-  skill declares `disable-model-invocation: true`; enabling the plugin alone
-  therefore never makes it self-apply. Dummyindex's project policy and
-  per-prompt reminder are the profile-independent carrier of the behavior and
-  stand alone with the plugin absent.
+  `SessionStart` shell command hook (`runs_code=true`).
+
+  The hook injects the full rules only when a per-profile `.i-have-adhd-always` flag exists. The skill declares `disable-model-invocation: true`. Enabling the plugin alone therefore never makes it self-apply.
+
+  Dummyindex's project policy and per-prompt reminder are the profile-independent carrier of the behavior. They stand alone with the plugin absent.
 <!-- test-anchor:policy-selfapply:end -->
 - `ponytail@ponytail` from `DietrichGebert/ponytail` (tracks the latest
   upstream default branch). Its reviewed surfaces are skills and commands. Its
   hooks are `SessionStart`, `SubagentStart`, and `UserPromptSubmit` Node
   command hooks. Also reviewed: a band UI module with local task ledger
-  (`runs_code=true`). The webhook is empty by default. Once a user sets it,
+  (`runs_code=true`).
+
+  The webhook is empty by default. Once a user sets it,
   every task row leaves the machine. The `SubagentStart` hook injects the
   ponytail ruleset into every subagent, including dummyindex-dispatched ones.
-  It applies when mode is not `off`; default mode is `full`.
+  It applies when mode is not `off`.
+  Default mode is `full`.
 
 Third-party sources track latest because Claude Code materializes
-marketplaces with `git clone --branch <ref>`, which accepts branch/tag names
-but never a commit SHA — a commit pin can never install. The three third-party
-records are a narrow reviewed built-in exception; they do not weaken
-`context equip` approval for any other third-party source. Adding or swapping
-a source requires a new source review and release.
+marketplaces with `git clone --branch <ref>`. That command accepts branch or
+tag names, but never a commit SHA. A commit pin can never install.
+
+The three third-party records are a narrow reviewed built-in exception. They do
+not weaken `context equip` approval for any other third-party source. Adding or
+swapping a source requires a new source review and release.
 
 <!-- test-anchor:policy-restatement:begin -->
 A Codex-only run creates no `.claude/**` state and invokes no Claude runner.
+
 Every dummyindex-managed project receives the same always-on output policy
-through its managed project guidance. Apply it on every reply without waiting
-for an invocation. Replies use the `i-have-adhd` shape at minimum verbosity,
-not `caveman` chat voice. Lead with the outcome or next action. Keep prose
-compact.
-Number multi-step work, at most 5 items per group. Suppress tangents, restate
-current state, and preserve technical and safety detail. Subagent prompts and
-SendMessage bodies use concise Chinese with caveman rules. Code, commits, docs,
-and final reports stay English. Repo docs follow ASD-STE100. Before
-acting, compare the request with every exposed skill's trigger rules and invoke
-every match without waiting to be asked. Explicit user formatting requests and
-safety requirements win. The policy is project-scoped; it is not added to
-Codex's global guidance.
+through its managed project guidance.
+
+Apply it on every reply without waiting for an invocation.
+Replies use the `i-have-adhd` shape at minimum verbosity, not `caveman` chat voice.
+Lead with the outcome or next action.
+Keep prose compact.
+
+Number multi-step work, at most 5 items per group.
+Suppress tangents and restate current state.
+Preserve technical and safety detail.
+Subagent prompts and SendMessage bodies use concise Chinese with caveman rules.
+Code, commits, docs, and final reports stay English.
+Repo docs follow ASD-STE100.
+
+Before acting, compare the request with every exposed skill's trigger rules and invoke every match without waiting to be asked.
+Explicit user formatting requests and safety requirements win.
+The policy is project-scoped.
+It is not added to Codex's global guidance.
 <!-- test-anchor:policy-restatement:end -->
 
 Opt-outs are deliberately separate:
@@ -118,54 +134,76 @@ Opt-outs are deliberately separate:
   defaults. `--no-superpowers` remains a compatibility alias with identical
   behavior. Neither flag persists an opt-out or removes the project policy.
 - **Durable, all defaults:** set `default_plugins_enabled` to `false` in
-  `.context/config.json`; later installs do not backfill defaults.
+  `.context/config.json`. Later installs do not backfill defaults.
 - **Durable, one target:** set that target to `false` in project or local
-  `enabledPlugins`; dummyindex preserves the tombstone and does not materialize
-  it.
+  `enabledPlugins`.
+
+  dummyindex preserves the tombstone and does not materialize it.
 
 A malformed `.context/config.json` fails closed: dummyindex warns and performs
 no default marketplace, enabled-plugin, runner, backfill, or config mutation.
 
 #### Platform selector, repair-on-reinstall, and dedupe
 
-`--platform agents` is the primary, platform-agnostic selector: it installs
-the `.agents/skills` family and a managed `AGENTS.md` block, discoverable by
+`--platform agents` is the primary, platform-agnostic selector.
+It installs the `.agents/skills` family and a managed `AGENTS.md` block.
 Codex, Cursor, Copilot CLI, OpenCode, Amp, Gemini CLI, Goose, Pi, Cline, and
-any other harness that scans the open Agent Skills / `AGENTS.md` conventions.
-`--platform codex` is a **deprecated alias** for `agents` — it still works,
-prints one `warning: --platform codex is deprecated, use --platform agents`
-line to stderr, and renders **byte-identical** skill trees to `agents`.
+any other harness can discover it.
+A harness qualifies when it scans the open Agent Skills and `AGENTS.md` conventions.
+
+`--platform codex` is a **deprecated alias** for `agents`.
+It still works.
+It prints one `warning: --platform codex is deprecated, use --platform agents`
+line to stderr.
+It renders **byte-identical** skill trees to `agents`.
 
 Rerunning `dummyindex install` (directly, or via `/dummyindex-update` /
-`$dummyindex-update`) does more than restamp the version — it **repairs**
-copies an older dummyindex left behind (a stale Codex-only preamble, a stale
-managed `CLAUDE.md`/`AGENTS.md` block), scoped to *this* invocation's selected
-platform(s) at *this* invocation's targeted scope root (`.claude/**` is
-written only when `claude` is selected; `.agents/**` only when `agents`/`codex`
-is selected; `--skill-only` behaves as before). A copy is rewritten only when
-it carries ownership proof — a `.dummyindex_version` stamp, or the legacy
-`## Codex host compatibility` heading — **and** its stamp is older than the
-running package version; a stamp newer than the package, or unparseable /
-`unknown`, is left alone and reported unless `--force-downgrade` is passed. A
-directory-name match with no ownership proof never triggers a write.
-Symlinked copies are refused and reported, never written through;
-`~/.codex/skills` is never touched (dummyindex has never written there).
-Every other detected copy — a different host, a different scope, an
-unproven or orphaned one — is report-only, printed with the exact install
-command that would repair it.
+`$dummyindex-update`) does more than restamp the version.
+It **repairs** copies an older dummyindex left behind (a stale Codex-only
+preamble, a stale managed `CLAUDE.md`/`AGENTS.md` block).
+It scopes the repair to *this* invocation's selected platform(s) at *this*
+invocation's targeted scope root.
 
-When the same skill family exists at both user and project scope, repair
-reports both paths but deletes neither implicitly. `--dedupe user\|project`
-removes the named scope's skill-family copy (flag-only, no interactive
-prompt, so it stays CI-safe); it never removes slash commands or managed
-guidance blocks and never runs the full `uninstall` orchestration. A repo
+`.claude/**` is written only when `claude` is selected.
+`.agents/**` is written only when `agents`/`codex` is selected.
+`--skill-only` behaves as before.
+
+A copy is rewritten only when it carries ownership proof.
+Ownership proof is a `.dummyindex_version` stamp, or the legacy
+`## Codex host compatibility` heading.
+Its stamp is also older than the running package version.
+
+A stamp newer than the package, or an unparseable or `unknown` stamp, is left alone and reported.
+Pass `--force-downgrade` to rewrite such a copy.
+A directory-name match with no ownership proof never triggers a write.
+
+Symlinked copies are refused and reported, never written through.
+`~/.codex/skills` is never touched, because dummyindex has never written there.
+
+Every other detected copy is report-only.
+That covers a different host, a different scope, or an unproven or orphaned copy.
+The report prints the exact install command that would repair it.
+
+When one skill family exists at both user and project scope, repair
+reports both paths.
+It deletes neither copy implicitly.
+
+`--dedupe user\|project` removes the named scope's skill-family copy.
+It is flag-only, with no interactive
+prompt, so it stays CI-safe.
+It never removes slash commands or managed
+guidance blocks.
+It never runs the full `uninstall` orchestration.
+
+A repo
 whose user-scope and project-scope roots resolve to the same directory is
 never treated as a duplicate.
 
-**Cursor free win:** Cursor already reads `.claude/agents/` natively, so a
-repo's `context equip`-generated Claude agents work in Cursor with no extra
-rendering — a deliberate omission from this feature's scope (no separate
-`.cursor/agents` rendering was built), not a gap.
+**Cursor free win:** Cursor already reads `.claude/agents/` natively.
+So a repo's `context equip`-generated Claude agents work in Cursor with no extra
+rendering.
+This is a deliberate omission from this feature's scope, not a gap.
+No separate `.cursor/agents` rendering was built.
 
 ### Index / backbone
 
@@ -198,9 +236,13 @@ rendering — a deliberate omission from this feature's scope (no separate
 | `dummyindex context hooks install\|uninstall\|status [path] [--root DIR] [--global]` | Manage the managed Claude Code hooks in `.claude/settings.json`: UserPromptSubmit static output/skill contract **plus bounded skill-correction feedback**, SessionStart drift/memory/GC signal **plus one silent feedback refresh**, Stop handoff nudge **+ reconcile gate**, PreCompact breadcrumb, and PreToolUse `Write` doc guard. `--global` targets `~/.claude/settings.json` so they fire in every repo; a repo's own `--local` install overrides the global one. |
 | `dummyindex context hooks defer-check [path] [--root DIR]` | Exit-code probe used by the global hook guard: exit 0 (defer) when the repo has its own `--local` dummyindex hooks, else exit 1. Prints nothing. |
 
-**PreToolUse language hint:** the PreToolUse matcher is `Write|Edit|MultiEdit|Agent|Task|SendMessage`. For `Agent` and `Task`, the hook reads `prompt`. For `SendMessage`, it reads `message`. Code, URLs, and paths are removed first. Text under 200 characters is then not judged. It warns when the CJK share (CJK characters / (CJK characters + Latin words)) is below 0.5, via `additionalContext`. It never denies, and `doc_guard_enabled` does not turn it off.
+**PreToolUse language hint:** the PreToolUse matcher is `Write|Edit|MultiEdit|Agent|Task|SendMessage`. For `Agent` and `Task`, the hook reads `prompt`. For `SendMessage`, it reads `message`. Code, URLs, and paths are removed first. Text under 200 characters is then not judged.
 
-**Reconcile-gate opt-out:** set `"auto_council": false` in `.context/config.json` to disable the gate for a repo even when the global hooks are installed (opt-out, not opt-in — absent file/key means enabled).
+It warns when the CJK share (CJK characters / (CJK characters + Latin words)) is below 0.5, via `additionalContext`. It never denies, and `doc_guard_enabled` does not turn it off.
+
+**Reconcile-gate opt-out:** set `"auto_council": false` in `.context/config.json` to disable the gate for a repo.
+
+This works even when the global hooks are installed. It is an opt-out, not an opt-in. An absent file or key means enabled.
 
 ### Retrieval
 
@@ -220,7 +262,7 @@ rendering — a deliberate omission from this feature's scope (no separate
 ### Usage (token reporting)
 
 A human checks tokens via the **`/tokens`** slash command (above), which wraps
-`dummyindex usage`; the agent calls these directly.
+`dummyindex usage`. The agent calls these directly.
 
 | Command | What it does |
 |---------|--------------|
@@ -242,15 +284,19 @@ A human checks tokens via the **`/tokens`** slash command (above), which wraps
 | `dummyindex context memory prompt-context [--root DIR]` | Claude UserPromptSubmit command: combine validated cached feedback with explicit corrections/revocations in the current prompt and emit one bounded hook JSON payload, or nothing. |
 
 The skill-feedback branch is derived from Headroom's deterministic transcript
-mining technique, but has a narrower privacy boundary: only external human
-prompt rows with an exact row-level `cwd` are considered; nested subagents and
-tool inputs/results are never opened by this path. The schema-1 cache contains
-at most 64 safe skill slugs and counts—no prompt, excerpt, UUID, timestamp,
-path, or profile name. Runtime reads reject symlinks, malformed/oversized
-files, and unknown fields; prompt context is fixed product text capped at eight
-skills and 1,600 characters. Two positive events after the latest revocation
-make feedback durable. The older `failure-patterns.md` tool-signature miner
-remains an explicit command path and is not wired into hooks.
+mining technique. It has a narrower privacy boundary. Only external human
+prompt rows with an exact row-level `cwd` are considered. Nested subagents and
+tool inputs/results are never opened by this path.
+
+The schema-1 cache holds at most 64 safe skill slugs and counts. It holds no
+prompt, excerpt, UUID, timestamp, path, or profile name.
+
+Runtime reads reject symlinks, malformed or oversized files, and unknown fields.
+Prompt context is fixed product text. It is capped at eight skills and 1,600
+characters. Two positive events after the latest revocation make feedback durable.
+
+The older `failure-patterns.md` tool-signature miner remains an explicit command
+path and is not wired into hooks.
 
 ### Build loop
 
@@ -270,7 +316,7 @@ A missing manifest does not block either host's native delegation.
 
 ### Enrichment, features & council (called by the skill/council)
 
-The council calls these to move bytes around atomically; a human never runs them by hand.
+The council calls these to move bytes around atomically. A human never runs them by hand.
 
 | Command | What it does |
 |---------|--------------|
@@ -303,7 +349,7 @@ The council calls these to move bytes around atomically; a human never runs them
 
 ### Audit panel (behind `/dummyindex-audit` or `$dummyindex-audit`)
 
-The CLI plumbing the argue-and-audit skill drives; a human runs the slash command, not these.
+The CLI plumbing the argue-and-audit skill drives. A human runs the slash command, not these.
 
 | Command | What it does |
 |---------|--------------|
@@ -313,7 +359,7 @@ The CLI plumbing the argue-and-audit skill drives; a human runs the slash comman
 
 ### Context-hygiene GC (behind `/dummyindex-gc` or `$dummyindex-gc`)
 
-Deterministic plumbing for the GC council sweep; `/dummyindex-gc` on Claude or `$dummyindex-gc` on Codex drives the judgment + user confirm. Generated docs are **deleted, never archived**. Never deletes source code.
+Deterministic plumbing for the GC council sweep. `/dummyindex-gc` on Claude or `$dummyindex-gc` on Codex drives the judgment + user confirm. Generated docs are **deleted, never archived**. Never deletes source code.
 
 | Command | What it does |
 |---------|--------------|
