@@ -20,21 +20,25 @@ def _host_mcp(layout: Layout, scope: str) -> list[ToolkitItem]:
     live = servers if isinstance(servers, dict) else {}
     out = [ToolkitItem("mcp", name, scope, True) for name in sorted(live)]
     for entry in read_stash(layout):
-        if entry.get("kind") == "mcp" and isinstance(entry.get("name"), str):
-            out.append(ToolkitItem("mcp", entry["name"], scope, False))
+        name = entry.get("name")
+        if entry.get("kind") == "mcp" and isinstance(name, str) and name not in live:
+            out.append(ToolkitItem("mcp", name, scope, False))
     return out
 
 
 def _host_skills(layout: Layout, scope: str) -> list[ToolkitItem]:
     out: list[ToolkitItem] = []
+    live: set[str] = set()
     skills_dir = layout.skills_dir()
     if skills_dir.is_dir():
         for child in sorted(skills_dir.iterdir()):
             if child.is_dir() and (child / "SKILL.md").is_file():
+                live.add(child.name)
                 out.append(ToolkitItem("skill", child.name, scope, True))
     for entry in read_stash(layout):
-        if entry.get("kind") == "skill" and isinstance(entry.get("name"), str):
-            out.append(ToolkitItem("skill", entry["name"], scope, False))
+        name = entry.get("name")
+        if entry.get("kind") == "skill" and isinstance(name, str) and name not in live:
+            out.append(ToolkitItem("skill", name, scope, False))
     return out
 
 

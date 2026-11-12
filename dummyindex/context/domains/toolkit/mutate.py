@@ -87,6 +87,15 @@ def _check_name(kind: str | None, name: str) -> None:
         validate_name(name)
 
 
+def _stashed_definition(stashed: dict[str, Any], scope: str) -> Any:
+    if "definition" not in stashed:
+        raise ToolkitError(
+            "malformed_config",
+            f"stash entry {stashed.get('name')} in {scope} scope has no definition; fix it by hand",
+        )
+    return stashed["definition"]
+
+
 def _layout_for(req: Request, scope: str) -> Layout:
     return req.layout_project if scope == "project" else req.layout_user
 
@@ -96,6 +105,10 @@ def _read_text(path: Path | None, flag: str) -> str:
         raise ToolkitError("invalid_argument", f"{flag} is required for this add")
     try:
         text = path.read_text(encoding="utf-8")
+    except UnicodeDecodeError as exc:
+        raise ToolkitError(
+            "malformed_config", f"{flag} {path} is not UTF-8: {exc}"
+        ) from exc
     except OSError as exc:
         raise ToolkitError(
             "invalid_argument", f"cannot read {flag} {path}: {exc}"
@@ -176,7 +189,7 @@ def _host_mcp(req: Request, layout: Layout, session: WriteSession) -> bool:
             return False
         if stashed is None:
             raise ToolkitError("not_found", f"no mcp {req.name} in {layout.scope}")
-        servers[req.name] = stashed["definition"]
+        servers[req.name] = _stashed_definition(stashed, layout.scope)
         new_stash = [s for s in stash if s is not stashed]
     elif req.action == "disable":
         if req.name not in servers:
@@ -228,7 +241,7 @@ def _host_skill(req: Request, layout: Layout, session: WriteSession) -> bool:
             return False
         if stashed is None:
             raise ToolkitError("not_found", f"no skill {req.name} in {layout.scope}")
-        write_text_atomic(path, stashed["definition"])
+        write_text_atomic(path, _stashed_definition(stashed, layout.scope))
         write_stash(layout, [s for s in stash if s is not stashed])
         return True
     if req.action == "disable":
@@ -425,6 +438,12 @@ def _resolve_scope_and_kind(req: Request) -> tuple[str, str]:
     if req.scope == "terminal":
         assert req.out_dir is not None and req.terminal_id is not None
         manifest = load_manifest(bundle_dir(req.out_dir, req.terminal_id))
+        for i in manifest["items"]:
+            if not isinstance(i.get("name"), str) or not isinstance(i.get("kind"), str):
+                raise ToolkitError(
+                    "malformed_config",
+                    f"terminal {req.terminal_id} has an item without kind or name; fix it by hand",
+                )
         matches = [
             i
             for i in manifest["items"]
@@ -436,20 +455,30 @@ def _resolve_scope_and_kind(req: Request) -> tuple[str, str]:
             raise ToolkitError(
                 "ambiguous_item", f"several kinds named {req.name}; pass --kind"
             )
-        host_matches = [
-            i
-            for i in host_items(req.layout_project) + host_items(req.layout_user)
-            if i.name == req.name and (req.kind is None or i.kind == req.kind)
-        ]
-        if not host_matches:
-            raise ToolkitError("not_found", f"no item {req.name} for this terminal")
+
+        def named(items: list[ToolkitItem]) -> list[ToolkitItem]:
+            return [
+                i
+                for i in items
+                if i.name == req.name and (req.kind is None or i.kind == req.kind)
+            ]
+
         if not req.allow_project_fallback:
+            if named(host_items(req.layout_project) + host_items(req.layout_user)):
+                raise ToolkitError(
+                    "scope_not_proven",
+                    f"{req.name} exists in project or user config; a per-terminal change is "
+                    f"not proven for it. {SCOPE_PROVEN_HINT}",
+                )
+            raise ToolkitError("not_found", f"no item {req.name} for this terminal")
+        project_matches = named(host_items(req.layout_project))
+        if not project_matches:
+            raise ToolkitError("not_found", f"no item {req.name} for this terminal")
+        if len(project_matches) > 1:
             raise ToolkitError(
-                "scope_not_proven",
-                f"{req.name} exists in project or user config; a per-terminal change is "
-                f"not proven for it. {SCOPE_PROVEN_HINT}",
+                "ambiguous_item", f"several kinds named {req.name}; pass --kind"
             )
-        return host_matches[0].scope, host_matches[0].kind
+        return project_matches[0].scope, project_matches[0].kind
     layout = _layout_for(req, req.scope)
     matches = [
         i
