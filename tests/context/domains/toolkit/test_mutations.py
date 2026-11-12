@@ -14,6 +14,8 @@ from dummyindex.context.domains.toolkit import (
     toolkit_mutate,
     toolkit_show,
 )
+from dummyindex.context.domains.toolkit.constants import BUNDLE_MANIFEST
+from dummyindex.context.domains.toolkit.host import user_layout
 from tests.context.domains.toolkit.helpers import MCP_TEXT, SKILL_TEXT
 
 pytestmark = pytest.mark.unit
@@ -540,3 +542,105 @@ def test_enable_writes_host_before_stash_so_a_stash_crash_loses_nothing(
 
     servers = json.loads((root / ".mcp.json").read_text(encoding="utf-8"))["mcpServers"]
     assert servers["srv"]["url"] == "https://example.test/mcp"
+
+
+def test_terminal_fallback_ignores_user_scope_match(
+    root: Path, home: Path, out_dir: Path, tmp_path: Path
+) -> None:
+    _mutate(
+        "add",
+        "srv",
+        root,
+        home,
+        kind="mcp",
+        scope="user",
+        config_file=_server_file(tmp_path),
+    )
+    user_file = user_layout(home).mcp_path()
+    before = user_file.read_bytes()
+
+    with pytest.raises(ToolkitError) as exc:
+        _mutate(
+            "disable",
+            "srv",
+            root,
+            home,
+            kind="mcp",
+            scope="terminal",
+            terminal_id="t-5",
+            out_dir=out_dir,
+            allow_project_fallback=True,
+        )
+
+    assert exc.value.code in ("not_found", "scope_not_proven")
+    assert user_file.read_bytes() == before
+
+
+def test_live_and_stashed_same_name_lists_once_and_resolves_with_kind(
+    root: Path, home: Path, tmp_path: Path
+) -> None:
+    cfg = _server_file(tmp_path)
+    _mutate("add", "srv", root, home, kind="mcp", scope="project", config_file=cfg)
+    _mutate("disable", "srv", root, home, kind="mcp", scope="project")
+    _write(
+        root / ".mcp.json",
+        json.dumps({"mcpServers": {"srv": {"url": "https://example.test/mcp"}}}),
+    )
+
+    listed = toolkit_list(root=root, home=home, kind="mcp", scope="project")
+    srv = [i for i in listed["items"] if i["name"] == "srv"]
+    assert len(srv) == 1
+    assert srv[0]["enabled"] is True
+
+    result = _mutate("disable", "srv", root, home, kind="mcp", scope="project")
+    assert result["changed"] is True
+    servers = json.loads((root / ".mcp.json").read_text(encoding="utf-8"))["mcpServers"]
+    assert "srv" not in servers
+
+
+def test_non_utf8_config_is_malformed_config(
+    root: Path, home: Path, tmp_path: Path
+) -> None:
+    cfg = tmp_path / "server.json"
+    cfg.write_bytes('{"command": "ñ"}'.encode("latin-1"))
+
+    with pytest.raises(ToolkitError) as exc:
+        _mutate("add", "srv", root, home, kind="mcp", scope="project", config_file=cfg)
+
+    assert exc.value.code == "malformed_config"
+
+
+def test_stash_entry_without_definition_is_malformed_config(
+    root: Path, home: Path
+) -> None:
+    _write(
+        root / ".context" / "toolkit" / "disabled.json",
+        json.dumps({"schema_version": 1, "items": [{"kind": "mcp", "name": "srv"}]}),
+    )
+
+    with pytest.raises(ToolkitError) as exc:
+        _mutate("enable", "srv", root, home, kind="mcp", scope="project")
+
+    assert exc.value.code == "malformed_config"
+
+
+def test_bundle_item_without_name_is_malformed_config(
+    root: Path, home: Path, out_dir: Path
+) -> None:
+    _write(
+        out_dir / "t-6" / BUNDLE_MANIFEST,
+        json.dumps({"items": [{"kind": "mcp"}]}),
+    )
+
+    with pytest.raises(ToolkitError) as exc:
+        _mutate(
+            "disable",
+            "srv",
+            root,
+            home,
+            scope="terminal",
+            terminal_id="t-6",
+            out_dir=out_dir,
+        )
+
+    assert exc.value.code == "malformed_config"
