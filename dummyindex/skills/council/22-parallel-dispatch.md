@@ -1,8 +1,8 @@
 # Parallel dispatch — the council batch loop
 
 The per-feature pipeline runs **in parallel across features**, not one feature
-at a time. Features are independent (each writes only to its own
-`features/<id>/` tree), so the council dispatches a whole batch of agents
+at a time. Features are independent: each writes only to its own
+`features/<id>/` tree. The council thus dispatches a whole batch of agents
 concurrently, waits, and advances.
 
 ## The loop
@@ -26,11 +26,11 @@ repeat
 ## Stages (what the CLI returns, in order)
 
 1 specify (dev) · 2 plan (architect) · 3 critique (critics, mode-rostered) ·
-4 flow (dev) · 5 tree-enrich (dev, on by default — pass `--no-tree-enrich` to
-drop it). The CLI returns
-the **earliest incomplete stage** across all features and never advances a
-feature to stage N+1 until stage N is logged complete for it — so intra-feature
-ordering is preserved while cross-feature work runs in parallel.
+4 flow (dev) · 5 tree-enrich (dev, on by default). Pass `--no-tree-enrich` to
+drop that stage. The CLI returns
+the **earliest incomplete stage** across all features. It never advances a
+feature to stage N+1 until stage N is logged complete for it. This keeps the
+intra-feature order while cross-feature work runs in parallel.
 
 ## Critic roster (deterministic, mode-gated)
 
@@ -44,14 +44,14 @@ The CLI emits one unit per (feature, critic), so the cap bounds **agents**.
 ## Failure isolation
 
 Features are independent. If one unit fails, log it
-(`--status failed`), **leave that feature at its stage, and keep going** — finish
+(`--status failed`), **leave that feature at its stage, and continue**. Finish
 the rest of the batch and all later batches. Do **not** stop the whole council
 (that is the build loop's gate, which is wrong here). At the end, **report the
-features that never reached completion** so the user can re-run — a re-run
-resumes exactly those, because the frontier is recomputed from the logs.
+features that never reached completion** so the user can re-run. A re-run
+resumes exactly those, because the CLI recomputes the frontier from the logs.
 
 ## Resumption
 
 `--next` is stateless beyond the per-feature `_council-log.json`: it recomputes
-the frontier every call. An interrupted run resumes with no special handling —
-just call `--next` again.
+the frontier every call. An interrupted run resumes with no special handling.
+Call `--next` again.
