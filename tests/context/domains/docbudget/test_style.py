@@ -132,3 +132,87 @@ def test_check_style_unrecorded_violation_flagged(tmp_path: Path) -> None:
         STYLE_CEILING,
         None,
     )
+
+
+SEVEN = " ".join(f"Item {i} runs fast." for i in range(7))
+
+
+@pytest.mark.unit
+def test_long_paragraph_flagged_once() -> None:
+    (v,) = lint_text(SEVEN + "\n")
+    assert v.rule == "long-paragraph"
+    assert v.severity == "strict"
+
+
+@pytest.mark.unit
+def test_six_sentences_pass() -> None:
+    assert lint_text(" ".join(f"Item {i} runs fast." for i in range(6)) + "\n") == ()
+
+
+@pytest.mark.unit
+def test_long_paragraph_backticked_passes() -> None:
+    text = " ".join(f"`Item {i} runs fast.`" for i in range(7)) + "\n"
+    assert lint_text(text) == ()
+
+
+@pytest.mark.unit
+def test_contraction_flagged_once() -> None:
+    (v,) = lint_text("It's ready.\n")
+    assert v.rule == "contraction"
+    assert v.severity == "strict"
+
+
+@pytest.mark.unit
+def test_contraction_backticked_passes() -> None:
+    assert lint_text("Set `It's` now.\n") == ()
+
+
+@pytest.mark.unit
+def test_semicolon_flagged_once() -> None:
+    (v,) = lint_text("Keep it short; keep it clear.\n")
+    assert v.rule == "semicolon"
+    assert v.severity == "strict"
+
+
+@pytest.mark.unit
+def test_semicolon_backticked_passes() -> None:
+    assert lint_text("Set `a;b` now.\n") == ()
+
+
+@pytest.mark.unit
+def test_ing_form_is_advice_and_not_counted(tmp_path: Path) -> None:
+    (v,) = lint_text("We are using the tool.\n")
+    assert v.rule == "ing-form"
+    assert v.severity == "advice"
+    assert count_violations(_write_doc(tmp_path, "We are using the tool.\n")) == 0
+
+
+@pytest.mark.unit
+def test_ing_allowlist_passes() -> None:
+    assert lint_text("The string is a thing during setup.\n") == ()
+
+
+@pytest.mark.unit
+def test_passive_is_advice() -> None:
+    (v,) = lint_text("The file is written by the tool.\n")
+    assert v.rule == "passive"
+    assert v.severity == "advice"
+
+
+@pytest.mark.unit
+def test_frontmatter_skipped() -> None:
+    long_desc = " ".join(["word"] * 40)
+    text = f"---\ndescription: {long_desc}\n---\n\nShort sentence here.\n"
+    assert lint_text(text) == ()
+
+
+@pytest.mark.unit
+def test_crlf_bom_matches_lf_for_new_rules() -> None:
+    body = f"{SEVEN}\n\nIt's ready; go.\n"
+    assert lint_text("﻿" + body.replace("\n", "\r\n")) == lint_text(body)
+
+
+def _write_doc(tmp_path: Path, text: str) -> Path:
+    p = tmp_path / "doc.md"
+    p.write_text(text, encoding="utf-8")
+    return p
