@@ -67,7 +67,12 @@ def test_project_session_writes_only_host_config_stash_and_backups(
     toolkit_mutate("disable", "a@b", kind="plugin", **kw)
 
     changed = _changed(before_root, snapshot(root))
-    allowed = {".mcp.json", ".claude/settings.json", ".claude/skills/demo/SKILL.md"}
+    allowed = {
+        ".mcp.json",
+        ".claude/settings.json",
+        ".claude/skills/demo/SKILL.md",
+        ".context/.gitignore",
+    }
     assert changed, "the session should have changed something"
     for rel in changed:
         if rel.startswith(".context/toolkit/"):
@@ -76,6 +81,9 @@ def test_project_session_writes_only_host_config_stash_and_backups(
             _config_or_backup(rel, (".mcp.json", ".claude/settings.json"))
             or rel in allowed
         ), rel
+    assert "/toolkit/" in (root / ".context" / ".gitignore").read_text(
+        encoding="utf-8"
+    ).splitlines()
     assert snapshot(home) == before_home, "project scope must not touch home"
 
 
@@ -159,5 +167,8 @@ def test_install_apply_writes_only_the_stash(root: Path, home: Path) -> None:
         runner=gh,
     )
     changed = _changed(before, snapshot(root))
-    assert changed == {".context/toolkit/disabled.json"}
+    assert changed == {".context/toolkit/disabled.json", ".context/.gitignore"}
+    assert "/toolkit/" in (root / ".context" / ".gitignore").read_text(
+        encoding="utf-8"
+    ).splitlines()
     assert snapshot(home) == before_home
