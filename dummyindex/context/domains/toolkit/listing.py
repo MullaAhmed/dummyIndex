@@ -16,7 +16,7 @@ from .items import ToolkitItem, fall_back
 
 
 def _host_mcp(layout: Layout, scope: str) -> list[ToolkitItem]:
-    servers = read_object(layout.mcp_path()).get("mcpServers", {})
+    servers = read_object(layout.mcp_read_path()).get("mcpServers", {})
     live = servers if isinstance(servers, dict) else {}
     out = [ToolkitItem("mcp", name, scope, True) for name in sorted(live)]
     for entry in read_stash(layout):
@@ -29,7 +29,7 @@ def _host_mcp(layout: Layout, scope: str) -> list[ToolkitItem]:
 def _host_skills(layout: Layout, scope: str) -> list[ToolkitItem]:
     out: list[ToolkitItem] = []
     live: set[str] = set()
-    skills_dir = layout.skills_dir()
+    skills_dir = layout.skills_read_dir()
     if skills_dir.is_dir():
         for child in sorted(skills_dir.iterdir()):
             if child.is_dir() and (child / "SKILL.md").is_file():
@@ -43,7 +43,7 @@ def _host_skills(layout: Layout, scope: str) -> list[ToolkitItem]:
 
 
 def _host_plugins(layout: Layout, scope: str) -> list[ToolkitItem]:
-    toggles = read_object(layout.settings_path()).get("enabledPlugins", {})
+    toggles = read_object(layout.settings_read_path()).get("enabledPlugins", {})
     if not isinstance(toggles, dict):
         return []
     return [

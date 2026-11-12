@@ -208,3 +208,12 @@ def test_install_yes_with_plan_hash_is_refused_when_not_matching(
     )
     assert rc == 1
     assert json.loads(_stdout(capsys))["error"]["code"] == "stale_plan_hash"
+
+
+def test_utf16_mcp_json_is_malformed_config_envelope_not_traceback(
+    root: Path, capsys
+) -> None:
+    (root / ".mcp.json").write_bytes('{"mcpServers": {}}'.encode("utf-16"))
+    assert run(["list", "--scope", "project", "--root", str(root)]) == 1
+    doc = json.loads(_stdout(capsys))
+    assert doc["error"]["code"] == "malformed_config"

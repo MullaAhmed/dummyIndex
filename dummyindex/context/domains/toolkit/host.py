@@ -27,7 +27,7 @@ from ...build.upgrade import ensure_context_gitignore
 from ..atomic_io import write_text_atomic
 from .constants import PROJECT_STASH_DIR, STASH_FILE, USER_STASH_DIR
 from .errors import ToolkitError
-from .paths import safe_target
+from .paths import read_target, safe_target
 
 
 @dataclass(frozen=True)
@@ -49,8 +49,17 @@ class Layout:
     def settings_path(self) -> Path:
         return safe_target(self.claude_base, *self.settings_parts)
 
+    def mcp_read_path(self) -> Path:
+        return read_target(self.mcp_base, *self.mcp_parts)
+
+    def settings_read_path(self) -> Path:
+        return read_target(self.claude_base, *self.settings_parts)
+
     def skills_dir(self) -> Path:
         return safe_target(self.claude_base, *self.skills_parts)
+
+    def skills_read_dir(self) -> Path:
+        return read_target(self.claude_base, *self.skills_parts)
 
     def skill_file(self, name: str) -> Path:
         return safe_target(self.claude_base, *self.skills_parts, name, "SKILL.md")
@@ -168,7 +177,7 @@ def read_object(path: Path) -> dict[str, Any]:
         return {}
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
+    except (OSError, ValueError) as exc:  # ValueError: bad JSON or bad encoding
         raise ToolkitError(
             "malformed_config",
             f"{path} is not valid JSON ({exc}); left unchanged, fix it by hand",

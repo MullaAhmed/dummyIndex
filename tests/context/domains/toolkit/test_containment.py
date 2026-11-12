@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 from pathlib import Path
@@ -13,6 +14,9 @@ from dummyindex.context.domains.toolkit import (
     toolkit_install,
     toolkit_mutate,
 )
+from dummyindex.context.domains.toolkit.bundle import load_manifest
+from dummyindex.context.domains.toolkit.host import project_layout
+from dummyindex.context.domains.toolkit.listing import host_items
 from dummyindex.context.domains.toolkit.source import parse_source
 from tests.context.domains.toolkit.helpers import SKILL_TEXT
 
@@ -34,6 +38,33 @@ def _link_outside(link: Path, target: Path) -> None:
         )
         if done.returncode == 0:
             return
+    pytest.skip("this environment cannot create symlinks or junctions")
+
+
+def _link_settings_outside(root: Path, outside_dir: Path) -> Path:
+    """``<root>/.claude/settings.json`` resolving outside ``root``.
+
+    Prefers a file symlink; without that privilege (Windows) it links the
+    ``.claude`` folder as a junction, which the containment check also sees.
+    """
+    claude = root / ".claude"
+    outside_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        claude.mkdir()
+        (claude / "settings.json").symlink_to(outside_dir / "settings.json")
+        return claude / "settings.json"
+    except OSError:
+        pass
+    if claude.exists():
+        claude.rmdir()
+    if os.name == "nt":
+        done = subprocess.run(
+            ["cmd", "/c", "mklink", "/J", str(claude), str(outside_dir)],
+            capture_output=True,
+            check=False,
+        )
+        if done.returncode == 0:
+            return claude / "settings.json"
     pytest.skip("this environment cannot create symlinks or junctions")
 
 
@@ -167,7 +198,7 @@ def test_symlinked_mcp_file_escaping_root_is_refused(
             config_file=_server(tmp_path),
         )
     assert exc.value.code == "path_escape"
-    assert outside.read_text(encoding="utf-8") == "{}"
+    assert (outside / "settings.json").read_text(encoding="utf-8") == "{}"
 
 
 def test_context_dir_redirected_outside_root_blocks_the_stash(
@@ -300,3 +331,40 @@ def test_install_cannot_target_terminal_scope(root: Path, home: Path) -> None:
             preview=True,
         )
     assert exc.value.code == "unsupported_scope"
+
+
+def test_read_of_symlinked_settings_outside_scope_is_allowed(
+    root: Path, home: Path, tmp_path: Path
+) -> None:
+    outside = tmp_path / "outside"
+    _link_settings_outside(root, outside)
+    (outside / "settings.json").write_text(
+        '{"enabledPlugins": {"codex@m": true}}', encoding="utf-8"
+    )
+    items = host_items(project_layout(root))
+    assert any(i.name == "codex@m" and i.enabled for i in items)
+
+
+def test_write_through_escaping_symlink_is_still_refused(
+    root: Path, home: Path, tmp_path: Path
+) -> None:
+    outside = tmp_path / "outside"
+    _link_settings_outside(root, outside)
+    original = '{"enabledPlugins": {"codex@m": false}}'
+    (outside / "settings.json").write_text(original, encoding="utf-8")
+    with pytest.raises(ToolkitError) as exc:
+        toolkit_mutate("enable", "codex@m", root=root, home=home, kind="plugin")
+    assert exc.value.code == "path_escape"
+    assert (outside / "settings.json").read_text(encoding="utf-8") == original
+
+
+def test_bundle_item_with_bad_shape_is_malformed_config(tmp_path: Path) -> None:
+    bdir = tmp_path / "term"
+    bdir.mkdir()
+    (bdir / "toolkit.json").write_text(
+        json.dumps({"schema_version": 1, "items": ["not-an-object"]}),
+        encoding="utf-8",
+    )
+    with pytest.raises(ToolkitError) as exc:
+        load_manifest(bdir)
+    assert exc.value.code == "malformed_config"

@@ -60,6 +60,16 @@ def load_manifest(bdir: Path) -> dict[str, Any]:
         ) from exc
     if not isinstance(data, dict) or not isinstance(data.get("items"), list):
         raise ToolkitError("malformed_config", f"{path} has no item list")
+    for item in data["items"]:
+        if not (
+            isinstance(item, dict)
+            and isinstance(item.get("kind"), str)
+            and isinstance(item.get("name"), str)
+        ):
+            raise ToolkitError(
+                "malformed_config",
+                f"{path} has an item without string 'kind' and 'name'",
+            )
     return data
 
 
