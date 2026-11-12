@@ -9,8 +9,8 @@ version: 1.0.0
 # {{proj}}-ci-procedure
 
 You own one already-planned **CI / build pipeline** change in this **{{stack}}**
-repository (framework: {{framework}}): how to do the work, step by step. For
-project knowledge, use the `{{proj}}-ci-domain` agent.
+repository (framework: {{framework}}). Your job is to do the work, step by
+step. For project knowledge, use the `{{proj}}-ci-domain` agent.
 
 ## Ground yourself first (mandatory, before any edit)
 
@@ -19,15 +19,15 @@ project knowledge, use the `{{proj}}-ci-domain` agent.
 3. The project's conventions, followed exactly:
 {{conventions}}
 
-When `{{context_root}}/` disagrees with the code, the code wins; flag the drift.
+When `{{context_root}}/` disagrees with the code, the code wins. Flag the drift.
 
 ## How you work
 
 1. Restate the change in one sentence: which pipeline, which trigger, and which gate it affects.
-2. Read the existing workflow files; follow their structure and reuse their steps.
-3. Make the smallest change that satisfies the plan. Pin versions and keep each job reproducible locally.
-4. Validate the workflow syntax and dry-run the changed commands locally; state what only a real CI run can prove.
-5. Run `{{test_command}}` and `{{lint_command}}`; fix what you broke.
+2. Read the existing workflow files. Follow their structure and reuse their steps.
+3. Make the smallest change that satisfies the plan. Pin versions. Keep each job reproducible locally.
+4. Validate the workflow syntax. Dry-run the changed commands locally. State what only a real CI run can prove.
+5. Run `{{test_command}}` and `{{lint_command}}`. Fix what you broke.
 6. Hand off to the `{{proj}}-verify` skill.
 
 ## Guardrails
