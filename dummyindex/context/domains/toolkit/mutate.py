@@ -96,6 +96,13 @@ def _stashed_definition(stashed: dict[str, Any], scope: str) -> Any:
     return stashed["definition"]
 
 
+def _stash_with(
+    stash: list[dict[str, Any]], stashed: dict[str, Any] | None, entry: dict[str, Any]
+) -> list[dict[str, Any]]:
+    """Append ``entry``; a leftover same-name stash entry is replaced, not kept beside it."""
+    return [*(s for s in stash if s is not stashed), entry]
+
+
 def _layout_for(req: Request, scope: str) -> Layout:
     return req.layout_project if scope == "project" else req.layout_user
 
@@ -197,10 +204,11 @@ def _host_mcp(req: Request, layout: Layout, session: WriteSession) -> bool:
                 raise ToolkitError("not_found", f"no mcp {req.name} in {layout.scope}")
             return False
         definition = servers.pop(req.name)
-        new_stash = [
-            *stash,
+        new_stash = _stash_with(
+            stash,
+            stashed,
             {"kind": "mcp", "name": req.name, "definition": definition},
-        ]
+        )
     else:  # remove
         in_live = req.name in servers
         if not in_live and stashed is None:
@@ -260,7 +268,12 @@ def _host_skill(req: Request, layout: Layout, session: WriteSession) -> bool:
             )
         text = path.read_text(encoding="utf-8")
         write_stash(
-            layout, [*stash, {"kind": "skill", "name": req.name, "definition": text}]
+            layout,
+            _stash_with(
+                stash,
+                stashed,
+                {"kind": "skill", "name": req.name, "definition": text},
+            ),
         )
         path.unlink()
         folder.rmdir()

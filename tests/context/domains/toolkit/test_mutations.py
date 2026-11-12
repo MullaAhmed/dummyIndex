@@ -35,6 +35,12 @@ def _skill_file(tmp_path: Path, text: str = SKILL_TEXT) -> Path:
     return _write(tmp_path / "in" / "SKILL.md", text)
 
 
+def _stash_entries(root: Path, name: str) -> list[dict]:
+    path = root / ".context" / "toolkit" / "disabled.json"
+    items = json.loads(path.read_text(encoding="utf-8"))["items"]
+    return [i for i in items if i.get("name") == name]
+
+
 def _mutate(action: str, name: str, root: Path, home: Path, **kw):
     return toolkit_mutate(action, name, root=root, home=home, **kw)
 
@@ -584,7 +590,7 @@ def test_live_and_stashed_same_name_lists_once_and_resolves_with_kind(
     _mutate("disable", "srv", root, home, kind="mcp", scope="project")
     _write(
         root / ".mcp.json",
-        json.dumps({"mcpServers": {"srv": {"url": "https://example.test/mcp"}}}),
+        json.dumps({"mcpServers": {"srv": {"url": "https://live.test/mcp"}}}),
     )
 
     listed = toolkit_list(root=root, home=home, kind="mcp", scope="project")
@@ -596,6 +602,78 @@ def test_live_and_stashed_same_name_lists_once_and_resolves_with_kind(
     assert result["changed"] is True
     servers = json.loads((root / ".mcp.json").read_text(encoding="utf-8"))["mcpServers"]
     assert "srv" not in servers
+    stashed = _stash_entries(root, "srv")
+    assert [s["definition"] for s in stashed] == [{"url": "https://live.test/mcp"}]
+
+    _mutate("enable", "srv", root, home, kind="mcp", scope="project")
+    servers = json.loads((root / ".mcp.json").read_text(encoding="utf-8"))["mcpServers"]
+    assert servers["srv"] == {"url": "https://live.test/mcp"}
+
+
+def test_live_and_stashed_skill_disable_leaves_one_stash_entry(
+    root: Path, home: Path, tmp_path: Path
+) -> None:
+    _mutate(
+        "add",
+        "demo",
+        root,
+        home,
+        kind="skill",
+        scope="project",
+        source_file=_skill_file(tmp_path),
+    )
+    _mutate("disable", "demo", root, home, kind="skill", scope="project")
+    live_text = SKILL_TEXT + "\nlive\n"
+    _write(root / ".claude" / "skills" / "demo" / "SKILL.md", live_text)
+
+    result = _mutate("disable", "demo", root, home, kind="skill", scope="project")
+    assert result["changed"] is True
+    assert [s["definition"] for s in _stash_entries(root, "demo")] == [live_text]
+
+    _mutate("enable", "demo", root, home, kind="skill", scope="project")
+    skill = root / ".claude" / "skills" / "demo" / "SKILL.md"
+    assert skill.read_text(encoding="utf-8") == live_text
+
+
+def test_terminal_fallback_with_two_project_kinds_is_ambiguous_and_changes_nothing(
+    root: Path, home: Path, out_dir: Path, tmp_path: Path
+) -> None:
+    _mutate(
+        "add",
+        "srv",
+        root,
+        home,
+        kind="mcp",
+        scope="project",
+        config_file=_server_file(tmp_path),
+    )
+    _mutate(
+        "add",
+        "srv",
+        root,
+        home,
+        kind="skill",
+        scope="project",
+        source_file=_skill_file(tmp_path),
+    )
+    mcp_file = root / ".mcp.json"
+    skill_file = root / ".claude" / "skills" / "srv" / "SKILL.md"
+    before = (mcp_file.read_bytes(), skill_file.read_bytes())
+
+    with pytest.raises(ToolkitError) as exc:
+        _mutate(
+            "disable",
+            "srv",
+            root,
+            home,
+            scope="terminal",
+            terminal_id="t-8",
+            out_dir=out_dir,
+            allow_project_fallback=True,
+        )
+
+    assert exc.value.code == "ambiguous_item"
+    assert (mcp_file.read_bytes(), skill_file.read_bytes()) == before
 
 
 def test_non_utf8_config_is_malformed_config(
