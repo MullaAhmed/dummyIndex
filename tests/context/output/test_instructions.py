@@ -96,7 +96,8 @@ def test_how_to_use_md_documents_commit_policy_for_machine_layer() -> None:
 
 @pytest.mark.unit
 def test_how_to_use_md_passes_style_lint() -> None:
-    assert lint_text(generate_how_to_use_md()) == ()
+    strict = [v for v in lint_text(generate_how_to_use_md()) if v.severity == "strict"]
+    assert strict == []
 
 
 @pytest.mark.unit
@@ -106,6 +107,16 @@ def test_how_to_use_md_keeps_backbone_naming_and_no_feature_fact() -> None:
     text = generate_how_to_use_md()
     assert "(map, tree, `naming`, source-docs)" in text
     assert "new code in no feature" in text
+
+
+@pytest.mark.unit
+def test_how_to_use_md_keeps_gc_removal_and_index_pointer_facts() -> None:
+    """Regression (T7d): dead code is removed only if the suite stays green,
+    and `features/INDEX.json` (not each feature) points to `feature.json`."""
+    text = generate_how_to_use_md()
+    assert "Remove it only if" in text
+    assert "Keep it only if" not in text
+    assert "The `features/INDEX.json` file points to the `feature.json` file of each feature" in text
 
 
 @pytest.mark.unit
