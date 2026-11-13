@@ -515,6 +515,16 @@ Subcommands:
   audit-log --slug S --round N --persona P --status STATE [--note "..."] [--root DIR]
                                     Append to audits/<slug>/_debate-log.json (debate
                                     resumption). Status: started|complete|failed|skipped.
+  requirements check|sync|gate|bypass [--root DIR] [--json] [--yes] [--local-only] [--hours N]
+                                    Required-setup manifest in .context/config.toml.
+                                      check  - print each requirement row. Exit 0 when
+                                               all are met. Exit 3 when one is missing.
+                                      sync   - restore local files, then install trusted
+                                               plugins. --yes approves untrusted plugins.
+                                               --local-only installs no plugins.
+                                      gate   - UserPromptSubmit hook. Blocks a prompt while
+                                               requirements are unmet. Always exit 0.
+                                      bypass - allow prompts for --hours N (1-24).
   gc status|delete|closeout|stamp|signal [--json] [--root DIR]
                                     Context-hygiene GC (deterministic plumbing;
                                     `/dummyindex-gc` on Claude or `$dummyindex-gc`
