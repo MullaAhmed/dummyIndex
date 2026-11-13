@@ -1,7 +1,7 @@
 """`dummyindex context wire`: the interactive escalation surface for `wired`.
 
 The headless reconciler only classifies and reports, never prompting. This re-classifies
-``config.wired`` read-only (``classify_wired_entry``, shared with ``status``) and prompts
+``config.wired`` read-only (``cli.requirements.classify_wired``, shared with ``status``) and prompts
 via :data:`_PROMPT` for each untrusted wireable plugin; skills get a manual notice and
 malformed targets are skipped. Never hangs: ``--yes`` affirms without prompting, and a
 non-TTY stdin without ``--yes`` prints what would be prompted and exits 0.
@@ -57,11 +57,10 @@ def _wire(
     entry: prompt for a wireable plugin (``--yes`` or a yes installs it, a decline
     leaves it needs-user); skills are manual, never auto-wired; malformed targets are
     skipped. A wire error is reported and leaves the entry needs-user."""
+    from dummyindex.cli.requirements import classify_wired
     from dummyindex.context.default_plugins import (
         WiredClass,
         WiredKind,
-        _already_decided,
-        classify_wired_entry,
     )
     from dummyindex.context.domains.config import ConfigError, read_config
 
@@ -78,12 +77,8 @@ def _wire(
         print("wired: none declared — nothing to wire.")
         return 0
 
-    def is_present(target: str) -> bool:
-        return _already_decided(out_root, target)
-
     classified = [
-        (entry, classify_wired_entry(entry, is_present=is_present))
-        for entry in config.wired
+        (entry, classify_wired(entry, root=out_root)) for entry in config.wired
     ]
     satisfied = sum(1 for _, c in classified if c is WiredClass.SATISFIED)
 

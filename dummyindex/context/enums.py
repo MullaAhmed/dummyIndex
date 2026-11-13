@@ -148,6 +148,7 @@ class ContextSubcommand(str, Enum):
     GC = "gc"
     MAINTAIN = "maintain"
     RESTYLE = "restyle"
+    REQUIREMENTS = "requirements"
     FLEET = "fleet"
     STATUS = "status"
     WIRE = "wire"
@@ -157,3 +158,12 @@ class ContextSubcommand(str, Enum):
     GUARD_DOC_WRITE = "guard-doc-write"
     DRIFT_ACK = "drift-ack"
     EVOLVE = "evolve"
+
+
+class RequirementsVerb(str, Enum):
+    """`dummyindex context requirements <verb>` — the closed verb alphabet."""
+
+    CHECK = "check"
+    SYNC = "sync"
+    GATE = "gate"
+    BYPASS = "bypass"

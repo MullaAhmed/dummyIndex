@@ -351,7 +351,9 @@ def test_global_upgrade_runs_on_stale_stamp_without_config_toml(
     assert result.returncode == 0
     calls = log.read_text(encoding="utf-8").splitlines()
     assert "context upgrade --if-stale --root " + tmp_path.as_posix() in calls
-    assert "context requirements sync --local-only" in calls
+    assert (
+        "context requirements sync --local-only --root " + tmp_path.as_posix() in calls
+    )
 
 
 @pytest.mark.integration

@@ -155,19 +155,13 @@ def _wired(context_dir: Path, out_root: Path) -> dict[str, Any]:
     plugin already decided; acted = declared but absent (only counted); needs-user =
     skills and malformed targets. Best-effort: no config → all-zero counts."""
     try:
-        from dummyindex.context.default_plugins import (
-            WiredClass,
-            _already_decided,
-            classify_wired_entry,
-        )
+        from dummyindex.cli.requirements import classify_wired
+        from dummyindex.context.default_plugins import WiredClass
         from dummyindex.context.domains.config import read_config
 
         config = read_config(context_dir)
         if config is None or not config.wired:
             return _empty_wired()
-
-        def is_present(target: str) -> bool:
-            return _already_decided(out_root, target)
 
         counts = {
             WiredClass.SATISFIED: 0,
@@ -175,7 +169,7 @@ def _wired(context_dir: Path, out_root: Path) -> dict[str, Any]:
             WiredClass.NEEDS_USER: 0,
         }
         for entry in config.wired:
-            counts[classify_wired_entry(entry, is_present=is_present)] += 1
+            counts[classify_wired(entry, root=out_root)] += 1
         return {
             "declared": len(config.wired),
             "satisfied": counts[WiredClass.SATISFIED],

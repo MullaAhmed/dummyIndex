@@ -77,7 +77,8 @@ def _upgrade_body(cli_version: str) -> str:
         f'grep -qsE {shlex.quote(pattern)} "$ROOT/.context/meta.json" && exit 0\n'
         "command -v dummyindex >/dev/null 2>&1 || exit 0\n"
         'dummyindex context upgrade --if-stale --root "$ROOT" 2>/dev/null || true\n'
-        "dummyindex context requirements sync --local-only >/dev/null 2>&1 || true\n"
+        'dummyindex context requirements sync --local-only --root "$ROOT" '
+        ">/dev/null 2>&1 || true\n"
         "exit 0\n"
     )
 
