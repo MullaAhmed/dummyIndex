@@ -389,3 +389,18 @@ def test_stamp_bad_style_ratchet_writes_nothing(ctx: Path, unique_runs: None) ->
     with pytest.raises(RestyleRunError, match="style-budget"):
         stamp(ctx)
     assert {rel: (ctx / rel).read_bytes() for rel in protected} == before
+
+
+@pytest.mark.unit
+def test_force_max_units_after_full_stamp_restarts_first_unit(
+    ctx: Path, unique_runs: None
+) -> None:
+    _add_billing(ctx)
+    for expected in ("auth", "billing", TESTING):
+        assert begin(ctx, all_units=False, max_units=1, force=False).units == (
+            expected,
+        )
+        done(ctx, expected)
+    assert stamp(ctx).ruleset == STE_RULESET_VERSION
+    result = begin(ctx, all_units=False, max_units=1, force=True)
+    assert result.units == ("auth",)
