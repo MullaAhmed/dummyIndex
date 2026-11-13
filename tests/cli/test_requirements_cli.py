@@ -386,3 +386,69 @@ def test_wired_plugin_satisfied_by_project_settings(project: Path) -> None:
     entry = WiredEntry(kind=WiredKind.PLUGIN, target=PLUGIN)
 
     assert cli_requirements.classify_wired(entry, root=project) is WiredClass.SATISFIED
+
+
+# --- polish: invalid config row, confirm prompt, kept adapters
+
+
+def test_check_invalid_config_prints_invalid_row_and_exits_zero(
+    project: Path, config_dir: Path, capsys
+) -> None:
+    (project / CONFIG_TOML_REL).write_text("[[[ not toml\n", encoding="utf-8")
+
+    rc = dispatch(["requirements", "check", "--root", str(project)])
+
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "invalid" in out
+    assert "config.toml" in out
+
+
+def test_check_invalid_config_json_has_invalid_status(
+    project: Path, config_dir: Path, capsys
+) -> None:
+    (project / CONFIG_TOML_REL).write_text("[[[ not toml\n", encoding="utf-8")
+
+    rc = dispatch(["requirements", "check", "--root", str(project), "--json"])
+
+    [row] = json.loads(capsys.readouterr().out)
+    assert rc == 0
+    assert row["status"] == "invalid"
+
+
+def test_confirm_passes_question_through_unchanged(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    asked: list[str] = []
+    monkeypatch.setattr("builtins.input", lambda prompt="": asked.append(prompt) or "y")
+
+    assert cli_requirements._confirm("Install untrusted plugin x [y/N]") is True
+    assert asked == ["Install untrusted plugin x [y/N]"]
+
+
+@pytest.mark.parametrize("failure", [EOFError, KeyboardInterrupt])
+def test_confirm_reads_interrupt_as_no(
+    monkeypatch: pytest.MonkeyPatch, failure: type[BaseException]
+) -> None:
+    def interrupted(prompt: str = "") -> str:
+        raise failure
+
+    monkeypatch.setattr("builtins.input", interrupted)
+
+    assert cli_requirements._confirm("Install untrusted plugin x [y/N]") is False
+
+
+def test_sync_prints_kept_adapters(
+    project: Path, config_dir: Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    report = _empty_report(adapters_kept=(".claude/agents/mine.md",))
+    monkeypatch.setattr(
+        "dummyindex.context.domains.requirements.sync_requirements",
+        _Recorder(report),
+    )
+    _write_config(project, Requirements(min_version=VERSION))
+
+    rc = dispatch(["requirements", "sync", "--root", str(project)])
+
+    assert rc == 0
+    assert "kept: .claude/agents/mine.md" in capsys.readouterr().out

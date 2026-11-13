@@ -385,18 +385,26 @@ Writes are atomic. Runs are prefix-scoped, so other proposals' runs under `.cont
 
 The required-setup manifest lives in `.context/config.toml`. These verbs read it and act on it. Root resolves from `--root`, then `CLAUDE_PROJECT_DIR`, then the working directory.
 
-- `check` prints one row per requirement with its status and fix. It exits 0 when all rows are met and 3 when one is missing. A missing config prints a note and exits 0.
+- `check` prints one row per requirement with its status and fix. It exits 0 when all rows are met and 3 when one is missing. An invalid config prints one `invalid` row and exits 0. A missing config prints a note and exits 0.
 - `sync` restores local files first. It then installs trusted plugins. `--yes` approves untrusted plugins. `--local-only` installs no plugins. It prints a restart hint when it writes agents. It exits 1 on any error.
 - `gate` is the UserPromptSubmit hook. It reads the prompt on stdin and blocks it while requirements are unmet. It fails open and always exits 0.
 - `bypass --hours N` allows prompts for N hours. N must be 1 to 24, else it exits 2.
 
 ### `dummyindex context requirements check [--json] [--root DIR]`
 
+Prints one row per requirement. Exits 3 when a requirement is missing or below its version.
+
 ### `dummyindex context requirements sync [--yes] [--local-only] [--root DIR]`
+
+Restores local files and installs trusted plugins. Exits 1 on any error.
 
 ### `dummyindex context requirements gate [--root DIR]`
 
+Reads the prompt on stdin. Prints a block decision while requirements are unmet. Always exits 0.
+
 ### `dummyindex context requirements bypass --hours N [--root DIR]`
+
+Allows prompts for N hours. N must be 1 to 24.
 
 ## Restyle loop (`restyle plan|begin|next|done|stamp|status`)
 

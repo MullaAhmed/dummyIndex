@@ -22,6 +22,7 @@ from .common import parse_path_and_root
 
 if TYPE_CHECKING:
     from dummyindex.context.default_plugins import WiredClass, WiredEntry
+    from dummyindex.context.domains.requirements import RequirementRow
 
 _USAGE = "usage: dummyindex context requirements check|sync|gate|bypass ..."
 _BYPASS_HOURS_RANGE = (1, 24)
@@ -133,7 +134,10 @@ def _check(args: list[str]) -> int:
         return 2
 
     from dummyindex.context.domains.requirements import (
+        RequirementKind,
+        RequirementRow,
         RequirementsError,
+        RequirementStatus,
         check_requirements,
         exit_code,
         read_requirements,
@@ -143,8 +147,16 @@ def _check(args: list[str]) -> int:
     try:
         requirements = read_requirements(_config_path(root))
     except RequirementsError as exc:
-        print(f"error: {exc}", file=sys.stderr)
-        return 2
+        # An invalid config is a reported state, not a crash: one row, exit 0.
+        invalid = RequirementRow(
+            kind=RequirementKind.DUMMYINDEX,
+            name="config.toml",
+            status=RequirementStatus.INVALID,
+            reason=str(exc),
+            fix="fix .context/config.toml",
+        )
+        _print_rows((invalid,), as_json=as_json)
+        return 0
     if requirements is None:
         if as_json:
             print("[]")
@@ -161,6 +173,11 @@ def _check(args: list[str]) -> int:
         family_stamp=_family_stamp(root),
         cli_version=_cli_version(),
     )
+    _print_rows(rows, as_json=as_json)
+    return exit_code(rows)
+
+
+def _print_rows(rows: tuple[RequirementRow, ...], *, as_json: bool) -> None:
     if as_json:
         payload = [
             {
@@ -173,15 +190,14 @@ def _check(args: list[str]) -> int:
             for row in rows
         ]
         print(json.dumps(payload, indent=2))
-    else:
-        for row in rows:
-            line = f"{row.status.value:<18} {row.kind.value}: {row.name}"
-            if row.reason:
-                line += f" — {row.reason}"
-            if row.fix and row.status.value != "satisfied":
-                line += f" (fix: {row.fix})"
-            print(line)
-    return exit_code(rows)
+        return
+    for row in rows:
+        line = f"{row.status.value:<18} {row.kind.value}: {row.name}"
+        if row.reason:
+            line += f" — {row.reason}"
+        if row.fix and row.status.value != "satisfied":
+            line += f" (fix: {row.fix})"
+        print(line)
 
 
 def _sync(args: list[str]) -> int:
@@ -228,13 +244,23 @@ def _sync(args: list[str]) -> int:
         print(f"skipped: {name} — {reason}")
     for name, message in report.errors:
         print(f"error: {name} — {message}", file=sys.stderr)
+    for path in report.adapters_kept:
+        print(f"kept: {path}")
     if report.adapters_written:
         print("restart Claude Code to load new agents")
     return 1 if report.errors else 0
 
 
 def _confirm(question: str) -> bool:
-    return input(f"{question} [y/N] ").strip().lower() in ("y", "yes")
+    """Ask an untrusted-plugin question. ``question`` already ends in ``[y/N]``.
+
+    EOF or Ctrl-C reads as No, so an interrupted sync never installs anything.
+    """
+    try:
+        answer = input(question)
+    except (EOFError, KeyboardInterrupt, OSError):
+        return False
+    return answer.strip().lower() in ("y", "yes")
 
 
 def _gate(args: list[str]) -> int:
