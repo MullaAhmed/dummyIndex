@@ -5,7 +5,7 @@ description: "Run context-hygiene garbage collection for stale, superseded, or d
 
 # /dummyindex-gc / $dummyindex-gc — context-hygiene GC council sweep
 
-> **Installed from dummyindex `__VERSION__`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, diagnose with `dummyindex context check --versions` (it reports which layer is stale), then run `/dummyindex-update` on Claude or `$dummyindex-update` on Codex to bring the CLI, skills, and this repo's wiring back into sync — the update skill is non-destructive on a curated `.context/`. Don't reach for a blunt `dummyindex install` to "fix" a version skew.
+> **Installed from dummyindex `__VERSION__`.** Run `dummyindex --version` to confirm the CLI matches. If they diverge, diagnose with `dummyindex context check --versions` (it reports which layer is stale). Then run `/dummyindex-update` on Claude or `$dummyindex-update` on Codex to sync the CLI, skills, and this repo's wiring. The update skill is non-destructive on a curated `.context/`. Do not reach for a blunt `dummyindex install` to "fix" a version skew.
 
 You are the **GC conductor**. Retire disposable proposals/audits. Keep their accepted knowledge in durable homes. Delete obsolete workspaces only after confirmation. Never archive transcripts or whole proposals.
 
@@ -14,7 +14,7 @@ You are the **GC conductor**. Retire disposable proposals/audits. Keep their acc
 Same idiom as `audit-panel` (plumbing) + `/dummyindex-audit` (council).
 
 - **`dummyindex context gc` is plumbing.** Lists candidate docs, gathers objective signals, computes commit-throttle state. Runs one guarded delete on explicit `--yes`. Never decides what is dead. Never confirms. Never touches source code.
-- **This skill is judgment + gate.** "Stale / superseded / dead" is an LLM call: does the artifact still match the code and work in flight? Not an age rule. Confirm with the user. Only then run the CLI delete, or route code.
+- **This skill is judgment + gate.** An LLM call decides "stale / superseded / dead": does the artifact still match the code and work in flight? Not an age rule. Confirm with the user. Only then run the CLI delete, or route code.
 
 ## The orchestration contract (run it in THIS order)
 
@@ -39,9 +39,9 @@ On Claude this report also drives the SessionStart "N commits since last hygiene
 
 ### 2. Fan out the PARALLEL council walk (dispatchable subagents)
 
-Walk only `close`, `review`, `delete` candidates. `keep` candidates get no walk. Dispatch **one host-native subagent per candidate (or small cluster), all in one message**, so they run concurrently. Claude: `Task`. Portable host path (e.g. Codex): `explorer`, falling back to `default`. Each subagent:
+Walk only `close`, `review`, `delete` candidates. `keep` candidates get no walk. Dispatch **one host-native subagent per candidate (or small cluster), all in one message**, so they run concurrently. Claude: `Task`. Portable host path (for example Codex): `explorer`, with `default` as fallback. Each subagent:
 
-- Grounds in `.context/HOW_TO_USE.md`, then reads the candidate's files (`spec.md`/`plan.md`/`checklist.md` for a proposal; `report.md`/`findings/` for an audit).
+- Grounds in `.context/HOW_TO_USE.md`, then reads the candidate's files (`spec.md`/`plan.md`/`checklist.md` for a proposal, `report.md`/`findings/` for an audit).
 - Walks PageIndex-style to find what supersedes or depends on the candidate:
   ```bash
   dummyindex context query "<the candidate's topic / feature area>" --top-k 8 --json
@@ -57,11 +57,11 @@ Consolidate verdicts into three dispositions. Each takes a different path in ste
 
 - **Dead docs.** Council verdict `stale` / `superseded` / `dead`: orphan scaffold, superseded `plan.md`, done audit with fixed findings, `_archive/*` child. Deleted through the CLI after confirm.
 - **Trivially-dead code.** A 0-caller leading-`_` PRIVATE symbol that passes EVERY guard below. Cite the 0-caller claim from `.context/features/symbol-graph.json` (`calls` edges). Route to a proposal instead if it is any of:
-  1. a CLI verb handler / `run(args)` reachable from the `cli/__init__.py` dispatch table;
-  2. a hook entry point in the `hooks.py` / `claude_settings.py` command set (e.g. `signal`, `decide_nudge`);
-  3. named in any `__all__` / re-exported public surface;
-  4. a serialization round-trip member (`to_dict` / `from_dict` / `__init__`);
-  5. referenced anywhere under `tests/`. First confirm `symbol-graph.json` includes `tests/`. If not, "0 callers" is blind to tests, so the graph alone never suffices;
+  1. a CLI verb handler / `run(args)` reachable from the `cli/__init__.py` dispatch table.
+  2. a hook entry point in the `hooks.py` / `claude_settings.py` command set (e.g. `signal`, `decide_nudge`).
+  3. named in any `__all__` / re-exported public surface.
+  4. a serialization round-trip member (`to_dict` / `from_dict` / `__init__`).
+  5. referenced anywhere under `tests/`. First confirm `symbol-graph.json` includes `tests/`. If not, "0 callers" is blind to tests, so the graph alone never suffices.
   6. reachable by dynamic dispatch.
   Even then, removal must be **proven**, not asserted from the graph.
 - **Broader / riskier dead code.** Anything not guard-passing: public symbol, multi-caller cluster that is all dead, anything unsure. Never auto-removed. Routed to a new proposal.
@@ -69,11 +69,13 @@ Consolidate verdicts into three dispositions. Each takes a different path in ste
 **Closeout and dry-run.**
 
 - **`close` candidates and accepted `review` candidates:** run closeout.
-  1. Draft: `dummyindex context gc closeout --draft --kind proposal --slug <slug>`. Existing draft is never overwritten; delete it to redraft.
+  1. Draft: `dummyindex context gc closeout --draft --kind proposal --slug <slug>`. Existing draft is never overwritten. Delete it to redraft.
   2. Fill transfers or discard reasons from council evidence. Empty discard reason is refused.
   3. Close: `dummyindex context gc closeout --kind proposal --slug <slug> --manifest .context/cache/gc/closeout-proposal-<slug>.json`
 
-  Explicitly classify accepted lessons/decisions/evidence/fixtures and discarded material. The receipt must stay valid. Missing accepted units, changed fixtures, unreviewed files, or inbound durable references block deletion, even with `--force-partial`. Empty scaffolds keep their existing path. See `docs/guide/closeout.md` in the source distribution. After an accepted closeout, process at most one queued learning event through the evolve skill's ordinary gate, or record `NO_ENTRY`. Never learn recursively from evolve/experiment output.
+  Explicitly classify accepted lessons/decisions/evidence/fixtures and discarded material. The receipt must stay valid. Missing accepted units, changed fixtures, unreviewed files, or inbound durable references block deletion, even with `--force-partial`. Empty scaffolds keep their existing path. See `docs/guide/closeout.md` in the source distribution.
+
+  After an accepted closeout, process at most one queued learning event through the evolve skill's ordinary gate, or record `NO_ENTRY`. Never learn recursively from evolve/experiment output.
 - **`delete` candidates:** skip closeout.
 - **All candidates headed for deletion:** run the dry-run. It runs every guard and removes nothing:
   ```bash
@@ -85,7 +87,7 @@ Audits follow the same flow with `--kind audit`.
 
 ### 4. CONFIRM WITH THE USER — **non-dispatchable / human-decision**
 
-> **This step is NOT dispatchable to a subagent.** The conductor (you, in this session) presents the batch and STOPS for an explicit "yes". A subagent never decides or confirms a deletion. Confirmation is a human decision the conductor/user owns. The CLI `--yes` flag enforces this gate; this skill enforces it above.
+> **This step is NOT dispatchable to a subagent.** The conductor (you, in this session) presents the batch and STOPS for an explicit "yes". A subagent never decides or confirms a deletion. Confirmation is a human decision the conductor/user owns. The CLI `--yes` flag enforces this gate. This skill enforces it above.
 
 Present **one batch table** with one row per candidate:
 
@@ -94,7 +96,9 @@ Present **one batch table** with one row per candidate:
 
 Ask for **one explicit confirmation**. The user may strike rows. Only listed rows are covered.
 
-Rows that need `--allow-untracked` or `--force-partial` are **excluded from the batch**. Confirm each one alone. For each, spell out what it is, why it is dead, how it is removed, and the irreversible risk. An `untracked` deletion is **permanent** (not in git, no recovery). It needs the user's explicit okay on *that specific risk* before `--allow-untracked`. An `in_progress` / `checklist-partial` proposal is delete-blocked unless the user explicitly okays `--force-partial`. Confirmation always gates deletion. No doc or code is removed without the explicit go-ahead surfaced here.
+Rows that need `--allow-untracked` or `--force-partial` are **excluded from the batch**. Confirm each one alone. For each, spell out what it is, why it is dead, how it is removed, and the irreversible risk. An `untracked` deletion is **permanent** (not in git, no recovery). It needs the user's explicit okay on *that specific risk* before `--allow-untracked`.
+
+An `in_progress` / `checklist-partial` proposal is delete-blocked unless the user explicitly okays `--force-partial`. Confirmation always gates deletion. No doc or code is removed without the explicit go-ahead surfaced here.
 
 ### 5. Execute, per category (only user-confirmed items)
 
@@ -104,7 +108,9 @@ Rows that need `--allow-untracked` or `--force-partial` are **excluded from the 
   dummyindex context gc delete --kind audit    --slug <slug> --yes
   ```
   One failure does not stop the others. A row refused at `--yes` is reported `blocked at delete`, with its reason. Add `--allow-untracked` only when the user explicitly okayed permanent deletion of that workspace. Add `--force-partial` only when the user explicitly okayed deleting that `in_progress` / `checklist-partial` proposal. Never add either speculatively. Re-deleting a gone target is an idempotent no-op (exit 0).
-- **Trivially-dead code → implementer+tester (PROVE it green).** Dispatch the implementer to remove the symbol. Dispatch the tester to prove the full suite stays green. Keep the removal only if green. If anything goes red, the symbol was not dead: revert, route to a proposal. The graph proposes; the green suite disposes. GC never edits source directly; this path does.
+- **Trivially-dead code → implementer+tester (PROVE it green).** Dispatch the implementer to remove the symbol. Dispatch the tester to prove the full suite stays green. Keep the removal only if green. If anything goes red, the symbol was not dead: revert, route to a proposal.
+
+  The graph proposes. The green suite disposes. GC never edits source directly. This path does.
 - **Broader dead code → new proposal (never auto-removed).** Invoke `/dummyindex-plan "remove dead code: <short description>"` on Claude, or `$dummyindex-plan "remove dead code: <short description>"` on Codex.
 
 ### 6. `gc stamp` — advance the GC anchor
@@ -119,7 +125,7 @@ Advances the committed anchor to HEAD (or `--to <sha>`) and resets the commit-th
 
 ### 7. Reconcile `.context/` if code changed
 
-If step 5's trivially-dead path changed source, reconcile per this repo's host guidance (`.claude/CLAUDE.md` or the active Codex project instruction file). **Do not** stop at a deterministic rebuild:
+If step 5's trivially-dead path changed source, reconcile per this repo's host guidance. That is `.claude/CLAUDE.md` or the active Codex project instruction file. **Do not** stop at a deterministic rebuild:
 
 ```bash
 dummyindex context reconcile          # read-only — reports the delta, writes nothing
@@ -137,10 +143,10 @@ Docs-only sweep: nothing to reconcile. `gc delete` already updated the on-disk d
 
 Final chat output of every run:
 
-- counts per recommendation: `delete` / `close` / `review` / `keep`;
-- closed: proposals closed out;
-- deleted: rows removed;
-- blocked: refused rows, each with its reason (`blocked at delete` or dry-run verdict);
+- counts per recommendation: `delete` / `close` / `review` / `keep`.
+- closed: proposals closed out.
+- deleted: rows removed.
+- blocked: refused rows, each with its reason (`blocked at delete` or dry-run verdict).
 - kept: rows left in place, including `keep` candidates.
 
 Nothing to retire: write `ran, found nothing to retire`.
@@ -154,7 +160,7 @@ Nothing to retire: write `ran, found nothing to retire`.
 - **Confirmation always gates deletion.** No doc or code is removed without explicit user confirmation from step 4. The CLI refuses without an explicit target and `--yes`. Untracked workspaces need a second flag, `--allow-untracked`. This skill gates above that.
 - **Step 4 (user-confirm) and the dogfood GATE are NOT dispatchable.** Human decisions. Only the read-only PageIndex walks (step 2) and trivially-dead implementer+tester (step 5) are dispatched.
 - **Never show a bare `gc delete`.** Every shown `gc delete` carries `--yes` and sits behind the confirm step. Without `--yes` it is a dry-run, never an auto-action.
-- **Delete only the genuinely dead.** Stale / superseded / dead / no-longer-useful. Not every `done` proposal. A `close` recommendation is only a hint; council and user decide.
+- **Delete only the genuinely dead.** Stale / superseded / dead / no-longer-useful. Not every `done` proposal. A `close` recommendation is only a hint. Council and user decide.
 - **Evidence over assertion.** Every verdict cites `path:range`, a superseding slug, or a fixed-findings reference. "Looks old" is not evidence.
 - **GC never edits source directly.** Trivially-dead code goes through implementer+tester and is removed only if the full suite stays green. Broader dead code goes to a proposal. The CLI never touches code.
 - **The code wins.** Conventions and feature docs are context, not authority. When a doc and the code disagree, cite the code. The doc is itself a GC candidate.
