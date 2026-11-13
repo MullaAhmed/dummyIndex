@@ -4,11 +4,11 @@
 
 ## Wave 1 — foundations
 
-- [ ] T1 Equip enums + models: `RequestedBy`, `EquipmentScope`, `EquipmentItem.requested_by/scope/task_refs`, `StackProfile.data_stores/search_backends`. Add a golden-bytes v4 test (`dummyindex/context/domains/equip/enums.py`, `dummyindex/context/domains/equip/models.py`, `tests/context/domains/equip/test_equip_manifest_v3.py`)
-- [ ] T2 Move fresh-render helpers to `dummyindex/context/domains/equip/generate/fresh.py` and re-export them from `dummyindex/cli/equip/common.py`. The equip suite stays green
-- [ ] T3 Requirements package: `__init__`, `errors`, `enums`, `constants`, `models`, `toml_io`, `seed` (`dummyindex/context/domains/requirements/`, `tests/context/domains/requirements/__init__.py`, `test_toml_io.py`, `test_seed.py`)
-- [ ] T4 `installed_plugin_record(target, *, config_dir, project_root)` in `dummyindex/context/claude_plugins.py`. `dummyindex/cli/equip/plugin_state.py` uses it (`tests/context/test_claude_plugins.py`)
-- [ ] T5 `refresh_deterministic_artifacts(advance_stamp=...)` + public `advance_version_stamp` (`dummyindex/context/build/enriched_refresh.py`, `tests/context/build/test_enriched_refresh_stamp.py`)
+- [x] T1 Equip enums + models: `RequestedBy`, `EquipmentScope`, `EquipmentItem.requested_by/scope/task_refs`, `StackProfile.data_stores/search_backends`. Add a golden-bytes v4 test (`dummyindex/context/domains/equip/enums.py`, `dummyindex/context/domains/equip/models.py`, `tests/context/domains/equip/test_equip_manifest_v3.py`)
+- [x] T2 Move fresh-render helpers to `dummyindex/context/domains/equip/generate/fresh.py` and re-export them from `dummyindex/cli/equip/common.py`. The equip suite stays green
+- [x] T3 Requirements package: `__init__`, `errors`, `enums`, `constants`, `models`, `toml_io`, `seed` (`dummyindex/context/domains/requirements/`, `tests/context/domains/requirements/__init__.py`, `test_toml_io.py`, `test_seed.py`)
+- [x] T4 `installed_plugin_record(target, *, config_dir, project_root)` in `dummyindex/context/claude_plugins.py`. `dummyindex/cli/equip/plugin_state.py` uses it (`tests/context/test_claude_plugins.py`)
+- [x] T5 `refresh_deterministic_artifacts(advance_stamp=...)` + public `advance_version_stamp` (`dummyindex/context/build/enriched_refresh.py`, `tests/context/build/test_enriched_refresh_stamp.py`)
 
 ## Wave 2 — agents core + requirements core
 

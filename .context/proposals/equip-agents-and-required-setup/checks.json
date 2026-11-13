@@ -1,0 +1,144 @@
+{
+  "task-0329c26c863b658d": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/build/enriched_refresh.py",
+        "sha256": "9e037d00a1530d200f5691121aebf4d61e2bd252fbe8d720ec52a68699137b28"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/build/test_enriched_refresh_stamp.py",
+        "sha256": "3c6806b7ff6cc00008958a2552a759e82ffab9dd95bb87defdd03346f4afe186"
+      }
+    ],
+    "source_commit": "5e2b668ad05c110ece11affbb085d41bc077422a",
+    "state": "verified",
+    "task_id": "task-0329c26c863b658d",
+    "task_sha256": "0329c26c863b658da15cd62e7571a4239e9ee4987c13945959d40d149a390298"
+  },
+  "task-4df3b3dfd9fe6048": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/equip/enums.py",
+        "sha256": "11bbd937654583ecec25819aca004427a8d15d471e5fa56ffc344611ce5e59a1"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/models.py",
+        "sha256": "5a508d91cc27be6ee44fa5b858e492be385ffadbfc61350ee4edac5d5dfc9795"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/equip/test_equip_manifest_v3.py",
+        "sha256": "b7511fd1804ac5043868595c115d96e33595c2e696e9c7e6485dfba06ff7df6f"
+      }
+    ],
+    "source_commit": "5e2b668ad05c110ece11affbb085d41bc077422a",
+    "state": "verified",
+    "task_id": "task-4df3b3dfd9fe6048",
+    "task_sha256": "4df3b3dfd9fe60480c3a0e427efa37181a3cb9c69584dcc787e969122730fde5"
+  },
+  "task-a4e4eb40d04fe470": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/equip/generate/fresh.py",
+        "sha256": "605981f67da039852d9e2ee8f3ce49005e66c55bc7abf817d241185959801e05"
+      },
+      {
+        "path": "dummyindex/cli/equip/common.py",
+        "sha256": "4cc378ad83be275bdfb0ffbe42d6d68521f1a4af6e80e384fd25c677e3841623"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/test_install.py",
+        "sha256": "861ae8edcb6a908c0b55306f381f1ceea067b75bd319f7cf74665190110f8d2a"
+      }
+    ],
+    "source_commit": "5e2b668ad05c110ece11affbb085d41bc077422a",
+    "state": "verified",
+    "task_id": "task-a4e4eb40d04fe470",
+    "task_sha256": "a4e4eb40d04fe470350f8667853e4c6232f0df24cffe4407799c8f13e247af5e"
+  },
+  "task-a5948056fea2458b": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/requirements/__init__.py",
+        "sha256": "f4ca9f26c89c16a781e85e114f8397ebbf95522a076a41fb2f418d36d5fc796e"
+      },
+      {
+        "path": "dummyindex/context/domains/requirements/errors.py",
+        "sha256": "d88f69fe3a625fcae0fdaa731eeceebf56d7bf142074e1b91d213ac44f4518e0"
+      },
+      {
+        "path": "dummyindex/context/domains/requirements/enums.py",
+        "sha256": "04fd77eb5bf081d3cf45f68476d3b9255bc747436722016f6340ce19f0905cc6"
+      },
+      {
+        "path": "dummyindex/context/domains/requirements/constants.py",
+        "sha256": "38ce567de711e20460253938c8a7956bca7cd3ff9553c67ec00bb99c80211d77"
+      },
+      {
+        "path": "dummyindex/context/domains/requirements/models.py",
+        "sha256": "366666535f9fb679a3fc140ebae04c4a2801c35a4ecfc230f142884892ce9a2a"
+      },
+      {
+        "path": "dummyindex/context/domains/requirements/toml_io.py",
+        "sha256": "aee122b5e0b6a03101cb589228a18f4856da1e4f474a814e3c76cfb244ab7e8d"
+      },
+      {
+        "path": "dummyindex/context/domains/requirements/seed.py",
+        "sha256": "12df65372a14b30c42ba4e6e52fba8849118ca36acd512d3426da9c3485f63b6"
+      },
+      {
+        "path": "dummyindex/skills/__init__.py",
+        "sha256": "d2424fa5a8e8ede926b03b64abf68e0e700ef30f2c93438a3c546ccc2c1ee67e"
+      },
+      {
+        "path": "dummyindex/installer/common.py",
+        "sha256": "026e9078a0dc19d79fbad2fdac5460c3e372c841699b5184612782e2ea688a33"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/requirements/test_toml_io.py",
+        "sha256": "02b7cafcf421f923e5541ea0b59bdaebb36a0bbfcc9d4cfcca4e3dfff6813c2d"
+      },
+      {
+        "path": "tests/context/domains/requirements/test_seed.py",
+        "sha256": "2dbb84d82519789fad03c89cb11f3f57266d7f5758ba6b6eab881ce2a7eccaed"
+      }
+    ],
+    "source_commit": "5e2b668ad05c110ece11affbb085d41bc077422a",
+    "state": "verified",
+    "task_id": "task-a5948056fea2458b",
+    "task_sha256": "a5948056fea2458b67cbc25e95f262d61496c156414869cf14c3ab200e14f265"
+  },
+  "task-f45ef35c554e4156": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/claude_plugins.py",
+        "sha256": "dd053cea1cd418cd2cde3589def6226d7f0bbf083454405dfccfb79706a614f3"
+      },
+      {
+        "path": "dummyindex/cli/equip/plugin_state.py",
+        "sha256": "b604daad8cde4d14d38bdb789a5188ec3a5519892d1a34ac6e7401d8ee4a4403"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/test_claude_plugins.py",
+        "sha256": "921f2624bc207bd370aa4ba850e4cae87580f6c05de59c71b16c9df10f0b13c7"
+      },
+      {
+        "path": "tests/context/domains/equip/test_equip_discover_cli.py",
+        "sha256": "2f2008d39f692c4c6e16d0f12801909d0c2d52dbc011542575155693d1dae584"
+      }
+    ],
+    "source_commit": "5e2b668ad05c110ece11affbb085d41bc077422a",
+    "state": "verified",
+    "task_id": "task-f45ef35c554e4156",
+    "task_sha256": "f45ef35c554e415613c07c83a086148f11e16e081901e924bddde5a5abe7cb8c"
+  }
+}
