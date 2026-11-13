@@ -83,13 +83,15 @@ def refresh_deterministic_artifacts(
     extra_doc_roots: Sequence[Path] = (),
     dummyindex_version: str | None = None,
     allow_downgrade: bool = False,
+    advance_stamp: bool = True,
 ) -> RefreshResult:
     """Refresh only the enrichment-free artefacts under ``root/.context/``.
 
     Migrates the layout first (it scopes the extraction cache to ``dummyindex_version``),
     then writes the tree before the maps (it diffs the old ``map/files.json`` to flag
     stale annotations). Meta keeps ``indexed_commit`` (:func:`_refresh_meta`) and the
-    version stamp moves last (:func:`_advance_version_stamp`). A missing anchor commit
+    version stamp moves last (:func:`advance_version_stamp`), unless ``advance_stamp``
+    is false. A missing anchor commit
     drops a ``.pending-enrichment`` marker into every feature.
     """
     root = root.resolve()
@@ -173,8 +175,8 @@ def refresh_deterministic_artifacts(
             warnings.warn(f"symbol-graph refresh failed: {exc!r}", stacklevel=2)
             failed.append((_GRAPH_ARTIFACT, repr(exc)))
 
-        if not failed:
-            _advance_version_stamp(
+        if advance_stamp and not failed:
+            advance_version_stamp(
                 context_dir, dummyindex_version, allow_downgrade=allow_downgrade
             )
 
@@ -285,7 +287,7 @@ def _refresh_meta(
 
     ``indexed_commit`` is kept: it is the last *reconcile* anchor, moved only by ingest
     or ``reconcile-stamp``, and advancing it here would silently forget every change
-    since. ``dummyindex_version``/``schema_version`` move in :func:`_advance_version_stamp`.
+    since. ``dummyindex_version``/``schema_version`` move in :func:`advance_version_stamp`.
     Returns ``(path, updated_at)``; ``updated_at`` is ``""`` if meta is missing/unreadable.
     """
     meta_path = context_dir / "meta.json"
@@ -308,13 +310,14 @@ def _refresh_meta(
     return meta_path, updated.updated_at
 
 
-def _advance_version_stamp(
+def advance_version_stamp(
     context_dir: Path, version: str | None, *, allow_downgrade: bool
 ) -> bool:
     """Last write of the refresh: stamp ``meta.json`` with ``version`` and the schema.
 
     Called only once every required artefact was written, so a failed refresh keeps the
-    old stamp. No-op when ``version`` is ``None`` or meta is missing/unreadable. The schema
+    old stamp. Callers may also invoke it alone. No-op when ``version`` is ``None`` or
+    meta is missing/unreadable. The schema
     becomes :data:`SCHEMA_VERSION` even at an equal version. The version moves when the
     stored one is older or unparseable, or on ``allow_downgrade``; an unparseable
     ``version`` never moves it. ``replace`` keeps ``updated_at``. True if the version moved.
@@ -343,3 +346,7 @@ def _advance_version_stamp(
         replace(meta, dummyindex_version=target, schema_version=SCHEMA_VERSION),
     )
     return advance
+
+
+# Old private name; kept so existing imports and monkeypatches keep working.
+_advance_version_stamp = advance_version_stamp

@@ -14,6 +14,8 @@ from pathlib import Path
 
 from dummyindex.context.claude_plugins import (
     DeclaredMarketplace,
+    PluginRegistryError,
+    installed_plugin_record,
     list_known_marketplaces,
     list_marketplaces,
 )
@@ -23,6 +25,7 @@ from dummyindex.context.domains.equip import (
     parse_catalog,
 )
 from dummyindex.context.domains.equip.plugins.sources import CATALOG_PATH
+from dummyindex.context.domains.memory.miner.resolve import resolve_claude_config_dir
 
 from .common import pull_root
 
@@ -90,7 +93,7 @@ def run_verify(rest: list[str]) -> int:
     and its last registry update. Exit 0 loaded; 1 declared-but-not-loaded (with the
     next step); 2 usage errors.
     """
-    _root, rest = pull_root(rest)  # tolerated for symmetry; verify is home-scoped
+    root, rest = pull_root(rest)
     target = next((a for a in rest if "@" in a and not a.startswith("--")), None)
     if target is None:
         print("error: `equip verify` requires <plugin>@<marketplace>", file=sys.stderr)
@@ -100,7 +103,7 @@ def run_verify(rest: list[str]) -> int:
         print("error: target must be <plugin>@<marketplace>", file=sys.stderr)
         return 2
 
-    record = _installed_plugin_record(target)
+    record = _installed_plugin_record(target, project_root=root)
     clone = Path.home() / ".claude" / "plugins" / "marketplaces" / marketplace
     known = {d.name: d for d in list_known_marketplaces()}.get(marketplace)
 
@@ -121,22 +124,17 @@ def run_verify(rest: list[str]) -> int:
     return 1
 
 
-def _installed_plugin_record(target: str) -> dict | None:
-    """The first registry record for ``target`` from installed_plugins.json.
-
-    Shape: ``{"version": 2, "plugins": {"<plugin>@<mkt>": [{scope, installPath,
-    version, gitCommitSha, ...}]}}``. Tolerant: an absent or undecodable
-    registry reads as not-loaded.
-    """
-    path = Path.home() / ".claude" / "plugins" / "installed_plugins.json"
-    if not path.is_file():
-        return None
+def _installed_plugin_record(
+    target: str, *, project_root: Path | None = None
+) -> dict | None:
+    """Tolerant wrapper: an unreadable registry reads as not-loaded (verify has
+    no ``unknown`` state; the check requirement row uses the raising reader).
+    ``project_root`` defaults to the cwd when ``--root`` is absent."""
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+        return installed_plugin_record(
+            target,
+            config_dir=resolve_claude_config_dir(),
+            project_root=project_root if project_root is not None else Path.cwd(),
+        )
+    except PluginRegistryError:
         return None
-    plugins = data.get("plugins") if isinstance(data, dict) else None
-    records = plugins.get(target) if isinstance(plugins, dict) else None
-    if isinstance(records, list) and records and isinstance(records[0], dict):
-        return records[0]
-    return None

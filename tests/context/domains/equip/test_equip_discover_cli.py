@@ -1016,7 +1016,12 @@ def test_verify_reports_loaded_plugin(monkeypatch, tmp_path, capsys):
                 "version": 2,
                 "plugins": {
                     "pg-tuner@claude-plugins-official": [
-                        {"scope": "project", "installPath": "/x", "version": "3.5.0"}
+                        {
+                            "scope": "project",
+                            "projectPath": str(Path.cwd().resolve()),
+                            "installPath": "/x",
+                            "version": "3.5.0",
+                        }
                     ]
                 },
             }
