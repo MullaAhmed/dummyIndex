@@ -30,6 +30,7 @@ _MAX_SENTENCES = 6
 _EXCERPT_CHARS = 60
 _FENCE_PREFIXES = ("```", "~~~")
 _LIST_RE = re.compile(r"(?:[-*+]|\d+[.)])\s+")
+_QUOTE_RE = re.compile(r"^[ \t]*(?:>[ \t]?)+")
 _CODE_RE = re.compile(r"(`+).*?\1")
 _CODE_PLACEHOLDER = "CODE"
 # Underscores at word edges are emphasis; inner underscores (snake_case) stay.
@@ -185,6 +186,7 @@ def lint_text(text: str) -> tuple[StyleViolation, ...]:
         lineno = idx + 1
         if idx <= front_end:
             continue
+        raw = _QUOTE_RE.sub("", raw)
         stripped = raw.lstrip()
         if in_fence:
             in_fence = not stripped.startswith(_FENCE_PREFIXES)
