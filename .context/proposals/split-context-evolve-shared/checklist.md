@@ -1,0 +1,23 @@
+# Checklist — Split dummyindex into shared, context and evolve layers with a one-way import boundary
+
+> Waves run in order. Items in one wave touch disjoint files.
+> Waves 2–3 start only after the equip-bugs task merges (spec: Conflict with the equip-bugs task).
+> Tick `- [x]` only after every named command passes.
+
+## Wave 1 — gate
+
+- [ ] **GATE** `git merge-base --is-ancestor <equip-bugs tip> HEAD` exits 0. Record `HEAD` here as `GATE_SHA`. Rerun the `D:\temp\split_*.py` scans and refresh `boundary-map.md` and the Wave 2–3 file lists (plan task 1).
+
+## Wave 2 — shared layer (BLOCKED until equip-bugs merges)
+
+- [ ] Create `dummyindex/shared/` (`atomic_io.py`, `errors.py`, `guard.py`, `lesson/`, `lesson/rules.py`), rename `_replace_bytes` and `_bump`, keep digest coverage, move tests to `tests/shared/`, and add boundary test v1 (plan task 2). Verify: `ruff check .` passes; `python -m pytest tests/test_import_boundaries.py tests/shared tests/context tests/cli tests/test_install.py -q` passes; `python -m pytest tests/ -q --tb=short` passes.
+
+## Wave 3 — evolve layer, seams, docs (BLOCKED until equip-bugs merges)
+
+- [ ] Create `dummyindex/evolve/` and `dummyindex/evolve/cli/`, add the 3 lazy root adapters and seams S1/S2, rename the C2 names, move tests to `tests/evolve/`, add the seam tests, and extend the boundary test to v2 (plan task 3). Verify: `ruff check .` passes; `python -m pytest tests/test_import_boundaries.py tests/evolve tests/context tests/cli -q` passes; `python -m pytest tests/ -q --tb=short` passes.
+- [ ] Update `docs/reference/01-conventions.md` with the 3-layer rule and its two exceptions (plan task 4). Verify: `python -m pytest tests/test_repo_doc_style.py -q` passes.
+
+## Wave 4 — acceptance
+
+- [ ] Acceptance: `ruff check .` passes and `python -m pytest tests/ -q --tb=short` passes on the split tree, including every R1–R7 self-check and the seam tests.
+- [ ] Acceptance: `git diff <GATE_SHA> HEAD -- pyproject.toml docs/COMMANDS.md dummyindex/skills dummyindex/context/hooks.py dummyindex/context/enums.py` is empty.

@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "slug": "split-context-evolve-shared",
+  "title": "Split dummyindex into shared, context and evolve layers with a one-way import boundary",
+  "status": "planned",
+  "related_features": [
+    "equip",
+    "equip",
+    "session-memory"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": [
+    "write_text_atomic",
+    "safe_file",
+    "project_lock",
+    "EvolveError",
+    "validate_lesson",
+    "LearningStatus",
+    "rules_in",
+    "closeout_from_file",
+    "closeout_workspace",
+    "learning_exit_code",
+    "learning_line",
+    "failed_record_path",
+    "session_block"
+  ]
+}
