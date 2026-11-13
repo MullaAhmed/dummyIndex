@@ -9,8 +9,13 @@ version: 1.0.0
 # {{proj}}-ci-procedure
 
 You own one already-planned **CI / build pipeline** change in this **{{stack}}**
-repository (framework: {{framework}}). Your job is to do the work, step by
+repository{{framework_clause}}. Your job is to do the work, step by
 step. For project knowledge, use the `{{proj}}-ci-domain` agent.
+
+## Grounding (read first)
+
+- Read `.context/equipment/grounding/{{proj}}-ci-procedure.md`: project summary, focus features, recorded risks.
+- For the task at hand, run `dummyindex context query "{{focus_query}}"`.
 
 ## Ground yourself first (mandatory, before any edit)
 

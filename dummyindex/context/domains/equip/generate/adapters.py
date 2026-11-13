@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 import re
+import unicodedata
 from pathlib import Path
 
 from dummyindex.context.domains.atomic_io import write_text_atomic
@@ -10,9 +12,12 @@ from dummyindex.context.domains.atomic_io import write_text_atomic
 from ..enums import EquipmentKind, EquipmentSource
 from ..lifecycle.hashing import content_hash
 from ..models import GENERATED_SENTINEL, EquipmentItem
+from ..plugins.sourcing import split_frontmatter
 
 _NAME_RE = re.compile(r"[a-z0-9][a-z0-9_-]*\Z")
 _ADAPTER_SENTINEL = "<!-- dummyindex:generated-adapter -->"
+_DESCRIPTION_MAX = 300
+_DESCRIPTION_PREFIX = "description: "
 
 
 def native_adapter_path(item: EquipmentItem) -> Path | None:
@@ -30,16 +35,88 @@ def native_adapter_path(item: EquipmentItem) -> Path | None:
     return None
 
 
-def native_adapter_content(item: EquipmentItem) -> str:
+def _clean_description(raw: str) -> str:
+    """One line, at most 300 characters, so the adapter frontmatter stays valid."""
+    spaced = "".join(
+        " " if ch in "\u2028\u2029" or unicodedata.category(ch) == "Cc" else ch for ch in raw
+    )
+    return " ".join(spaced.split())[:_DESCRIPTION_MAX].rstrip()
+
+
+_BLOCK_INDICATORS = frozenset({">", ">-", ">+", "|", "|-", "|+"})
+
+
+def _read_block(body_text: str) -> str:
+    """Join the indented lines under a block-scalar ``description:`` key."""
+    if body_text.startswith("﻿"):
+        body_text = body_text[1:]
+    lines = body_text.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+    collected: list[str] = []
+    in_block = False
+    for line in lines[1:]:
+        if line == "---":
+            break
+        if in_block:
+            if line == "" or line[0] in " \t":
+                collected.append(line.strip())
+                continue
+            break
+        if line.startswith("description:"):
+            in_block = True
+    return " ".join(part for part in collected if part)
+
+
+def adapter_description(body_text: str) -> str | None:
+    """Cleaned frontmatter description of a canonical body, or None when absent."""
+    parts = split_frontmatter(body_text)
+    if parts is None:
+        return None
+    description = parts[0]
+    if description in _BLOCK_INDICATORS:
+        # split_frontmatter keeps only the indicator; the text lives on the next lines.
+        description = _read_block(body_text)
+    return _clean_description(description) or None
+
+
+def _description_line(name: str, description: str | None) -> str:
+    # The generic line stays unquoted so pre-fix adapters remain byte-identical.
+    clean = _clean_description(description or "")
+    if not clean:
+        return f"{_DESCRIPTION_PREFIX}Use the project's {name} capability."
+    return _DESCRIPTION_PREFIX + json.dumps(clean, ensure_ascii=True)
+
+
+def _own_description(text: str) -> str | None:
+    """Decode the description an adapter already carries; None for generic or unreadable."""
+    for line in text.split("\n")[1:]:
+        if line == "---":
+            break
+        if line.startswith(_DESCRIPTION_PREFIX):
+            try:
+                decoded = json.loads(line[len(_DESCRIPTION_PREFIX) :])
+            except ValueError:
+                return None
+            return decoded if isinstance(decoded, str) else None
+    return None
+
+
+def native_adapter_content(
+    item: EquipmentItem, *, description: str | None = None
+) -> str:
     """Keep workflow and policy text exclusively in the canonical file."""
     return (
         f"---\nname: {item.name}\n"
-        f"description: Use the project's {item.name} capability.\n---\n"
+        f"{_description_line(item.name, description)}\n---\n"
         f"{GENERATED_SENTINEL}\n{_ADAPTER_SENTINEL}\n\n"
         f"Read `{item.path}` before acting and follow its instructions.\n"
         "The referenced file owns this capability; edit it through the "
         "equipment lifecycle.\n"
     )
+
+
+def _is_pristine(item: EquipmentItem, text: str) -> bool:
+    """Structure decides ownership: any description passes when the skeleton matches."""
+    return text == native_adapter_content(item, description=_own_description(text))
 
 
 def _has_symlink_parent(root: Path, relative: Path) -> bool:
@@ -56,6 +133,7 @@ def write_native_adapter(
     item: EquipmentItem,
     *,
     prior: EquipmentItem | None = None,
+    description: str | None = None,
     dry_run: bool = False,
 ) -> str | None:
     """Write a pointer, preserving foreign files and edits to older equipment.
@@ -69,7 +147,7 @@ def write_native_adapter(
     target = root / relative
     if _has_symlink_parent(root, relative) or target.is_symlink():
         return f"native adapter kept: {relative.as_posix()} (symlink)"
-    expected = native_adapter_content(item)
+    expected = native_adapter_content(item, description=description)
     if target.exists():
         try:
             existing = target.read_text(encoding="utf-8")
@@ -77,7 +155,7 @@ def write_native_adapter(
             return f"native adapter kept: {relative.as_posix()} (unreadable)"
         if existing == expected:
             return None
-        if (
+        if not _is_pristine(item, existing) and (
             prior is None
             or prior.path != relative.as_posix()
             or prior.origin_hash is None
@@ -98,7 +176,7 @@ def remove_native_adapter(root: Path, item: EquipmentItem) -> bool:
     if target.is_symlink():
         return False
     try:
-        if target.read_text(encoding="utf-8") != native_adapter_content(item):
+        if not _is_pristine(item, target.read_text(encoding="utf-8")):
             return False
     except (OSError, UnicodeError):
         return False
