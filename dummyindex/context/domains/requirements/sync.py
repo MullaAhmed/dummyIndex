@@ -37,7 +37,9 @@ from dummyindex.context.domains.equip.generate.adapters import (
 )
 from dummyindex.context.domains.equip.lifecycle.manifest import read_manifest
 from dummyindex.context.domains.equip.plugins.marketplace import SEED_MARKETPLACES
+from dummyindex.versioning import VersionOrder, compare_versions
 
+from .check import _split_constraint
 from .models import PluginRequirement, Requirements
 
 SKILL_FAMILY_ARGV = ("dummyindex", "install", "--scope", "user", "--skill-only")
@@ -67,13 +69,13 @@ def sync_requirements(
     local_only: bool,
     runner: Runner,
     confirm: Confirm | None,
-    claude_config_dir: Path | None = None,
+    claude_config_dir: Path,
 ) -> SyncReport:
     """Restore local files, then (unless ``local_only``) install trusted and approved plugins.
 
     ``confirm`` is ``None`` when there is no TTY; an untrusted plugin then needs
-    ``approve`` or it is skipped and listed. ``claude_config_dir`` enables the
-    user-scope ``enabledPlugins: false`` check and the already-installed skip.
+    ``approve`` or it is skipped and listed. ``claude_config_dir`` is the user-scope
+    settings and plugin registry used for the disable and already-installed checks.
     """
     written: list[str] = []
     unchanged: list[str] = []
@@ -179,7 +181,7 @@ def _sync_plugin(
     approve: bool,
     confirm: Confirm | None,
     runner: Runner,
-    claude_config_dir: Path | None,
+    claude_config_dir: Path,
     installed: list[str],
     skipped: list[tuple[str, str]],
     errors: list[tuple[str, str]],
@@ -205,25 +207,27 @@ def _sync_plugin(
     if repo is not None and not _REPO_RE.match(repo):
         skipped.append((target, "repo must be owner/name"))
         return
+    # Even with --yes, a reviewed id must not be declared while its CLI source is swapped.
+    if default is not None and repo != default.repo:
+        skipped.append((target, "repo differs from reviewed default"))
+        return
 
     try:
         project_state = _effective_enabled(root, target)
         user_value = _user_enabled(claude_config_dir, target)
-        record = (
-            installed_plugin_record(
-                target, config_dir=claude_config_dir, project_root=root
-            )
-            if claude_config_dir is not None
-            else None
-        )
-    except (MalformedSettingsError, PluginRegistryError, OSError) as exc:
+    except (MalformedSettingsError, OSError) as exc:
         errors.append((target, str(exc)))
         return
 
     if project_state is False or user_value is False:
         skipped.append((target, "disabled by you"))
         return
-    if record is not None and (project_state is True or user_value is True):
+    record = _installed_record(claude_config_dir, target, root)
+    if (
+        record is not None
+        and (project_state is True or user_value is True)
+        and _version_satisfied(record, plugin.version)
+    ):
         skipped.append((target, "already installed and enabled"))
         return
 
@@ -258,12 +262,32 @@ def _sync_plugin(
         errors.append((target, err or "install failed"))
 
 
-def _user_enabled(config_dir: Path | None, target: str) -> bool | None:
-    if config_dir is None:
-        return None
+def _user_enabled(config_dir: Path, target: str) -> bool | None:
     enabled = load_settings(config_dir / "settings.json").get("enabledPlugins")
     value = enabled.get(target) if isinstance(enabled, dict) else None
     return value if isinstance(value, bool) else None
+
+
+def _installed_record(config_dir: Path, target: str, root: Path) -> dict | None:
+    """An unreadable registry counts as no record, so sync installs as if absent."""
+    try:
+        return installed_plugin_record(target, config_dir=config_dir, project_root=root)
+    except PluginRegistryError:
+        return None
+
+
+def _version_satisfied(record: dict, constraint: str | None) -> bool:
+    """Same rule as check.py's plugin row: an unparseable version does not satisfy."""
+    if constraint is None:
+        return True
+    op, want = _split_constraint(constraint)
+    recorded = record.get("version")
+    order = compare_versions(recorded if isinstance(recorded, str) else None, want)
+    if order is VersionOrder.UNKNOWN:
+        return False
+    return (
+        order is VersionOrder.EQUAL if op == "==" else order is not VersionOrder.OLDER
+    )
 
 
 def _is_trusted(marketplace: str, repo: str | None) -> bool:

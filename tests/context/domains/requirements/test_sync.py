@@ -96,9 +96,26 @@ def _caveman(**extra: str) -> PluginRequirement:
 
 
 def _sync(root: Path, req: Requirements, runner: FakeRunner, **kwargs):
-    options = {"approve": False, "local_only": False, "confirm": None}
+    options = {
+        "approve": False,
+        "local_only": False,
+        "confirm": None,
+        "claude_config_dir": root / "claude-config",
+    }
     options.update(kwargs)
     return sync_requirements(root, req, runner=runner, **options)
+
+
+def _registry(config_dir: Path, version: str) -> None:
+    _write_json(
+        config_dir / "plugins" / "installed_plugins.json",
+        {
+            "version": 2,
+            "plugins": {
+                CAVEMAN: [{"scope": "user", "installPath": "/x", "version": version}]
+            },
+        },
+    )
 
 
 def test_deleted_native_adapter_is_restored(tmp_path: Path) -> None:
@@ -165,16 +182,90 @@ def test_seeded_plugin_without_repo_installs_without_yes(tmp_path: Path) -> None
     assert CAVEMAN_MARKETPLACE_ADD in runner.calls
 
 
-def test_caveman_with_other_repo_is_untrusted(tmp_path: Path) -> None:
+def test_reviewed_default_with_other_repo_is_refused_even_with_yes(
+    tmp_path: Path,
+) -> None:
     runner = FakeRunner()
 
     report = _sync(
-        tmp_path, _requirements(plugins=(_caveman(repo="evil/caveman"),)), runner
+        tmp_path,
+        _requirements(plugins=(_caveman(repo="evil/caveman"),)),
+        runner,
+        approve=True,
     )
 
     assert report.installed == ()
-    assert [target for target, _ in report.skipped] == [CAVEMAN]
+    assert report.skipped == ((CAVEMAN, "repo differs from reviewed default"),)
     assert runner.plugin_calls() == []
+
+
+def test_installed_plugin_below_version_constraint_is_reinstalled(
+    tmp_path: Path,
+) -> None:
+    config_dir = tmp_path / "claude-config"
+    _registry(config_dir, "1.0.0")
+    _write_settings(tmp_path, {CAVEMAN: True})
+    runner = FakeRunner()
+    req = _requirements(
+        plugins=(
+            PluginRequirement(id=CAVEMAN, version=">=2.0.0", extra=(CAVEMAN_REPO,)),
+        )
+    )
+
+    report = _sync(tmp_path, req, runner, claude_config_dir=config_dir)
+
+    assert report.installed == (CAVEMAN,)
+    assert CAVEMAN_MARKETPLACE_ADD in runner.calls
+
+
+def test_installed_plugin_meeting_version_constraint_is_skipped(tmp_path: Path) -> None:
+    config_dir = tmp_path / "claude-config"
+    _registry(config_dir, "1.0.0")
+    _write_settings(tmp_path, {CAVEMAN: True})
+    runner = FakeRunner()
+    req = _requirements(plugins=(PluginRequirement(id=CAVEMAN, version=">=1.0.0"),))
+
+    report = _sync(tmp_path, req, runner, claude_config_dir=config_dir)
+
+    assert report.skipped == ((CAVEMAN, "already installed and enabled"),)
+    assert runner.plugin_calls() == []
+
+
+def test_unreadable_registry_counts_as_no_record(tmp_path: Path) -> None:
+    config_dir = tmp_path / "claude-config"
+    (config_dir / "plugins").mkdir(parents=True)
+    (config_dir / "plugins" / "installed_plugins.json").write_text(
+        "not json", encoding="utf-8"
+    )
+    _write_settings(tmp_path, {CAVEMAN: True})
+    runner = FakeRunner()
+
+    report = _sync(
+        tmp_path,
+        _requirements(plugins=(_caveman(repo="JuliusBrussee/caveman"),)),
+        runner,
+        claude_config_dir=config_dir,
+    )
+
+    assert report.installed == (CAVEMAN,)
+    assert report.errors == ()
+    assert CAVEMAN_MARKETPLACE_ADD in runner.calls
+
+
+def test_user_edited_adapter_is_kept(tmp_path: Path) -> None:
+    _agent_fixture(tmp_path)
+    req = _requirements(native=True)
+    _sync(tmp_path, req, FakeRunner())
+    adapter = tmp_path / ".claude" / "agents" / "reviewer.md"
+    adapter.write_text("my own hand-written agent\n", encoding="utf-8")
+
+    report = _sync(tmp_path, req, FakeRunner())
+
+    assert adapter.read_text(encoding="utf-8") == "my own hand-written agent\n"
+    assert report.adapters_written == ()
+    assert report.adapters_kept == (
+        "native adapter kept: .claude/agents/reviewer.md (user-owned)",
+    )
 
 
 def test_untrusted_plugin_is_skipped_without_tty_or_yes(tmp_path: Path) -> None:
