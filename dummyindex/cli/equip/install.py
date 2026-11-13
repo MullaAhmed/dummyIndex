@@ -16,7 +16,13 @@ from dummyindex.context.claude_plugins import add_marketplace, enable_plugin
 from dummyindex.context.claude_settings import MalformedSettingsError, load_settings
 from dummyindex.context.default_plugins import WiredEntry, WiredKind
 from dummyindex.context.domains.atomic_io import write_text_atomic
-from dummyindex.context.domains.config import ConfigError, read_config, write_config
+from dummyindex.context.domains.config import (
+    ConfigError,
+    has_config_toml,
+    read_config,
+    upsert_toml_wired,
+    write_config,
+)
 from dummyindex.context.domains.equip import (
     SCHEMA_VERSION,
     VENDORED_SENTINEL,
@@ -466,13 +472,15 @@ def _write_back_wired(project_root: Path, target: str, version: str | None) -> N
         return
 
     entry = WiredEntry(kind=WiredKind.PLUGIN, target=target, version=version)
-    kept = tuple(e for e in config.wired if e.target != target)
-    updated = replace(config, wired=kept + (entry,))
     try:
-        write_config(context_dir, updated)
-    except OSError as exc:
+        if has_config_toml(context_dir):
+            upsert_toml_wired(context_dir, (entry,))
+            return
+        kept = tuple(e for e in config.wired if e.target != target)
+        write_config(context_dir, replace(config, wired=kept + (entry,)))
+    except (OSError, ConfigError) as exc:
         print(
-            f"warning: {target} wired, but config.json not updated: {exc}",
+            f"warning: {target} wired, but config not updated: {exc}",
             file=sys.stderr,
         )
 

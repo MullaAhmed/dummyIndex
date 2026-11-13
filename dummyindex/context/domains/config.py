@@ -10,12 +10,15 @@ take the ``.context/`` directory itself.
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from ..default_plugins import WiredEntry, WiredKind, default_wired
+
+if TYPE_CHECKING:
+    from .requirements.models import Requirements
 
 _E = TypeVar("_E", bound=Enum)
 
@@ -475,13 +478,15 @@ def resolve_depth(
     return config.mode
 
 
-def read_config(context_dir: Path) -> Config | None:
-    """Return the config if it exists; ``None`` otherwise.
+_TOML_NAME = "config.toml"
 
-    ``context_dir`` is the ``.context/`` directory itself (mirrors
-    ``manifest.read_manifest``). Raises ``ConfigError`` on malformed JSON
-    or a schema the loader rejects.
-    """
+
+def has_config_toml(context_dir: Path) -> bool:
+    """Whether ``config.toml`` owns the required plugins and skills."""
+    return (context_dir / _TOML_NAME).exists()
+
+
+def _read_config_json(context_dir: Path) -> Config | None:
     path = context_dir / CONFIG_REL
     if not path.exists():
         return None
@@ -490,6 +495,85 @@ def read_config(context_dir: Path) -> Config | None:
     except (json.JSONDecodeError, OSError) as exc:
         raise ConfigError(f"could not read config.json: {exc}") from exc
     return Config.from_dict(raw)
+
+
+def read_config(context_dir: Path) -> Config | None:
+    """Return the config if it exists; ``None`` otherwise.
+
+    ``context_dir`` is the ``.context/`` directory itself (mirrors
+    ``manifest.read_manifest``). Raises ``ConfigError`` on malformed JSON
+    or a schema the loader rejects. When ``config.toml`` exists, its plugins
+    and non-family skills replace ``wired``; ``config.json`` keeps its own.
+    """
+    config = _read_config_json(context_dir)
+    if config is None or not has_config_toml(context_dir):
+        return config
+    return replace(config, wired=_wired_from_requirements(_load_toml(context_dir)))
+
+
+def _load_toml(context_dir: Path) -> Requirements:
+    from .requirements.errors import RequirementsError
+    from .requirements.toml_io import read_requirements
+
+    try:
+        req = read_requirements(context_dir / _TOML_NAME)
+    except RequirementsError as exc:
+        raise ConfigError(f"could not read config.toml: {exc}") from exc
+    if req is None:
+        raise ConfigError("config.toml vanished while reading")
+    return req
+
+
+def _wired_from_requirements(req: Requirements) -> tuple[WiredEntry, ...]:
+    from .requirements.seed import _family_names
+
+    family = set(_family_names())
+    plugins = (
+        WiredEntry(kind=WiredKind.PLUGIN, target=p.id, version=p.version)
+        for p in req.plugins
+    )
+    skills = (
+        WiredEntry(kind=WiredKind.SKILL, target=s.name)
+        for s in req.skills
+        if s.name not in family
+    )
+    return (*plugins, *skills)
+
+
+def upsert_toml_wired(context_dir: Path, entries: tuple[WiredEntry, ...]) -> None:
+    """Upsert plugin ``entries`` into ``config.toml`` by id, keeping unknown keys.
+
+    Existing plugin blocks keep their ``extra`` and take the new constraint;
+    absent ones are appended. Skills and comments are left as they are.
+    """
+    from .requirements.errors import RequirementsError
+    from .requirements.models import PluginRequirement
+    from .requirements.seed import _constraint
+    from .requirements.toml_io import write_requirements
+
+    plugin_entries = {e.target: e for e in entries if e.kind is WiredKind.PLUGIN}
+    cur = _load_toml(context_dir)
+    merged: list[PluginRequirement] = []
+    for p in cur.plugins:
+        entry = plugin_entries.pop(p.id, None)
+        if entry is None:
+            merged.append(p)
+        else:
+            merged.append(
+                PluginRequirement(
+                    id=p.id, version=_constraint(entry.version), extra=p.extra
+                )
+            )
+    for entry in plugin_entries.values():
+        merged.append(
+            PluginRequirement(id=entry.target, version=_constraint(entry.version))
+        )
+    try:
+        write_requirements(
+            context_dir / _TOML_NAME, replace(cur, plugins=tuple(merged))
+        )
+    except RequirementsError as exc:
+        raise ConfigError(f"could not write config.toml: {exc}") from exc
 
 
 def read_doc_guard_settings(context_dir: Path) -> tuple[bool, tuple[str, ...]]:
@@ -599,7 +683,10 @@ def reconcile_wired_with_equipment(context_dir: Path) -> bool:
     if not added:
         return False
 
-    write_config(context_dir, replace(config, wired=config.wired + tuple(added)))
+    if has_config_toml(context_dir):
+        upsert_toml_wired(context_dir, tuple(added))
+    else:
+        write_config(context_dir, replace(config, wired=config.wired + tuple(added)))
     return True
 
 
@@ -628,6 +715,17 @@ def reconcile_default_plugins(context_dir: Path, *, platform: str) -> bool:
     enabled = True
     if not missing and config.default_plugins_enabled is enabled:
         return False
+
+    if has_config_toml(context_dir):
+        if missing:
+            upsert_toml_wired(context_dir, missing)
+        if config.default_plugins_enabled is not enabled:
+            json_config = _read_config_json(context_dir)
+            if json_config is not None:
+                write_config(
+                    context_dir, replace(json_config, default_plugins_enabled=enabled)
+                )
+        return True
 
     write_config(
         context_dir,
