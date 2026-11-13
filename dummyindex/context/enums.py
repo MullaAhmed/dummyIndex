@@ -113,6 +113,7 @@ class ContextSubcommand(str, Enum):
     ENRICH_PLAN = "enrich-plan"
     ENRICH_APPLY = "enrich-apply"
     FEATURES_RENAME = "features-rename"
+    FEATURES_LIST = "features-list"
     FEATURES_MERGE = "features-merge"
     FLOW_REMOVE = "flow-remove"
     SECTION_WRITE = "section-write"

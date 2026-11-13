@@ -122,6 +122,12 @@ Subcommands:
                                     Atomically drop a flow from a feature
                                     (deletes flow files, updates feature.json
                                     + INDEX.json + INDEX.md + graph.json).
+  features-list [--root DIR] --json
+                                    Read-only: print .context/features/INDEX.json
+                                    as one JSON document (schema_version 1).
+                                    --json is required. Exit 1 with an error
+                                    envelope when the index is missing or its
+                                    schema_version is unsupported.
   features-merge [--root DIR] --from ID --into ID [--as-section NAME]
                                     [--note "rationale"]
                                     Absorb a trivial feature into another as a
@@ -777,6 +783,38 @@ Subcommands:
 # other ``{...}`` literal verbatim — only this sentinel is replaced), so the
 # version next to equipment.json can never drift from the constant.
 USAGE = _USAGE_TEMPLATE.replace("__EQUIP_SCHEMA__", str(_EQUIP_SCHEMA_VERSION))
+
+# Top-level commands that are not `context` subcommands (dispatched directly by
+# `dummyindex/__main__.py`, argv excluding the command token). Printed by
+# `dummyindex --help`; they have no ContextSubcommand, so usage_for() never
+# returns them.
+TOP_LEVEL_USAGE = """\
+  sessions list [--root DIR] [--projects-root DIR] --json
+                                    Read-only: list Claude Code sessions (main and
+                                    subagent) as one JSON document. --root keeps
+                                    only sessions whose cwd is under DIR;
+                                    --projects-root overrides the transcripts
+                                    location. --json is required. Unparseable
+                                    session data is reported inside the document
+                                    (state unknown + warning), never as an error.
+  toolkit list [--kind mcp|skill|plugin] [--scope terminal|project|user]
+               [--root DIR] --json
+  toolkit show NAME [--kind K] [--scope S] [--root DIR]
+  toolkit add NAME --kind K [--scope S] [--config FILE | --file FILE | --dir DIR]
+               [--mechanism mcp_additive|mcp_exclusive|plugin_dir|settings|add_dir]
+  toolkit remove|enable|disable NAME [--kind K] [--scope S]
+               [--allow-project-fallback] [--root DIR]
+  toolkit install --kind K --source github:OWNER/REPO[/PATH][@REF]
+               [--scope project|user] [--root DIR] --preview
+  toolkit install --kind K --source REF [--scope S] [--root DIR] --yes --plan-hash H
+                                    Toolkit JSON facade for the GUI. list/show are
+                                    read-only; add/remove/enable/disable mutate the
+                                    toolkit and print one JSON document; install
+                                    is two-step (--preview, then --yes with the
+                                    plan hash it returned). Every verb prints JSON
+                                    (--json accepted); failures print an error
+                                    envelope and exit 2 (usage) or 1 (operational).
+"""
 
 
 # A subcommand usage line is indented two spaces and begins with the

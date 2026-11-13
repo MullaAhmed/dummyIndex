@@ -81,7 +81,9 @@ def test_plan_prints_ordered_features_with_estimates(drifted_repo: Path) -> None
     assert rc == 0
     assert "ordered work list" in out
     # Execution order: drifted features in report order.
-    assert out.index("auth") < out.index("db")
+    # Match the feature lines, not bare "db": the header holds a hex anchor sha
+    # that can contain "db" by chance.
+    assert out.index("    auth:") < out.index("    db:")
     assert "estimate:" in out
     assert "heuristic" in out  # clearly-labelled, never a wall-clock promise
 

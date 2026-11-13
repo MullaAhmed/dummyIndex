@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dummyplane:schema:error-envelope",
+  "title": "dummyindex error envelope",
+  "description": "Every new --json command (features-list, sessions list, toolkit *) prints this as the last JSON document on stdout and exits non-zero on failure. Extra keys are allowed (the engine may add fields such as hint; consumers ignore them). The GUI maps code to its own typed errors and shows message. code is an engine-defined snake_case string; the GUI treats unknown codes as a generic engine failure. Note: `status --json` does not print this envelope on usage errors in 0.37.0 (it writes text to stderr), which the GUI treats as EngineProtocol.",
+  "type": "object",
+  "required": [
+    "error"
+  ],
+  "properties": {
+    "error": {
+      "type": "object",
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

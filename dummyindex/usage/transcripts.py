@@ -38,8 +38,12 @@ def resolve_session_id() -> str | None:
 
 
 def encode_project_slug(path: Path) -> str:
-    """Claude Code's cwd → project-dir encoding: every non-alphanumeric → '-'."""
-    return "".join(c if c.isalnum() else "-" for c in str(path))
+    """Claude Code's cwd → project-dir encoding: every non-ASCII-alphanumeric → '-'.
+
+    `str.isalnum()` is true for non-ASCII letters (`é`), but Claude Code keeps
+    only ASCII letters and digits, so the ASCII test is required here.
+    """
+    return "".join(c if (c.isascii() and c.isalnum()) else "-" for c in str(path))
 
 
 def find_main_transcript(

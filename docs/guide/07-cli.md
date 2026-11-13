@@ -251,6 +251,27 @@ The warning goes out as `additionalContext`. It never denies, and `doc_guard_ena
 - Used by the architect agent during the structural regrouping pre-stage.
 - Idempotent. When `--from == --to`, the verb refreshes metadata alone.
 
+### `dummyindex context features-list [--root DIR] --json`
+
+- Read-only. Prints `.context/features/INDEX.json` as one JSON document (`schema_version` 1). `--json` is required.
+- Exits 1 with an error envelope when the index is missing or its `schema_version` is unsupported. Exits 2 on a usage error.
+- Contract: `docs/schemas/features-list.json`.
+
+## Sessions and toolkit (GUI JSON facade)
+
+These are top-level commands, not `context` subcommands. Each prints one JSON document. The contract is `docs/engine-contract.md`.
+
+### `dummyindex sessions list [--root DIR] [--projects-root DIR] --json`
+
+- Read-only. Lists Claude Code sessions, main and subagent, from the transcripts store. `--root` keeps sessions whose `cwd` is under DIR.
+- The document reports unparseable session data inside itself. It uses state `unknown` and adds a warning. It never reports this as an error exit.
+
+### `dummyindex toolkit list|show|add|remove|enable|disable|install`
+
+- `list` and `show` are read-only. `add`, `remove`, `enable`, and `disable` mutate the project toolkit and print one document.
+- `install` has two steps. `--preview` prints a plan hash. Then `--yes --plan-hash H` applies it. Only `github:<owner>/<repo>[/<path>][@<ref>]` sources are accepted.
+- Failures print an error envelope. Exit 2 is a usage error. Exit 1 is an operational failure.
+
 ### `dummyindex context features-merge [--root DIR] --from ID --into ID [--as-section NAME] [--note "..."]`
 
 - Absorbs a trivial feature into another as a section (architect consolidation of dangling features).

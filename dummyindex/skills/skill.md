@@ -93,7 +93,7 @@ to the built-in set.
 ## What you do (the high-level flow)
 
 1. **Resolve scope + root.** The user's invocation tokens after the host's dummyindex skill invocation are the scope. Apply this rule **literally**:
-   - **Rule 0 — CLI command, not a scope (check FIRST).** If the first token is a dummyindex CLI command, the user wants to **run that command**, not index a path. The CLI commands are `usage`, `install`, `uninstall`, `context`, `ingest`, `status` (i.e. anything `dummyindex --help` lists as a top-level command). Run `dummyindex <tokens>` verbatim (e.g. `/dummyindex usage chat` → `dummyindex usage chat`), report its output, and **STOP**. On Claude, route a bare `usage` to the `/tokens` report.
+   - **Rule 0 — CLI command, not a scope (check FIRST).** If the first token is a dummyindex CLI command, the user wants to **run that command**, not index a path. The CLI commands are `usage`, `install`, `uninstall`, `context`, `ingest`, `status`, `sessions`, `toolkit` (i.e. anything `dummyindex --help` lists as a top-level command). Run `dummyindex <tokens>` verbatim (e.g. `/dummyindex usage chat` → `dummyindex usage chat`), report its output, and **STOP**. On Claude, route a bare `usage` to the `/tokens` report.
 
      On Codex, `dummyindex usage` is not a current-session reporter because it reads Claude transcripts. On Codex, use native `/status` or `/usage` unless the user explicitly asked for saved Claude history. Never treat these tokens as an index scope, and never start an ingest or council from them. Only fall through to the path rules below when the first token is NOT one of these commands.
    - `/dummyindex` (no args) → scope = cwd.
