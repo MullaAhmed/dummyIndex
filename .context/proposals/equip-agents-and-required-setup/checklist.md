@@ -12,10 +12,10 @@
 
 ## Wave 2 — agents core + requirements core
 
-- [ ] T6 Adapter description + structural ownership (`dummyindex/context/domains/equip/generate/adapters.py`, `tests/context/domains/equip/test_equip_adapters.py`)
-- [ ] T8 Grounding sidecar + `{{framework_clause}}`/`{{focus_query}}` slots + 17 templates (`dummyindex/context/domains/equip/generate/grounding.py`, `dummyindex/context/domains/equip/generate/render.py`, `dummyindex/skills/equip/templates/*.md.tmpl`, `tests/context/domains/equip/test_equip_grounding.py`)
-- [ ] T9 Requirements check + gate decision (`dummyindex/context/domains/requirements/check.py`, `dummyindex/context/domains/requirements/gate.py`, `tests/context/domains/requirements/test_check.py`, `test_gate.py`)
-- [ ] T10 Requirements hooks module + `hooks.install/uninstall` calls. `test_hooks.py` counts move to named constants (`dummyindex/context/hooks_requirements.py`, `dummyindex/context/hooks.py`, `tests/context/test_hooks_requirements.py`, `tests/context/test_hooks.py`)
+- [x] T6 Adapter description + structural ownership (`dummyindex/context/domains/equip/generate/adapters.py`, `tests/context/domains/equip/test_equip_adapters.py`)
+- [x] T8 Grounding sidecar + `{{framework_clause}}`/`{{focus_query}}` slots + 17 templates (`dummyindex/context/domains/equip/generate/grounding.py`, `dummyindex/context/domains/equip/generate/render.py`, `dummyindex/skills/equip/templates/*.md.tmpl`, `tests/context/domains/equip/test_equip_grounding.py`)
+- [x] T9 Requirements check + gate decision (`dummyindex/context/domains/requirements/check.py`, `dummyindex/context/domains/requirements/gate.py`, `tests/context/domains/requirements/test_check.py`, `test_gate.py`)
+- [x] T10 Requirements hooks module + `hooks.install/uninstall` calls. `test_hooks.py` counts move to named constants (`dummyindex/context/hooks_requirements.py`, `dummyindex/context/hooks.py`, `tests/context/test_hooks_requirements.py`, `tests/context/test_hooks.py`)
 
 ## Wave 3 — evidence, sync, single owner, removal
 
