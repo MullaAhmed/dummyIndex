@@ -22,6 +22,10 @@ STATE_SCHEMA_VERSION = 1
 FLEET_DIR_REL = "fleet"
 # Prefix-scoped: fleet-runner owns ``run-*`` under the same directory.
 MAINTAIN_RUN_PREFIX = "maintain-"
+KIND_MAINTAIN = "maintain"
+KIND_RESTYLE = "restyle"
+# Folder prefix per run kind; each kind is discovered by its own prefix.
+_RUN_PREFIXES = {KIND_MAINTAIN: MAINTAIN_RUN_PREFIX, KIND_RESTYLE: "restyle-"}
 STATE_REL = "state.json"
 RUN_MANIFEST_REL = "RUN.md"
 # Clearly-labelled heuristic reference point for "how long is left" — never
@@ -95,6 +99,7 @@ class FleetRun:
     created_at: str
     updated_at: str
     features: tuple[FleetFeature, ...]
+    kind: str = KIND_MAINTAIN
 
     @property
     def units(self) -> tuple[FleetUnit, ...]:
@@ -103,7 +108,7 @@ class FleetRun:
     def to_dict(self) -> dict[str, Any]:
         return {
             "schema_version": STATE_SCHEMA_VERSION,
-            "kind": "maintain",
+            "kind": self.kind,
             "anchor_sha": self.anchor_sha,
             "mode": self.mode,
             "created_at": self.created_at,
@@ -117,8 +122,15 @@ def runs_root(context_dir: Path) -> Path:
     return context_dir / FLEET_DIR_REL
 
 
-def find_newest_run(context_dir: Path) -> Path | None:
-    """The newest ``maintain-*`` dir carrying a *parseable* ``state.json``.
+def _run_prefix(kind: str) -> str:
+    try:
+        return _RUN_PREFIXES[kind]
+    except KeyError:
+        raise FleetRunError(f"unknown run kind {kind!r}") from None
+
+
+def find_newest_run(context_dir: Path, kind: str = KIND_MAINTAIN) -> Path | None:
+    """The newest ``<kind>-*`` dir carrying a *parseable* ``state.json``.
 
     Tolerant scan (the ``drift._manifest_shas`` direction): dirs missing the
     state file or carrying unreadable/malformed JSON are skipped rather than
@@ -129,7 +141,7 @@ def find_newest_run(context_dir: Path) -> Path | None:
     if not root.is_dir():
         return None
     candidates: list[tuple[str, Path]] = []
-    for child in sorted(root.glob(f"{MAINTAIN_RUN_PREFIX}*")):
+    for child in sorted(root.glob(f"{_run_prefix(kind)}*")):
         if not child.is_dir():
             continue
         try:
@@ -142,7 +154,9 @@ def find_newest_run(context_dir: Path) -> Path | None:
     return max(candidates, key=lambda item: item[0])[1]
 
 
-def resolve_run_dir(context_dir: Path, explicit: str | None) -> Path | None:
+def resolve_run_dir(
+    context_dir: Path, explicit: str | None, kind: str = KIND_MAINTAIN
+) -> Path | None:
     """An explicit ``--run <name-or-dir>`` (validated) or the newest run.
 
     A bare name (``maintain-20260822-101500``) resolves under
@@ -151,7 +165,7 @@ def resolve_run_dir(context_dir: Path, explicit: str | None) -> Path | None:
     returns ``None`` when nothing explicit was given and no run exists.
     """
     if not explicit:
-        return find_newest_run(context_dir)
+        return find_newest_run(context_dir, kind)
     candidate = Path(explicit)
     run_dir = (
         candidate if candidate.is_absolute() else runs_root(context_dir) / candidate
@@ -173,8 +187,9 @@ def create_run(
     anchor_sha: str | None = None,
     stages_for_feature: dict[str, tuple[tuple[int, str], ...]] | None = None,
     now: _dt.datetime | None = None,
+    kind: str = KIND_MAINTAIN,
 ) -> FleetRun:
-    """Write a new ``maintain-<ts>/`` run and return its parsed state.
+    """Write a new ``<kind>-<ts>/`` run and return its parsed state.
 
     ``features`` is the work list in execution order. Per-feature stages come
     from ``stages_for_feature`` (an ``(stage_number, name)`` pair per active
@@ -187,7 +202,7 @@ def create_run(
     stage_map = stages_for_feature or {}
     moment = now or _dt.datetime.now(_dt.timezone.utc)
     created = _isoformat(moment)
-    run_dir = runs_root(context_dir) / f"{MAINTAIN_RUN_PREFIX}{_run_ts(moment)}"
+    run_dir = runs_root(context_dir) / f"{_run_prefix(kind)}{_run_ts(moment)}"
     if (run_dir / STATE_REL).exists():
         raise FleetRunError(f"run already exists: {run_dir}")
     run_dir.mkdir(parents=True)
@@ -198,6 +213,7 @@ def create_run(
         mode=mode,
         created_at=created,
         updated_at=created,
+        kind=kind,
         features=tuple(
             FleetFeature(
                 feature_id=fid,
@@ -296,6 +312,7 @@ def _parse_state(run_dir: Path, raw: Any) -> FleetRun:
         created_at=str(raw.get("created_at", "")),
         updated_at=str(raw.get("updated_at", "")),
         features=tuple(features),
+        kind=str(raw.get("kind", KIND_MAINTAIN)),
     )
 
 
@@ -456,7 +473,7 @@ def estimate_run(
 def render_run_md(run: FleetRun) -> str:
     """The human-readable ``RUN.md`` manifest written next to the state."""
     lines = [
-        "# Maintain run",
+        f"# {run.kind.capitalize()} run",
         "",
         f"- dir: `{run.run_dir.name}`",
         f"- anchor: `{run.anchor_sha or '(none)'}`",

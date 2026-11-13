@@ -211,8 +211,8 @@ def test_build_skill_via_substitution_is_a_failure() -> None:
 @pytest.mark.unit
 def test_build_skill_verify_demands_tool_provenance() -> None:
     text = _build_skill()
-    # The verify step must require evidence the tagged tool actually ran.
-    assert "the tool actually ran" in text
+    # The verify step must require evidence the tagged tool ran.
+    assert "the tool ran and produced the result" in text
 
 
 @pytest.mark.unit
@@ -410,7 +410,7 @@ def test_build_delegates_selected_capability_and_policy_on_every_host() -> None:
     text = " ".join(_build_skill().split())
     assert "read `role_path`" in text
     assert "include the full capability mandate" in text
-    assert "policies actually selected in this session" in text
+    assert "only the policies that this session selected" in text
     assert "Never stop solely because Claude equipment is missing" in text
     assert "sanctioned seam on every host" in text
 
@@ -512,6 +512,58 @@ def test_update_skill_documents_generated_tool_refresh() -> None:
     # refresh is skipped — not a silent hope.
     assert "dummyindex context equip refresh" in text
     assert "skipped" in text
+
+
+@pytest.mark.unit
+def test_update_skill_restyle_runs_after_verify_step() -> None:
+    """`context restyle` sits in a numbered step after `### 4. Verify the result`."""
+    text = (_SKILLS_DIR / "update" / "SKILL.md").read_text(encoding="utf-8")
+    step_re = re.compile(r"^### (\d+)\. (.+)$", re.MULTILINE)
+    heads = [(int(m.group(1)), m.group(2), m.start()) for m in step_re.finditer(text)]
+    verify = [n for n, title, _ in heads if title == "Verify the result"]
+    assert verify, "update SKILL.md lost its 'Verify the result' step"
+    restyle_steps = []
+    for idx, (num, _title, start) in enumerate(heads):
+        end = heads[idx + 1][2] if idx + 1 < len(heads) else len(text)
+        if "context restyle" in text[start:end]:
+            restyle_steps.append(num)
+    assert restyle_steps, "no update step names `context restyle`"
+    assert all(num > verify[0] for num in restyle_steps), (
+        f"`context restyle` in step(s) {restyle_steps}, not after verify step {verify[0]}"
+    )
+
+
+@pytest.mark.unit
+def test_update_skill_restyle_gate_and_report_lines() -> None:
+    text = (_SKILLS_DIR / "update" / "SKILL.md").read_text(encoding="utf-8")
+    assert "already restyled" in text
+    assert "context prose  restyled N doc(s) (ASD-STE100 ruleset N)" in text
+    assert (
+        "context prose  restyle pending — resume: dummyindex context restyle status"
+        in text
+    )
+
+
+@pytest.mark.unit
+def test_update_skill_layers_at_target_still_run_restyle_check() -> None:
+    """Idempotent exit must still run the step 5 gate before it ends."""
+    text = " ".join(
+        (_SKILLS_DIR / "update" / "SKILL.md").read_text(encoding="utf-8").split()
+    )
+    assert "run the step 5 check" in text
+    assert "Stop only when step 5 skips" in text
+    assert "`already restyled`" in text
+    assert "`nothing to restyle`" in text
+
+
+@pytest.mark.unit
+def test_update_skill_taxonomy_rule_lists_names_ids_and_file_sets() -> None:
+    """Taxonomy is feature names, ids and file sets. Conventions are rewritten by restyle."""
+    text = " ".join(
+        (_SKILLS_DIR / "update" / "SKILL.md").read_text(encoding="utf-8").split()
+    )
+    assert "change the taxonomy (feature names, feature IDs, file sets)" in text
+    assert "abstracts, conventions, audits" not in text
 
 
 # --- trivial-filter doc: where the count fields live

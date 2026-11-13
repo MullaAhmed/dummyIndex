@@ -203,6 +203,12 @@ def refresh_deterministic_artifacts(
     # are committed, so they must stay pre-commit-clean (one EOF newline).
     normalize_written_eof_newlines(context_dir, written)
 
+    # An upgraded STE ruleset re-records style counts; restyle then lowers them.
+    from dummyindex.context.domains.docbudget import reseed_stale_style
+    from dummyindex.context.domains.docbudget.constants import STYLE_RATCHET_REL
+
+    reseed_stale_style(root, root / STYLE_RATCHET_REL)
+
     # Unknown source basis requires an explicit feature review before re-anchor.
     from .git_delta import commit_exists
 

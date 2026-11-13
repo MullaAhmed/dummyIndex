@@ -582,6 +582,29 @@ Subcommands:
                                                 one-line nudge iff commits_since the
                                                 anchor >= threshold and it has not already
                                                 signalled this session. Always exit 0.
+  restyle plan|begin|next|done|stamp|status [--all] [--max-units N]
+        [--force] [--run NAME] [--json] [--root DIR]
+                                    ASD-STE100 rewrite loop over curated
+                                    features/ and conventions/ docs (deterministic;
+                                    the host skill rewrites each unit).
+                                      plan   - read-only: units with doc, strict
+                                               and advice counts.
+                                      begin  - snapshot the docs of a run. Requires
+                                               --all or --max-units N. Refuses while
+                                               a run is unfinished.
+                                               --max-units N skips units that an
+                                               earlier run of the same ruleset
+                                               finished.
+                                      next   - print the next unit, its docs and brief.
+                                      done <unit> - check a rewritten unit. Refuses
+                                               (exit 1) when a protected token is lost.
+                                      stamp  - judge all curated units.
+                                               Records the ruleset only when
+                                               every unit is covered. A partial
+                                               stamp reseeds the ratchet and
+                                               prints
+                                               `not stamped, N/M unit(s) covered`.
+                                      status - counts for the run.
   fleet init --plans SLUG[,SLUG…] | --intake FILE --budget-usd N
         --max-parallel N [--branch-template TPL] [--ruling KEY=VALUE]...
         [--root DIR]                                       Build loop — scaffold a

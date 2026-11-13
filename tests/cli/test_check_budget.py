@@ -124,7 +124,7 @@ def test_style_without_ratchet_prints_details_and_hint(tmp_path, capsys):
 
 @pytest.mark.unit
 def test_style_recorded_zero_then_long_sentence_fails(tmp_path, capsys):
-    _ratchet(tmp_path, ".context/style-budget.txt", f"{DOC}\t0\n")
+    _ratchet(tmp_path, ".context/style-budget.txt", f"# ruleset 1\n{DOC}\t0\n")
     _doc(tmp_path, LONG + "\n")
     assert _style(tmp_path) == 1
     assert DOC in capsys.readouterr().out
@@ -133,7 +133,7 @@ def test_style_recorded_zero_then_long_sentence_fails(tmp_path, capsys):
 @pytest.mark.unit
 def test_style_clean_and_recorded_passes(tmp_path, capsys):
     _doc(tmp_path, "Short clean sentence here.\n")
-    _ratchet(tmp_path, ".context/style-budget.txt", f"{DOC}\t0\n")
+    _ratchet(tmp_path, ".context/style-budget.txt", f"# ruleset 1\n{DOC}\t0\n")
     assert _style(tmp_path) == 0
     assert "context check --style: ok" in capsys.readouterr().out
 
@@ -144,3 +144,32 @@ def test_style_update_seeds_ratchet(tmp_path):
     assert _style(tmp_path, "--update-ratchet") == 0
     text = (tmp_path / ".context/style-budget.txt").read_text(encoding="utf-8")
     assert f"{DOC}\t0" in text
+
+
+@pytest.mark.unit
+def test_advice_printed_and_exit_zero(tmp_path, capsys):
+    _doc(tmp_path, "We are using the tool. The file is written by the tool.\n")
+    _ratchet(tmp_path, ".context/style-budget.txt", f"# ruleset 1\n{DOC}\t0\n")
+    assert _style(tmp_path) == 0
+    out = capsys.readouterr().out
+    assert f"advice: {DOC}:1: ing-form:" in out
+    assert f"advice: {DOC}:1: passive:" in out
+
+
+@pytest.mark.unit
+def test_stale_ruleset_prints_hint_exit_zero(tmp_path, capsys):
+    _doc(tmp_path, LONG + "\n")
+    _ratchet(tmp_path, ".context/style-budget.txt", f"# ruleset 0\n{DOC}\t0\n")
+    assert _style(tmp_path) == 0
+    assert "re-seed" in capsys.readouterr().out
+
+
+@pytest.mark.unit
+def test_stale_ruleset_update_rewrites_header(tmp_path):
+    _doc(tmp_path, LONG + "\n")
+    ratchet = tmp_path / ".context/style-budget.txt"
+    _ratchet(tmp_path, ".context/style-budget.txt", f"# ruleset 0\n{DOC}\t0\n")
+    assert _style(tmp_path, "--update-ratchet") == 0
+    text = ratchet.read_text(encoding="utf-8")
+    assert text.splitlines()[0] == "# ruleset 1"
+    assert f"{DOC}\t1" in text

@@ -933,3 +933,17 @@ def test_user_uninstall_keeps_legacy_unowned_project_block(tmp_path: Path) -> No
 
     assert result.removed == ()
     assert path.exists()
+
+
+@pytest.mark.unit
+def test_rendered_guidance_names_ste_not_caveman_docs(tmp_path: Path) -> None:
+    """AGENTS.md, managed CLAUDE.md block and Codex guidance all carry STE."""
+    from dummyindex.context.output.bootstrap import generate_managed_block
+
+    project_text = bootstrap_project_agents_md(tmp_path).read_text(encoding="utf-8")
+    claude_block = generate_managed_block()
+
+    for text in (project_text, claude_block):
+        body = " ".join(text.split())
+        assert "ASD-STE100" in body
+        assert "caveman style" not in body

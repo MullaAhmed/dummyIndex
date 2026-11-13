@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "slug": "ste100-docs",
+  "title": "All authored .context docs and repo docs follow ASD-STE100; dummyindex-update rewrites all context prose to STE",
+  "status": "planned",
+  "related_features": [
+    "equip",
+    "equip",
+    "session-memory"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": []
+}

@@ -2,153 +2,99 @@
 
 Every command. What it does. Why it exists.
 
-> **The CLI is the agent's backbone — you don't run it by hand.** The skill and
-> council invoke these commands to move bytes around atomically; everything that
-> needs judgment stays in markdown (see [the closing rule](#what-is-not-a-cli-command)).
-> A human's interface is **slash commands** in Claude Code or `$skill` mentions
-> in Codex. The lone
-> exception is the one-time **Installation** bootstrap below — `pip install dummyindex`
-> + `dummyindex install` — which a human runs in a terminal to put the skill in place.
+> **The CLI is the agent's backbone. You do not run it by hand.** The skill and council invoke these commands to move bytes around atomically. Everything that needs judgment stays in markdown (see [the closing rule](#what-is-not-a-cli-command)). A human's interface is **slash commands** in Claude Code or `$skill` mentions in Codex. The one exception is the one-time **Installation** bootstrap below.
+
+> It is `pip install dummyindex` plus `dummyindex install`. A human runs it in a terminal to put the skill in place.
 
 ## Installation — the human bootstrap (run once)
 
-The one place a human touches the terminal. Every section after this is agent-invoked.
+The one place a human uses the terminal. Every later section is invoked by an agent.
 
 ### `dummyindex install [--platform claude|agents|both] [--scope user|project] [--dir PATH] [--skill-only] [--no-onboarding] [--defaults] [--no-default-plugins] [--no-superpowers] [--dedupe user|project] [--force-downgrade]`
 
-- Copies all eight skills into `.claude/skills/` for Claude Code,
-  `.agents/skills/` for the platform-agnostic `agents` selector (Codex,
-  Cursor, Copilot CLI, OpenCode, Amp, Gemini CLI, Goose, Pi, Cline, and other
-  Agent-Skills/AGENTS.md harnesses), or both. **The default is `both`** — a
-  flagless install produces the universal layout (a documented compatibility
-  break with the previous claude-only default); pass `--platform claude` or
-  `--platform agents` to narrow to one host. `codex` still works as a
-  **deprecated alias** for `agents` — it prints a one-time deprecation
-  warning on stderr and renders a byte-identical `.agents/skills` tree.
-- `--scope user` (default) installs under the user's home; `--scope project`
-  installs under `<PATH>`.
-- Claude uses `/dummyindex*`; Codex discovers the same family through `/skills`
-  and invokes it as `$dummyindex*`.
-- Claude's `/tokens` remains a host-specific command because its reporter reads
-  Claude transcript files. Codex uses native `/status` for current
-  context/session tokens and `/usage` for account usage.
-- **Auto-init**: on a git repo, builds `.context/` and writes the selected host
-  guidance. Claude receives `.claude/CLAUDE.md` plus hooks; Codex receives its
-  active project instruction file and no Claude settings. Pass `--skill-only`
-  to copy skills alone.
-- **Installs five managed Claude hook events** as part of auto-init — UserPromptSubmit (static per-turn output/skill contract + dynamic `memory prompt-context`), SessionStart (`plan-update`, `memory session-start`, `gc signal`, and silent `memory mine`), Stop (`memory nudge`, `reconcile-gate`), PreCompact (`memory breadcrumb`), and PreToolUse Write (`guard-doc-write`). None rebuild the index or stamp the anchor (unlike the legacy pre-v0.13.5 shell-rebuild hooks).
-- **When Claude is selected, refreshes equip-generated tools** to the current
-  templates as part of auto-init, so `/dummyindex-update` carries that Claude
-  toolkit forward. A Codex-only install neither creates nor refreshes Claude
-  equipment.
-- `--defaults` / `--no-onboarding` writes config non-interactively. Claude-only
-  defaults to `sonnet` with hooks on; Codex-only to `current` with hooks off;
-  `both` to portable `current` with Claude hooks on.
-- `--no-default-plugins` skips every native default plugin for this run.
-  `--no-superpowers` is retained as a compatibility alias with identical
-  behavior. The flags do not persist an opt-out or remove the always-on project
-  output policy described below.
-- **Repair on reinstall.** Rerunning `install` also repairs stale copies an
-  older dummyindex version left behind (stale preambles, stale managed
-  guidance blocks), scoped to the invocation's selected platform(s) and
-  targeted scope; everything else is reported with the exact command to fix
-  it. A duplicate copy at both user and project scope is reported, never
-  deleted, unless `--dedupe user|project` is passed; a copy stamped newer than
-  the running package is left alone unless `--force-downgrade` is passed.
-  Symlinked copies are always refused. See
-  [docs/COMMANDS.md](../COMMANDS.md#platform-selector-repair-on-reinstall-and-dedupe)
-  for the full contract.
+- Copies all eight skills into `.claude/skills/` for Claude Code. It copies them into `.agents/skills/` for the platform-agnostic `agents` selector. That selector covers Codex, Cursor, Copilot CLI, OpenCode, Amp, Gemini CLI, Goose, Pi, Cline, and other Agent-Skills/AGENTS.md harnesses. **The default is `both`.** A flagless install produces the universal layout. This is a documented compatibility break with the previous claude-only default.
+
+  Pass `--platform claude` or `--platform agents` to narrow to one host.
+
+  `codex` still works as a **deprecated alias** for `agents`.
+
+  It prints a one-time deprecation warning on stderr. It renders a byte-identical `.agents/skills` tree.
+- `--scope user` (default) installs under the user's home. `--scope project` installs under `<PATH>`.
+- Claude uses `/dummyindex*`. Codex discovers the same family through `/skills`. Codex invokes it as `$dummyindex*`.
+- Claude's `/tokens` remains a host-specific command. Its reporter reads Claude transcript files. Codex uses native `/status` for current context and session tokens. Codex uses `/usage` for account usage.
+- **Auto-init**: on a git repo, auto-init builds `.context/` and writes the selected host guidance. Claude receives `.claude/CLAUDE.md` and hooks. Codex receives its active project instruction file and no Claude settings. Pass `--skill-only` to copy skills alone.
+- **Installs five managed Claude hook events** during auto-init. The five events are UserPromptSubmit, SessionStart, Stop, PreCompact, and PreToolUse Write. UserPromptSubmit runs the static per-turn output and skill contract, plus dynamic `memory prompt-context`. SessionStart runs `plan-update`, `memory session-start`, `gc signal`, and silent `memory mine`. Stop runs `memory nudge` and `reconcile-gate`.
+
+  PreCompact runs `memory breadcrumb`. PreToolUse Write runs `guard-doc-write`. None of them rebuilds the index. None of them stamps the anchor. The legacy pre-v0.13.5 shell-rebuild hooks did both.
+- **When Claude is selected, auto-init refreshes equip-generated tools** to the current templates. This lets `/dummyindex-update` carry that Claude toolkit forward. A Codex-only install neither creates nor refreshes Claude equipment.
+- `--defaults` and `--no-onboarding` write config non-interactively. Claude-only installs default to `sonnet` with hooks on. Codex-only installs default to `current` with hooks off. `both` defaults to portable `current` with Claude hooks on.
+- `--no-default-plugins` skips every native default plugin for this run. `--no-superpowers` remains a compatibility alias with identical behavior. The flags do not persist an opt-out. They keep the always-on project output policy described below.
+- **Repair on reinstall.** Rerunning `install` also repairs stale copies. An older dummyindex version left these copies behind. Repair covers stale preambles and stale managed guidance blocks. It is scoped to the invocation's selected platforms and targeted scope. Everything else is reported with the exact command to fix it.
+
+  A duplicate copy at both user and project scope is reported.
+
+  It is never deleted, unless `--dedupe user|project` is passed. A copy stamped newer than the running package is left alone, unless `--force-downgrade` is passed. Symlinked copies are always refused. See [docs/COMMANDS.md](../COMMANDS.md#platform-selector-repair-on-reinstall-and-dedupe) for the full contract.
 
 #### Reviewed default plugins and always-on behavior
 
-When `claude` or `both` is selected, install/auto-init declares the selected
-defaults in project `.claude/settings.json` and makes one best-effort
-materialization pass:
+When `claude` or `both` is selected, install and auto-init declare the selected defaults in project `.claude/settings.json`. They make one best-effort materialization pass:
 
 1. `superpowers@claude-plugins-official` from the official marketplace.
-2. `caveman@caveman`, with marketplace source `JuliusBrussee/caveman`
-   (tracks the latest upstream default branch).
-   The reviewed plugin exposes skills and commands plus `SessionStart` and
-   `UserPromptSubmit` Node command hooks, so `runs_code=true`.
-   Install writes `.caveman.json` as `{"defaultMode": "manual"}`, so caveman starts inactive.
-   It skips the write when `.caveman.json` or `.caveman/config.json` already exists.
-   It also skips the user home directory, Codex-only installs, and `caveman@caveman` set to `false`.
-   `/caveman` still works. Env var `CAVEMAN_DEFAULT_MODE` overrides the file.
-<!-- test-anchor:policy-selfapply:begin -->
-3. `i-have-adhd@i-have-adhd`, with marketplace source `ayghri/i-have-adhd`
-   (tracks the latest upstream default branch).
-   The reviewed plugin exposes one skill plus an opt-in `SessionStart` shell
-   command hook, so `runs_code=true`. The hook requires a per-profile
-   `.i-have-adhd-always` flag and the skill sets
-   `disable-model-invocation: true`, so enabling the plugin alone never makes
-   it self-apply. Dummyindex's managed project policy and per-prompt reminder
-   carry the behavior across profiles and stand alone without the plugin.
-<!-- test-anchor:policy-selfapply:end -->
-4. `ponytail@ponytail`, with marketplace source `DietrichGebert/ponytail`
-   (tracks the latest upstream default branch). The reviewed plugin exposes
-   skills and commands. Its hooks are `SessionStart`, `SubagentStart`, and
-   `UserPromptSubmit` Node command hooks. Also reviewed: a band UI module with
-   local task ledger, so `runs_code=true`. The webhook is empty by default.
-   Once a user sets it, every task row leaves the machine. The `SubagentStart`
-   hook injects the ponytail ruleset into every subagent, including
-   dummyindex-dispatched ones. It applies when mode is not `off`; default mode
-   is `full`.
+2. `caveman@caveman`, with marketplace source `JuliusBrussee/caveman` (tracks the latest upstream default branch). The reviewed plugin exposes skills and commands. It also exposes `SessionStart` and `UserPromptSubmit` Node command hooks. So `runs_code=true`. Install writes `.caveman.json` as `{"defaultMode": "manual"}`.
 
-The three third-party entries are a narrow, reviewed built-in exception. They
-track latest because Claude Code materializes marketplaces with
-`git clone --branch <ref>` — branch/tag names only, never a commit SHA, so a
-commit pin can never install. Sources and blast radii are disclosed before
-settings or runner action; adding or swapping a source requires another
-source review and release. This does **not**
-relax `context equip`'s approval requirement for any other third-party source.
-Marketplace declaration is preserved even when the Claude CLI is unavailable,
-so Claude Code can resolve the target later. Failures are reported per target
-and do not fail indexing or prevent later independent defaults from being
-attempted.
+   Caveman therefore starts inactive.
+
+   Install skips the write when `.caveman.json` or `.caveman/config.json` already exists. Install also skips the user home directory, Codex-only installs, and `caveman@caveman` set to `false`. `/caveman` still works. Env var `CAVEMAN_DEFAULT_MODE` overrides the file.
+<!-- test-anchor:policy-selfapply:begin -->
+3. `i-have-adhd@i-have-adhd`, with marketplace source `ayghri/i-have-adhd` (tracks the latest upstream default branch). The reviewed plugin exposes one skill plus an opt-in `SessionStart` shell command hook. So `runs_code=true`. The hook requires a per-profile `.i-have-adhd-always` flag. The skill sets `disable-model-invocation: true`.
+
+   Enabling the plugin alone never makes it self-apply.
+
+   Dummyindex's managed project policy and per-prompt reminder carry the behavior across profiles. They stand alone without the plugin.
+<!-- test-anchor:policy-selfapply:end -->
+4. `ponytail@ponytail`, with marketplace source `DietrichGebert/ponytail` (tracks the latest upstream default branch). The reviewed plugin exposes skills and commands. Its hooks are `SessionStart`, `SubagentStart`, and `UserPromptSubmit` Node command hooks. It also includes a band UI module with a local task ledger. So `runs_code=true`.
+
+   The webhook is empty by default.
+
+   Once a user sets it, every task row leaves the machine. The `SubagentStart` hook injects the ponytail ruleset into every subagent. This includes dummyindex-dispatched subagents. The hook applies when mode is not `off`. The default mode is `full`.
+
+The three third-party entries are a narrow, reviewed built-in exception. They track latest because Claude Code materializes marketplaces with `git clone --branch <ref>`. That command accepts branch and tag names only, never a commit SHA. So a commit pin can never install. Sources and blast radii are disclosed before settings or runner action.
+
+Adding or swapping a source requires another source review and release.
+
+This does **not** relax `context equip`'s approval requirement for any other third-party source. Marketplace declaration is preserved even when the Claude CLI is unavailable, so Claude Code can resolve the target later. Failures are reported per target, and they do not fail indexing or prevent later independent defaults from being attempted.
 
 <!-- test-anchor:policy-restatement:begin -->
-A Codex-only install writes no `.claude/**` files and invokes no Claude runner.
-It receives the behavior through the active managed **project** instruction
-file instead. Claude's managed project block carries the same always-on output
-policy. Apply it on every reply without waiting for an invocation. Replies use
-the `i-have-adhd` shape at minimum verbosity, not `caveman` chat voice. Lead
-with the outcome or next action. Keep prose compact. Number multi-step work, at most 5
-items per group. Suppress tangents, restate current state, and preserve technical
-and safety detail. Subagent prompts and SendMessage bodies use concise Chinese
-with caveman rules. Code, commits, docs, and final reports stay English. Repo
-docs use English caveman style. Before acting, compare the request with every
-exposed skill's trigger rules and invoke every match without waiting to be asked.
-Explicit user formatting requests and safety requirements win. The policy is not
-written to Codex's global guidance.
+A Codex-only install writes no `.claude/**` files. It invokes no Claude runner. It receives the behavior through the active managed **project** instruction file instead. Claude's managed project block carries the same always-on output policy. Apply it on every reply without waiting for an invocation.
+
+Replies use the `i-have-adhd` shape at minimum verbosity.
+
+Replies do not use `caveman` chat voice. Lead with the outcome or next action. Keep prose compact. Number multi-step work, at most 5 items per group. Suppress tangents, restate current state, and preserve technical and safety detail.
+
+Subagent prompts and SendMessage bodies use concise Chinese with caveman rules.
+
+Code, commits, docs, and final reports stay English. Repo docs follow ASD-STE100. Before acting, compare the request with every exposed skill's trigger rules. Invoke every match without waiting to be asked. Explicit user formatting requests and safety requirements win.
+
+The policy is not written to Codex's global guidance.
 <!-- test-anchor:policy-restatement:end -->
 
-There are three distinct opt-out layers for the native defaults:
+There are three distinct opt-out layers for the native defaults.
 
-- **One run, all four:** pass `--no-default-plugins`, or its legacy
-  `--no-superpowers` alias. The gate runs before config reconciliation,
-  marketplace/settings changes, runner probes, or code execution; a current
-  config remains byte-identical.
-- **Durable, all four:** set `.context/config.json` field
-  `default_plugins_enabled` to `false`. Reinstall/update does not backfill
-  missing defaults while this explicit state remains disabled.
-- **Durable, one target:** set its project or local `enabledPlugins` value to
-  `false`. That tombstone wins over project/local precedence, remains `false`,
-  and is never materialized by dummyindex.
+- **One run, all four:** pass `--no-default-plugins`, or its legacy `--no-superpowers` alias. The gate runs before config reconciliation, marketplace or settings changes, runner probes, and code execution. A current config remains byte-identical.
+- **Durable, all four:** set `.context/config.json` field `default_plugins_enabled` to `false`. Reinstall or update does not backfill missing defaults. This holds while this explicit state remains disabled.
+- **Durable, one target:** set its project or local `enabledPlugins` value to `false`. That tombstone takes precedence over project and local values. It remains `false`. Dummyindex never materializes it.
 
-Malformed config fails closed. Install/init warns and performs no default
-marketplace declaration, enabled-plugin write, runner action, backfill, or
-config mutation instead of falling back to the built-in tuple.
+Malformed config fails closed. Install and init warn. They perform no default marketplace declaration, enabled-plugin write, runner action, backfill, or config mutation. The built-in tuple stays unused.
 
 ### `dummyindex uninstall [--platform claude|agents|both] [--scope user|project] [--dir PATH]`
 
-- Removes the selected host's skill family and version stamp; Claude command
-  aliases owned by dummyindex are removed with a Claude selection.
-- Project-scope Codex removal cleans that project's managed guidance. User
-  scope cleans global guidance plus only a current/`--dir` project block
-  stamped as that user install's auto-init; explicit project/ingest and legacy
-  unowned blocks are preserved. Claude guidance and project hooks have separate
-  lifecycle commands and are left intact.
-- Best-effort cleanup of now-empty skill/command parent directories.
+- Removes the selected host's skill family and version stamp. Claude command aliases owned by dummyindex are removed with a Claude selection.
+- Project-scope Codex removal cleans that project's managed guidance. User scope cleans global guidance. It also cleans only a current or `--dir` project block. That block is stamped as the auto-init of that user install. Explicit project and ingest blocks are preserved, and so are legacy unowned blocks.
+
+  Claude guidance and project hooks have separate lifecycle commands.
+
+  They are left intact.
+- Best-effort cleanup removes now-empty skill and command parent directories.
 
 ## Backbone
 
@@ -156,16 +102,10 @@ config mutation instead of falling back to the built-in tuple.
 
 - Primary entry point. Equivalent to `context init`.
 - Runs the deterministic backbone on `path`.
-- Writes `.context/` and host guidance. Codex uses its active project
-  instruction file (`AGENTS.override.md`, `AGENTS.md`, or a configured
-  fallback); Claude uses
-  `.claude/CLAUDE.md` and installs hooks by default.
-- Refuses to replace a curated/enriched index unless `--force` is explicit;
-  use `rebuild --changed` for a non-destructive refresh. `--depth` is a one-run
-  council-depth override. `--no-default-plugins` (or compatibility alias
-  `--no-superpowers`) applies the one-run native-default gate above.
-- Smart default: relative `path` under cwd → output to cwd; absolute path → output to that path.
-- `--docs PATH` (repeatable) — adds external doc folders to the source-docs catalog. In-repo docs (`README.md`, `CHANGELOG.md`, `ARCHITECTURE.md`, `SECURITY.md`, `BRIEF.md`, any root-level `*.md`, plus `docs/`, `doc/`, `documentation/`, `ADR/`, `RFC/`) are discovered automatically.
+- Writes `.context/` and host guidance. Codex uses its active project instruction file. That file is `AGENTS.override.md`, `AGENTS.md`, or a configured fallback. Claude uses `.claude/CLAUDE.md`. Claude also installs hooks by default.
+- Refuses to replace a curated/enriched index unless `--force` is explicit. Use `rebuild --changed` for a non-destructive refresh. `--depth` is a one-run council-depth override. `--no-default-plugins` (or compatibility alias `--no-superpowers`) applies the one-run native-default gate above.
+- Smart default: a relative `path` under cwd writes output to cwd. An absolute path writes output to that path.
+- `--docs PATH` (repeatable) adds external doc folders to the source-docs catalog. The in-repo docs are discovered automatically. They are `README.md`, `CHANGELOG.md`, `ARCHITECTURE.md`, `SECURITY.md`, `BRIEF.md`, any root-level `*.md`, and the folders `docs/`, `doc/`, `documentation/`, `ADR/`, and `RFC/`.
 
 ### `dummyindex context init [path] [--root DIR] [--platform claude|agents|both] [--no-hooks] [--no-default-plugins] [--no-superpowers] [--force] [--depth light|standard|deep] [--docs PATH]...`
 
@@ -174,23 +114,28 @@ config mutation instead of falling back to the built-in tuple.
 ### `dummyindex context rebuild [--changed] [--full] [path] [--root DIR] [--docs PATH]...`
 
 - Full or incremental rebuild.
-- `--changed` re-extracts only files whose content hash changed (the manual incremental path). The manifest tracks both code and in-repo docs, so a README edit is detected. As of v0.13.5 this is run manually, not from a hook.
-- **Non-destructive on an enriched index.** When `features/INDEX.json` carries a curated taxonomy (a feature renamed off `community-*`, or an `INFERRED` confidence), `--changed` no longer re-clusters or re-stubs. It refreshes only the deterministic, enrichment-free artefacts (`map/files.json`, `map/symbols.json`, `conventions/naming.{json,md}`, `source-docs/INDEX.{json,md}`, `features/symbol-graph.json`), preserves `tree.json` abstracts and every per-feature `spec.md`, and prints a reconcile report (drifted features + unassigned new files). It deliberately leaves `meta.indexed_commit` unchanged until the curated reconcile procedure finishes and runs `reconcile-stamp`. A fresh deterministic-only index (all `community-*` / `EXTRACTED`) still full-builds.
-- `--full` forces the destructive full re-cluster regardless, printing a warning that it discards any curated taxonomy + enrichment. Use after an intentional from-scratch reset; otherwise pass `--changed` for the non-destructive path.
+- `--changed` re-extracts only files whose content hash changed. This is the manual incremental path. The manifest tracks both code and in-repo docs. So a README edit is detected. As of v0.13.5, you run this manually.
+
+  It does not run from a hook.
+- **Non-destructive on an enriched index.** When `features/INDEX.json` carries a curated taxonomy, `--changed` no longer re-clusters or re-stubs. A curated taxonomy means a feature renamed off `community-*`, or an `INFERRED` confidence. It refreshes only the deterministic, enrichment-free artefacts (`map/files.json`, `map/symbols.json`, `conventions/naming.{json,md}`, `source-docs/INDEX.{json,md}`, `features/symbol-graph.json`). It preserves `tree.json` abstracts and every per-feature `spec.md`. It prints a reconcile report with drifted features and unassigned new files.
+
+  It deliberately leaves `meta.indexed_commit` unchanged until the curated reconcile procedure finishes.
+
+  Then that procedure runs `reconcile-stamp`. A fresh deterministic-only index, with all `community-*` and `EXTRACTED` entries, still full-builds.
+- `--full` forces the destructive full re-cluster regardless. It prints a warning. The warning says the run discards any curated taxonomy and enrichment. Run the full rebuild after an intentional from-scratch reset. Otherwise, pass `--changed` for the non-destructive path.
 - `--docs PATH` accepts the same form as `ingest`. Pass it on every rebuild that should preserve the same external doc roots.
 - Outputs `added / modified / removed` summary (or the reconcile report on the enriched path).
 
 ### `dummyindex context check [path] [--root DIR] [--auto-refresh] [--quiet] [--docs PATH]... [--versions]`
 
-- Manifest-based drift detection. Compares current source + doc content hashes to the stored manifest; reports `added / modified / removed`.
+- Manifest-based drift detection. It compares current source and doc content hashes to the stored manifest. It reports `added / modified / removed`.
 - `--auto-refresh` runs `rebuild --changed` automatically when drift is detected.
-- `--quiet` suppresses human-readable output; the exit code still reports clean
-  (`0`), drift (`1`), or usage/setup failure (`2`).
-- `--docs PATH` mirrors `ingest` so external doc roots aren't reported as `removed`.
-- `--versions` is a separate read-only diagnostic. It compares the running CLI,
-  `.context` stamp, and every repo/user × Claude/Codex skill stamp independently,
-  reports PATH shadowing, never fixes anything, and always exits 0.
-- A manual inspection command. **No longer auto-refreshes** and is **not** the SessionStart hook (that's `plan-update`, below).
+- `--quiet` suppresses human-readable output. The exit code still reports clean (`0`), drift (`1`), or usage or setup failure (`2`).
+- `--docs PATH` mirrors `ingest`. External doc roots are not reported as `removed`.
+- `--versions` is a separate, read-only diagnostic. It compares the running CLI, the `.context` stamp, and every repo or user skill stamp, for Claude and for Codex. It compares each one independently. It reports PATH shadowing. It never fixes anything.
+
+  It always exits 0.
+- A manual inspection command. It **no longer auto-refreshes**. It is **not** the SessionStart hook. The SessionStart hook is `plan-update`, which is described below.
 
 **`check` ratchets and reference checks:**
 
@@ -204,89 +149,90 @@ config mutation instead of falling back to the built-in tuple.
 ### `dummyindex context plan-update [path] [--root DIR]`
 
 - The SessionStart-hook command (v0.13.5).
-- Prints a markdown drift report to stdout: one line per feature whose source-file mtime exceeds the max mtime of that feature's docs. Empty stdout when nothing is stale.
-- Claude Code's `SessionStart` hook takes the plain stdout as `additionalContext` — no JSON wrapping.
-- Advisory only: it does not rebuild or rewrite anything. The running session reconciles the named features' docs in place.
+- It prints a markdown drift report to stdout. It prints one line per feature. That line appears when the feature's source-file mtime exceeds the newest mtime of its docs. Stdout is empty when nothing is stale.
+- Claude Code's `SessionStart` hook takes the plain stdout as `additionalContext`. It needs no JSON wrapping.
+- It is advisory only. It does not rebuild or rewrite anything. The running session reconciles the named features' docs in place.
 
 ### `dummyindex context reconcile-gate [path] [--root DIR]`
 
-- The Stop-hook reconcile gate (v0.23.0). Reads the Stop hook's JSON from stdin (`stop_hook_active`, `session_id`, `transcript_path`).
-- Prints a Claude Code `{"decision":"block","reason":…}` payload — **blocking the session's exit once** — when `.context/` is stale (`compute_drift` reports drift) **after a substantial session** (subagents ran, or main-thread output ≥ the significance threshold). The `reason` is a scoped directive: re-run the council for the drifted features (`/dummyindex --recouncil <feature>`), place any new files, then `dummyindex context reconcile-stamp`.
-- Silent (allows the stop) when the index is fresh, on the re-entrant stop (`stop_hook_active` true → **block-once**, never traps the session), on a trivial session, or when opted out via `"auto_council": false` in `.context/config.json`.
-- **The hook never writes or stamps `.context/`** — the agent runs the council and advances the anchor, preserving the "no hook may stamp" invariant. Always exits 0 (a Stop hook must never fail the turn).
+- The Stop-hook reconcile gate (v0.23.0). It reads the Stop hook's JSON from stdin (`stop_hook_active`, `session_id`, `transcript_path`).
+- It prints a Claude Code `{"decision":"block","reason":…}` payload. It blocks the session exit once. It prints this payload when `.context/` is stale (`compute_drift` reports drift). It prints it after a substantial session. A substantial session has subagent runs, or main-thread output at or above the significance threshold.
+
+  The `reason` is a scoped directive.
+
+  It tells the agent to re-run the council for the drifted features, using `/dummyindex --recouncil <feature>`. It also tells the agent to place any new files. Then it runs `dummyindex context reconcile-stamp`.
+- It stays silent and allows the stop in these cases. The index is fresh. The stop is re-entrant (`stop_hook_active` true). The session is trivial. The user opts out through `"auto_council": false` in `.context/config.json`.
+
+  On a re-entrant stop, it blocks **once** and never traps the session.
+- The **hook never writes or stamps `.context/`**. The agent runs the council and advances the anchor. This preserves the "no hook may stamp" invariant. It always exits 0. A Stop hook must never fail the turn.
 
 ### `dummyindex context bootstrap [path] [--root DIR] [--platform claude|agents|both]`
 
-- Regenerates selected host guidance without rebuilding `.context/`: Claude's
-  managed block in `.claude/CLAUDE.md`, the active project-level Codex
-  instruction file, or both. The default remains `claude` for backward
-  compatibility; `codex` still works as a deprecated alias for `agents` (see
-  Installation above).
-- Useful when managed guidance text changes (e.g., schema bumps).
+- Regenerates the selected host guidance without rebuilding `.context/`. For Claude, it regenerates the managed block in `.claude/CLAUDE.md`. For Codex, it regenerates the active project-level instruction file. It can regenerate both.
+- The default remains `claude` for backward compatibility. `codex` still works as a deprecated alias for `agents`. See Installation above.
+- Use it when managed guidance text changes, for example during schema bumps.
 
 ## Hooks (installed by `ingest` or `install --scope project`)
 
 ### `dummyindex context hooks install [path] [--root DIR]`
 
-- Idempotent. Installs **five** `.claude/settings.json` hook events, none of which rebuild the index or stamp the anchor:
-  - UserPromptSubmit — injects the compact always-on output and skill-routing contract, plus an independent `memory prompt-context` payload for validated recurring corrections and the current prompt.
-  - SessionStart — runs `dummyindex context plan-update` (drift report + freshness badge cache), `dummyindex context memory session-start` (memory block), `dummyindex context gc signal` (commit-throttled `/dummyindex-gc` nudge), and one fully silent `dummyindex context memory mine` refresh.
-  - Stop — runs `dummyindex context memory nudge` (handoff-checkpoint CTA) **and** `dummyindex context reconcile-gate` (the block-once reconcile gate).
-  - PreCompact — runs `dummyindex context memory breadcrumb` (writes a breadcrumb to `now.md`).
-  - PreToolUse (`Write`) — runs `dummyindex context guard-doc-write` (managed-doc-homes guard).
-- `--global` writes `~/.claude/settings.json` instead, so the hooks fire in **every** repo (self-gating on `.context/` existing). A repo's own `--local` install overrides the global one — global hook bodies carry a `dummyindex context hooks defer-check` guard that yields when the repo has its own dummyindex hooks.
-- **Upgrade scrub** (local scope): removes any legacy `git post-commit` script and sentinel-bearing `PostToolUse` entry installed by pre-v0.13.5 versions. User-authored hooks (no sentinel) are left untouched.
+- It is idempotent. It installs **five** `.claude/settings.json` hook events. None of them rebuilds the index or stamps the anchor:
+  - UserPromptSubmit injects the compact always-on output and skill-routing contract. It also injects an independent `memory prompt-context` payload. That payload covers validated recurring corrections and the current prompt.
+  - SessionStart runs `dummyindex context plan-update`. That command prints the drift report and refreshes the freshness badge cache. It also runs `dummyindex context memory session-start` for the memory block. It runs `dummyindex context gc signal` for the commit-throttled `/dummyindex-gc` nudge. It runs one fully silent `dummyindex context memory mine` refresh.
+  - Stop runs `dummyindex context memory nudge` for the handoff checkpoint call to action. It also runs `dummyindex context reconcile-gate` for the block-once reconcile gate.
+  - PreCompact runs `dummyindex context memory breadcrumb`. That command writes a breadcrumb to `now.md`.
+  - PreToolUse (`Write`) runs `dummyindex context guard-doc-write`. This is the managed doc homes guard.
+- `--global` writes `~/.claude/settings.json` instead. The hooks then fire in **every** repo. Each hook gates itself on `.context/` existing. A repo's own `--local` install overrides the global one. Global hook bodies carry a `dummyindex context hooks defer-check` guard.
 
-**PreToolUse language hint.** The PreToolUse matcher is `Write|Edit|MultiEdit|Agent|Task|SendMessage`.
-For `Agent` and `Task`, the hook reads `prompt`. For `SendMessage`, it reads `message`.
-Code, URLs, and paths are removed first. Text under 200 characters is then not judged.
+  That guard yields when the repo has its own dummyindex hooks.
+- **Upgrade scrub** (local scope) removes any legacy `git post-commit` script. It also removes a sentinel-bearing `PostToolUse` entry. Pre-v0.13.5 versions installed both. User-authored hooks have no sentinel. The scrub leaves them untouched.
+
+**PreToolUse language hint.** The PreToolUse matcher is `Write|Edit|MultiEdit|Agent|Task|SendMessage`. For `Agent` and `Task`, the hook reads `prompt`. For `SendMessage`, it reads `message`. Code, URLs, and paths are removed first. Text under 200 characters is then not judged.
+
 It warns when the CJK share (CJK characters / (CJK characters + Latin words)) is below 0.5.
+
 The warning goes out as `additionalContext`. It never denies, and `doc_guard_enabled` does not turn it off.
 
 ### `dummyindex context hooks defer-check [path] [--root DIR]`
 
-- Silent exit-code probe used by the `--global` hook guard: exit 0 (defer) when the repo has its own `--local` dummyindex hooks, else exit 1.
+- It is a silent exit-code probe. The `--global` hook guard uses it. It exits 0 (defer) when the repo has its own `--local` dummyindex hooks. Otherwise it exits 1.
 
 ### `dummyindex context hooks uninstall [path] [--root DIR]`
 
-- Removes the managed hook entries (and scrubs any legacy entries). Leaves the rest of `.git/hooks` and `settings.json` untouched.
+- Removes the managed hook entries and scrubs any legacy entries. It leaves the rest of `.git/hooks` and `settings.json` untouched.
 
 ### `dummyindex context hooks status [path] [--root DIR]`
 
-- Prints whether each managed hook is installed. (`HookStatus` carries `claude_user_prompt_submit`, `claude_session_start`, `claude_stop`, `claude_pre_compact`, and `claude_pre_tool_use`; `all_installed` requires all five.)
+- Prints whether each managed hook is installed. The `HookStatus` type carries `claude_user_prompt_submit`, `claude_session_start`, `claude_stop`, `claude_pre_compact`, and `claude_pre_tool_use`. `all_installed` requires all five.
 
 ## Onboarding & preflight
 
 ### `dummyindex context preflight [path] [--root DIR] [--json]`
 
-- Read-only inventory of the repo's existing `.claude/` setup before any write:
-  actionable for a Claude run and informational for a Codex-only run.
+- It is a read-only inventory of the repo's existing `.claude/` setup. It runs before any write. The inventory is actionable for a Claude run. It is informational for a Codex-only run.
 - The skill runs it as Phase 0 on every invocation and surfaces the summary.
 
 ### `dummyindex context onboard [path] [--root DIR] --model current|opus|sonnet|haiku|fable [--scope repo|subdir|explicit] [--scope-path PATH] [--mode light|standard|deep] [--hook|--no-hook] [--doc PATH]... [--platform claude|agents|both] [--defaults]`
 
 - Persists the first-run council preferences (scope, mode, model, session hooks, external docs) to `.context/config.json`.
-- The model is never silently defaulted — `--model` (or `--defaults`) is required.
-- `--defaults` uses an explicit `--platform` when supplied. Otherwise it
-  infers dummyindex's managed Claude/Codex guidance markers and preserves the
-  historical Claude baseline only when neither marker exists. `codex` still
-  works as a deprecated alias for `agents` here too (see Installation above).
-- Driven by the skill's platform-aware Phase 1.2 setup. Claude-only asks five
-  questions. Codex-only asks only portable preferences and passes
-  `--model current --no-hook`. A both-host run uses `current` and asks for or
-  retains the Claude hook preference; re-run via the active host's
-  `--reconfigure` skill invocation.
+- The model is never silently defaulted. `--model` or `--defaults` is required.
+- `--defaults` uses an explicit `--platform` when you supply one. Otherwise it infers the managed Claude and Codex guidance markers. It preserves the historical Claude baseline only when neither marker exists. `codex` still works as a deprecated alias for `agents` here. See Installation above.
+- The skill's platform-aware Phase 1.2 setup drives this. Claude-only asks five questions. Codex-only asks only portable preferences. It passes `--model current --no-hook`. A both-host run uses `current`.
+
+  It asks for or retains the Claude hook preference.
+
+  Re-run it through the active host's `--reconfigure` skill invocation.
 
 ### `dummyindex context config show [path] [--root DIR]`
 
-- Prints `.context/config.json`; exit 1 when no config exists yet (the skill's "needs onboarding" signal).
+- Prints `.context/config.json`. It exits 1 when no config exists yet. The skill reads that exit as its "needs onboarding" signal.
 - `get`/`set` are reserved for a future release.
 
 ## Enrichment (called by the council)
 
 ### `dummyindex context enrich-plan [path] [--root DIR]`
 
-- Emits `.context/cache/_enrich_plan.json` — work-list of `tree.json` stubs.
+- It emits `.context/cache/_enrich_plan.json`. This work list covers the `tree.json` stubs.
 - Grouped into per-file batches.
 - Used by the dev to enrich tree abstracts.
 
@@ -294,7 +240,7 @@ The warning goes out as `additionalContext`. It never denies, and `doc_guard_ena
 
 - Merges `{node_id: abstract}` into `tree.json` atomically.
 - Bumps `confidence: EXTRACTED → INFERRED` on each touched node.
-- Warns + exits non-zero on unknown `node_id`.
+- Warns and exits non-zero on unknown `node_id`.
 
 ## Features
 
@@ -303,104 +249,147 @@ The warning goes out as `additionalContext`. It never denies, and `doc_guard_ena
 - Atomic feature folder rename.
 - Updates: folder name, `feature.json`, every nested `flows/*.json`, `INDEX.json`, `INDEX.md`, `graph.json`.
 - Used by the architect agent during the structural regrouping pre-stage.
-- Idempotent: `--from == --to` just refreshes metadata.
+- Idempotent. When `--from == --to`, the verb refreshes metadata alone.
 
 ### `dummyindex context features-merge [--root DIR] --from ID --into ID [--as-section NAME] [--note "..."]`
 
 - Absorbs a trivial feature into another as a section (architect consolidation of dangling features).
-- Appends — never clobbers — into `features/<into>/<section>.md`; updates `INDEX.json` and the graph.
+- It appends into `features/<into>/<section>.md`. It never clobbers existing content. It updates `INDEX.json` and the graph.
 
 ### `dummyindex context flow-remove [--root DIR] --feature X --flow Y`
 
-- Drops a flow's JSON + MD.
-- Updates: `feature.json` (remove from `flow_ids`), `INDEX.json` (decrement `flow_count`), `graph.json` (remove flow node + edges).
-- Used by the dev when filtering trivial/false-positive flows.
+- Drops a flow's JSON and MD files.
+- Updates: `feature.json` (remove from `flow_ids`), `INDEX.json` (decrement `flow_count`), `graph.json` (remove flow node and edges).
+- Used by the dev when filtering trivial or false-positive flows.
 
 ### `dummyindex context scaffold-feature [--root DIR] --id ID --name "..." [--summary "..."] --file PATH [--file PATH]...`
 
-- Atomic, deterministic placement of net-new files into a **brand-new** feature the council decided should stand on its own — folds source into the curated taxonomy **without** re-clustering.
-- Creates `features/<id>/`: `feature.json` (`members` derived from `map/symbols.json` for the given files, `entry_points`/`flow_ids` empty, `confidence: EXTRACTED`), a deterministic `spec.md` stub (the same writer the scaffolder uses), and `docs.md` when the source-docs catalog matches.
-- Appends the feature to `INDEX.json` and regenerates `INDEX.md` + `graph.{json,html}` (reuses the index writers; never re-clusters, never invents `community-N`).
-- Errors (exit 2) on a duplicate `--id`, a reserved `community-*` id, no `--file`, or a `--file` that isn't a real file under the repo. All validation runs before any write.
+- It places net-new files into a **brand-new** feature. The council decided this feature should stand on its own. The command folds the source into the curated taxonomy **without** re-clustering. It is atomic and deterministic.
+- It creates `features/<id>/`. The new `feature.json` derives `members` from `map/symbols.json` for the given files. `entry_points` and `flow_ids` stay empty. `confidence: EXTRACTED`. It also writes a deterministic `spec.md` stub.
+
+  The scaffolder uses the same writer.
+
+  It writes `docs.md` when the source-docs catalog matches.
+- It appends the feature to `INDEX.json`. It regenerates `INDEX.md` and `graph.{json,html}`. It reuses the index writers. It never re-clusters. It never invents `community-N`.
+- It exits 2 on these errors. The `--id` is a duplicate. The id is a reserved `community-*` id. No `--file` is given. A `--file` is not a real file under the repo.
+
+  All validation runs before any write.
 - The council reconciliation phase (Phase 3) calls this to place a net-new cluster reported as unassigned.
 
 ### `dummyindex context assign-files [--root DIR] --feature ID --file PATH [--file PATH]...`
 
-- Atomic, deterministic placement of net-new files into an **existing** feature — `files` ∪ new, `members` recomputed from `map/symbols.json`.
-- Updates that feature's `INDEX.json` counts and regenerates `INDEX.md` + `graph.{json,html}`.
-- **Preserves** the feature's enriched `spec.md` / `plan.md` / `concerns.md` — they are never touched.
-- Idempotent on already-assigned files (silently skipped, not an error). Errors (exit 2) on a missing feature, no `--file`, or a `--file` missing/outside the repo. All validation runs before any write.
+- It places net-new files into an **existing** feature. It adds them to `files`. It recomputes `members` from `map/symbols.json`.
+- Updates that feature's `INDEX.json` counts and regenerates `INDEX.md` and `graph.{json,html}`.
+- **Preserves** the feature's enriched `spec.md`, `plan.md`, and `concerns.md`. These files are never touched.
+- It is idempotent for files that are already assigned. It skips them silently. That case is not an error. It exits 2 on these errors. They cover a missing feature, no `--file`, and a `--file` that is missing or outside the repo.
+
+  All validation runs before any write.
 
 ### `dummyindex context unassign-files [--root DIR] --feature ID --file PATH [--file PATH]...`
 
-- The **subtractive inverse** of `assign-files` — removes files from an existing feature (`files` minus the given set), recomputes `members` from `map/symbols.json` over what remains, refreshes INDEX counts + `INDEX.md`/`graph`, and re-drops the `.pending-enrichment` marker (the feature's scope changed → it owes re-enrichment).
-- **Does not require the files to exist on disk** — the point is they were *deleted* (or moved to another feature). Idempotent on a path the feature doesn't own.
-- Preserves the enriched `spec.md`/`plan.md`/`concerns.md`. Errors (exit 2) on a missing feature, no `--file`, a path outside the repo, or a removal that would empty the feature (use `features-remove` instead of stranding it).
+- The **subtractive inverse** of `assign-files`. It removes files from an existing feature (`files` minus the given set). It recomputes `members` from `map/symbols.json` over what remains. It refreshes INDEX counts and `INDEX.md` and `graph`. It re-drops the `.pending-enrichment` marker, because the feature's scope changed and it owes re-enrichment.
+- **Does not require the files to exist on disk.** The point is that they were *deleted*, or moved to another feature. It is idempotent on a path the feature does not own.
+- Preserves the enriched `spec.md`, `plan.md`, and `concerns.md`. It exits 2 on these errors. They cover a missing feature, no `--file`, a path outside the repo, or a removal that would empty the feature. An emptying removal needs `features-remove` instead. That avoids stranding the feature.
 - The reconcile procedure calls this for `removed_files` when a feature loses *some* of its files.
 
 ### `dummyindex context features-remove [--root DIR] --feature ID [--force]`
 
-- Atomically **deletes a feature whose code is gone**: drops `features/<id>/` (folder + enriched docs + flows), its `INDEX.json` entry (regenerating `INDEX.md` and decrementing the top-level `flow_count`), and its node + edges from `graph.json`.
-- **Safety guard:** refuses (exit 2) when the feature still owns files that exist on disk — those are live, so unassign the dead paths or merge it instead. `--force` overrides.
-- The reconcile procedure calls this for `removed_files` when a feature loses *all* of its files. The standalone deletion `features-merge` only does as a side effect of merging into a target.
+- Atomically **deletes a feature whose code is gone**. It drops `features/<id>/`, which holds the folder, the enriched docs, and the flows. It drops the `INDEX.json` entry, regenerates `INDEX.md`, and decrements the top-level `flow_count`. It drops the node and edges from `graph.json`.
+- **Safety guard:** it refuses with exit 2 when the feature still owns files that exist on disk. Those files are live. Unassign the dead paths, or merge the feature instead. `--force` overrides the guard.
+- The reconcile procedure calls this for `removed_files` when a feature loses *all* of its files. The standalone deletion `features-merge` only does this as a side effect of merging into a target.
 
 ## Reconcile — commit-anchored update (v0.15.3)
 
-The non-destructive successor to a full re-cluster. `.context/` records the commit it was last reconciled against (`meta.indexed_commit`); these commands diff against it and let the council update only what changed, preserving the curated taxonomy + enrichment. See `skills/council/65-reconcile.md` for the procedure.
+This is the non-destructive successor to a full re-cluster. `.context/` records the commit it was last reconciled against (`meta.indexed_commit`). These commands diff against that commit. They let the council update only what changed, and they preserve the curated taxonomy and enrichment. See `skills/council/65-reconcile.md` for the procedure.
 
 ### `dummyindex context reconcile [path] [--root DIR] [--json]`
 
-- **Read-only.** Diffs `meta.indexed_commit`..HEAD (+ the working tree, incl. untracked) and reports: **drifted features** (own a changed/removed file), **removed files**, **unassigned new files** (owned by no feature), and **features awaiting enrichment** (carry a `.pending-enrichment` marker).
-- `--json` emits the report `{indexed_commit, drifted_features, removed_files, unassigned_new_files, awaiting_enrichment, has_drift}` for the council procedure to consume.
-- Never writes; never decides taxonomy. Empty report when there's no anchor (non-git, or a pre-v0.15.3 index).
+- **Read-only.** It diffs `meta.indexed_commit`..HEAD, plus the working tree including untracked files. It reports these items. **Drifted features** own a changed or removed file. **Removed files** are gone. **Unassigned new files** belong to no feature.
+
+  **Features awaiting enrichment** carry a `.pending-enrichment` marker.
+- `--json` emits the report `{indexed_commit, drifted_features, removed_files, unassigned_new_files, awaiting_enrichment, has_drift}`. The council procedure consumes this report.
+- It never writes. It never decides taxonomy. It returns an empty report when there is no anchor. That happens on a non-git tree or a pre-v0.15.3 index.
 
 ### `dummyindex context mark-enriched [--root DIR] --feature ID`
 
-- Clears a feature's `.pending-enrichment` marker once the council has (re-)enriched it. The marker is set by `scaffold-feature` / `assign-files`; while set, `reconcile-stamp` refuses to advance the anchor past that feature (so a place-then-restart can't orphan an un-enriched stub).
-- Idempotent: no marker → no-op (exit 0). Errors (exit 2) only on a missing feature folder.
+- Clears a feature's `.pending-enrichment` marker after the council re-enriches it. The `scaffold-feature` and `assign-files` commands set the marker. While it is set, `reconcile-stamp` refuses to advance the anchor past that feature. A place-then-restart therefore cannot orphan an un-enriched stub.
+- Idempotent. With no marker, it is a no-op and exits 0. It exits 2 only on a missing feature folder.
 
 ### `dummyindex context reconcile-stamp [path] [--root DIR] [--force] [--heal-orphaned]`
 
-- **The write boundary.** Advances `meta.indexed_commit` to HEAD — run *after* the council has placed every unassigned file and enriched every placed/drifted feature. This is the one command (besides a fresh `ingest`) that moves the anchor.
-- **Refuses (exit 1)** while any **unassigned new files** or **awaiting-enrichment features** remain — advancing past them would silently forget them. Does **not** block on drifted features (only the stamp clears drift, so blocking on it could never advance).
-- `--force` anchors anyway and prints what it skipped. Warns when uncommitted source remains outside `.context/` (it re-surfaces as drift next reconcile). Off-git is a graceful no-op (exit 0).
-- `--heal-orphaned` opts into auto-healing an orphaned anchor (history rewritten by a rebase/squash, or never fetched): instead of refusing, the stamp re-baselines at HEAD with a loud warning. Un-reconciled blockers still refuse; without the flag the refusal is unchanged.
+- **The write boundary.** It advances `meta.indexed_commit` to HEAD. Run it *after* the council places every unassigned file and enriches every placed or drifted feature. This is the one command, besides a fresh `ingest`, that moves the anchor.
+- **Refuses with exit 1** while unassigned new files or awaiting-enrichment features remain. Advancing past them would silently forget them. It does **not** block on drifted features. Only the stamp clears drift, so blocking on drift could never advance the anchor.
+- `--force` anchors anyway and prints what it skipped. It warns when uncommitted source remains outside `.context/`. That source re-surfaces as drift on the next reconcile. Off-git, it is a graceful no-op that exits 0.
+- `--heal-orphaned` opts into auto-healing an orphaned anchor. An orphaned anchor comes from a history rewrite. Examples are a rebase or a squash. It can also come from a commit that was never fetched. Instead of refusing, the stamp re-baselines at HEAD with a loud warning.
+
+  Un-reconciled blockers still refuse. Without the flag, the refusal is unchanged.
 
 ## Context maintain loop (`maintain plan|begin|next|done|stamp|status`)
 
-One-command assembly of the maintenance runbook (`rebuild --changed` → `reconcile` → per-feature recouncil → `reconcile-stamp`): deterministic plumbing only, no LLM calls — the host skill consumes `next` units and launches one subagent per unit, then reports back through `done`/`stamp`. Durable state lives in committed `.context/fleet/maintain-<ts>/` dirs (`RUN.md` + `state.json`, atomic writes), prefix-scoped so other proposals' runs under `.context/fleet/` are never picked up; any killed session resumes from `state.json`.
+This command assembles the maintenance runbook in one step. The runbook runs `rebuild --changed`, then `reconcile`, then per-feature recouncil, then `reconcile-stamp`. The CLI does only deterministic plumbing and makes no LLM calls. The host skill consumes `next` units and launches one subagent per unit. It then reports back through `done` and `stamp`.
+
+Durable state lives in committed `.context/fleet/maintain-<ts>/` directories, which hold `RUN.md` and `state.json`.
+
+Writes are atomic. Runs are prefix-scoped, so other proposals' runs under `.context/fleet/` are never picked up. Any killed session resumes from `state.json`.
 
 ### `dummyindex context maintain plan [--max-features N] [--json] [--root DIR]`
 
-- Read-only assembly: computes the reconcile report and prints the ordered work list (drifted features first, then awaiting enrichment) with `estimate:` lines per feature — stub-node counts from a single `enrich.build_plan` walk x active council stages from `council_batch.active_stages` — plus a clearly-labelled `units x 90s` heuristic that is explicitly not a wall-clock promise. Notes unassigned new files separately (placement work, not units). Exit 0.
+- Read-only assembly. It computes the reconcile report. It prints the ordered work list. Drifted features come first, then features awaiting enrichment. Each feature has `estimate:` lines.
+
+  Stub-node counts come from a single `enrich.build_plan` walk.
+
+  Active council stages come from `council_batch.active_stages`. The command also prints a clearly labelled `units x 90s` heuristic. That heuristic is not a wall-clock promise. It notes unassigned new files separately, as placement work and not units. Exit 0.
 
 ### `dummyindex context maintain begin [--max-features N] [--all] [--json] [--root DIR]`
 
-- Writes the run manifest + state under `.context/fleet/maintain-<ts>/`. Requires either `--max-features N` or an explicit `--all` — an unbounded spend is never started silently (refusal is exit 2). Refuses politely (exit 0) when in sync.
+- Writes the run manifest and state under `.context/fleet/maintain-<ts>/`. It requires either `--max-features N` or an explicit `--all`. An unbounded spend never starts silently. A missing bound is refused with exit 2. It refuses politely with exit 0 when the index is in sync.
 
 ### `dummyindex context maintain next [--run NAME] [--json] [--root DIR]`
 
-- Prints the earliest incomplete unit (the same stage-major frontier semantics as `council-batch --next`) plus remaining counts, so the host skill launches exactly one unit without re-deriving order. Done units are never repeated.
+- Prints the earliest incomplete unit. The order matches the stage-major frontier of `council-batch --next`. It also prints the remaining counts. The host skill launches exactly one unit, and the output carries the order. Done units are never repeated.
 
 ### `dummyindex context maintain done --feature ID [--stage N] [--run NAME] [--root DIR]`
 
-- Marks a unit complete in state.json; without `--stage` the feature's earliest pending stage is taken. Unknown feature/stage pairs error out rather than silently succeeding.
+- Marks a unit complete in state.json. Without `--stage`, the feature's earliest pending stage is taken. An unknown feature and stage pair errors out. It fails loudly.
 
 ### `dummyindex context maintain stamp --feature ID [--run NAME] [--force] [--to <sha>] [--heal-orphaned] [--root DIR]`
 
-- Wraps `reconcile-stamp` for the finished feature (flags pass through) and ticks its units done in state only when the stamp succeeds — a refused stamp leaves the run untouched.
+- Wraps `reconcile-stamp` for the finished feature. The flags pass through. It ticks the feature's units done in state only when the stamp succeeds. A refused stamp leaves the run untouched.
 
 ### `dummyindex context maintain status [--run NAME] [--json] [--root DIR]`
 
-- Counts done/pending/skipped, elapsed time, the labelled heuristic remaining estimate, plus the run's anchor and mode. Always exit 0.
+- Counts done, pending, and skipped units. It reports elapsed time and the labelled heuristic remaining estimate. It also reports the run's anchor and mode. It always exits 0.
+
+## Restyle loop (`restyle plan|begin|next|done|stamp|status`)
+
+This is an ASD-STE100 rewrite of curated `features/` and `conventions/` docs. The CLI is deterministic. It snapshots each unit, checks the rewrite, and records the ruleset. The host skill rewrites each unit between `next` and `done`. The restyle loop makes no LLM calls.
+
+- `plan` is read-only. It lists units with their doc, strict, and advice counts. It prints `already restyled (ruleset N)` once stamped. It prints `nothing to restyle` on an index without curated docs.
+- `begin --all` or `begin --max-units N` starts a run. An unbounded run needs `--all`. `begin` refuses with exit 1 while a run is unfinished. `--max-units N` skips units that an earlier run of the same ruleset finished. `--force` starts a new run after a stamp.
+- `next` prints the next unit, its doc paths, and the rewrite brief. It prints a completion hint when all units are done.
+- `done <unit>` checks the unit against its snapshot. It exits 1 and names each doc and token when a protected token is lost. Otherwise it prints the remaining strict violations and `advice:` lines. It warns about new protected tokens.
+- `stamp` judges all curated units across runs. It records the ruleset in `meta.json` only when every unit is covered. A partial stamp reseeds the ratchet and prints `not stamped, N/M unit(s) covered`.
+- `status` reports unit counts for the run.
+
+### `dummyindex context restyle plan [--json] [--root DIR]`
+
+### `dummyindex context restyle begin --all | --max-units N [--force] [--json] [--root DIR]`
+
+### `dummyindex context restyle next [--run NAME] [--json] [--root DIR]`
+
+### `dummyindex context restyle done <unit> [--run NAME] [--json] [--root DIR]`
+
+### `dummyindex context restyle stamp [--run NAME] [--json] [--root DIR]`
+
+### `dummyindex context restyle status [--run NAME] [--json] [--root DIR]`
 
 ## Council (called by skill procedures)
 
 ### `dummyindex context section-write [--root DIR] --feature X --section NAME --from-file PATH`
 
 - Atomic placement of a markdown into `features/<X>/<NAME>.md`.
-- Sections: `spec`, `plan`, `concerns` (v0.14). Legacy: `README`, `architecture`, `implementation`, `data-model`, `security`, `product` (pre-v0.14, accepted for backwards compatibility).
-- Temp-file + rename for atomicity. Idempotent.
+- Sections: `spec`, `plan`, `concerns` (v0.14). Legacy sections are also accepted: `README`, `architecture`, `implementation`, `data-model`, `security`, and `product`. These predate v0.14. The CLI accepts them for backwards compatibility.
+- It writes to a temp file and then renames it, so the write is atomic. It is idempotent.
 - Used by the dev at stage 1, the architect at stage 2, and the critics at stage 3.
 
 ### `dummyindex context council-log [--root DIR] --feature X --stage N --agent NAME --status STATE [--note "..."]`
@@ -408,31 +397,31 @@ One-command assembly of the maintenance runbook (`rebuild --changed` → `reconc
 - Appends to `features/<X>/council/_council-log.json`.
 - Status values: `started`, `complete`, `failed`, `skipped`.
 - Used by every persona at start and end of work.
-- Enables resumption: skill checks the log to know what's already done.
+- It enables resumption. The skill reads the log to see what is already done.
 
 ### `dummyindex context council-batch [--root DIR] --next [--feature ID]... [--force] [--mode light|standard|deep] [--cap N] [--no-tree-enrich] [--json]`
 
-- Returns the next parallel batch of council dispatch-units: the earliest incomplete stage across all non-trivial features, up to `--cap` agents.
-- Tree enrichment (stage 5) is appended **by default** in every mode; `--no-tree-enrich` drops it for a run and `--tree-enrich` is accepted as a no-op.
-- `--feature ID` (repeatable) scopes the frontier to those features; `--force` re-councils already-complete scoped features (requires `--feature`).
-- `--json` emits `{complete, stage, mode, cap, units[]}` — each unit carries `feature_id`, `stage`, `role`, `subagent_type`, `framework`.
+- It returns the next parallel batch of council dispatch units. The batch holds the earliest incomplete stage across all non-trivial features. It holds up to `--cap` agents.
+- Tree enrichment (stage 5) is appended **by default** in every mode. `--no-tree-enrich` drops it for a run. `--tree-enrich` is accepted as a no-op.
+- `--feature ID` (repeatable) scopes the frontier to those features. `--force` re-councils already-complete scoped features. It requires `--feature`.
+- `--json` emits `{complete, stage, mode, cap, units[]}`. Each unit carries `feature_id`, `stage`, `role`, `subagent_type`, and `framework`.
 - When `complete` is `true`, all features have finished every active stage for the given mode.
-- The council twin of `build --next-wave`; the skill fans units out to parallel Task subagents, barriers, then re-runs `--next`.
+- It is the council twin of `build --next-wave`. The skill fans units out to parallel Task subagents. It waits at a barrier. Then it re-runs `--next`.
 
 ### `dummyindex context conventions-write [--root DIR] --section NAME --from-file PATH`
 
-- Atomic markdown placement into `.context/conventions/<section>.md` (agent-authored docs: folder-organization, coding-practices, testing, data-access).
+- It places markdown atomically into `.context/conventions/<section>.md`. These agent-authored docs cover folder-organization, coding-practices, testing, and data-access.
 - The Phase 1.5 convention authors place their output through this.
 
 ### `dummyindex context reality-check [--root DIR] --feature ID [--demote] [--json]`
 
-- Post-synthesis fact-check (Phase 3.5): pulls concrete claims ("X calls Y", `file.py:42`) out of a feature's docs and verifies them against `map/symbols.json` + the symbol graph.
+- It runs a post-synthesis fact-check (Phase 3.5). It pulls concrete claims, such as "X calls Y" or `file.py:42`, out of a feature's docs. It verifies them against `map/symbols.json` and the symbol graph.
 - `--demote` flips the feature's confidence to `AMBIGUOUS` when claims contradict the AST.
 
 ### `dummyindex context dev-pick [path] [--root DIR] --feature ID`
 
-- Resolves which stack-specialist "dev" persona authors a feature's docs — first-match-wins over the feature's file list + dependency tokens.
-- Prints JSON (`persona_id`, `subagent_type`, `framework`, `fallbacks`) — deterministic, no LLM.
+- It resolves which stack-specialist "dev" persona authors a feature's docs. The first match wins. The match uses the feature's file list and dependency tokens.
+- It prints JSON with `persona_id`, `subagent_type`, `framework`, and `fallbacks`. The output is deterministic. It uses no LLM.
 
 ## Refresh
 
@@ -440,16 +429,18 @@ One-command assembly of the maintenance runbook (`rebuild --changed` → `reconc
 
 - Rebuilds `.context/INDEX.md` from disk.
 - Rebuilds `features/INDEX.md` from `features/INDEX.json`.
-- Rebuilds `features/graph.json` + `features/graph.html` from the per-feature data.
-- Use after enrichment + renames to reconcile derived artifacts.
-- **Also migrates** legacy layouts (moves `graph/` contents under `features/`, shrinks long CLAUDE.md blocks).
-- **Preserves a curated scan.** `features/graph.json` is regenerated only while it is still the deterministic seed (`confidence: EXTRACTED`). Once the codebase-scan stage has authored it (`INFERRED`), a rebuild leaves it alone and just re-renders `graph.html` around it — the same contract that protects an enriched `spec.md`.
+- Rebuilds `features/graph.json` and `features/graph.html` from the per-feature data.
+- Use it after enrichment and renames. It reconciles the derived artifacts.
+- **Also migrates** legacy layouts. It moves `graph/` contents under `features/`. It shrinks long CLAUDE.md blocks.
+- **Preserves a curated scan.** `features/graph.json` regenerates only while it is still the deterministic seed (`confidence: EXTRACTED`). After the codebase-scan stage authors it (`INFERRED`), a rebuild leaves it alone. The rebuild re-renders `graph.html` around it. This is the same contract that protects an enriched `spec.md`.
 
 ### `dummyindex context scan-check [path] [--root DIR] [--json]`
 
-Validates the curated codebase scan at `features/graph.json` against the schema-v2 contract, and is the feedback half of the authoring loop: the stage writes the scan, runs this, fixes what it reports, re-runs.
+It validates the curated codebase scan at `features/graph.json` against the schema-v2 contract. It is the feedback half of the authoring loop. The stage writes the scan. It runs this check. It fixes what the check reports.
 
-Checks, all in **one pass** so every problem surfaces per round trip:
+Then it re-runs the check.
+
+The check runs in **one pass**. Every problem surfaces in each round trip.
 
 - caps — ≤ 60 nodes, ≤ 120 edges, ≤ 3 `topModels`, ≤ 10 `topTools` / `topIntegrations`
 - closed alphabets — `kind` ∈ `entry cron agent model tool service store external`, edge `kind` ∈ `calls reads writes triggers`
@@ -457,227 +448,306 @@ Checks, all in **one pass** so every problem surfaces per round trip:
 - referential integrity — node ids unique, every edge endpoint resolves to a node
 - formats — `project.slug` lowercase-dashed, `project.date` `YYYY-MM-DD`, `domain` a bare host (`openai.com`, never `https://openai.com`)
 
-Each violation prints as `<json.path>: <message> [<code>]`. Exits `0` when clean (noting when the scan is still the uncurated seed), `1` on violations, `2` when there is no scan to check. `--json` emits `{ok, path, confidence, violations[]}`. Deterministic, no LLM.
+Each violation prints as `<json.path>: <message> [<code>]`. It exits `0` when clean. It notes when the scan is still the uncurated seed. It exits `1` on violations. It exits `2` when there is no scan to check.
+
+`--json` emits `{ok, path, confidence, violations[]}`.
+
+The check is deterministic. It uses no LLM.
 
 ## Retrieval CLI
 
 ### `dummyindex context query "..." [--root DIR] [--top-k N] [--budget N] [--json]` ✅ shipped (v0.12)
 
-- PageIndex-style tree search. Agent passes a natural-language question.
+- It runs a PageIndex-style tree search. The agent passes a natural-language question.
 - Walks `features/INDEX.json` → relevant feature → relevant section.
-- Returns the cited markdown + `path:range` references.
+- It returns the cited markdown and `path:range` references.
 - Budget-capped (default 2000 tokens) for predictable cost in agent loops.
-- Deterministic — no LLM in the loop; a view over the same JSON the agent walks manually.
+- It is deterministic. It uses no LLM in the loop. It is a view over the same JSON that the agent walks manually.
 
 ### `dummyindex context graph <verb> [SYMBOL] [SYMBOL2] [--limit N] [--depth N] [--hops N] [--json] [--root DIR]`
 
-Bounded, read-only query verbs over the full extracted symbol graph.
-`features/symbol-graph.json` may be legacy JSON, compact JSON or a shard manifest;
-the commands reconstruct the same logical graph automatically:
+Bounded, read-only query verbs over the full extracted symbol graph. `features/symbol-graph.json` can be legacy JSON, compact JSON, or a shard manifest. The commands rebuild the same logical graph automatically:
 
-- `graph callers-of SYMBOL` / `graph callees-of SYMBOL` — direct `calls` edges, each row carrying its call site.
-- `graph impact SYMBOL [--depth N]` — transitive dependents via a reverse walk over dependency edges (default depth 2).
-- `graph path A B` — the shortest link chain between two symbols, each hop annotated with its relation and direction.
-- `graph neighbors SYMBOL [--hops N]` — every node within N hops over any relation except `rationale_for` (default 1).
-- `graph dead-code` — code nodes with zero incoming `calls`/`uses`/`imports_from`/`inherits` edges. Purely graph-driven, so dispatch-dict and function-body-import idioms can false-positive until those edges are extracted.
-- `graph community ID|SLUG|NAME` — members of one Leiden community ranked by dependency degree; accepts the raw community integer, a card slug from `features/graph-communities.json`, or any symbol (falls back to that symbol's own community).
+- `graph callers-of SYMBOL` and `graph callees-of SYMBOL` list direct `calls` edges. Each row carries its call site.
+- `graph impact SYMBOL [--depth N]` lists transitive dependents. It uses a reverse walk over dependency edges. The default depth is 2.
+- `graph path A B` gives the shortest link chain between two symbols. Each hop shows its relation and direction.
+- `graph neighbors SYMBOL [--hops N]` lists every node within N hops. It follows any relation except `rationale_for`. The default is 1 hop.
+- `graph dead-code` lists code nodes with zero incoming `calls`, `uses`, `imports_from`, or `inherits` edges. The check is purely graph-driven. Dispatch-dict and function-body-import idioms can give false positives until those edges are extracted.
+- `graph community ID|SLUG|NAME` lists members of one Leiden community. It ranks them by dependency degree. It accepts the raw community integer. It accepts a card slug from `features/graph-communities.json`. It also accepts any symbol, and it falls back to that symbol's own community.
 
-Symbols resolve by node id, bare name, or `path.py:name` suffix; an ambiguous name lists cited candidates instead of guessing. Every row cites `file:line` and attaches the extracted docstring when present. `--limit` bounds output (default 20; `dead-code` 50) while the pre-truncation total is preserved. Exits `0` when the query was answered (a valid empty answer counts), `1` on unknown/ambiguous symbol, no path, or empty community, `2` on usage error or when there is no `features/symbol-graph.json` to query. `--json` emits the stable result structure. Deterministic, no LLM.
+Symbols resolve by node id, bare name, or `path.py:name` suffix. An ambiguous name lists cited candidates instead of guessing. Every row cites `file:line`. It attaches the extracted docstring when one exists. `--limit` bounds output.
+
+The default is 20 rows, or 50 for `dead-code`.
+
+The pre-truncation total is still preserved. It exits `0` when the query is answered. A valid empty answer counts. It exits `1` on an unknown or ambiguous symbol, no path, or an empty community. It exits `2` on a usage error, or when there is no `features/symbol-graph.json` to query.
+
+`--json` emits the stable result structure. The check is deterministic. It uses no LLM.
 
 ### `dummyindex context debt [path] [--root DIR] [--write] [--json]`
 
-- Technical-debt ledger over the repo's **Python** source: a per-file, path-sorted, repo-relative list of `# TODO:` / `# FIXME:` / `# HACK:` / `# DEBT:` markers.
-- Each row is tagged with its declared upgrade trigger (`# DEBT: <ceiling>; upgrade: <trigger>`) or `no-trigger`; the body ends with the `N markers, M with no trigger.` tally.
-- Prints to stdout by default; `--write` also persists `.context/debt.md`; `--json` emits the stable `DebtLedger` structure.
-- Deterministic — no LLM; re-running on an unchanged tree is byte-identical. Rows are always repo-relative (no absolute path ever leaks).
+- It is a technical-debt ledger for the repo's **Python** source. It lists `# TODO:`, `# FIXME:`, `# HACK:`, and `# DEBT:` markers. The list is per file, sorted by path, and repo-relative.
+- Each row carries its declared upgrade trigger (`# DEBT: <ceiling>; upgrade: <trigger>`). A row without a trigger is tagged `no-trigger`. The body ends with the `N markers, M with no trigger.` tally.
+- It prints to stdout by default. `--write` also persists `.context/debt.md`. `--json` emits the stable `DebtLedger` structure.
+- It is deterministic and uses no LLM. Re-running it on an unchanged tree gives byte-identical output. Rows are always repo-relative. No absolute path ever leaks.
 
 ## Session memory (v0.15)
 
 ### `dummyindex context memory session-start|roll|init [path] [--root DIR]`
 
-- `session-start` — emits the SessionStart block (HANDOFF + MEMORY) into the session's `additionalContext`; silent if the `remember` plugin's `.remember/` is present (suppresses double-inject). Called by the hook folded into the existing sentinel entry.
-- `roll` — relocates dated entries down the tiers: `now.md` → `recent.md` → `archive.md`, idempotent.
-- `init` — creates the session-memory store stubs at `.context/session-memory/` if absent.
-- Seeded by `ingest`; never regenerated; invisible to drift detection.
+- `session-start` emits the SessionStart block (HANDOFF and MEMORY) into the session's `additionalContext`. It stays silent when the `remember` plugin's `.remember/` directory is present. This prevents double injection. The hook calls it. The hook is folded into the existing sentinel entry.
+- `roll` moves dated entries down the tiers. The tiers are `now.md`, then `recent.md`, then `archive.md`. The command is idempotent.
+- `init` creates the session-memory store stubs at `.context/session-memory/` when they are absent.
+- `ingest` seeds the store. The store is never regenerated. It is invisible to drift detection.
 
 ### `dummyindex context memory nudge [path] [--root DIR]`
 
-- The **Stop**-hook command. Reads the hook's stdin JSON (`transcript_path`,
-  `session_id`). When the session is significant (subagents used, or ≥40k
-  main-thread output tokens) and not already nudged / not already saved /
-  no `remember` plugin, prints a `hookSpecificOutput.additionalContext`
-  payload that prompts the agent to offer a handoff CTA. Otherwise silent.
-  Never auto-saves; never fails the turn.
+- It is the **Stop**-hook command. It reads the hook's stdin JSON (`transcript_path`, `session_id`). It prints a `hookSpecificOutput.additionalContext` payload when three conditions hold. The session is significant. Subagents ran, or main-thread output reached 40k tokens.
+
+  The session was not already nudged, and it was not already saved.
+
+  No `remember` plugin is present. The payload prompts the agent to offer a handoff call to action. Otherwise, it stays silent. It never auto-saves. It never fails the turn.
 
 ### `dummyindex context memory breadcrumb [path] [--root DIR]`
 
-- The **PreCompact**-hook command. Writes a deterministic, tagged breadcrumb
-  entry (branch, `git diff --stat`, file list, subagent + turn counts) to the
-  top of `now.md` so a session is never lost to compaction. Silent when the
-  `remember` plugin is present. Never stamps the commit anchor.
+- It is the **PreCompact**-hook command. It writes a deterministic, tagged breadcrumb entry to the top of `now.md`. The entry holds the branch, `git diff --stat`, the file list, and the subagent and turn counts. It ensures a session is never lost to compaction. It stays silent when the `remember` plugin is present.
+
+  It never stamps the commit anchor.
 
 ### `dummyindex context memory mine [path] [--root DIR]`
 
-- The **SessionStart** feedback refresh. It unions the active
-  `CLAUDE_CONFIG_DIR`, `~/.claude`, and home `.claude-*` profiles, but opens
-  only root-level main transcript JSONLs in this repo's exact project folder.
-  Every candidate must be an external human prompt row whose resolved `cwd`
-  equals the repo; subagents, tool rows, meta/task events, and foreign rows are
-  excluded. Two explicit positive corrections after the latest revocation make
-  a skill durable.
-- Writes only `.context/cache/skill-feedback.json`: schema 1, at most 64 safe
-  slugs plus positive counts, no prompt text or event metadata. First-run empty
-  state stays absent; unchanged bytes are not rewritten. Silent and fail-open.
+- It is the **SessionStart** feedback refresh. It unions the active `CLAUDE_CONFIG_DIR`, `~/.claude`, and home `.claude-*` profiles. It opens only root-level main transcript JSONLs. Those JSONLs sit in this repo's exact project folder. Every candidate must be an external human prompt row.
+
+  Its resolved `cwd` equals the repo.
+
+  Subagents, tool rows, meta and task events, and foreign rows are excluded. Two explicit positive corrections after the latest revocation make a skill durable.
+- It writes only `.context/cache/skill-feedback.json`. The file uses schema 1. It holds at most 64 safe slugs and positive counts. It holds no prompt text or event metadata. On a first run, the empty state stays absent.
+
+  It does not rewrite unchanged bytes.
+
+  It stays silent and fail-open.
 
 ### `dummyindex context memory prompt-context [path] [--root DIR]`
 
-- The **UserPromptSubmit** feedback command. It validates the local cache,
-  combines it with a direct correction/revocation in the current `prompt`, and
-  emits one compact `hookSpecificOutput.additionalContext` JSON payload or
-  nothing. A current correction applies on that same turn; a current revocation
-  suppresses the skill.
-- Cache reads reject symlinks, unknown fields, invalid order/counts/slugs, more
-  than 64 entries, and files over 32 KiB. Output is re-rendered fixed policy,
-  never raw cache or transcript text, and is capped at eight skills / 1,600
-  characters. `i-have-adhd` applies its response behavior directly; other
-  skills are invoked only when exposed and triggered or explicitly named.
+- It is the **UserPromptSubmit** feedback command. It validates the local cache. It combines the cache with a direct correction or revocation in the current `prompt`. It emits one compact `hookSpecificOutput.additionalContext` JSON payload, or nothing. A current correction applies on that same turn.
 
-This privacy-safe branch is derived from Headroom's deterministic mining
-technique. The older `failure-patterns.md` tool-signature report remains
-explicit and unwired because structured tool inputs are not safe automatic
-prompt material.
+  A current revocation suppresses the skill.
+- Cache reads reject symlinks. They reject unknown fields. They reject invalid order, counts, or slugs. They reject more than 64 entries, and files over 32 KiB. The output is re-rendered fixed policy.
+
+  It is never raw cache or transcript text.
+
+  It is capped at eight skills and 1,600 characters. `i-have-adhd` applies its response behavior directly. Other skills are invoked only when exposed and triggered, or explicitly named.
+
+This privacy-safe branch is derived from Headroom's deterministic mining technique. The older `failure-patterns.md` tool-signature report remains explicit and unwired because structured tool inputs are not safe automatic prompt material.
 
 ## Build loop (v0.15)
 
-The `context equip ...` commands prepare shared project capabilities for every
-host. Native discovery and hook installation are optional adapters. A missing
-equipment manifest does not block native delegation.
+The `context equip ...` commands prepare shared project capabilities for every host. Native discovery and hook installation are optional adapters. A missing equipment manifest does not block native delegation.
 
 ### `dummyindex context propose --slug S --title "..." [--route K=V]... [--root DIR] [--force]`
 
-- Build loop — grounded planning. Scaffolds `.context/proposals/<slug>/` (`proposal.json` + `spec.md` / `plan.md` / `checklist.md`).
-- Runs a deterministic consistency scan (reuses `query`, no LLM) and records related features + conventions in `proposal.json` and a `## Consistency` block in `spec.md`.
-- `--route K=V` (repeatable; keys: `implementer|auditor|decisions`; values a model-family alias: `current|opus|sonnet|haiku|fable`) records the optional model-routing block in the scaffolded `proposal.json`; absent = unrouted, never silently defaulted.
+- It is the build loop for grounded planning. It scaffolds `.context/proposals/<slug>/`. The scaffold holds `proposal.json`, `spec.md`, `plan.md`, and `checklist.md`.
+- It runs a deterministic consistency scan. The scan reuses `query` and uses no LLM. It records related features and conventions in `proposal.json`. It also writes a `## Consistency` block in `spec.md`.
+- `--route K=V` is repeatable. Keys are `implementer|auditor|decisions`. Values are a model-family alias: `current|opus|sonnet|haiku|fable`. The flag records the optional model-routing block in the scaffolded `proposal.json`. An absent route means unrouted.
+
+  The route is never silently defaulted.
 - `--force` overwrites an existing proposal.
-- Why: gives `/dummyindex-plan` a structured, index-grounded scaffold to fill rather than drafting into the void.
+- Why: it gives `/dummyindex-plan` a structured, index-grounded scaffold to fill, rather than drafting into the void.
 
 ### `dummyindex context equip apply [path] [--root DIR] [--dry-run] [--for-proposal S] [--specialist C] [--platform agents|claude|both] [--lesson-file F] [--source [--yes]] [--json]`
 
-- Prepare canonical capability bodies in `.context/equipment/` from the index and preflight data; record ownership in `.context/equipment.json` (schema v4). Every host uses these same bodies. `--platform claude` adds thin native references and supported hooks; default preparation creates no new Claude setup. Existing pristine native bodies migrate to references; edited/evolved files remain registered at their current paths.
-- **`apply` is an explicit verb.** A bare `dummyindex context equip` (no verb, no flags) is a help probe: it prints usage and **exits 2 without writing** — a discovery probe never mutates the repo. The only verbless form is the read-only `equip --dry-run` preview. `apply` also **refuses** (`exit 1`) on a repo with no `.context/` (equip renders *from* the index — run `dummyindex ingest` first).
-- Generates: implementer, tester, reviewer, verify skill and every template-backed specialist (`db | security | performance | docs | search`). Native formatter hooks require the Claude adapter. Shared instructions use explicit changed file paths.
-- **Generated vs adopted.** A capability a template backs (**db / security / performance / docs / search**) is *generated* as a real, file-backed `<proj>-<cap>-specialist.md` (marker + `version`/`origin_hash`/`grounded_in`, lifecycle-managed like the core four). A capability with **no** template (e.g. frontend → *Frontend Developer*) is *adopted* manifest-only (`path: ""`, no file written).
-- `--for-proposal S` covers the capabilities `S`'s `plan.md`/`checklist.md` demand (adopting the ones no template backs; RLS / tenant-isolation map to `security`). `--specialist C` forces capability `C` to lead the specialist order. Neither flag is required to *get* a template-backed specialist — every one is generated on every pass — and already-applied specialists are carried forward, so a plain re-apply never drops or renames one.
+- It prepares canonical capability bodies in `.context/equipment/` from the index and preflight data. It records ownership in `.context/equipment.json` (schema v4). Every host uses these same bodies. `--platform claude` adds thin native references and supported hooks. Default preparation creates no new Claude setup.
+
+  Existing pristine native bodies migrate to references.
+
+  Edited or evolved files stay registered at their current paths.
+- **`apply` is an explicit verb.** A bare `dummyindex context equip` is a help probe. It has no verb and no flags. It prints usage. It **exits 2 without writing**. A discovery probe never mutates the repo.
+
+  The only verbless form is the read-only `equip --dry-run` preview.
+
+  `apply` also **refuses** (`exit 1`) on a repo with no `.context/`. Equip renders *from* the index, so run `dummyindex ingest` first.
+- It generates the implementer, tester, reviewer, and verify skill. It also generates every template-backed specialist (`db | security | performance | docs | search`). Native formatter hooks require the Claude adapter. Shared instructions use explicit changed file paths.
+- **Generated vs adopted.** A template backs some capabilities (**db / security / performance / docs / search**). The template generates each one as a real, file-backed `<proj>-<cap>-specialist.md`. That file carries a marker and `version`, `origin_hash`, and `grounded_in` fields. Its lifecycle is managed like the core four. A capability with **no** template (for example, frontend → *Frontend Developer*) is adopted manifest-only.
+
+  Its manifest entry reads `path: ""`.
+
+  The adoption writes no file.
+- `--for-proposal S` covers the capabilities that `S`'s `plan.md` and `checklist.md` demand. It adopts the ones that no template backs. RLS and tenant-isolation map to `security`. `--specialist C` forces capability `C` to lead the specialist order. Neither flag is needed to *get* a template-backed specialist.
+
+  Every one is generated on every pass.
+
+  Already-applied specialists are carried forward. So a plain re-apply never drops or renames one.
 - Equipment-eval scaffolding and scoring are removed. Existing user-authored suites are left untouched.
-- `--source [--yes]` sources each db / security / performance / docs / search and procedure specialist from catalogs before templates: seed marketplaces (incl. ECC), then skills.sh (`npx --no skills find`), then GitHub search. A qualified `skills/<name>/SKILL.md`, pinned to a commit sha and scanned, becomes the body under a repo overlay; no candidate keeps the template. Untrusted or `warn:` candidates need `--yes`; `block:` findings never adopt. With no `gh`, it prints `source: gh unavailable — templates kept`. A later `apply --source` reports `needs-reverify (upstream changed)`; re-source with `equip reset NAME`, then `apply --source`. The sourced body lives at `.context/equipment/<name>.md`: plain `apply` keeps it (`(sourced, kept)`), `refresh` skips it, and `reset` restores the template and clears the origin fields. `--source --dry-run` is a read-only query and writes nothing. With `--json`, sourcing lines go to stderr.
-- `--dry-run` writes nothing; additive + never-clobber on real runs.
+- `--source [--yes]` sources each db, security, performance, docs, and search specialist. It also sources procedure specialists. Sourcing uses catalogs before templates. It checks seed marketplaces, including ECC, first. Then it checks skills.sh (`npx --no skills find`).
+
+  Then it runs a GitHub search.
+
+A qualified `skills/<name>/SKILL.md` becomes the body under a repo overlay. That file is pinned to a commit sha and scanned. If no candidate qualifies, the template stays. Untrusted or `warn:` candidates need `--yes`. `block:` findings never adopt.
+
+With no `gh`, it prints `source: gh unavailable — templates kept`.
+
+A later `apply --source` reports `needs-reverify (upstream changed)`. Re-source with `equip reset NAME`, then run `apply --source`. The sourced body lives at `.context/equipment/<name>.md`. Plain `apply` keeps it (`(sourced, kept)`). `refresh` skips it.
+
+`reset` restores the template and clears the origin fields.
+
+  `--source --dry-run` is a read-only query. It writes nothing. With `--json`, sourcing lines go to stderr.
+- `--dry-run` writes nothing. Real runs are additive and never clobber existing files.
 
 ### `dummyindex context equip add-specialist CAPABILITY [--root DIR] [--dry-run] [--json]`
 
-- Force one grounded specialist (`db | security | performance | docs | search`) as a `<proj>-CAPABILITY-specialist` agent. All template-backed specialists are already generated by a plain `apply`, so this verb is for pinning one explicitly; it stays idempotent + additive (a later plain `equip` preserves it).
-- An unknown `CAPABILITY` (no template — e.g. `frontend`) exits `2` with the valid list; that capability is covered by manifest-only adoption on a `--for-proposal` run instead.
+- It forces one grounded specialist (`db | security | performance | docs | search`). The result is a `<proj>-CAPABILITY-specialist` agent. A plain `apply` already generates every template-backed specialist. Use this verb to pin one explicitly. It stays idempotent and additive.
+
+  A later plain `equip` preserves it.
+- An unknown `CAPABILITY` exits `2` and prints the valid list. Capabilities with no template, such as `frontend`, count as unknown here. A `--for-proposal` run covers them instead, through manifest-only adoption.
 - The flag form is `dummyindex context equip apply --specialist CAPABILITY`.
 
 ### `dummyindex context equip discover [QUERY] [--repo OWNER/NAME] [--root DIR] [--json]`
 
-- **Plugin manager (dry-run).** Fetch the seed marketplaces' `marketplace.json` (and, for a `QUERY`, GitHub code search) and print a ranked plan. With no `QUERY`, auto-matches the detected stack's capabilities; with one, ranks by query + capability overlap.
-- `--repo OWNER/NAME` (also accepts a full GitHub URL) adds one extra collection repo to the search universe beyond the seed marketplaces — for a low-profile repo the marketplaces don't list.
-- Each candidate shows its **blast radius**: the surfaces it declares (`hook` / `mcp` / `lsp` / `bin` run code; `agent` / `skill` / `command` are inert) and its trust tier (Anthropic-official = trusted). Writes nothing. Requires `gh` (warns + degrades when absent).
+- **Plugin manager (dry-run).** It fetches the seed marketplaces' `marketplace.json`. For a `QUERY`, it also runs a GitHub code search. It prints a ranked plan. With no `QUERY`, it matches the detected stack's capabilities. With one, it ranks by query and capability overlap.
+- `--repo OWNER/NAME` also accepts a full GitHub URL. It adds one extra collection repo to the search universe, beyond the seed marketplaces. Use it for a low-profile repo that the marketplaces do not list.
+- Each candidate shows its **blast radius**. That covers the surfaces it declares. `hook`, `mcp`, `lsp`, and `bin` run code. `agent`, `skill`, and `command` are inert. It also shows its trust tier.
+
+  Anthropic-official is trusted.
+
+  It writes nothing. It requires `gh`. It warns and degrades when absent.
 
 ### `dummyindex context equip install <plugin>@<marketplace> [--yes] [--scope project|local|user] [--repo OWNER/NAME] [--usage-doc PATH|--skip-usage-doc] [--root DIR]`
 
-- Install one approved plugin, in one of **two mechanisms** decided by the install plan:
-  - **Native wiring** (a marketplace plugin): add it to `extraKnownMarketplaces` + `enabledPlugins` in `.claude/settings.json` (scope `project` by default — `local` → `settings.local.json`, `user` → `~/.claude/settings.json`), and record a `MARKETPLACE` item in the manifest.
-  - **Vendor** (a loose-collection skill, `InstallMechanism.VENDOR`): resolve the source repo's HEAD to a **pinned commit sha**, fetch that skill's `SKILL.md` at the sha, stamp it, and copy it to `.claude/skills/<name>/SKILL.md` — no settings wiring. Records a `VENDORED` manifest item carrying the pinned ref. Never-clobber: an absent target or a prior dummyindex-vendored copy is (re-)written; a user file (or a hand-edited vendored copy that has gone USER_MODIFIED) is refused (`exit 1`) — `equip uninstall` first to re-vendor.
-- A code-running plugin from an **untrusted** source is refused (`exit 1`) without `--yes`. Settings writes are preserve-or-refuse + atomic.
-- **Usage playbook is mandatory:** pass exactly one of `--usage-doc <path>` (recorded in the item's `grounded_in`; a repo-relative path travels with the committed manifest, an out-of-repo absolute one is kept with a warning) or `--skip-usage-doc` to opt out. Neither, or both, is a usage error (`exit 2`) — the `/dummyindex-equip` council writes the playbook.
-- `--repo OWNER/NAME` (or a full GitHub URL) names an extra collection repo to resolve the target from, when it isn't in the seed marketplaces.
+- It installs one approved plugin. The install plan decides between **two mechanisms**:
+  - **Native wiring** applies to a marketplace plugin. It adds the plugin to `extraKnownMarketplaces` and `enabledPlugins` in `.claude/settings.json`. The default scope is `project`. Scope `local` writes `settings.local.json`. Scope `user` writes `~/.claude/settings.json`.
+
+    It records a `MARKETPLACE` item in the manifest.
+  - **Vendor** applies to a loose-collection skill (`InstallMechanism.VENDOR`). It resolves the source repo's HEAD to a **pinned commit sha**. It fetches that skill's `SKILL.md` at the sha. It stamps the file and copies it to `.claude/skills/<name>/SKILL.md`. It adds no settings wiring.
+
+    It records a `VENDORED` manifest item with the pinned ref.
+
+    Writes never clobber. An absent target or a prior dummyindex-vendored copy is written again. A user file is refused with `exit 1`. So is a hand-edited vendored copy that has gone USER_MODIFIED. Run `equip uninstall` first to re-vendor.
+- A code-running plugin from an **untrusted** source is refused (`exit 1`) without `--yes`. Settings writes preserve existing content or refuse, and they are atomic.
+- **Usage playbook is mandatory.** Pass exactly one of two flags. `--usage-doc <path>` records the path in the item's `grounded_in`. A repo-relative path travels with the committed manifest. An out-of-repo absolute path is kept, with a warning. `--skip-usage-doc` opts out.
+
+  Neither flag, or both, is a usage error (`exit 2`).
+
+  The `/dummyindex-equip` council writes the playbook.
+- `--repo OWNER/NAME` (or a full GitHub URL) names an extra collection repo. The command resolves the target from that repo. Use it when the repo is not in the seed marketplaces.
 
 ### `dummyindex context equip status [--root DIR] [--json]`
 
-- Classify every tracked item: generated + vendored by origin-hash (`pristine` / `user-modified` / `missing`), and marketplace items by whether their `enabledPlugins` key is still set (`pristine` = enabled, `missing` = not), with each item's version.
+- It classifies every tracked item. Generated and vendored items are classified by origin hash. The classes are `pristine`, `user-modified`, and `missing`. Marketplace items are classified by whether their `enabledPlugins` key is still set. `pristine` means enabled.
+
+  `missing` means not enabled.
+
+  Each item also shows its version.
 
 ### `dummyindex context equip refresh [--root DIR] [--dry-run]`
 
-- Re-render PRISTINE-and-stale items, re-baseline + minor-bump. USER_MODIFIED items are skipped forever.
+- It re-renders PRISTINE-and-stale items. It re-baselines them and bumps the minor version. USER_MODIFIED items are skipped forever.
 
 ### `dummyindex context equip reset NAME [--root DIR]`
 
-- Restore one generated item to its pristine render (the escape hatch), re-baseline + bump.
+- It restores one generated item to its pristine render. This is the escape hatch. It re-baselines the item and bumps the version.
 - Resetting a sourced item restores the template and clears `origin_repo`, `origin_ref` and `marketplace`.
 
 ### `dummyindex context equip uninstall [--root DIR] [--dry-run]`
 
-- Remove PRISTINE generated files + the `DUMMYINDEX_EQUIP` hook + the manifest; USER_MODIFIED files are kept and reported. Also disables any equip-enabled plugins (and drops their marketplaces) from `settings.json`, and removes PRISTINE vendored files (user-edited vendored copies are kept).
+- It removes PRISTINE generated files, the `DUMMYINDEX_EQUIP` hook, and the manifest. USER_MODIFIED files are kept and reported. It also disables any equip-enabled plugins. It drops their marketplaces from `settings.json`. It removes PRISTINE vendored files.
+
+  User-edited vendored copies are kept.
 
 ### `dummyindex context equip patch --item NAME --from-file F [--lesson-file F] [--root DIR]`
 
-- Sanctioned evolution: apply an exact-once old→new patch (`F` is `{"old": "...", "new": "..."}`) to a generated item, re-baseline + patch-version bump.
-- Why: lets build-run learnings flow back into generated tooling (`dummyindex-build` calls this post-build) without stomping user edits.
+- It is a sanctioned evolution step. It applies an exact-once old-to-new patch. `F` is `{"old": "...", "new": "..."}`. The patch goes to a generated item. It re-baselines the item and bumps the patch version.
+- Why: it lets build-run learnings flow back into generated tooling (`dummyindex-build` calls this post-build) without stomping user edits.
 
 ### `dummyindex context equip reuse CAPABILITY_ID [--force] [--root DIR]`
 
-- Copy a stored library specialist (`.context/equipment/library/`) into the project at the capability's manifest path and print `status=ok|needs-reverify`. Refuses (exit 1) to overwrite a locally edited target (differing from the manifest `origin_hash`) unless `--force`, and requires the id to be in the manifest; a successful reuse re-baselines `origin_hash`. `equip apply` / `equip patch` accept `--lesson-file F` (a validated lesson JSON) (validated before anything is written; invalid exits 2). `apply` stores only the specialists it generated or adopted in that run; `patch` stores only the patched item. Without it nothing is stored.
+- It copies a stored library specialist from `.context/equipment/library/` into the project. The copy goes to the capability's manifest path. It prints `status=ok|needs-reverify`. It refuses with exit 1 to overwrite a locally edited target. A locally edited target differs from the manifest `origin_hash`.
+
+  Use `--force` to overwrite it anyway.
+
+The command also requires the id to be in the manifest. A successful reuse re-baselines `origin_hash`. `equip apply` and `equip patch` accept `--lesson-file F`. The lesson JSON is validated before anything is written. An invalid file exits 2.
+
+`apply` stores only the specialists it generated or adopted in that run.
+
+  `patch` stores only the patched item. Without that flag, nothing is stored.
 
 ### `dummyindex context equip remove NAME [--root DIR] [--delete-file] [--keep-wiring]`
 
-- Drop one item from the manifest and unwire it from `settings.json`. `--delete-file` also removes a PRISTINE generated/vendored file from disk (USER_MODIFIED is kept); `--keep-wiring` leaves the settings entry in place.
+- It drops one item from the manifest. It unwires that item from `settings.json`. `--delete-file` also removes a PRISTINE generated or vendored file from disk. USER_MODIFIED files are kept. `--keep-wiring` leaves the settings entry in place.
 
 ### `dummyindex context equip verify <plugin>@<marketplace> [--root DIR]`
 
-- Read-only supply-chain check: re-resolve an installed plugin against its upstream and report whether the pinned commit sha still matches. Writes nothing.
+- It is a read-only supply-chain check. It re-resolves an installed plugin against its upstream. It reports whether the pinned commit sha still matches. It writes nothing.
 
 ### `dummyindex context build --proposal S (--next-wave | --next | --check "<item>" | --skip "<item>" --reason "<why>" | --status) [--route K=V]... [--json]`
 
-- Build loop — deterministic state machine over a proposal's `checklist.md`. The `/dummyindex-build` skill orchestrates dispatch; this command drives the state.
-- `--route K=V` (repeatable, same alphabet as `propose`) overrides the proposal's `"routing"` block for this invocation — precedence: invocation > proposal > unset. `--status` reports the resolved routing; `--next`/`--next-wave` payloads carry it too.
-- Via tags have two classes: agent-named tags (`— via agent:<name>`, or a bare name exactly matching an equipped kind-agent entry) fan out as **pinned subagent units** (recorded in a per-item `upgrade_note`; unknown agent names fail safe as `main-session` with a warning), while genuine tool/skill/MCP tags stay binding main-session work.
-- `checklist.md` may group items under `## Wave N — label` (or `## Group N`) headings: items in one wave are mutually independent and may be dispatched **in parallel**; waves run strictly in order. Any other heading (a plain title) keeps items serial, so legacy flat checklists are unchanged.
-- `--next-wave` prints **every** unchecked item in the earliest incomplete wave
-  with compatibility routing metadata and shared grounding paths. The active
-  skill dispatches the wave through its host: Claude uses the equipment mapping;
-  Codex maps by task to native built-ins.
-- `--next` prints one item with the same metadata. Both verbs report an
-  **`equipped`** flag (`--json`) and warn in text mode when no manifest exists.
-  Claude's build skill stops on that signal; Codex treats it as the expected
-  no-equipment state and continues natively.
-- `--check "<item>"` flips an item to `- [x]`, idempotent — one call per verified item.
-- `--skip "<item>" --reason "<why>"` closes an item as `- [~] … — skipped: <why>` (renegotiated scope); `--reason` is mandatory and an already-closed box is refused.
-- `--status` reports `done/total` + the resolved model routing (`models:` line); when complete, prints `dummyindex context reconcile`.
+- It is the build loop. It is a deterministic state machine over a proposal's `checklist.md`. The `/dummyindex-build` skill orchestrates dispatch. This command drives the state.
+- `--route K=V` is repeatable. It uses the same alphabet as `propose`. It overrides the proposal's `"routing"` block for this invocation. Precedence runs from invocation, to proposal, to unset. `--status` reports the resolved routing.
+
+  The `--next` and `--next-wave` payloads carry it too.
+- Via tags come in two classes. Agent-named tags fan out as **pinned subagent units**. Such a tag is `— via agent:<name>`, or a bare name that matches an equipped kind-agent entry exactly. Each unit is recorded in a per-item `upgrade_note`. Unknown agent names fail safe as `main-session`, with a warning.
+
+  Genuine tool, skill, and MCP tags stay binding main-session work.
+- `checklist.md` can group items under `## Wave N — label` or `## Group N` headings. Items in one wave are mutually independent. You can dispatch them **in parallel**. Waves run strictly in order. Any other heading, such as a plain title, keeps items serial.
+
+  Legacy flat checklists stay unchanged.
+- `--next-wave` prints **every** unchecked item in the earliest incomplete wave. It also prints compatibility routing metadata and shared grounding paths. The active skill dispatches the wave through its host. Claude uses the equipment mapping. Codex maps each task to native built-ins.
+- `--next` prints one item with the same metadata. Both verbs report an **`equipped`** flag with `--json`. In text mode, they warn when no manifest exists. Claude's build skill stops on that signal. Codex treats it as the expected no-equipment state.
+
+  It continues natively.
+- `--check "<item>"` flips an item to `- [x]`. It is idempotent. Use one call per verified item.
+- `--skip "<item>" --reason "<why>"` closes an item as `- [~] … — skipped: <why>`. Use it for renegotiated scope. `--reason` is mandatory. The command refuses an already-closed box.
+- `--status` reports `done/total` and the resolved model routing (`models:` line). When the build is complete, it prints `dummyindex context reconcile`.
 
 ## Managed doc homes — migrate strays + write-guard
 
-Keep internal planning artifacts (plans / specs / design docs / audits) in their managed `.context/` homes (`proposals/<slug>/`, `audits/<slug>/`) instead of leaking into the user-facing `docs/` tree. One shared, location-gated classifier backs both a relocation command and a PreToolUse write-guard.
+Keep internal planning artifacts (plans, specs, design docs, audits) in their managed `.context/` homes (`proposals/<slug>/`, `audits/<slug>/`). They stay out of the user-facing `docs/` tree, instead of leaking into it. One shared classifier backs both a relocation command and a PreToolUse write-guard. The classifier is location-gated.
 
 ### `dummyindex context migrate-docs [--root DIR] [--yes] [--force] [--json]`
 
-- Relocates stray planning-doc markdown that leaked under `docs/` (a `plans|specs|proposals|audits` segment — incl. `docs/internal/*` and `docs/superpowers/{plans,specs}` — or a `*-design.md` / `YYYY-MM-DD-<name>.md` filename under such a dir) into its managed home: `.context/proposals/<slug>/` (`spec.md`/`plan.md`) or `.context/audits/<slug>/` (`report.md`), minting a valid `proposal.json` (terminal status `done`, no template checklist so the GC won't read it as in-flight).
-- Dry-run by default — lists every stray grouped by slug + target home in deterministic sorted order and moves nothing. `--yes` performs the moves; `--force` fills only *missing* files in an existing home (never clobbers a non-empty `spec.md`/`plan.md`/`proposal.json`); `--json` emits the stable `{dry_run, groups, skipped}` payload.
-- Preserves git history: a tracked stray moves via `git mv` (rename in the index), an untracked one via `Path.replace` + `git add`, a non-git tree via `Path.replace` only. Transactional — the whole plan is realpath-validated (no `..`/symlink escape) before any move executes. Never touches source code or moves outside `docs/`. See the `playbooks/migrate-stray-docs.md` playbook (commit the move alone so `git log --follow` survives).
+- It relocates stray planning-doc markdown. Strays leaked under `docs/` in a `plans|specs|proposals|audits` segment. That segment includes `docs/internal/*` and `docs/superpowers/{plans,specs}`. A `*-design.md` file also counts. So does a `YYYY-MM-DD-<name>.md` filename under such a directory.
+
+  The command moves each stray into its managed home.
+
+  The home is `.context/proposals/<slug>/` for `spec.md` or `plan.md`. It is `.context/audits/<slug>/` for `report.md`. The command mints a valid `proposal.json`. Its terminal status is `done`. It has no template checklist, so the GC will not read it as in-flight.
+- It is a dry run by default. It lists every stray, grouped by slug and target home, in deterministic sorted order. It moves nothing. `--yes` performs the moves. `--force` fills only *missing* files in an existing home.
+
+  It never clobbers a non-empty `spec.md`, `plan.md`, or `proposal.json`.
+
+  `--json` emits the stable `{dry_run, groups, skipped}` payload.
+- It preserves git history. A tracked stray moves with `git mv`, which renames it in the index. An untracked stray moves with `Path.replace` and then `git add`. A non-git tree uses `Path.replace` only. The move is transactional.
+
+  Realpath validation covers the whole plan before any move runs.
+
+  It rejects `..` paths and symlink escapes. No such escape reaches a move. The command never touches source code, and it moves nothing outside `docs/`. See the `playbooks/migrate-stray-docs.md` playbook. Commit the move alone, so `git log --follow` survives.
 
 ### `dummyindex context guard-doc-write [--root DIR]`
 
-- The **PreToolUse `Write` guard** (reads the hook JSON on stdin). Denies a `Write` that would create an internal planning doc in an unmanaged location, with an interpolated reason naming the `.context/` home it belongs in; allows everything else.
-- **Fail-open**: exits 0 on every path except an explicit JSON `deny` — malformed/empty stdin, a non-`Write` tool (`Edit`/`MultiEdit` can only maintain an existing file, never create a fresh leak), a missing or out-of-repo `file_path`, or any internal error all allow. It **never** `exit 2` (which would block the tool) and runs no git/subprocess on the hot path.
-- Config-gated by `doc_guard_enabled` (default on everywhere, engages even before `.context/` exists); a `doc_guard_allow` glob (e.g. `docs/specs/**`) exempts a legitimately-published path. Wired as a managed PreToolUse hook by `hooks install`.
+- It is the **PreToolUse `Write` guard**. It reads the hook JSON on stdin. It denies a `Write` that would create an internal planning doc in an unmanaged location. The denial carries an interpolated reason. The reason names the `.context/` home that the doc belongs in.
+
+  It allows everything else.
+- **Fail-open.** It exits 0 on every path. The one exception is an explicit JSON `deny`. The other paths also allow. They include malformed or empty stdin. They include a non-`Write` tool.
+
+  `Edit` and `MultiEdit` can only maintain an existing file.
+
+  They never create a fresh leak.
+
+  They include a missing or out-of-repo `file_path`. They include any internal error, and all of these allow. It **never** returns `exit 2`, which would block the tool. It runs no git or subprocess on the hot path.
+- `doc_guard_enabled` gates the guard. It defaults to on everywhere. It engages even before `.context/` exists. A `doc_guard_allow` glob exempts a legitimately published path. For example, `docs/specs/**` is such a glob.
+
+  `hooks install` wires the guard as a managed PreToolUse hook.
 
 ## Audit — argue-and-audit panel (`/dummyindex-audit` / `$dummyindex-audit`)
 
-On-demand adversarial review: a free-text description spins up a
-**task-dependent** panel of auditors that file findings, then argue them (up to
-3 rebuttal rounds, stopping early on agreement) before synthesis writes a ranked
-`report.md`. The CLI is deterministic plumbing; the active-host audit skill
-orchestrates Claude Task subagents or Codex native `explorer`/`default`
-subagents. It does **not** require a full `.context/` index.
+This is an on-demand adversarial review. A free-text description starts a **task-dependent** panel of auditors. The auditors file findings. Then they argue them, for up to 3 rebuttal rounds. The rounds stop early on agreement.
+
+Synthesis then writes a ranked `report.md`.
+
+The CLI is deterministic plumbing. The active-host audit skill orchestrates Claude Task subagents or Codex native `explorer` and `default` subagents. It does **not** require a full `.context/` index.
 
 ### `dummyindex context audit start --describe "..." [--scope PATH]... [--mode light|standard|deep] [--model current|opus|sonnet|haiku|fable] [--slug S] [--force] [--root DIR] [--json]`
 
-- Scaffolds `.context/audits/<slug>/` (`audit.json`, `description.md`, `catalog.json`, `findings/`) and emits the persona catalog as JSON (`{slug, dir, mode, model, max_rounds, scope, catalog:[...]}`).
-- `--describe` is required. `--slug` defaults to a slug derived from the description; `--force` overwrites an existing audit.
-- `--model` is required unless config provides one. Claude uses a configured or
-  user-selected Claude label. Codex passes `--model current` explicitly, even
-  when a shared config contains a Claude label. `--mode` defaults to config,
-  else `standard`.
+- It scaffolds `.context/audits/<slug>/`. The scaffold holds `audit.json`, `description.md`, `catalog.json`, and `findings/`. It emits the persona catalog as JSON (`{slug, dir, mode, model, max_rounds, scope, catalog:[...]}`).
+- `--describe` is required. `--slug` defaults to a slug derived from the description. `--force` overwrites an existing audit.
+- `--model` is required unless config provides one. Claude uses a configured or user-selected Claude label. Codex passes `--model current` explicitly, even when a shared config contains a Claude label. `--mode` defaults to config, else `standard`.
 - `--scope PATH` (repeatable) focuses the audit on specific paths.
 
 ### `dummyindex context audit show --slug S [--root DIR] [--json]`
@@ -686,134 +756,186 @@ subagents. It does **not** require a full `.context/` index.
 
 ### `dummyindex context audit-log --slug S --round N --persona P --status STATE [--note "..."] [--root DIR]`
 
-- Appends a row to `audits/<slug>/_debate-log.json` for debate resumption. `STATE` is `started|complete|failed|skipped`. The skill logs each persona per round so a re-run skips completed rounds.
+- Appends a row to `audits/<slug>/_debate-log.json` for debate resumption. `STATE` is `started|complete|failed|skipped`. The skill logs each persona per round, so a re-run skips completed rounds.
 
 ## Context-hygiene GC (`/dummyindex-gc` / `$dummyindex-gc`)
 
-Deterministic plumbing for the commit-throttled hygiene sweep. Generated docs are GC'd (deleted), never archived; `/dummyindex-gc` on Claude or `$dummyindex-gc` on Codex drives the council judgment + user confirmation, while these verbs are the bounded Python.
+This is deterministic plumbing for the commit-throttled hygiene sweep. The GC deletes generated docs. It never archives them. `/dummyindex-gc` on Claude, or `$dummyindex-gc` on Codex, drives the council judgment and user confirmation. These verbs supply the bounded Python.
 
 ### `dummyindex context gc status [--json] [--root DIR]`
 
-- Read-only sweep: every candidate generated-doc workspace under `proposals/` + `audits/` with its deterministic signals (`status:<v>`, `orphan-empty`, `checklist-complete`/`checklist-partial`, `report-written`, `untracked`, `age-<n>d`), plus the commit-throttle state (`commits_since`, `anchor`, `threshold`, `should_signal`, `anchor_orphaned`). `--json` emits the same payload. Surfaces a re-baseline hint when the recorded anchor is orphaned by a history rewrite. Exit 0.
+- It is a read-only sweep. It lists every candidate generated-doc workspace under `proposals/` and `audits/`. Each one shows its deterministic signals: `status:<v>`, `orphan-empty`, `checklist-complete` or `checklist-partial`, `report-written`, `untracked`, and `age-<n>d`. It also shows the commit-throttle state: `commits_since`, `anchor`, `threshold`, `should_signal`, and `anchor_orphaned`. `--json` emits the same payload.
+
+  It surfaces a re-baseline hint when a history rewrite orphans the recorded anchor.
+
+  It exits 0.
 
 ### `dummyindex context gc delete --kind proposal|audit (--slug S | --path P) [--yes] [--allow-untracked] [--force-partial] [--root DIR]`
 
-- Removes exactly one doc workspace dir, behind a guard ladder (slug-charset → sentinel-reject → realpath-containment → liveness → recoverability). Without `--yes` it is a dry-run that deletes nothing (exit 0); with `--yes` it performs the bounded delete. Refuses a sentinel (`_archive`, leading-`_`), an out-of-charset slug, or an escaping `--path` (exit 2), and an untracked workspace without `--allow-untracked`. An already-absent target is an exit-0 no-op. Never deletes source code.
+- It removes exactly one doc workspace directory. A guard ladder checks the removal. The ladder runs these checks: slug charset, sentinel rejection, realpath containment, liveness, and recoverability. Without `--yes`, the command is a dry run. It deletes nothing and exits 0.
+
+  With `--yes`, it performs the bounded delete.
+
+It refuses a sentinel such as `_archive` or a leading `_`. It refuses an out-of-charset slug. It refuses an escaping `--path`, and these refusals exit 2. It also refuses an untracked workspace unless `--allow-untracked` is given. An already-absent target is an exit-0 no-op.
+
+The command never deletes source code.
 
 ### `dummyindex context gc stamp [--to <sha>] [--root DIR]`
 
-- Advances the committed GC commit anchor in `.context/gc/state.json` to HEAD (or `--to <sha>`), resetting the commit-throttle counter. Off-git is a no-op.
+- It advances the committed GC commit anchor in `.context/gc/state.json` to HEAD, or to `--to <sha>`. It resets the commit-throttle counter. Off git, it is a no-op.
 
 ### `dummyindex context gc signal [--json] [--root DIR]`
 
-- The SessionStart throttle probe: prints the one-line nudge (`N commits since last hygiene sweep — run /dummyindex-gc`) iff `commits_since(anchor) >= threshold` and it has not already signalled this session (resolved from `CLAUDE_CODE_SESSION_ID`). Always exit 0; silent under threshold / off-git / already-signalled.
+- It is the SessionStart throttle probe. It prints the one-line nudge `N commits since last hygiene sweep — run /dummyindex-gc`. It prints the nudge when `commits_since(anchor) >= threshold`. It also checks that the session has not already signalled. The session ID resolves from `CLAUDE_CODE_SESSION_ID`.
+
+  It always exits 0.
+
+  It stays silent under the threshold, off git, or when already signalled.
 
 ## Fleet runs (`dummyindex-fleet` babysitter)
 
-Checkpointed multi-proposal execution: several proposal-sized units run in parallel in isolated worktrees, all state committed under `.context/fleet/run-<id>/` (`RUN-MANIFEST.md` written first, `state.json` last — both atomic). The CLI is tracker-agnostic; intake JSON is produced host-side.
+It runs checkpointed, multi-proposal execution. Several proposal-sized units run in parallel, in isolated worktrees. All state is committed under `.context/fleet/run-<id>/`. `RUN-MANIFEST.md` is written first, and `state.json` is written last. Both writes are atomic.
+
+The CLI is tracker-agnostic.
+
+The host produces intake JSON.
 
 ### `dummyindex context fleet init --plans SLUG[,SLUG…] | --intake FILE --budget-usd N --max-parallel N [--branch-template TPL] [--ruling KEY=VALUE]... [--root DIR]`
 
-- Scaffolds a run and goes live. Unit member paths freeze at init (intake entries' `paths[]`, or each proposal's optional `member_files`; absent/empty prints an init-time warning and schedules that unit conservatively serially). Refuses a zero-unit run, duplicate slugs, `--budget-usd <= 0`, `--max-parallel < 1`, and branch templates without `{id}`/`{slug}` (default neutral `{run}/{id}-{slug}`).
+- It scaffolds a run and goes live. Unit member paths freeze at init. They come from intake entries' `paths[]`, or from each proposal's optional `member_files`. If those are absent or empty, init prints a warning. It then schedules that unit conservatively, in serial.
+
+  It refuses a zero-unit run.
+
+  It refuses duplicate slugs. It refuses `--budget-usd <= 0`, `--max-parallel < 1`, and branch templates without `{id}` or `{slug}`. The default branch template is the neutral `{run}/{id}-{slug}`.
 
 ### `dummyindex context fleet next [--run DIR] [--json] [--root DIR]`
 
-- The dispatch frontier over the newest `run-*` dir: up to `--max-parallel` pending units, priority order, never two whose frozen path sets intersect; gated/blocked units are skipped with reasons. At/over budget cap every response is a `BUDGET-HALT` envelope carrying exact resume steps (`--json` adds `"halt": true`). Always exit 0 for a valid envelope — an empty-but-valid envelope (everything gated) is the anti-stall guarantee.
+- It prints the dispatch frontier for the newest `run-*` directory. It lists up to `--max-parallel` pending units, in priority order. It never lists two units whose frozen path sets intersect. It skips gated or blocked units and gives reasons. At or over the budget cap, every response is a `BUDGET-HALT` envelope.
+
+  That envelope carries exact resume steps.
+
+  `--json` adds `"halt": true`. For a valid envelope, it always exits 0. An empty but valid envelope is the anti-stall guarantee. It happens when every unit is gated.
 
 ### `dummyindex context fleet checkpoint --unit ID [--status ST] [--wave N] [--gate "Q"] [--note "..."] [--run DIR] [--root DIR]`
 
-- Advance one unit through `pending|planning|building|merging|done|blocked`. `--gate` parks it as `gated` on an unanswered question — `next` skips it until a later checkpoint answers with `--status`. Every mutation is a lock-serialized read-modify-write that bumps the state `revision`.
+- It advances one unit through `pending|planning|building|merging|done|blocked`. `--gate` parks the unit as `gated` on an unanswered question. `next` skips the unit until a later checkpoint answers it with `--status`. Every mutation is a lock-serialized read-modify-write. Each one bumps the state `revision`.
 
 ### `dummyindex context fleet spend --unit ID --est-usd X [--adjust] [--run DIR] [--root DIR]`
 
-- Accumulate the budget breaker meter. Negative deltas require `--adjust` — the recorded correction is the only resume path after `BUDGET-HALT`.
+- It accumulates the budget breaker meter. Negative deltas require `--adjust`. The recorded correction is the only resume path after `BUDGET-HALT`.
 
 ### `dummyindex context fleet merge-order [--run DIR] [--json] [--root DIR]`
 
-- Projected landing order with disjointness rationale: done units first, then the rest in priority order, each row citing the earlier unit it must land after (shared member paths) or marking itself parallel-safe.
+- It projects the landing order and gives the disjointness rationale. Done units come first. The rest follow in priority order. Each row cites the earlier unit that it must land after, because they share member paths. Otherwise the row marks itself parallel-safe.
 
 ### `dummyindex context fleet status [--run DIR] [--json] [--root DIR]`
 
-- Read-only run summary: per-unit id/slug/status/spend/gates plus meter and halt state.
+- It is a read-only run summary. It shows, per unit, the id, slug, status, spend, and gates. It also shows the meter and halt state.
 ## Self-improvement loop (`/dummyindex-evolve` / `$dummyindex-evolve`)
 
-Deterministic plumbing for cited evidence → scoped guidance edit → project-test qualification → adoption or discard. The host authors candidates; the CLI checks exact files, records receipts and owns recoverable writes. Model improvement remains unmeasured by ordinary project tests.
+This is deterministic plumbing for the self-improvement loop. It runs these stages in order: cited evidence, scoped guidance edit, project-test qualification, and adoption or discard. The host authors candidates. The CLI checks exact files, records receipts, and owns recoverable writes. Ordinary project tests leave model improvement unmeasured.
 
 ### `dummyindex context evolve harvest [--since YYYY-MM-DD] [--sleep] [--json] [--run NAME] [--root DIR]`
 
-- Collects evidence with citations into `<run>/harvest.json`: open audit findings (`audits/<slug>/report.md`), session-memory correction notes, reconcile deltas (drifted features / unassigned new files / awaiting enrichment), and transcript adoption misses (counts + projects-root-relative session slugs only — never message content). Also prints flipped predictions from earlier promotes. `--sleep` is the overnight contract: nothing new → exit 0 having written nothing.
+- It collects cited evidence into `<run>/harvest.json`. The evidence covers open audit findings in `audits/<slug>/report.md`. It covers session-memory correction notes. It covers reconcile deltas: drifted features, unassigned new files, and features awaiting enrichment. It covers transcript adoption misses.
+
+  Those misses hold counts and projects-root-relative session slugs only.
+
+  They never hold message content. It also prints flipped predictions from earlier promotes. `--sleep` is the overnight contract. When nothing is new, it exits 0 and writes nothing.
 
 ### `dummyindex context evolve diagnose --run NAME --from-file FILE [--json]`
 
-- Validates host-authored candidates (structure, scope guard, citation existence; ≤5 candidates, ≤5 target files each) into `<run>/candidates.jsonl` — `--candidate N` elsewhere refers to its 0-based line. Invalid candidates are rejected with per-line errors and nothing is written.
+- It validates host-authored candidates. It checks structure, the scope guard, and citation existence. It allows at most 5 candidates, with at most 5 target files each. Valid candidates go into `<run>/candidates.jsonl`. `--candidate N` elsewhere refers to its 0-based line.
+
+  Invalid candidates are rejected with per-line errors.
+
+  Nothing is written.
 
 ### `dummyindex context evolve apply --candidate N --run NAME [--tests PATH] [--json]`
 
-- Read proposed files from `<run>/staged/<N>/<repo-relative-target>`. Run the same established pytest checks against isolated copies of the current baseline and exact candidate; `--tests PATH` selects an existing check, otherwise use target-matching tests. Missing checks are blocked. Bind the receipt to candidate, baseline, verification inputs and execution settings. Passing project checks does not establish measured model improvement.
+- It reads proposed files from `<run>/staged/<N>/<repo-relative-target>`. It runs the same established pytest checks. It runs them against isolated copies of the current baseline and the exact candidate. `--tests PATH` selects an existing check. Otherwise, it uses target-matching tests.
+
+  Missing checks are blocked.
+
+  The receipt binds to the candidate, the baseline, the verification inputs, and the execution settings. Passing project checks does not establish measured model improvement.
 
 ### `dummyindex context evolve promote --candidate N --run NAME [--override "REASON"]`
 
-- Adopt only the measured content while its baseline and verification identity still match. Backups and a recoverable journal protect multi-file changes. A blocked verdict needs a recorded manual-adoption override and remains unmeasured; failed checks and stale receipts cannot be overridden.
+- It adopts only the measured content. It does so while its baseline and verification identity still match. Backups and a recoverable journal protect multi-file changes. A blocked verdict needs a recorded manual-adoption override. The verdict remains unmeasured.
+
+  Failed checks and stale receipts cannot be overridden.
 
 ### `dummyindex context evolve rollback|discard --candidate N --run NAME`
 
-- `rollback` restores the backed-up originals of a promoted candidate; `discard` drops the staged copy without adopting anything. Each appends exactly one transition line to `evolution.jsonl` — every harvest/diagnosis/gate/promote/rollback/discard gets one line in the committed, append-only decision history.
+- `rollback` restores the backed-up originals of a promoted candidate. `discard` drops the staged copy without adopting anything. Each command appends exactly one transition line to `evolution.jsonl`. Every harvest, diagnosis, gate, promote, rollback, and discard gets one line. The lines form a committed, append-only decision history.
 
 ## Doc reorg (destructive, part of the normal pipeline; `/dummyindex --reorg-docs` runs it alone)
 
 ### `dummyindex context doc-reorg guard|list|backup|restore [path] [--root DIR] [--json] [--from DIR]`
 
-- Safety net for the destructive in-place doc reorg; the rewrites themselves happen in the session via `Edit` with per-file confirm.
-- `guard` — exit 0 if the working tree is clean, else 1 (the hard gate).
-- `list` — the doc files in scope. `backup` — copy them to a timestamped backup dir; it **re-asserts the clean tree itself** (exit 1 on a dirty or non-git tree) so an always-on reorg can never snapshot a dirty tree and poison the undo path. `restore --from <dir>` — put a backup back (never gated: restoring *is* the recovery path).
+- It is a safety net for the destructive in-place doc reorg. The rewrites happen in the session through `Edit`. Each file needs a confirm.
+- `guard` exits 0 if the working tree is clean, else 1 (the hard gate).
+- `list` shows the doc files in scope. `backup` copies them to a timestamped backup directory. It **re-asserts the clean tree itself**. It exits 1 on a dirty or non-git tree. So an always-on reorg can never snapshot a dirty tree and poison the undo path.
+
+  `restore --from <dir>` puts a backup back.
+
+  Restore is never gated. Restoring is the recovery path.
 
 ## Token usage
 
 ### `dummyindex usage [chat|daily|session|monthly|blocks]`
 
-- Reads Claude Code transcripts to report token usage. No LLM cost.
-- It is not a Codex session reporter. In Codex use native `/status` for the
-  current context/session and `/usage` for account usage.
-- `chat` (default) — the current session: context window now (main thread, matches `/context`) plus deduplicated cumulative totals, with a subagents column summing any Task/subagent transcripts. This is what the `/tokens` slash command runs.
-- `daily` / `session` / `monthly` — token totals aggregated across every project, grouped by day / session / month.
-- `blocks` — usage grouped into billing blocks across every project.
+- It reads Claude Code transcripts to report token usage. It has no LLM cost.
+- It is not a Codex session reporter. In Codex, use native `/status` for the current context and session. Use `/usage` for account usage.
+- `chat` is the default. It reports the current session. It shows the context window now, from the main thread, and it matches `/context`. It also shows deduplicated cumulative totals. A subagents column sums any Task or subagent transcripts.
+
+  The `/tokens` slash command runs this view.
+- `daily`, `session`, and `monthly` show token totals. The totals aggregate across every project. They group by day, session, or month.
+- `blocks` shows usage grouped into billing blocks across every project.
 
 ## Status — read-only overview
 
 ### `dummyindex context status [path] [--root DIR] [--json]`
 
-- A single read-only glance, composed from the existing per-domain read helpers — it **never mutates**. Also available as the top-level alias `dummyindex status` (the spelling models reach for first).
-- Reports: whether `.context/` is present and enriched; the `.context` version stamp vs the running CLI (flags skew); the commit-anchored drift one-liner (drifted / unassigned / awaiting-enrichment / removed); the equipment item count + schema version; each proposal's `done/total`; and session-memory presence.
-- Exits `0` even on an un-indexed repo (it reports "not initialized" rather than erroring), so it is safe to run anywhere.
+- It is a single read-only glance. It composes the existing per-domain read helpers. It **never mutates** anything. The top-level alias `dummyindex status` also works. Models reach for that spelling first.
+- It reports these items. It reports whether `.context/` is present and enriched. It compares the `.context` version stamp with the running CLI, and it flags skew. It shows the commit-anchored drift one-liner: drifted, unassigned, awaiting-enrichment, and removed. It shows the equipment item count and schema version.
+
+  It shows each proposal's `done/total`.
+
+  It also shows session-memory presence.
+- It exits `0`, even on an un-indexed repo. It reports "not initialized" instead of erroring. So it is safe to run anywhere.
 
 ### `dummyindex context wire [path] [--root DIR] [--yes]`
 
-- The **interactive escalation surface** for the `wired` config list. Where the headless reconciler (`install`/`ingest`) only **classifies and reports** needs-user entries, `wire` actually resolves them — by prompting.
-- Re-classifies every `config.wired` entry **read-only** with the same shared helper `status` uses (satisfied / acted / needs-user), then resolves each entry that is not already satisfied: every declared-but-absent wireable plugin (the *acted* class) is **prompted** before wiring; a `kind: skill` entry is surfaced as a manual notice and **never** auto-wired (no skill-enable primitive exists); a malformed plugin target is reported and skipped.
-- `--yes` auto-affirms every plugin prompt (the automation path, no `input` call). A non-TTY stdin without `--yes` never blocks — it prints the needs-user list and exits `0`. The headless reconciler stays non-interactive; this is the **only** surface that prompts.
+- It is the **interactive escalation surface** for the `wired` config list. The headless reconciler, run by `install` or `ingest`, only **classifies and reports** needs-user entries. `wire` resolves them by prompting.
+- It re-classifies every `config.wired` entry **read-only**. It uses the same shared helper that `status` uses. The classes are satisfied, acted, and needs-user. Then it resolves each entry that is not already satisfied. Each declared but absent wireable plugin, the *acted* class, is **prompted** before wiring.
+
+  A `kind: skill` entry appears as a manual notice.
+
+  It is **never** auto-wired, because no skill-enable primitive exists. A malformed plugin target is reported and skipped.
+- `--yes` auto-affirms every plugin prompt. This is the automation path, and it makes no `input` call. A non-TTY stdin without `--yes` never blocks. It prints the needs-user list and exits `0`. The headless reconciler stays non-interactive.
+
+  This is the **only** surface that prompts.
 
 ### `dummyindex context statusline [path] [--root DIR]`
 
-- Prints the cached `.context/` freshness badge (`[ctx ✓]` / `[ctx: E edited · A anchored]`) for a shell `statusLine` — the **cold-path** fallback for the per-prompt hot path (the shipped `statusline.sh` / `statusline.ps1` `cat` the same gitignored cache directly).
-- Reads the pre-computed badge cache written by the `plan-update` SessionStart path — it **never recomputes drift**.
-- A missing `.context/`, a missing or malformed cache, or **any** error collapses to empty stdout and `exit 0`, so it can never crash a user's shell.
+- It prints the cached `.context/` freshness badge for a shell `statusLine`. The badge looks like `[ctx ✓]` or `[ctx: E edited · A anchored]`. It is the **cold-path** fallback for the per-prompt hot path. The shipped `statusline.sh` and `statusline.ps1` `cat` the same gitignored cache directly.
+- It reads the pre-computed badge cache. The `plan-update` SessionStart path writes that cache. It **never recomputes drift**.
+- A missing `.context/`, a missing or malformed cache, or **any** error gives empty stdout and `exit 0`. So it can never crash a user's shell.
 
 ### `dummyindex context drift-ack [path] [--root DIR] (--feature ID [--path REL] [--reason TEXT] | --list | --clear)`
 
-- Acknowledges drift rows as false positives for this machine/workflow. Appends `{feature_id, path, acked_sha, reason?, ts}` entries to the gitignored `.context/cache/drift-acks.json`; a suppressed row returns the moment the file's bytes change (ack auto-expiry).
-- With just `--feature`, every currently-drifting file of that feature is acked; `--path` scopes to one file; `--reason` annotates the entry.
-- `--list` prints recorded acks (optionally filtered by `--feature`); `--clear` drops them all. The modes are mutually exclusive.
-- Off-git repos use content sha256 instead of git blob shas; suppression matching lives in the SessionStart drift scan (`plan-update`).
+- It acknowledges drift rows as false positives for this machine or workflow. It appends `{feature_id, path, acked_sha, reason?, ts}` entries to the gitignored `.context/cache/drift-acks.json`. A suppressed row returns the moment the file's bytes change. This is ack auto-expiry.
+- With `--feature` alone, every currently drifting file of that feature is acked. `--path` scopes the ack to one file. `--reason` annotates the entry.
+- `--list` prints recorded acks. You can filter them by `--feature`. `--clear` drops them all. The modes are mutually exclusive.
+- Off-git repos use content sha256 instead of git blob shas. Suppression matching lives in the SessionStart drift scan (`plan-update`).
 
 ## What is NOT a CLI command
 
-- "Run the council" — that's the **skill's** job. The CLI doesn't dispatch agents.
-- "Enrich PROJECT.md" — that's a markdown procedure; the agent uses `Write`.
-- "Decide if a flow is trivial" — that's the dev agent's call.
+- "Run the council" is the **skill's** job. The CLI does not dispatch agents.
+- "Enrich PROJECT.md" is a markdown procedure. The agent uses `Write`.
+- "Decide if a flow is trivial" is the dev agent's call.
 
 Rule of thumb: the CLI moves bytes around atomically. Everything that requires judgment is in markdown.
 
-And the human never runs it: the CLI is the agent's deterministic backbone,
-invoked by the skill and council. A human's interface is slash commands inside
-Claude Code or `$skill` mentions in Codex — plus the one-time `install`
-bootstrap.
+A human never runs the CLI. The CLI is the agent's deterministic backbone. The skill and council invoke it. A human's interface is slash commands inside Claude Code, or `$skill` mentions in Codex. The one exception is the one-time `install` bootstrap.

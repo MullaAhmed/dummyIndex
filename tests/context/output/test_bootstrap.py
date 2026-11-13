@@ -211,8 +211,9 @@ def test_generated_block_is_short_pointer() -> None:
     assert body.count(ALWAYS_ON_OUTPUT_POLICY) == 1
     assert body.count(ALWAYS_ON_SKILL_POLICY) == 1
     # Must stay small — duplicating navigation rules in CLAUDE.md was the bug
-    # the shrink fixed. Be generous with the cap but enforce a ceiling.
-    assert len(body.splitlines()) <= 10, (
+    # the shrink fixed. The STE policy is split into short paragraphs (style
+    # lint), which adds blank lines, so the ceiling allows for them.
+    assert len(body.splitlines()) <= 20, (
         f"managed block is {len(body.splitlines())} lines; should stay terse"
     )
 
@@ -250,3 +251,17 @@ def test_create_in_nonexistent_parent_dir(tmp_path: Path) -> None:
     bootstrap_claude_md(nested)
     assert nested.exists()
     assert _wrote_block(nested.read_text(encoding="utf-8"))
+
+
+@pytest.mark.unit
+def test_repo_docs_follow_ste_not_caveman_in_policy_and_reminder() -> None:
+    from dummyindex.context.output.bootstrap import (
+        ALWAYS_ON_TURN_REMINDER,
+        STE_DOC_STANDARD,
+    )
+
+    assert "ASD-STE100" in ALWAYS_ON_OUTPUT_POLICY
+    assert STE_DOC_STANDARD in ALWAYS_ON_OUTPUT_POLICY
+    assert "caveman style" not in ALWAYS_ON_OUTPUT_POLICY
+    assert "Repo docs follow ASD-STE100" in ALWAYS_ON_TURN_REMINDER
+    assert "caveman style" not in ALWAYS_ON_TURN_REMINDER

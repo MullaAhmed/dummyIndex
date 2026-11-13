@@ -1,9 +1,9 @@
-dummyindex/skills/audit/SKILL.md	914
-dummyindex/skills/build/SKILL.md	3125
-dummyindex/skills/equip/SKILL.md	3576
+dummyindex/skills/audit/SKILL.md	1057
+dummyindex/skills/build/SKILL.md	3157
+dummyindex/skills/equip/SKILL.md	3661
 dummyindex/skills/evolve/SKILL.md	1276
-dummyindex/skills/fleet/SKILL.md	1043
+dummyindex/skills/fleet/SKILL.md	1091
 dummyindex/skills/gc/SKILL.md	2191
-dummyindex/skills/memory/SKILL.md	295
-dummyindex/skills/plan/SKILL.md	2174
-dummyindex/skills/update/SKILL.md	1772
+dummyindex/skills/memory/SKILL.md	323
+dummyindex/skills/plan/SKILL.md	2194
+dummyindex/skills/update/SKILL.md	2022

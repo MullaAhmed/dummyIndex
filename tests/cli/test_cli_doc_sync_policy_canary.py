@@ -287,9 +287,10 @@ _POLICY_INVARIANTS: tuple[_PolicyInvariant, ...] = (
         "concise chinese",
     ),
     _PolicyInvariant(
-        "repo docs in english caveman",
-        "english caveman style",
-        "english caveman",
+        "repo docs follow asd-ste100",
+        "repo docs follow asd-ste100",
+        "repo docs follow asd-ste100",
+        ("english caveman style",),
     ),
 )
 
@@ -300,7 +301,7 @@ _POLICY_INVARIANTS: tuple[_PolicyInvariant, ...] = (
 # constant never lies about what changed: it fires on ANY edit, with an
 # explicit instruction to go re-check `_POLICY_INVARIANTS` by hand rather
 # than claiming to know what changed.
-_POLICY_CONSTANT_HASH = "9c2fba5c44d1d133"
+_POLICY_CONSTANT_HASH = "d7eb1ab98f03e126"
 
 
 @pytest.mark.unit
