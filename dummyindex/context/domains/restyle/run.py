@@ -191,7 +191,7 @@ def begin(
     if max_units is None:
         chosen = current.units
     else:
-        finished = _finished_units(context_dir)
+        finished = {} if force else _finished_units(context_dir)
         chosen = tuple(u for u in current.units if u.unit_id not in finished)[
             :max_units
         ]
