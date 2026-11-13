@@ -54,6 +54,7 @@ from . import (
     scan,
     status,
     statusline,
+    upgrade,
     wire,
 )
 from .common import _FLAGS_TAKING_VALUE, resolve_context_root
@@ -138,6 +139,7 @@ _HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
     ContextSubcommand.GUARD_DOC_WRITE: guard_doc_write.run,
     ContextSubcommand.DRIFT_ACK: drift_ack.run,
     ContextSubcommand.EVOLVE: evolve.run,
+    ContextSubcommand.UPGRADE: upgrade.run,
 }
 
 

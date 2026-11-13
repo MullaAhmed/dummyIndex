@@ -158,6 +158,7 @@ class ContextSubcommand(str, Enum):
     GUARD_DOC_WRITE = "guard-doc-write"
     DRIFT_ACK = "drift-ack"
     EVOLVE = "evolve"
+    UPGRADE = "upgrade"
 
 
 class RequirementsVerb(str, Enum):

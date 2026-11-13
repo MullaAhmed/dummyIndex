@@ -525,6 +525,12 @@ Subcommands:
                                       gate   - UserPromptSubmit hook. Blocks a prompt while
                                                requirements are unmet. Always exit 0.
                                       bypass - allow prompts for --hours N (1-24).
+  upgrade [--if-stale] [--root DIR]
+                                    Bring .context/ forward to the installed CLI: refresh
+                                    deterministic maps, backfill config, sync equipment
+                                    and adapters, then move the version stamp. --if-stale
+                                    does nothing unless the stamp is older (SessionStart).
+                                    Exit 1 only when a step fails.
   gc status|delete|closeout|stamp|signal [--json] [--root DIR]
                                     Context-hygiene GC (deterministic plumbing;
                                     `/dummyindex-gc` on Claude or `$dummyindex-gc`
@@ -552,6 +558,11 @@ Subcommands:
                                                 target (exit 2) and an untracked target
                                                 without --allow-untracked. Never deletes
                                                 source code.
+                                                --kind equipment --slug S [--yes] [--force]
+                                                — remove one equipment item: its body,
+                                                adapter and manifest entry. A user-modified
+                                                body needs --force. The library entry stays
+                                                for `equip reuse`.
                                       closeout --kind proposal|audit --slug S
                                                 (--manifest F | --draft) — --draft writes
                                                 a closeout manifest draft to

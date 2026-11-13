@@ -102,6 +102,28 @@ def test_requirements_verb_documented_in_help_and_docs(verb: RequirementsVerb) -
 
 
 @pytest.mark.unit
+@pytest.mark.parametrize(
+    "command",
+    [
+        "dummyindex context upgrade --if-stale",
+        "dummyindex context gc delete --kind equipment",
+    ],
+    ids=["upgrade-if-stale", "gc-delete-equipment"],
+)
+def test_upgrade_and_equipment_delete_documented_in_help_and_docs(command: str) -> None:
+    """`upgrade --if-stale` and `gc delete --kind equipment` appear in help and both docs."""
+    from dummyindex.cli.help import usage_for
+
+    assert command in _CLI_GUIDE.read_text(encoding="utf-8")
+    assert command in _COMMAND_REFERENCE.read_text(encoding="utf-8")
+    sub = ContextSubcommand.UPGRADE if "upgrade" in command else ContextSubcommand.GC
+    flags = command.split(f"context {sub.value} ", 1)[1]
+    assert flags.split()[0] in usage_for(sub), (
+        f"`context {sub.value} --help` omits {flags.split()[0]!r}"
+    )
+
+
+@pytest.mark.unit
 def test_top_level_help_lists_every_subcommand(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
