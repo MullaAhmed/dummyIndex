@@ -47,7 +47,7 @@ Symbol moves (code moves, file stays):
 
 | Symbol | From | To |
 |---|---|---|
-| `EvolveError` | `dummyindex/context/domains/evolve_gate.py` | `dummyindex/shared/guard.py` |
+| `EvolveError` | `dummyindex/context/domains/evolve_gate.py` | `dummyindex/shared/errors.py` |
 | `safe_file` | `dummyindex/context/domains/evolve_gate.py` | `dummyindex/shared/guard.py` |
 | `project_lock` | `dummyindex/context/domains/evolve_promotion.py` | `dummyindex/shared/guard.py` |
 | `rules_in` | `dummyindex/context/domains/living_rules.py` | `dummyindex/shared/lesson/rules.py` |
@@ -203,20 +203,20 @@ Tests that stay:
 | `dummyindex/context/output/claude_md.py` | 17 | top | `context.domains.atomic_io` | write_text_atomic | context->context | context->shared | move into shared: retarget to `dummyindex/shared/atomic_io.py` |
 | `dummyindex/context/reconcile_gate.py` | 21 | top | `context.domains.atomic_io` | write_text_atomic | context->context | context->shared | move into shared: retarget to `dummyindex/shared/atomic_io.py` |
 | `dummyindex/installer/ownership.py` | 12 | top | `context.domains.atomic_io` | write_text_atomic | context->context | context->shared | move into shared: retarget to `dummyindex/shared/atomic_io.py` |
-| `dummyindex/cli/__init__.py` | 16 | top | `cli.evolve` | (module) | context->evolve | context->evolve | keep: composition-root allowlist (`dummyindex/cli/__init__.py`) |
+| `dummyindex/cli/__init__.py` | 16 | top | `cli.evolve` | (module) | context->evolve | context->evolve | keep: exact root allowlist pair; import becomes a lazy root adapter (avoids cli<->evolve cycle) |
 | `dummyindex/cli/memory.py` | 58 | lazy | `context.domains.probation` | session_block | context->evolve | context->evolve | seam: `memory.run(..., session_block=None)`; root passes lazy adapter to `evolve.probation.session_block` |
-| `dummyindex/context/domains/buildloop/checklist.py` | 265 | lazy | `context.domains.evolve_gate` | EvolveError | context->evolve | context->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
+| `dummyindex/context/domains/buildloop/checklist.py` | 265 | lazy | `context.domains.evolve_gate` | EvolveError | context->evolve | context->shared | move into shared: retarget to `dummyindex/shared/errors.py` |
 | `dummyindex/context/domains/buildloop/checklist.py` | 266 | lazy | `context.domains.evolve_promotion` | project_lock | context->evolve | context->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
-| `dummyindex/context/domains/equip/lifecycle/library.py` | 18 | top | `context.domains.evolve_gate` | EvolveError | context->evolve | context->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
+| `dummyindex/context/domains/equip/lifecycle/library.py` | 18 | top | `context.domains.evolve_gate` | EvolveError | context->evolve | context->shared | move into shared: retarget to `dummyindex/shared/errors.py` |
 | `dummyindex/context/domains/equip/lifecycle/library.py` | 19 | top | `context.domains.lesson` | validate_lesson | context->evolve | context->shared | move into shared: retarget to `dummyindex/shared/lesson/__init__.py` |
-| `dummyindex/context/domains/gc/delete.py` | 78 | lazy | `context.domains.evolve_gate` | EvolveError | context->evolve | context->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
+| `dummyindex/context/domains/gc/delete.py` | 78 | lazy | `context.domains.evolve_gate` | EvolveError | context->evolve | context->shared | move into shared: retarget to `dummyindex/shared/errors.py` |
 | `dummyindex/context/domains/gc/delete.py` | 79 | lazy | `context.domains.evolve_promotion` | project_lock | context->evolve | context->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
 | `dummyindex/context/domains/proposals/closeout.py` | 15 | top | `context.domains.lesson.enums` | LearningStatus | context->evolve | context->shared | move into shared: retarget to `dummyindex/shared/lesson/enums.py` |
-| `dummyindex/context/domains/proposals/closeout.py` | 152 | lazy | `context.domains.evolve_gate` | EvolveError | context->evolve | context->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
+| `dummyindex/context/domains/proposals/closeout.py` | 152 | lazy | `context.domains.evolve_gate` | EvolveError | context->evolve | context->shared | move into shared: retarget to `dummyindex/shared/errors.py` |
 | `dummyindex/context/domains/proposals/closeout.py` | 153 | lazy | `context.domains.lesson` | validate_lesson | context->evolve | context->shared | move into shared: retarget to `dummyindex/shared/lesson/__init__.py` |
 | `dummyindex/context/domains/proposals/closeout.py` | 282 | lazy | `context.domains.evolve_gate` | safe_file | context->evolve | context->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
 | `dummyindex/context/domains/proposals/closeout.py` | 283 | lazy | `context.domains.evolve_learning` | learning_status, mark_failed, read_event, run_learning | context->evolve | context->evolve | seam: move `_learn_after_closeout` to `evolve/evolve_learning.py` as `learn_after_closeout`; closeout takes it as `learner`; root injects via `gc.run`/`build_loop.run` |
-| `dummyindex/context/domains/proposals/closeout.py` | 584 | lazy | `context.domains.evolve_gate` | EvolveError | context->evolve | context->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
+| `dummyindex/context/domains/proposals/closeout.py` | 584 | lazy | `context.domains.evolve_gate` | EvolveError | context->evolve | context->shared | move into shared: retarget to `dummyindex/shared/errors.py` |
 | `dummyindex/context/domains/proposals/closeout.py` | 585 | lazy | `context.domains.evolve_promotion` | project_lock | context->evolve | context->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
 | `dummyindex/cli/evolve.py` | 17 | top | `cli.common` | resolve_context_root, usage_error | evolve->context | evolve->context | keep (allowed direction) |
 | `dummyindex/cli/evolve.py` | 101 | lazy | `context.domains.proposals.closeout` | learning_exit_code, learning_line | evolve->context | evolve->context | keep (allowed direction) |
@@ -247,28 +247,28 @@ Tests that stay:
 | `dummyindex/context/domains/observe/ledger.py` | 11 | top | `context.domains.atomic_io` | write_text_atomic | evolve->context | evolve->shared | move into shared: retarget to `dummyindex/shared/atomic_io.py` |
 | `dummyindex/context/domains/probation/actions.py` | 12 | top | `context.domains.atomic_io` | write_text_atomic | evolve->context | evolve->shared | move into shared: retarget to `dummyindex/shared/atomic_io.py` |
 | `dummyindex/context/domains/probation/store.py` | 11 | top | `context.domains.atomic_io` | write_text_atomic | evolve->context | evolve->shared | move into shared: retarget to `dummyindex/shared/atomic_io.py` |
-| `dummyindex/cli/evolve.py` | 61 | lazy | `context.domains.evolve_gate` | EvolveError | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
-| `dummyindex/cli/evolve.py` | 95 | lazy | `context.domains.evolve_gate` | EvolveError | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
-| `dummyindex/cli/evolve.py` | 151 | lazy | `context.domains.evolve_gate` | EvolveError | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
-| `dummyindex/cli/evolve.py` | 170 | lazy | `context.domains.evolve_gate` | EvolveError | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
-| `dummyindex/cli/evolve.py` | 189 | lazy | `context.domains.evolve_gate` | EvolveError | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
-| `dummyindex/cli/evolve_probation.py` | 28 | lazy | `context.domains.evolve_gate` | EvolveError | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
-| `dummyindex/cli/evolve_probation.py` | 117 | lazy | `context.domains.evolve_gate` | EvolveError | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
-| `dummyindex/context/domains/evidence.py` | 21 | top | `context.domains.evolve_gate` | EvolveError, safe_file | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
+| `dummyindex/cli/evolve.py` | 61 | lazy | `context.domains.evolve_gate` | EvolveError | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/errors.py` |
+| `dummyindex/cli/evolve.py` | 95 | lazy | `context.domains.evolve_gate` | EvolveError | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/errors.py` |
+| `dummyindex/cli/evolve.py` | 151 | lazy | `context.domains.evolve_gate` | EvolveError | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/errors.py` |
+| `dummyindex/cli/evolve.py` | 170 | lazy | `context.domains.evolve_gate` | EvolveError | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/errors.py` |
+| `dummyindex/cli/evolve.py` | 189 | lazy | `context.domains.evolve_gate` | EvolveError | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/errors.py` |
+| `dummyindex/cli/evolve_probation.py` | 28 | lazy | `context.domains.evolve_gate` | EvolveError | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/errors.py` |
+| `dummyindex/cli/evolve_probation.py` | 117 | lazy | `context.domains.evolve_gate` | EvolveError | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/errors.py` |
+| `dummyindex/context/domains/evidence.py` | 21 | top | `context.domains.evolve_gate` | EvolveError, safe_file | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/errors.py` |
 | `dummyindex/context/domains/evidence.py` | 22 | top | `context.domains.evolve_promotion` | project_lock | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
 | `dummyindex/context/domains/evolve_experiments.py` | 36 | top | `context.domains.evolve_promotion` | project_lock | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
 | `dummyindex/context/domains/evolve_learning.py` | 15 | top | `context.domains.lesson` | lesson_to_delta, validate_lesson | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/lesson/__init__.py` |
 | `dummyindex/context/domains/evolve_learning.py` | 16 | top | `context.domains.lesson.enums` | LearningStatus | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/lesson/enums.py` |
-| `dummyindex/context/domains/evolve_native.py` | 22 | top | `context.domains.evolve_gate` | EvolveError, safe_file | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
+| `dummyindex/context/domains/evolve_native.py` | 22 | top | `context.domains.evolve_gate` | EvolveError, safe_file | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/errors.py` |
 | `dummyindex/context/domains/evolve_native.py` | 34 | top | `context.domains.evolve_promotion` | project_lock | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
-| `dummyindex/context/domains/evolve_native_response.py` | 7 | top | `context.domains.evolve_gate` | EvolveError | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
-| `dummyindex/context/domains/living_rules.py` | 10 | top | `context.domains.evolve_gate` | EvolveError, safe_file | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
-| `dummyindex/context/domains/observe/attribution.py` | 11 | top | `context.domains.evolve_gate` | EvolveError, safe_file | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
-| `dummyindex/context/domains/observe/importer.py` | 13 | top | `context.domains.evolve_gate` | EvolveError | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
+| `dummyindex/context/domains/evolve_native_response.py` | 7 | top | `context.domains.evolve_gate` | EvolveError | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/errors.py` |
+| `dummyindex/context/domains/living_rules.py` | 10 | top | `context.domains.evolve_gate` | EvolveError, safe_file | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/errors.py` |
+| `dummyindex/context/domains/observe/attribution.py` | 11 | top | `context.domains.evolve_gate` | EvolveError, safe_file | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/errors.py` |
+| `dummyindex/context/domains/observe/importer.py` | 13 | top | `context.domains.evolve_gate` | EvolveError | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/errors.py` |
 | `dummyindex/context/domains/observe/importer.py` | 14 | top | `context.domains.living_rules` | rules_in | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/lesson/rules.py` |
-| `dummyindex/context/domains/observe/ledger.py` | 12 | top | `context.domains.evolve_gate` | EvolveError, safe_file | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
+| `dummyindex/context/domains/observe/ledger.py` | 12 | top | `context.domains.evolve_gate` | EvolveError, safe_file | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/errors.py` |
 | `dummyindex/context/domains/observe/ledger.py` | 13 | top | `context.domains.evolve_promotion` | project_lock | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
-| `dummyindex/context/domains/probation/models.py` | 9 | top | `context.domains.evolve_gate` | EvolveError | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
-| `dummyindex/context/domains/probation/rules.py` | 9 | top | `context.domains.evolve_gate` | EvolveError | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
-| `dummyindex/context/domains/probation/store.py` | 12 | top | `context.domains.evolve_gate` | EvolveError, safe_file | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
-| `dummyindex/context/domains/probation/sync.py` | 11 | top | `context.domains.evolve_gate` | EvolveError, safe_file | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/guard.py` |
+| `dummyindex/context/domains/probation/models.py` | 9 | top | `context.domains.evolve_gate` | EvolveError | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/errors.py` |
+| `dummyindex/context/domains/probation/rules.py` | 9 | top | `context.domains.evolve_gate` | EvolveError | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/errors.py` |
+| `dummyindex/context/domains/probation/store.py` | 12 | top | `context.domains.evolve_gate` | EvolveError, safe_file | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/errors.py` |
+| `dummyindex/context/domains/probation/sync.py` | 11 | top | `context.domains.evolve_gate` | EvolveError, safe_file | evolve->evolve | evolve->shared | move into shared: retarget to `dummyindex/shared/errors.py` |
