@@ -50,3 +50,22 @@ def test_write_back_without_toml_updates_json_wired(tmp_path: Path) -> None:
 
     assert not (ctx / "config.toml").exists()
     assert '"target": "x@m"' in (ctx / "config.json").read_text(encoding="utf-8")
+
+
+@pytest.mark.unit
+def test_toml_write_failure_warns_about_config_toml(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    project, ctx = _project(tmp_path)
+    (ctx / "config.toml").write_text(_TOML, encoding="utf-8")
+
+    def boom(context_dir, entries):
+        raise OSError("disk full")
+
+    monkeypatch.setattr("dummyindex.cli.equip.install.upsert_toml_wired", boom)
+
+    _write_back_wired(project, "x@m", "1.2.0")
+
+    err = capsys.readouterr().err
+    assert "config.toml not updated: disk full" in err
+    assert "config.json" not in err

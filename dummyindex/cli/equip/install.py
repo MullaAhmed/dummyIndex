@@ -472,15 +472,21 @@ def _write_back_wired(project_root: Path, target: str, version: str | None) -> N
         return
 
     entry = WiredEntry(kind=WiredKind.PLUGIN, target=target, version=version)
-    try:
-        if has_config_toml(context_dir):
+    if has_config_toml(context_dir):
+        try:
             upsert_toml_wired(context_dir, (entry,))
-            return
-        kept = tuple(e for e in config.wired if e.target != target)
+        except (OSError, ConfigError) as exc:
+            print(
+                f"warning: {target} wired, but config.toml not updated: {exc}",
+                file=sys.stderr,
+            )
+        return
+    kept = tuple(e for e in config.wired if e.target != target)
+    try:
         write_config(context_dir, replace(config, wired=kept + (entry,)))
-    except (OSError, ConfigError) as exc:
+    except OSError as exc:
         print(
-            f"warning: {target} wired, but config not updated: {exc}",
+            f"warning: {target} wired, but config.json not updated: {exc}",
             file=sys.stderr,
         )
 
