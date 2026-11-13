@@ -24,27 +24,87 @@ from dummyindex.context.domains.equip import (
     templated_capabilities,
 )
 from dummyindex.context.domains.equip.constants import VENDORED_SENTINEL
+from dummyindex.context.domains.equip.enums import EquipmentScope, RequestedBy
 
 # Grounding cited by every rendered tool (in addition to the conventions list).
 _GROUNDING_BASE: tuple[str, ...] = (".context/HOW_TO_USE.md",)
 
 
-def specialist_caps_from_manifest(manifest: EquipmentManifest) -> tuple[str, ...]:
+def specialist_caps_from_manifest(
+    manifest: EquipmentManifest, *, context_dir: Path | None = None
+) -> tuple[str, ...]:
     """Capabilities of already-applied generated specialists, in manifest order.
 
     Carried forward as ``forced_specialist_capabilities`` so a re-apply,
     ``refresh`` or ``reset`` never silently drops a specialist (a lifecycle-managed
     item with a templated capability; the core four have none, so never appear).
+    A task-scoped item is carried only while one of its refs is live; without
+    ``context_dir`` liveness cannot be checked, so it is carried conservatively.
     """
     templated = templated_capabilities()
     seen: list[str] = []
     for item in manifest.items:
         if not is_lifecycle_managed(item):
             continue
+        if not _carries_forward(item, context_dir):
+            continue
         for capability in item.capabilities:
             if capability in templated and capability not in seen:
                 seen.append(capability)
     return tuple(seen)
+
+
+def _carries_forward(item: EquipmentItem, context_dir: Path | None) -> bool:
+    """Whether an applied specialist survives a re-apply (contract 17)."""
+    if item.scope == EquipmentScope.PROJECT:
+        return True
+    if item.requested_by in (RequestedBy.ADD_SPECIALIST, RequestedBy.LEGACY):
+        return True
+    if context_dir is None:
+        return True
+    return any(_ref_is_live(ref, context_dir) for ref in item.task_refs)
+
+
+def _ref_is_live(ref: str, context_dir: Path) -> bool:
+    """A ``proposal:<slug>`` / ``audit:<slug>`` ref whose workspace is not finished.
+
+    Finished (contract 18): a proposal ``done`` or ``superseded``, an audit with
+    its ``report.md`` written, or no workspace at all. Lazy imports keep the
+    liveness readers out of this module's import path.
+    """
+    kind, _, slug = ref.partition(":")
+    if not slug:
+        return False
+    if kind == "proposal":
+        from dummyindex.context.domains.gc.delete import _proposal_status
+        from dummyindex.context.domains.proposals.errors import ProposalSlugError
+        from dummyindex.context.domains.proposals.store import (
+            proposals_root,
+            validate_slug,
+        )
+
+        try:
+            target = proposals_root(context_dir) / validate_slug(slug)
+        except ProposalSlugError:
+            return False
+        return target.is_dir() and _proposal_status(target) not in {
+            "done",
+            "superseded",
+        }
+    if kind == "audit":
+        from dummyindex.context.domains.audit.errors import AuditSlugError
+        from dummyindex.context.domains.audit.workspace import (
+            audit_dir,
+            report_written,
+        )
+
+        try:
+            target = audit_dir(context_dir, slug)
+            closed = report_written(context_dir, slug)
+        except AuditSlugError:
+            return False
+        return target.is_dir() and not closed
+    return False
 
 
 def drop_generated_stems(

@@ -11,17 +11,23 @@ import pytest
 
 from dummyindex.context.domains.equip import EquipmentKind
 from dummyindex.context.domains.equip.generate.catalog import build_catalog
-from dummyindex.context.domains.equip.generate.specialists import SPECIALIST_TEMPLATES
+from dummyindex.context.domains.equip.generate.specialists import (
+    ALWAYS_ON_CAPABILITIES,
+    EVIDENCE_GATED_CAPABILITIES,
+    SPECIALIST_TEMPLATES,
+)
 from dummyindex.context.domains.equip.models import StackProfile
 from dummyindex.context.domains.preflight.models import PreflightReport, SettingsState
 
-# Specialists are no longer opt-in: every equip pass generates one per template.
-# Counts are expressed as "core + the templated alphabet" so adding a template
-# never silently breaks an unrelated assertion.
-# Always-on specialists = the undimensioned templates. The dimensioned ones
-# (frontend / api / migration / ci) are signal-gated; the FastAPI test profile
-# evidences api (procedure + domain) only.
-_SPECIALISTS = sum(1 for t in SPECIALIST_TEMPLATES.values() if t.dimension is None)
+# Baseline specialists (security / performance / docs) are generated on every
+# non-generic stack; db / search are generated only on evidence, an explicit ask,
+# or a proposal capability. Counts are written against these named sets so a
+# policy change moves one place, not every assertion.
+_ALWAYS_ON = ALWAYS_ON_CAPABILITIES
+_EVIDENCE_GATED = EVIDENCE_GATED_CAPABILITIES
+# The python test profile carries no data_stores / search_backends evidence.
+_SPECIALISTS = len(_ALWAYS_ON)
+# FastAPI evidences api (procedure + domain) only.
 _API_PAIR = 2
 _CORE_GENERATE = 4  # implementer + tester + reviewer agents, verify skill
 _CORE_AGENTS = 3
@@ -80,9 +86,9 @@ def test_standard_generated_set() -> None:
 
 
 @pytest.mark.unit
-def test_every_templated_specialist_is_generated_without_being_asked() -> None:
-    """A specialist is an ability, not an opt-in: a bare pass — no proposal
-    capabilities, no forced caps — generates one specialist per template."""
+def test_bare_pass_generates_baseline_and_stack_evidenced_specialists_only() -> None:
+    """A bare pass — no proposal capabilities, no forced caps — generates the
+    baseline specialists and the stack-evidenced ones, nothing else."""
     decision = build_catalog(
         profile=_python_profile(),
         conventions=(),
@@ -91,10 +97,10 @@ def test_every_templated_specialist_is_generated_without_being_asked() -> None:
     )
     names = {g.name for g in decision.generate}
     for template in SPECIALIST_TEMPLATES.values():
-        if template.dimension is None or template.capability == "api":
-            assert f"p-{template.name_suffix}" in names
-        else:  # frontend / migration / ci: no signal on a FastAPI stack
-            assert f"p-{template.name_suffix}" not in names
+        expected = template.capability in _ALWAYS_ON or template.capability == "api"
+        assert (f"p-{template.name_suffix}" in names) is expected, template.capability
+    for capability in _EVIDENCE_GATED:
+        assert f"p-{SPECIALIST_TEMPLATES[capability].name_suffix}" not in names
 
 
 @pytest.mark.unit
@@ -135,9 +141,8 @@ def test_proposal_capability_generates_specialist_when_template_exists() -> None
     )
     # database has a template → a grounded specialist is GENERATED, not adopted.
     assert "p-db-specialist" in {g.name for g in decision.generate}
-    # The specialist is generated once, not twice, when the proposal also names
-    # a capability the always-on pass already covers.
-    assert len(decision.generate) == _CORE_GENERATE + _SPECIALISTS + _API_PAIR
+    # The proposal's db is one extra generated specialist on top of the baseline.
+    assert len(decision.generate) == _CORE_GENERATE + _SPECIALISTS + _API_PAIR + 1
     assert decision.adopt == ()
 
 
@@ -313,3 +318,58 @@ def test_profile_has_frontend_predicate() -> None:
         is False
     )
     assert profile_has_frontend(StackProfile(label="generic")) is False
+
+
+# --- evidence gate: db / search need a signal; security / performance / docs don't
+
+
+def _names(profile: StackProfile, forced: tuple[str, ...] = ()) -> set[str]:
+    decision = build_catalog(
+        profile=profile,
+        conventions=(),
+        preflight=_report(),
+        proj="p",
+        forced_specialist_capabilities=forced,
+    )
+    return {g.name for g in decision.generate}
+
+
+@pytest.mark.unit
+def test_no_evidence_generates_no_db_or_search_specialist() -> None:
+    names = _names(_python_profile())
+    assert "p-db-specialist" not in names
+    assert "p-search-specialist" not in names
+
+
+@pytest.mark.unit
+def test_sqlalchemy_evidence_generates_db_specialist() -> None:
+    profile = StackProfile(
+        label="python", frameworks=("FastAPI",), data_stores=("sqlalchemy",)
+    )
+    names = _names(profile)
+    assert "p-db-specialist" in names
+    assert "p-search-specialist" not in names
+
+
+@pytest.mark.unit
+def test_search_backend_evidence_generates_search_specialist() -> None:
+    profile = StackProfile(
+        label="python", frameworks=("FastAPI",), search_backends=("elasticsearch",)
+    )
+    names = _names(profile)
+    assert "p-search-specialist" in names
+    assert "p-db-specialist" not in names
+
+
+@pytest.mark.unit
+def test_explicit_add_specialist_db_generates_db_without_evidence() -> None:
+    names = _names(_python_profile(), forced=("database",))
+    assert "p-db-specialist" in names
+    assert len(names) == _CORE_GENERATE + _SPECIALISTS + _API_PAIR + 1
+
+
+@pytest.mark.unit
+def test_generic_stack_gets_no_baseline_specialists() -> None:
+    names = _names(StackProfile(label="generic"))
+    for capability in _ALWAYS_ON:
+        assert f"p-{SPECIALIST_TEMPLATES[capability].name_suffix}" not in names
