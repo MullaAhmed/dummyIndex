@@ -279,13 +279,47 @@ def _is_specialist(item) -> bool:
     return item.kind is EquipmentKind.AGENT and item.source is EquipmentSource.GENERATED
 
 
-def _has_evidence(item) -> bool:
-    from dummyindex.context.domains.equip.enums import RequestedBy
+def _capability_values(capabilities) -> frozenset[str]:
+    return frozenset(c.value if hasattr(c, "value") else str(c) for c in capabilities)
 
-    return bool(item.task_refs) or item.requested_by in (
-        RequestedBy.ADD_SPECIALIST,
-        RequestedBy.PROPOSAL,
+
+def _is_templated_specialist(item) -> bool:
+    """A generated specialist whose capability has a shipped template (core agents excluded)."""
+    from dummyindex.context.domains.equip.enums import EquipmentSource
+    from dummyindex.context.domains.equip.generate.specialists import (
+        templated_capabilities,
     )
+
+    if item.source is not EquipmentSource.GENERATED:
+        return False
+    templated = _capability_values(templated_capabilities())
+    return bool(_capability_values(item.capabilities) & templated)
+
+
+def _lacks_evidence(item, context_dir: Path) -> bool:
+    """True for an evidence-gated specialist that today's stack does not back.
+
+    Always-on capabilities never lack evidence. ``add_specialist`` and ``proposal``
+    items were asked for explicitly, so they are not reported either.
+    """
+    from dummyindex.context.domains.equip.enums import RequestedBy
+    from dummyindex.context.domains.equip.generate import detect as equip_detect
+    from dummyindex.context.domains.equip.generate.catalog import (
+        _evidenced_capabilities,
+    )
+    from dummyindex.context.domains.equip.generate.specialists import (
+        EVIDENCE_GATED_CAPABILITIES,
+    )
+
+    if item.requested_by in (RequestedBy.ADD_SPECIALIST, RequestedBy.PROPOSAL):
+        return False
+    gated = _capability_values(EVIDENCE_GATED_CAPABILITIES)
+    wanted = _capability_values(item.capabilities) & gated
+    if not wanted:
+        return False
+    profile = equip_detect.detect_stack(context_dir)
+    evidenced = _capability_values(_evidenced_capabilities(profile))
+    return not (wanted & evidenced)
 
 
 def _claude_wired(root: Path, context_dir: Path) -> bool:
@@ -338,7 +372,7 @@ def _seed_config_toml(
 
 
 def _backfill_legacy(context_dir: Path) -> tuple[bool, tuple[str, ...]]:
-    """Stamp ``requested_by=legacy`` on generated specialists; return (changed, no-evidence names)."""
+    """Stamp ``requested_by=legacy`` on templated specialists; return (changed, unevidenced names)."""
     from dummyindex.context.domains.equip.enums import RequestedBy
     from dummyindex.context.domains.equip.lifecycle.manifest import (
         read_manifest,
@@ -350,10 +384,13 @@ def _backfill_legacy(context_dir: Path) -> tuple[bool, tuple[str, ...]]:
     items = []
     without: list[str] = []
     for item in manifest.items:
-        if _is_specialist(item) and item.requested_by is None:
+        if not _is_templated_specialist(item):
+            items.append(item)
+            continue
+        if item.requested_by is None:
             item = dataclasses.replace(item, requested_by=RequestedBy.LEGACY)
             changed = True
-        if _is_specialist(item) and not _has_evidence(item):
+        if _lacks_evidence(item, context_dir):
             without.append(item.name)
         items.append(item)
     if changed:

@@ -74,7 +74,7 @@ def _pristine_db(root: Path, context_dir: Path, *, requested_by=None) -> Equipme
         name="db",
         path=".context/equipment/db.md",
         source=EquipmentSource.GENERATED,
-        capabilities=("db",),
+        capabilities=("database",),
         version="1.0.0",
         origin_hash=content_hash(BODY),
         requested_by=requested_by,
@@ -396,3 +396,134 @@ def test_dataclass_report_is_frozen():
     report = context_upgrade.UpgradeReport()
     with pytest.raises(dataclasses.FrozenInstanceError):
         report.changed = True  # type: ignore[misc]
+
+
+def _generated(name: str, capability: str, requested_by=None) -> EquipmentItem:
+    return EquipmentItem(
+        kind=EquipmentKind.AGENT,
+        name=name,
+        path=f".context/equipment/{name}.md",
+        source=EquipmentSource.GENERATED,
+        capabilities=(capability,),
+        version="1.0.0",
+        origin_hash=content_hash(f"{name}\n"),
+        requested_by=requested_by,
+    )
+
+
+def _with_items(context_dir: Path, *items: EquipmentItem) -> None:
+    write_manifest(context_dir, EquipmentManifest(schema_version=4, items=items))
+
+
+def _stack(monkeypatch: pytest.MonkeyPatch, **evidence: tuple[str, ...]) -> None:
+    from dummyindex.context.domains.equip.generate import detect as equip_detect
+    from dummyindex.context.domains.equip.models import StackProfile
+
+    profile = StackProfile(label="python", **evidence)
+    monkeypatch.setattr(equip_detect, "detect_stack", lambda ctx: profile)
+
+
+def _run_once(root: Path, context_dir: Path) -> context_upgrade.UpgradeReport:
+    return upgrade_project(
+        root, package_version=CLI, refresh=_refresh(context_dir), runner=_runner(False)
+    )
+
+
+@pytest.mark.unit
+def test_legacy_db_backed_by_stack_evidence_is_not_reported(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    context_dir = _project(tmp_path)
+    _with_items(context_dir, _generated("db", "database"))
+    _stack(monkeypatch, data_stores=("sqlalchemy",))
+    _stub_fresh(monkeypatch, {})
+
+    report = _run_once(tmp_path, context_dir)
+
+    assert read_manifest(context_dir).items[0].requested_by is RequestedBy.LEGACY
+    assert not any(w.startswith("specialist without evidence") for w in report.warnings)
+
+
+@pytest.mark.unit
+def test_always_on_specialist_is_never_reported(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    context_dir = _project(tmp_path)
+    _with_items(context_dir, _generated("security", "security"))
+    _stub_fresh(monkeypatch, {})
+
+    report = _run_once(tmp_path, context_dir)
+
+    assert read_manifest(context_dir).items[0].requested_by is RequestedBy.LEGACY
+    assert not any(w.startswith("specialist without evidence") for w in report.warnings)
+
+
+@pytest.mark.unit
+def test_add_specialist_db_without_evidence_is_not_reported(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    context_dir = _project(tmp_path)
+    _with_items(
+        context_dir,
+        _generated("db", "database", requested_by=RequestedBy.ADD_SPECIALIST),
+    )
+    _stub_fresh(monkeypatch, {})
+
+    report = _run_once(tmp_path, context_dir)
+
+    assert (
+        read_manifest(context_dir).items[0].requested_by is RequestedBy.ADD_SPECIALIST
+    )
+    assert not any(w.startswith("specialist without evidence") for w in report.warnings)
+
+
+@pytest.mark.unit
+def test_core_agent_is_never_backfilled(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    context_dir = _project(tmp_path)
+    _with_items(context_dir, _generated("implementer", "implement"))
+    _stub_fresh(monkeypatch, {})
+
+    _run_once(tmp_path, context_dir)
+
+    assert read_manifest(context_dir).items[0].requested_by is None
+
+
+@pytest.mark.unit
+def test_two_threads_one_holds_the_lock_and_the_other_reports_in_progress(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    import threading
+
+    from dummyindex.context.domains.requirements import read_requirements
+
+    context_dir = _project(tmp_path)
+    holding = threading.Event()
+    release = threading.Event()
+
+    def slow_renders(root, ctx):
+        holding.set()
+        release.wait(timeout=10)
+        return {}
+
+    monkeypatch.setattr(equip_fresh, "fresh_renders", slow_renders)
+    results: dict[str, context_upgrade.UpgradeReport] = {}
+
+    def run(key: str) -> None:
+        results[key] = _run_once(tmp_path, context_dir)
+
+    holder = threading.Thread(target=run, args=("holder",))
+    holder.start()
+    assert holding.wait(timeout=10)
+    contender = threading.Thread(target=run, args=("contender",))
+    contender.start()
+    contender.join(timeout=10)
+    release.set()
+    holder.join(timeout=10)
+
+    assert results["contender"].warnings == ("upgrade in progress",)
+    assert results["holder"].stamp_advanced
+    assert read_meta(context_dir / "meta.json").dummyindex_version == CLI
+    assert read_requirements(context_dir / "config.toml") is not None
+    assert not (context_dir / "cache" / "upgrade.lock").exists()
