@@ -653,12 +653,20 @@ def test_second_apply_is_idempotent(tmp_path: Path) -> None:
     equip_dir = root / ".context" / "equipment"
     before = (
         manifest.read_text("utf-8"),
-        {f.name: f.read_bytes() for f in equip_dir.iterdir()},
+        {
+            p.relative_to(equip_dir).as_posix(): p.read_bytes()
+            for p in equip_dir.rglob("*")
+            if p.is_file()
+        },
     )
     assert run_equip(["apply", str(root)]) == 0
     after = (
         manifest.read_text("utf-8"),
-        {f.name: f.read_bytes() for f in equip_dir.iterdir()},
+        {
+            p.relative_to(equip_dir).as_posix(): p.read_bytes()
+            for p in equip_dir.rglob("*")
+            if p.is_file()
+        },
     )
     assert before == after
 

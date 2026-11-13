@@ -27,8 +27,14 @@ from __future__ import annotations
 from dummyindex.context.domains.preflight.models import PreflightReport
 
 from ..constants import EQUIP_SENTINEL
-from ..enums import Capability, EquipmentKind
-from ..models import CatalogDecision, GenerateSpec, HookSpec, StackProfile
+from ..enums import Capability, EquipmentKind, RequestedBy
+from ..models import (
+    CatalogDecision,
+    EquipmentItem,
+    GenerateSpec,
+    HookSpec,
+    StackProfile,
+)
 from .adopt import resolve_coverage
 from .render import (
     IMPLEMENTER_TEMPLATE,
@@ -38,6 +44,7 @@ from .render import (
 )
 from .specialists import (
     ALWAYS_ON_CAPABILITIES,
+    EVIDENCE_GATED_CAPABILITIES,
     SPECIALIST_TEMPLATES,
     specialist_specs,
     templated_capabilities,
@@ -92,6 +99,38 @@ def _evidenced_capabilities(profile: StackProfile) -> frozenset[str]:
     if profile.search_backends:
         out.add(Capability.SEARCH)
     return frozenset(out)
+
+
+def capability_values(capabilities) -> frozenset[str]:
+    """Plain capability strings; ``Capability`` members hash by name, not value."""
+    return frozenset(c.value if hasattr(c, "value") else str(c) for c in capabilities)
+
+
+def stack_evidence(profile: StackProfile) -> frozenset[str]:
+    """Evidence-gated capability values the detected stack backs."""
+    return capability_values(_evidenced_capabilities(profile))
+
+
+def lacks_evidence(item: EquipmentItem, evidenced: frozenset[str]) -> bool:
+    """True for an evidence-gated specialist that the stack does not back.
+
+    Always-on capabilities never lack evidence. ``add_specialist`` and ``proposal``
+    items were asked for explicitly, so they are never reported.
+    """
+    if item.requested_by in (RequestedBy.ADD_SPECIALIST, RequestedBy.PROPOSAL):
+        return False
+    wanted = capability_values(item.capabilities) & capability_values(
+        EVIDENCE_GATED_CAPABILITIES
+    )
+    return bool(wanted) and not (wanted & evidenced)
+
+
+def specialists_without_evidence(
+    items: tuple[EquipmentItem, ...] | list[EquipmentItem], profile: StackProfile
+) -> tuple[str, ...]:
+    """Names of the items :func:`lacks_evidence` flags, in input order."""
+    evidenced = stack_evidence(profile)
+    return tuple(item.name for item in items if lacks_evidence(item, evidenced))
 
 
 def _all_templated_capabilities(

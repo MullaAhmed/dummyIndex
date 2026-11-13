@@ -67,6 +67,14 @@ from dummyindex.context.domains.equip import (
     wire_hooks,
     write_manifest,
 )
+from dummyindex.context.domains.equip.enums import EquipmentScope, RequestedBy
+from dummyindex.context.domains.equip.generate.catalog import (
+    capability_values,
+    specialists_without_evidence,
+)
+from dummyindex.context.domains.equip.generate.grounding import (
+    write_grounding_sidecars,
+)
 from dummyindex.context.domains.equip.lifecycle.status import is_sourced
 from dummyindex.context.domains.preflight import PreflightReport
 from dummyindex.installer.common import normalize_platform_arg
@@ -345,7 +353,10 @@ def _run_apply(
     # Carry forward already-applied specialists so a plain re-apply never drops
     # one; an explicit `--specialist` ask is added on top (deduped, order-stable).
     forced = tuple(
-        dict.fromkeys(explicit_specialists + specialist_caps_from_manifest(prior))
+        dict.fromkeys(
+            explicit_specialists
+            + specialist_caps_from_manifest(prior, context_dir=context_dir)
+        )
     )
 
     try:
@@ -363,6 +374,16 @@ def _run_apply(
             conventions=conventions,
             grounding=grounding,
             proj=proj,
+        )
+        baseline = build_catalog(
+            profile=profile, conventions=conventions, preflight=report, proj=proj
+        ).generate
+        rendered = _stamp_rendered(
+            rendered,
+            prior=prior,
+            baseline=frozenset(spec.name for spec in baseline),
+            proposal=proposal,
+            explicit=capability_values(explicit_specialists),
         )
     except EquipError as exc:
         print(f"error: {exc}", file=sys.stderr)
@@ -382,6 +403,11 @@ def _run_apply(
                 "frontend — skipped the Frontend Developer adoption (the "
                 "generic implementer covers it)"
             )
+    if not as_json:
+        for name in specialists_without_evidence(
+            tuple(item for item, _, _ in rendered), profile
+        ):
+            print(f"specialist without evidence: {name} (see dummyindex-gc)")
     if source:
         rendered, _ = source_rendered(
             rendered,
@@ -601,11 +627,13 @@ def _apply_write(
         # Retire an existing owned native body while its original hash is still
         # known. Otherwise a later run sees an unowned stale full copy forever.
         from dummyindex.context.domains.equip.generate.adapters import (
+            adapter_description,
             native_adapter_content,
             native_adapter_path,
             write_native_adapter,
         )
 
+        description = adapter_description(content)
         native_path = native_adapter_path(item)
         if (
             prior_item is not None
@@ -617,7 +645,9 @@ def _apply_write(
             original_path = project_root / native_path
             original = original_path.read_bytes()
             try:
-                warning = write_native_adapter(project_root, item, prior=prior_item)
+                warning = write_native_adapter(
+                    project_root, item, prior=prior_item, description=description
+                )
             except OSError as exc:
                 warning = f"native migration unavailable for {item.name}: {exc}"
             if warning:
@@ -626,9 +656,10 @@ def _apply_write(
                 written.append(prior_item)
                 preserved.append(item.name)
                 continue
-            migrated_adapters.append(
-                (original_path, original, native_adapter_content(item).encode("utf-8"))
-            )
+            expected_adapter = native_adapter_content(
+                item, description=description
+            ).encode("utf-8")
+            migrated_adapters.append((original_path, original, expected_adapter))
         written.append(item)
         files_written.append(item.name)
         if not as_json:
@@ -710,6 +741,8 @@ def _apply_write(
         restore_migrations()
         print(f"error: {exc}", file=sys.stderr)
         return 1
+    _, sidecar_skipped = write_grounding_sidecars(project_root, context_dir, written)
+    skipped.extend(sidecar_skipped)
 
     if native_claude:
         from dummyindex.context.domains.equip.generate.adapters import (
@@ -724,7 +757,12 @@ def _apply_write(
             ):
                 previous = None
             try:
-                warning = write_native_adapter(project_root, item, prior=previous)
+                warning = write_native_adapter(
+                    project_root,
+                    item,
+                    prior=previous,
+                    description=_description_of(project_root / item.path),
+                )
             except OSError as exc:
                 warning = f"native adapter unavailable for {item.name}: {exc}"
             if warning:
@@ -784,6 +822,7 @@ def _preview_native_adapters(
     native_claude: bool,
 ) -> list[dict[str, str | None]]:
     from dummyindex.context.domains.equip.generate.adapters import (
+        adapter_description,
         native_adapter_path,
         write_native_adapter,
     )
@@ -814,7 +853,13 @@ def _preview_native_adapters(
         if not native_claude and not migrating:
             continue
         try:
-            warning = write_native_adapter(root, item, prior=previous, dry_run=True)
+            warning = write_native_adapter(
+                root,
+                item,
+                prior=previous,
+                description=adapter_description(content),
+                dry_run=True,
+            )
         except OSError as exc:
             warning = str(exc)
         plans.append(
@@ -851,6 +896,71 @@ def _hook_items(
         )
         for hook in decision.hooks
     ]
+
+
+def _stamp_rendered(
+    rendered: tuple[tuple[EquipmentItem, str, str], ...],
+    *,
+    prior: EquipmentManifest,
+    baseline: frozenset[str],
+    proposal: str | None,
+    explicit: frozenset[str],
+) -> tuple[tuple[EquipmentItem, str, str], ...]:
+    """Stamp scope, task refs and requested_by on each rendered item (contract 17)."""
+    prior_by_name = {i.name: i for i in prior.items}
+    proposal_ref = None if proposal is None else f"proposal:{proposal}"
+    stamped = []
+    for item, rel, content in rendered:
+        is_explicit = bool(capability_values(item.capabilities) & explicit)
+        stamped_item = _stamp_item(
+            item,
+            prior_by_name.get(item.name),
+            baseline=item.name in baseline,
+            proposal_ref=proposal_ref,
+            explicit=is_explicit,
+        )
+        stamped.append((stamped_item, rel, content))
+    return tuple(stamped)
+
+
+def _stamp_item(
+    item: EquipmentItem,
+    prior: EquipmentItem | None,
+    *,
+    baseline: bool,
+    proposal_ref: str | None,
+    explicit: bool,
+) -> EquipmentItem:
+    """Baseline items are project-wide; a proposal-only item is task-scoped.
+
+    An existing ``requested_by`` is kept, so a re-apply never downgrades it. A
+    baseline item stores no scope, task refs or requested_by, unless it was asked for.
+    """
+    scope = prior.scope if prior is not None else EquipmentScope.PROJECT
+    refs = prior.task_refs if prior is not None else ()
+    requested_by = prior.requested_by if prior is not None else None
+    if baseline:
+        scope, refs = EquipmentScope.PROJECT, ()
+    elif proposal_ref is not None and prior is None and not explicit:
+        scope, refs = EquipmentScope.TASK, (proposal_ref,)
+        requested_by = RequestedBy.PROPOSAL
+    elif proposal_ref is not None and scope is EquipmentScope.TASK:
+        refs = tuple(dict.fromkeys((*refs, proposal_ref)))
+    if explicit and requested_by is None:
+        requested_by = RequestedBy.ADD_SPECIALIST
+    return dataclasses.replace(
+        item, scope=scope, task_refs=refs, requested_by=requested_by
+    )
+
+
+def _description_of(path: Path) -> str | None:
+    """The body's description for its native adapter; None when unreadable."""
+    from dummyindex.context.domains.equip.generate.adapters import adapter_description
+
+    try:
+        return adapter_description(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError):
+        return None
 
 
 def _write_file(target: Path, content: str) -> int:

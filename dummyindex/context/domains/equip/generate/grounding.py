@@ -12,7 +12,10 @@ import json
 import re
 from pathlib import Path
 
+from ...atomic_io import write_text_atomic
 from ...query import query
+from ..enums import EquipmentKind, EquipmentSource
+from ..models import EquipmentItem
 
 GROUNDING_HEADER = "<!-- dummyindex:generated-grounding — do not edit -->"
 GENERIC_FOCUS_QUERY = "architecture overview"
@@ -41,6 +44,63 @@ _FOCUS_QUERIES: dict[str, str] = {
 
 def grounding_path(name: str) -> str:
     return f".context/equipment/grounding/{name}.md"
+
+
+# Equipment may write only under these project-relative roots; anything else is refused.
+EQUIPMENT_WRITE_ROOTS = (
+    Path(".context/equipment"),
+    Path(".claude/agents"),
+    Path(".claude/skills"),
+)
+
+
+def contained_path(root: Path, rel: str) -> Path | None:
+    """The resolved path when ``rel`` lies strictly inside an allowed root, else None.
+
+    The bases are compared unresolved: a base that is itself a symlink out of the
+    repo must not count as contained.
+    """
+    if not rel or Path(rel).is_absolute():
+        return None
+    base_root = root.resolve()
+    target = (base_root / rel).resolve()
+    for base in EQUIPMENT_WRITE_ROOTS:
+        if base_root / base in target.parents:
+            return target
+    return None
+
+
+def write_grounding_sidecars(
+    root: Path,
+    context_dir: Path,
+    items: list[EquipmentItem] | tuple[EquipmentItem, ...],
+) -> tuple[bool, tuple[str, ...]]:
+    """Write ``.context/equipment/grounding/<name>.md`` for each generated agent and skill.
+
+    Whole-file atomic rewrite; a byte-identical file is left alone. Returns
+    ``(changed, skipped)`` where ``skipped`` lists sidecars refused by containment.
+    """
+    changed = False
+    skipped: list[str] = []
+    for item in items:
+        if item.source is not EquipmentSource.GENERATED or item.kind not in (
+            EquipmentKind.AGENT,
+            EquipmentKind.SKILL,
+        ):
+            continue
+        rel = grounding_path(item.name)
+        target = contained_path(root, rel)
+        if target is None:
+            skipped.append(rel)
+            continue
+        capability = item.capabilities[0] if item.capabilities else item.name
+        text = render_grounding(context_dir, capability=capability)
+        if _read_text(target) == text:
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
+        write_text_atomic(target, text)
+        changed = True
+    return changed, tuple(skipped)
 
 
 def focus_query(capability: str) -> str:

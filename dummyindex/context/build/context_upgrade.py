@@ -32,13 +32,6 @@ GITIGNORE_WARNING = (
     ".claude/ is gitignored — teammates get this setup from .context/config.toml "
     "via the global dummyindex hooks"
 )
-# Manifest paths a write may touch; anything else is skipped and reported.
-_ALLOWED_ROOTS = (
-    Path(".context/equipment"),
-    Path(".claude/agents"),
-    Path(".claude/skills"),
-)
-
 GitRunner = Callable[..., "subprocess.CompletedProcess[str]"]
 
 
@@ -255,17 +248,9 @@ def _acquire_lock(path: Path) -> bool:
 
 
 def _contained(root: Path, rel: str) -> Path | None:
-    """The resolved path when ``rel`` lies strictly inside an allowed root, else None."""
-    if not rel or Path(rel).is_absolute():
-        return None
-    # Resolve only the target: a base that is itself a symlink out of the repo must not
-    # count as contained, so the bases are compared unresolved.
-    base_root = root.resolve()
-    target = (base_root / rel).resolve()
-    for base in _ALLOWED_ROOTS:
-        if base_root / base in target.parents:
-            return target
-    return None
+    from dummyindex.context.domains.equip.generate.grounding import contained_path
+
+    return contained_path(root, rel)
 
 
 def _read_or_none(path: Path) -> str | None:
@@ -285,52 +270,18 @@ def _is_specialist(item) -> bool:
     )
 
 
-def _capability_values(capabilities) -> frozenset[str]:
-    return frozenset(c.value if hasattr(c, "value") else str(c) for c in capabilities)
-
-
 def _is_templated_specialist(item) -> bool:
     """A generated specialist whose capability has a shipped template (core agents excluded)."""
     from dummyindex.context.domains.equip.enums import EquipmentSource
+    from dummyindex.context.domains.equip.generate.catalog import capability_values
     from dummyindex.context.domains.equip.generate.specialists import (
         templated_capabilities,
     )
 
     if item.source is not EquipmentSource.GENERATED:
         return False
-    templated = _capability_values(templated_capabilities())
-    return bool(_capability_values(item.capabilities) & templated)
-
-
-def _stack_evidence(context_dir: Path) -> frozenset[str]:
-    """Capability values the current stack backs; computed once per upgrade."""
-    from dummyindex.context.domains.equip.generate import detect as equip_detect
-    from dummyindex.context.domains.equip.generate.catalog import (
-        _evidenced_capabilities,
-    )
-
-    profile = equip_detect.detect_stack(context_dir)
-    return _capability_values(_evidenced_capabilities(profile))
-
-
-def _lacks_evidence(item, evidenced: frozenset[str]) -> bool:
-    """True for an evidence-gated specialist that today's stack does not back.
-
-    Always-on capabilities never lack evidence. ``add_specialist`` and ``proposal``
-    items were asked for explicitly, so they are not reported either.
-    """
-    from dummyindex.context.domains.equip.enums import RequestedBy
-    from dummyindex.context.domains.equip.generate.specialists import (
-        EVIDENCE_GATED_CAPABILITIES,
-    )
-
-    if item.requested_by in (RequestedBy.ADD_SPECIALIST, RequestedBy.PROPOSAL):
-        return False
-    gated = _capability_values(EVIDENCE_GATED_CAPABILITIES)
-    wanted = _capability_values(item.capabilities) & gated
-    if not wanted:
-        return False
-    return not (wanted & evidenced)
+    templated = capability_values(templated_capabilities())
+    return bool(capability_values(item.capabilities) & templated)
 
 
 def _claude_wired(root: Path, context_dir: Path) -> bool:
@@ -385,6 +336,10 @@ def _seed_config_toml(
 def _backfill_legacy(context_dir: Path) -> tuple[bool, tuple[str, ...]]:
     """Stamp ``requested_by=legacy`` on templated specialists; return (changed, unevidenced names)."""
     from dummyindex.context.domains.equip.enums import RequestedBy
+    from dummyindex.context.domains.equip.generate import detect as equip_detect
+    from dummyindex.context.domains.equip.generate.catalog import (
+        specialists_without_evidence,
+    )
     from dummyindex.context.domains.equip.lifecycle.manifest import (
         read_manifest,
         write_manifest,
@@ -393,9 +348,7 @@ def _backfill_legacy(context_dir: Path) -> tuple[bool, tuple[str, ...]]:
     manifest = read_manifest(context_dir)
     changed = False
     items = []
-    without: list[str] = []
-    templated = [item for item in manifest.items if _is_templated_specialist(item)]
-    evidenced = _stack_evidence(context_dir) if templated else frozenset()
+    templated: list = []
     for item in manifest.items:
         if not _is_templated_specialist(item):
             items.append(item)
@@ -403,12 +356,16 @@ def _backfill_legacy(context_dir: Path) -> tuple[bool, tuple[str, ...]]:
         if item.requested_by is None:
             item = dataclasses.replace(item, requested_by=RequestedBy.LEGACY)
             changed = True
-        if _lacks_evidence(item, evidenced):
-            without.append(item.name)
+        templated.append(item)
         items.append(item)
+    without: tuple[str, ...] = ()
+    if templated:
+        without = specialists_without_evidence(
+            templated, equip_detect.detect_stack(context_dir)
+        )
     if changed:
         write_manifest(context_dir, dataclasses.replace(manifest, items=tuple(items)))
-    return changed, tuple(without)
+    return changed, without
 
 
 def _upgrade_equipment(
@@ -421,6 +378,9 @@ def _upgrade_equipment(
     warnings: list[str],
 ) -> bool:
     from dummyindex.context.domains.equip.generate import fresh as equip_fresh
+    from dummyindex.context.domains.equip.generate.grounding import (
+        write_grounding_sidecars,
+    )
     from dummyindex.context.domains.equip.lifecycle import status as equip_status
     from dummyindex.context.domains.equip.lifecycle.manifest import (
         EQUIPMENT_REL,
@@ -438,34 +398,16 @@ def _upgrade_equipment(
 
     # Pristine bodies only: refresh keeps user-modified and evolved items as they are.
     changed = bool(equip_status.refresh(root, fresh_renders=fresh).refreshed)
-    for item in read_manifest(context_dir).items:
-        if not _is_specialist(item):
-            continue
-        changed = _write_sidecar(root, context_dir, item, skipped) or changed
-        if claude_wired:
+    items = read_manifest(context_dir).items
+    sidecars_changed, sidecars_skipped = write_grounding_sidecars(
+        root, context_dir, items
+    )
+    skipped.extend(sidecars_skipped)
+    changed = sidecars_changed or changed
+    for item in items:
+        if claude_wired and _is_specialist(item):
             changed = _write_adapter(root, item, skipped, adapters, warnings) or changed
     return changed
-
-
-def _write_sidecar(root: Path, context_dir: Path, item, skipped: list[str]) -> bool:
-    from dummyindex.context.domains.atomic_io import write_text_atomic
-    from dummyindex.context.domains.equip.generate.grounding import (
-        grounding_path,
-        render_grounding,
-    )
-
-    rel = grounding_path(item.name)
-    if _contained(root, rel) is None:
-        skipped.append(rel)
-        return False
-    capability = item.capabilities[0] if item.capabilities else item.name
-    text = render_grounding(context_dir, capability=capability)
-    target = root / rel
-    if _read_or_none(target) == text:
-        return False
-    target.parent.mkdir(parents=True, exist_ok=True)
-    write_text_atomic(target, text)
-    return True
 
 
 def _write_adapter(
