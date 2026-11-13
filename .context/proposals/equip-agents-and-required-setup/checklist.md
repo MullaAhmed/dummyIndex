@@ -32,8 +32,8 @@
 
 ## Wave 5 — equip dispatch + GC candidates
 
-- [ ] T15 Equip dispatch: adapter descriptions, sidecar writes, `--for-proposal` provenance, `add-specialist` stamp, evidence report (`dummyindex/cli/equip/dispatch.py`, `tests/context/domains/equip/test_equip_apply_merge.py`)
-- [ ] T16 GC equipment candidates + liveness move + recommend/scan/signal (`dummyindex/context/domains/gc/enums.py`, `dummyindex/context/domains/gc/liveness.py`, `dummyindex/context/domains/gc/equipment.py`, `dummyindex/context/domains/gc/enumerate.py`, `dummyindex/context/domains/gc/recommend.py`, `dummyindex/context/domains/gc/scan.py`, `dummyindex/context/domains/gc/signals.py`, `tests/context/domains/gc/test_equipment_candidates.py`)
+- [x] T15 Equip dispatch: adapter descriptions, sidecar writes, `--for-proposal` provenance, `add-specialist` stamp, evidence report (`dummyindex/cli/equip/dispatch.py`, `tests/context/domains/equip/test_equip_apply_merge.py`)
+- [x] T16 GC equipment candidates + liveness move + recommend/scan/signal (`dummyindex/context/domains/gc/enums.py`, `dummyindex/context/domains/gc/liveness.py`, `dummyindex/context/domains/gc/equipment.py`, `dummyindex/context/domains/gc/enumerate.py`, `dummyindex/context/domains/gc/recommend.py`, `dummyindex/context/domains/gc/scan.py`, `dummyindex/context/domains/gc/signals.py`, `tests/context/domains/gc/test_equipment_candidates.py`)
 
 ## Wave 6 — GC delete, upgrade CLI, installer, docs
 

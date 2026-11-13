@@ -407,6 +407,86 @@
     "task_id": "task-add49101c259e698",
     "task_sha256": "add49101c259e698c20bd6029b944838c94fe55334029c4f31e12401a0f0e509"
   },
+  "task-cb4ce32ba8d849a4": {
+    "artifacts": [
+      {
+        "path": "dummyindex/cli/equip/dispatch.py",
+        "sha256": "fad8e650d0d54aa1a8eee9261f5673563a66623e81baab1083fadbe653fca4c8"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/generate/grounding.py",
+        "sha256": "ab7411053d47144ef646c6e56396ed9c3e3e30894946ac5b1ad52a7d8abc89d9"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/generate/catalog.py",
+        "sha256": "94ba61d52c9ed15bb0b45cf8a39316ce2ae265fbeb9aa5e884499e2052a6b4d4"
+      },
+      {
+        "path": "dummyindex/context/build/context_upgrade.py",
+        "sha256": "43650b7215b0e51f5fcb3be8b687fecb68b8521d927de8f25b2939ffe2633bff"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/equip/test_equip_apply_merge.py",
+        "sha256": "6225795c80a505b3ad0a186736d48374007a6fa9bd097e5beea2ad5d0bee988c"
+      }
+    ],
+    "source_commit": "5325aa9f69ab03ee52d611163b325ccec97ecb9b",
+    "state": "verified",
+    "task_id": "task-cb4ce32ba8d849a4",
+    "task_sha256": "cb4ce32ba8d849a49cca77aa3eff23587bf3949c914eef580efd606c7fd4ae8b"
+  },
+  "task-dc6c52b2b99ddd2c": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/gc/enums.py",
+        "sha256": "5633efd78b6b2b78d0691389c456dad680bcae0fd8f7bd86ee3aaf7a9bfe3881"
+      },
+      {
+        "path": "dummyindex/context/domains/gc/liveness.py",
+        "sha256": "abaf69a4dce6167957acc0935874d48e02dd7017ecf01106d4c6230dc36dbb5d"
+      },
+      {
+        "path": "dummyindex/context/domains/gc/equipment.py",
+        "sha256": "6e90f0ca0194600cbe09fafe42115330620a0ba50b2b7e865f4f98f222969b29"
+      },
+      {
+        "path": "dummyindex/context/domains/gc/enumerate.py",
+        "sha256": "3c755a5e654000f62b10fe13a7217c7917008c3d272c17d9384ba4228cec6bd7"
+      },
+      {
+        "path": "dummyindex/context/domains/gc/recommend.py",
+        "sha256": "802de278fb7038358b5ce704388d20369dc04892556e3eb0bf3d75f7e4cc7401"
+      },
+      {
+        "path": "dummyindex/context/domains/gc/scan.py",
+        "sha256": "02bd4cdc6ad283903ac31da8b2c82442d7996f0ec88f99e3098b7d64f6ebf3d3"
+      },
+      {
+        "path": "dummyindex/context/domains/gc/signals.py",
+        "sha256": "f249079a6d64acb355e341c8c3b28c0d3f29281f40e1ed8b3d052c07697024bd"
+      },
+      {
+        "path": "dummyindex/cli/gc.py",
+        "sha256": "7f9454bcdb6740ae70181a567853cb2aa94e401756ab8a65bf358892a49015ac"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/gc/test_equipment_candidates.py",
+        "sha256": "dcfc10a18916a13aac1c413431919aff5c99dd904e121f5ea435e659452258fa"
+      },
+      {
+        "path": "tests/cli/test_gc_cli.py",
+        "sha256": "1a5e30b5d9bc41930e4d2808a202800b2c927cdaf03150d1e498132af8d9ff31"
+      }
+    ],
+    "source_commit": "f8a0258a1241ed58d139c0e3bd668fc2b4f31e6e",
+    "state": "verified",
+    "task_id": "task-dc6c52b2b99ddd2c",
+    "task_sha256": "dc6c52b2b99ddd2cefc3f6d98b5116fd8b02a3d50fd07400f0cc0046fc98d6d3"
+  },
   "task-e93bc694c55fd2d1": {
     "artifacts": [
       {
