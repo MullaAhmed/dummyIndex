@@ -1,4 +1,30 @@
 {
+  "task-00c2ac96016f63c6": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/equip/lifecycle/remove.py",
+        "sha256": "05bd0b6408322b6d492d9d75afbd9a24cb4744ff01be7ab2d0a66637bea7e522"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/lifecycle/status.py",
+        "sha256": "357ab1a5e7e5f79a2485fb0e4a6746c4d2e006e89416daf4bda02f8fc4b21e84"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/equip/test_equip_remove.py",
+        "sha256": "646c73b946c47c1b6ac10b4fe7722a819595423557d5bbfb2e2d7c52bc7c822c"
+      },
+      {
+        "path": "tests/context/domains/equip/test_equip_lifecycle.py",
+        "sha256": "456982e12cadcb0f3594f7165b792a7c32803c2334a74d373eeedd64cf24df66"
+      }
+    ],
+    "source_commit": "0d41000dbac91e3e42a5ed8084ab3fb22f9e74b8",
+    "state": "verified",
+    "task_id": "task-00c2ac96016f63c6",
+    "task_sha256": "00c2ac96016f63c65d979982bf3273e38ec7c55c1a4ac48b3e580195b32836dc"
+  },
   "task-0329c26c863b658d": {
     "artifacts": [
       {
@@ -42,6 +68,32 @@
     "state": "verified",
     "task_id": "task-0570130417a521ff",
     "task_sha256": "0570130417a521ffe5b81b4484447ba2c92f5447094d17610ef4729325129428"
+  },
+  "task-413e1e2743340d08": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/config.py",
+        "sha256": "59cbe32c065df85e6e7cf166e7cc0c5f42f2f59824468f35d3683b1b3faff0a3"
+      },
+      {
+        "path": "dummyindex/cli/equip/install.py",
+        "sha256": "6fce3dafa8cc6a4e68d4f69cbe9bb25e9c9383005f3be7696e75ece033f70624"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/test_config.py",
+        "sha256": "005a9e4e9a13a46a5cbdb9810000ded15bebbe6d1eb4c7fc1fe7e3f4605f2f4a"
+      },
+      {
+        "path": "tests/cli/equip/test_equip_install_writeback.py",
+        "sha256": "b94edaa5d38e0acc55c9b6301efd70baa688c8e0e4f3764c3fa21b55a8a23568"
+      }
+    ],
+    "source_commit": "0d41000dbac91e3e42a5ed8084ab3fb22f9e74b8",
+    "state": "verified",
+    "task_id": "task-413e1e2743340d08",
+    "task_sha256": "413e1e2743340d08396c2995858471440d1ccab0317182b3c018b637dd3dd3af"
   },
   "task-46ecd53b11c24d40": {
     "artifacts": [
@@ -98,6 +150,28 @@
     "state": "verified",
     "task_id": "task-4df3b3dfd9fe6048",
     "task_sha256": "4df3b3dfd9fe60480c3a0e427efa37181a3cb9c69584dcc787e969122730fde5"
+  },
+  "task-96ae5061fd0f4366": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/requirements/sync.py",
+        "sha256": "3f7119e16d0de65b236ae9f3d696572d1d08a91b67c7aad5e2ee4016cbfc874f"
+      },
+      {
+        "path": "dummyindex/context/domains/requirements/__init__.py",
+        "sha256": "ab089daa5f05249cf9039292c4fd07b94382dc12163085b93ec1e3036674cd19"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/requirements/test_sync.py",
+        "sha256": "11396219a523a367441f779fcc33dc0d26efc60863e5e8a240a3373f9df019f1"
+      }
+    ],
+    "source_commit": "3c6204cf66bea77aa7c7f8279a5fa779f440b05b",
+    "state": "verified",
+    "task_id": "task-96ae5061fd0f4366",
+    "task_sha256": "96ae5061fd0f4366369bbeb5849531faeb5287369b69f3ae4f5ff0dee4010e22"
   },
   "task-a4e4eb40d04fe470": {
     "artifacts": [
@@ -222,6 +296,24 @@
     "state": "verified",
     "task_id": "task-add49101c259e698",
     "task_sha256": "add49101c259e698c20bd6029b944838c94fe55334029c4f31e12401a0f0e509"
+  },
+  "task-e93bc694c55fd2d1": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/equip/generate/detect.py",
+        "sha256": "f6d325b7f6b990be05ed72d02f79671626a8e3a3ba75a97d1436431739b44139"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/equip/test_equip.py",
+        "sha256": "b037e66f646fc1accdcc5dfbb60272630a66c973f2d93ff0224c51f4b6cfb45a"
+      }
+    ],
+    "source_commit": "0d41000dbac91e3e42a5ed8084ab3fb22f9e74b8",
+    "state": "verified",
+    "task_id": "task-e93bc694c55fd2d1",
+    "task_sha256": "e93bc694c55fd2d17773dca1175348fa0d1da247b4d69c6fdca30bf49368937b"
   },
   "task-f45ef35c554e4156": {
     "artifacts": [

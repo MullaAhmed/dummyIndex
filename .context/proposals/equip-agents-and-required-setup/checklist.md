@@ -19,10 +19,10 @@
 
 ## Wave 3 — evidence, sync, single owner, removal
 
-- [ ] T7 Evidence detection with word-boundary tokens and file patterns (`dummyindex/context/domains/equip/generate/detect.py`, `tests/context/domains/equip/test_equip.py`)
-- [ ] T12 Requirements sync: adapters, skill family via runner, plugins with `(name, repo)` trust (`dummyindex/context/domains/requirements/sync.py`, `tests/context/domains/requirements/test_sync.py`)
-- [ ] T13 `config.toml` as single owner of `wired` (`dummyindex/context/domains/config.py`, `dummyindex/cli/equip/install.py`, `tests/context/domains/test_config.py`, `tests/cli/equip/test_equip_install_writeback.py`)
-- [ ] T14 Structural adapter removal at `remove` and `uninstall` (`dummyindex/context/domains/equip/lifecycle/remove.py`, `dummyindex/context/domains/equip/lifecycle/status.py`, `tests/context/domains/equip/test_equip_remove.py`, `tests/context/domains/equip/test_equip_lifecycle.py`)
+- [x] T7 Evidence detection with word-boundary tokens and file patterns (`dummyindex/context/domains/equip/generate/detect.py`, `tests/context/domains/equip/test_equip.py`)
+- [x] T12 Requirements sync: adapters, skill family via runner, plugins with `(name, repo)` trust (`dummyindex/context/domains/requirements/sync.py`, `tests/context/domains/requirements/test_sync.py`)
+- [x] T13 `config.toml` as single owner of `wired` (`dummyindex/context/domains/config.py`, `dummyindex/cli/equip/install.py`, `tests/context/domains/test_config.py`, `tests/cli/equip/test_equip_install_writeback.py`)
+- [x] T14 Structural adapter removal at `remove` and `uninstall` (`dummyindex/context/domains/equip/lifecycle/remove.py`, `dummyindex/context/domains/equip/lifecycle/status.py`, `tests/context/domains/equip/test_equip_remove.py`, `tests/context/domains/equip/test_equip_lifecycle.py`)
 
 ## Wave 4 — gating, upgrade pipeline, requirements CLI
 
