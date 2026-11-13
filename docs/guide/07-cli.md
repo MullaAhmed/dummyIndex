@@ -365,10 +365,10 @@ Writes are atomic. Runs are prefix-scoped, so other proposals' runs under `.cont
 This is an ASD-STE100 rewrite of curated `features/` and `conventions/` docs. The CLI is deterministic. It snapshots each unit, checks the rewrite, and records the ruleset. The host skill rewrites each unit between `next` and `done`. The restyle loop makes no LLM calls.
 
 - `plan` is read-only. It lists units with their doc, strict, and advice counts. It prints `already restyled (ruleset N)` once stamped. It prints `nothing to restyle` on an index without curated docs.
-- `begin --all` or `begin --max-units N` starts a run. An unbounded run needs `--all`. `begin` refuses with exit 1 while a run is unfinished. `--force` starts a new run after a stamp.
+- `begin --all` or `begin --max-units N` starts a run. An unbounded run needs `--all`. `begin` refuses with exit 1 while a run is unfinished. `--max-units N` skips units that an earlier run of the same ruleset finished. `--force` starts a new run after a stamp.
 - `next` prints the next unit, its doc paths, and the rewrite brief. It prints a completion hint when all units are done.
 - `done <unit>` checks the unit against its snapshot. It exits 1 and names each doc and token when a protected token is lost. Otherwise it prints the remaining strict violations and `advice:` lines. It warns about new protected tokens.
-- `stamp` records the ruleset in `meta.json` once every unit is done.
+- `stamp` judges all curated units across runs. It records the ruleset in `meta.json` only when every unit is covered. A partial stamp reseeds the ratchet and prints `not stamped, N/M unit(s) covered`.
 - `status` reports unit counts for the run.
 
 ### `dummyindex context restyle plan [--json] [--root DIR]`
