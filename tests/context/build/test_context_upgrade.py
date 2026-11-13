@@ -499,6 +499,7 @@ def test_two_threads_one_holds_the_lock_and_the_other_reports_in_progress(
     from dummyindex.context.domains.requirements import read_requirements
 
     context_dir = _project(tmp_path)
+    _with_items(context_dir)  # an empty manifest: step 3 reaches fresh_renders
     holding = threading.Event()
     release = threading.Event()
 
@@ -527,3 +528,128 @@ def test_two_threads_one_holds_the_lock_and_the_other_reports_in_progress(
     assert read_meta(context_dir / "meta.json").dummyindex_version == CLI
     assert read_requirements(context_dir / "config.toml") is not None
     assert not (context_dir / "cache" / "upgrade.lock").exists()
+
+
+SKILL_BODY = (
+    "---\nname: verify\ndescription: Verify the change end to end\nversion: 1.0.0\n---\n"
+    "# verify\n\nRun the gate before reporting.\n"
+)
+
+
+@pytest.mark.unit
+def test_generated_skill_gets_sidecar_and_skill_adapter_with_body_description(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    context_dir = _project(tmp_path)
+    body_path = context_dir / "equipment" / "verify.md"
+    body_path.parent.mkdir(parents=True, exist_ok=True)
+    body_path.write_text(SKILL_BODY, encoding="utf-8")
+    skill = EquipmentItem(
+        kind=EquipmentKind.SKILL,
+        name="verify",
+        path=".context/equipment/verify.md",
+        source=EquipmentSource.GENERATED,
+        capabilities=("verify",),
+        version="1.0.0",
+        origin_hash=content_hash(SKILL_BODY),
+    )
+    _with_items(context_dir, skill)
+    _stub_fresh(monkeypatch, {"verify": SKILL_BODY})
+
+    report = _run_once(tmp_path, context_dir)
+
+    assert (context_dir / "equipment" / "grounding" / "verify.md").is_file()
+    adapter = tmp_path / ".claude" / "skills" / "verify" / "SKILL.md"
+    assert adapter.is_file()
+    assert "Verify the change end to end" in adapter.read_text(encoding="utf-8")
+    assert ".claude/skills/verify/SKILL.md" in report.adapters_written
+
+
+@pytest.mark.unit
+def test_skill_outside_allowed_roots_is_skipped(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    context_dir = _project(tmp_path)
+    outside = tmp_path / "src" / "x.md"
+    outside.parent.mkdir()
+    outside.write_text("keep\n", encoding="utf-8")
+    _with_items(
+        context_dir,
+        EquipmentItem(
+            kind=EquipmentKind.SKILL,
+            name="x",
+            path="src/x.md",
+            source=EquipmentSource.GENERATED,
+            version="1.0.0",
+            origin_hash=content_hash("keep\n"),
+        ),
+    )
+    _stub_fresh(monkeypatch, {"x": "overwritten\n"})
+
+    report = _run_once(tmp_path, context_dir)
+
+    assert "src/x.md" in report.skipped_paths
+    assert outside.read_text(encoding="utf-8") == "keep\n"
+    assert not (tmp_path / ".claude" / "skills" / "x" / "SKILL.md").exists()
+
+
+@pytest.mark.unit
+def test_symlinked_claude_agents_is_not_contained(tmp_path: Path, real_symlinks):
+    repo = tmp_path / "repo"
+    outside = tmp_path / "outside"
+    (repo / ".claude").mkdir(parents=True)
+    outside.mkdir()
+    (repo / ".claude" / "agents").symlink_to(outside, target_is_directory=True)
+
+    assert _contained(repo, ".claude/agents/db.md") is None
+    assert _contained(repo, ".context/equipment/db.md") is not None
+
+
+@pytest.mark.integration
+def test_real_fresh_render_re_renders_a_pristine_body_that_drifted_from_the_template(
+    tmp_path: Path,
+):
+    """No stub: the real equip render is the template. A pristine body from an older
+    template output must be re-rendered and re-baselined."""
+    import json
+
+    from dummyindex.context.domains.equip.generate import fresh as equip_fresh
+
+    (tmp_path / "app.py").write_text("def main():\n    return 1\n", encoding="utf-8")
+    context_dir = _project(tmp_path)
+    (context_dir / "map").mkdir()
+    (context_dir / "map" / "files.json").write_text(
+        json.dumps({"files": [{"path": "app.py", "language": "python"}]}),
+        encoding="utf-8",
+    )
+    renders = equip_fresh.fresh_renders(tmp_path, context_dir)
+    name = next(n for n in renders if n.endswith("security-specialist"))
+    fresh = renders[name]
+    heading = f"# {name}"
+    assert fresh.count(heading) == 1
+    old = fresh.replace(heading, f"# {name} (previous template)", 1)
+    body_rel = f".context/equipment/{name}.md"
+    (tmp_path / body_rel).parent.mkdir(parents=True, exist_ok=True)
+    (tmp_path / body_rel).write_text(old, encoding="utf-8")
+    _with_items(
+        context_dir,
+        EquipmentItem(
+            kind=EquipmentKind.AGENT,
+            name=name,
+            path=body_rel,
+            source=EquipmentSource.GENERATED,
+            capabilities=("security",),
+            version="1.0.0",
+            origin_hash=content_hash(old),
+        ),
+    )
+
+    _run_once(tmp_path, context_dir)
+
+    after = (tmp_path / body_rel).read_text(encoding="utf-8")
+    item = read_manifest(context_dir).items[0]
+    assert after != old
+    assert "previous template" not in after
+    assert heading in after
+    assert item.version == "1.1.0"
+    assert item.origin_hash == content_hash(after)

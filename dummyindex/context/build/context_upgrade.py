@@ -258,10 +258,12 @@ def _contained(root: Path, rel: str) -> Path | None:
     """The resolved path when ``rel`` lies strictly inside an allowed root, else None."""
     if not rel or Path(rel).is_absolute():
         return None
-    target = (root / rel).resolve()
+    # Resolve only the target: a base that is itself a symlink out of the repo must not
+    # count as contained, so the bases are compared unresolved.
+    base_root = root.resolve()
+    target = (base_root / rel).resolve()
     for base in _ALLOWED_ROOTS:
-        base_abs = (root / base).resolve()
-        if base_abs in target.parents:
+        if base_root / base in target.parents:
             return target
     return None
 
@@ -274,9 +276,13 @@ def _read_or_none(path: Path) -> str | None:
 
 
 def _is_specialist(item) -> bool:
+    """Generated agents and skills: the kinds that get a sidecar and a native adapter."""
     from dummyindex.context.domains.equip.enums import EquipmentKind, EquipmentSource
 
-    return item.kind is EquipmentKind.AGENT and item.source is EquipmentSource.GENERATED
+    return item.source is EquipmentSource.GENERATED and item.kind in (
+        EquipmentKind.AGENT,
+        EquipmentKind.SKILL,
+    )
 
 
 def _capability_values(capabilities) -> frozenset[str]:
@@ -296,17 +302,24 @@ def _is_templated_specialist(item) -> bool:
     return bool(_capability_values(item.capabilities) & templated)
 
 
-def _lacks_evidence(item, context_dir: Path) -> bool:
+def _stack_evidence(context_dir: Path) -> frozenset[str]:
+    """Capability values the current stack backs; computed once per upgrade."""
+    from dummyindex.context.domains.equip.generate import detect as equip_detect
+    from dummyindex.context.domains.equip.generate.catalog import (
+        _evidenced_capabilities,
+    )
+
+    profile = equip_detect.detect_stack(context_dir)
+    return _capability_values(_evidenced_capabilities(profile))
+
+
+def _lacks_evidence(item, evidenced: frozenset[str]) -> bool:
     """True for an evidence-gated specialist that today's stack does not back.
 
     Always-on capabilities never lack evidence. ``add_specialist`` and ``proposal``
     items were asked for explicitly, so they are not reported either.
     """
     from dummyindex.context.domains.equip.enums import RequestedBy
-    from dummyindex.context.domains.equip.generate import detect as equip_detect
-    from dummyindex.context.domains.equip.generate.catalog import (
-        _evidenced_capabilities,
-    )
     from dummyindex.context.domains.equip.generate.specialists import (
         EVIDENCE_GATED_CAPABILITIES,
     )
@@ -317,8 +330,6 @@ def _lacks_evidence(item, context_dir: Path) -> bool:
     wanted = _capability_values(item.capabilities) & gated
     if not wanted:
         return False
-    profile = equip_detect.detect_stack(context_dir)
-    evidenced = _capability_values(_evidenced_capabilities(profile))
     return not (wanted & evidenced)
 
 
@@ -383,6 +394,8 @@ def _backfill_legacy(context_dir: Path) -> tuple[bool, tuple[str, ...]]:
     changed = False
     items = []
     without: list[str] = []
+    templated = [item for item in manifest.items if _is_templated_specialist(item)]
+    evidenced = _stack_evidence(context_dir) if templated else frozenset()
     for item in manifest.items:
         if not _is_templated_specialist(item):
             items.append(item)
@@ -390,7 +403,7 @@ def _backfill_legacy(context_dir: Path) -> tuple[bool, tuple[str, ...]]:
         if item.requested_by is None:
             item = dataclasses.replace(item, requested_by=RequestedBy.LEGACY)
             changed = True
-        if _lacks_evidence(item, context_dir):
+        if _lacks_evidence(item, evidenced):
             without.append(item.name)
         items.append(item)
     if changed:
@@ -409,9 +422,14 @@ def _upgrade_equipment(
 ) -> bool:
     from dummyindex.context.domains.equip.generate import fresh as equip_fresh
     from dummyindex.context.domains.equip.lifecycle import status as equip_status
-    from dummyindex.context.domains.equip.lifecycle.manifest import read_manifest
+    from dummyindex.context.domains.equip.lifecycle.manifest import (
+        EQUIPMENT_REL,
+        read_manifest,
+    )
     from dummyindex.context.domains.equip.lifecycle.status import is_lifecycle_managed
 
+    if not (context_dir / EQUIPMENT_REL).is_file():
+        return False  # no equipment yet: nothing to render, adapt, or sidecar
     fresh = equip_fresh.fresh_renders(root, context_dir)
     for item in read_manifest(context_dir).items:
         if is_lifecycle_managed(item) and _contained(root, item.path) is None:
