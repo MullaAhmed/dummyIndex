@@ -81,5 +81,5 @@ When the agent has a task or question about the codebase:
 - `--top-k N` sets how many features the command returns (default 3). The command ranks the features by token overlap.
 - `--budget N` sets a token cap on the output that the command prints (default 2000). The cap lets the output fit cleanly into agent loops. The command drops lower-ranked matches when the output reaches the cap.
 - `--json` emits a structured result instead of markdown. Use it in scripts.
-- Exit codes: `0` on a hit, `1` (no error output) when nothing matches, and `2` on a usage error. The `1` code lets shell scripts detect "no hit". An example of a usage error is a non-integer `--top-k`/`--budget`.
+- Exit codes: `0` on a hit. `1` (no error output) when nothing matches, so shell scripts can detect "no hit". `2` on a usage error, for example a non-integer `--top-k`/`--budget`.
 - It is deterministic, with no LLM in the loop. The command is a convenience view over the same JSON that the agent walks manually. The tree-walk procedure above remains the primary interface.
