@@ -7,6 +7,7 @@ Public surface:
 - ``read_requirements``, ``render_requirements``, ``write_requirements``,
   ``set_min_version_line``, ``parse_skill_from``, ``is_valid_constraint``
 - ``seed_requirements`` (pure seeding from the wired set)
+- ``sync_requirements`` / ``SyncReport`` (local repair and plugin install)
 - ``check_requirements`` / ``exit_code`` and the gate: ``gate_decision``,
   ``read_bypass``, ``write_bypass``, ``write_ok_marker``, ``run_gate``.
 - ``RequirementsError`` and the layout constants.
@@ -34,6 +35,7 @@ from .gate import (
 )
 from .models import PluginRequirement, RequirementRow, Requirements, SkillRequirement
 from .seed import seed_requirements
+from .sync import SyncReport, sync_requirements
 from .toml_io import (
     is_valid_constraint,
     parse_skill_from,
@@ -69,7 +71,9 @@ __all__ = [
     "parse_skill_from",
     "read_requirements",
     "render_requirements",
+    "SyncReport",
     "seed_requirements",
     "set_min_version_line",
+    "sync_requirements",
     "write_requirements",
 ]
