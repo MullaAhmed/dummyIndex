@@ -154,3 +154,40 @@ def test_status_json_parses(curated: Path) -> None:
     rc, out, _ = _run(curated, "status", "--json")
     assert rc == 0
     assert json.loads(out)["total"] == 2
+
+
+@pytest.mark.unit
+def test_partial_stamp_reports_coverage_and_plan_stays_ready(curated: Path) -> None:
+    rc, out, err = _run(curated, "begin", "--max-units", "1")
+    assert rc == 0, err
+    rc, _, err = _run(curated, "done", "auth")
+    assert rc == 0, err
+    rc, out, err = _run(curated, "stamp")
+    assert rc == 0, err
+    assert "not stamped" in out
+    assert "1/2" in out
+    rc, out, _ = _run(curated, "plan", "--json")
+    assert rc == 0
+    assert json.loads(out)["status"] == "ready"
+
+
+@pytest.mark.unit
+def test_partial_stamp_json_reports_null_ruleset(curated: Path) -> None:
+    assert _run(curated, "begin", "--max-units", "1")[0] == 0
+    assert _run(curated, "done", "auth")[0] == 0
+    rc, out, err = _run(curated, "stamp", "--json")
+    assert rc == 0, err
+    payload = json.loads(out)
+    assert payload["ruleset"] is None
+    assert payload["covered"] == 1
+    assert payload["total"] == 2
+
+
+@pytest.mark.unit
+def test_plan_after_partial_stamp_is_not_already_restyled(curated: Path) -> None:
+    assert _run(curated, "begin", "--max-units", "1")[0] == 0
+    assert _run(curated, "done", "auth")[0] == 0
+    assert _run(curated, "stamp")[0] == 0
+    rc, out, _ = _run(curated, "plan")
+    assert rc == 0
+    assert "already restyled" not in out
