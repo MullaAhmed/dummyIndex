@@ -21,6 +21,7 @@ by their new names).
 > `entry_point_count`, and `flow_count` are carried in the feature's entry in
 > **`features/INDEX.json`** (under the top-level `features` array, keyed
 > `feature_id`). They are **not** in `features/<id>/feature.json`.
+>
 > `feature.json` carries only the raw lists `members` / `files` / `entry_points` /
 > `flow_ids`. If you read it directly, compute the counts with `len()` (e.g.
 > `len(feature["members"]) < 3`). Reading a `*_count` key off `feature.json`

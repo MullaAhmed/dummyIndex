@@ -55,7 +55,7 @@ dummyindex/skills/
 Triggered by `/dummyindex` on Claude Code or `$dummyindex` on Codex, optionally
 with a path.
 
-The skill body is short. It's a conductor, not a worker.
+The skill body is short. It is a conductor, not a worker.
 
 Pseudocode of the skill's logic:
 
@@ -113,7 +113,7 @@ Pseudocode of the skill's logic:
 
 ## How retrieval works (the always-on path)
 
-The SKILL.md described above runs only when explicitly invoked. The **always-on retrieval** is different: it's instructions the agent follows in **every session**, encoded in `.context/HOW_TO_USE.md` and `.context/features/HOW_TO_NAVIGATE.md` (written into the repo).
+The `SKILL.md` described above runs only when explicitly invoked. The **always-on retrieval** is different. It is a set of instructions the agent follows in **every session**. The instructions are encoded in `.context/HOW_TO_USE.md` and `.context/features/HOW_TO_NAVIGATE.md` (written into the repo).
 
 ```
 Every supported host session in the repo
@@ -132,14 +132,14 @@ Every supported host session in the repo
        7. Read source files cited by the docs.
 ```
 
-The retrieval procedure markdowns under `skills/retrieval/` are the source of truth for what gets copied into `.context/HOW_TO_USE.md` at ingest time. Updating them and re-running `dummyindex ingest` (or `dummyindex context rebuild`) propagates the new guidance into the repo — `HOW_TO_USE.md` is written by the ingest/rebuild runner, not by `bootstrap` (which regenerates only the selected host guidance block).
+The retrieval procedure markdowns under `skills/retrieval/` are the source of truth for what ingest copies into `.context/HOW_TO_USE.md`. Update them and re-run `dummyindex ingest` (or `dummyindex context rebuild`). This propagates the new guidance into the repo. The ingest/rebuild runner writes `HOW_TO_USE.md`. `bootstrap` does not write it. `bootstrap` regenerates only the selected host guidance block.
 
 ## Host command surface (inspired by KARIMO)
 
-`/dummyindex` is the Claude Code entry point; `$dummyindex` is the Codex
+`/dummyindex` is the Claude Code entry point. `$dummyindex` is the Codex
 equivalent. The same arguments work on both:
 
-- `/dummyindex` — full first-time ingest + pipeline (standard mode default; first run also triggers onboarding, v0.14).
+- `/dummyindex` — full first-time ingest + pipeline. Standard mode is the default. The first run also triggers onboarding (v0.14).
 - `/dummyindex --mode light|standard|deep` — override the council mode for this run.
 - `/dummyindex --scaffold-only` — backbone only, skip the pipeline.
 - `/dummyindex --recouncil [feature_id]` — re-run the pipeline (one feature or all).
@@ -148,7 +148,7 @@ equivalent. The same arguments work on both:
 - `/dummyindex --status` — show the read-only index, drift, version, depth,
   equipment, proposal, and memory overview.
 
-The PageIndex tree search itself is the standalone CLI verb `dummyindex context query "..."` (no LLM; the plan skill reuses it for grounding).
+The PageIndex tree search itself is the standalone CLI verb `dummyindex context query "..."`. It uses no LLM. The plan skill reuses it for grounding.
 
 ## Sibling skills
 
@@ -167,7 +167,7 @@ replace the leading `/` with `$` for Codex.
 | `/dummyindex-update` | `dummyindex/skills/update/` | Resolves the latest GitHub release tag → force-reinstalls the CLI via the detected method (uv tool / pipx / pip) → re-runs `dummyindex install` for a non-destructive refresh → verifies the CLI, skill family, and repo wiring all moved |
 | `/dummyindex-gc` | `dummyindex/skills/gc/` | `dummyindex context gc status` (read-only sweep + commit-throttle state) → parallel council walks `.context/` to judge each candidate keep / stale / superseded / dead → user confirms → deletes decisively: docs via `gc delete --kind proposal\|audit --yes`, trivially-dead private code via implementer+tester (only if the suite stays green), broader dead code routed to a new proposal. Never archives, never removes anything unconfirmed |
 
-Each sibling skill is markdown-first and follows the same conductor pattern: Python does the deterministic moves; the skill dispatches agents for everything requiring judgment.
+Each sibling skill is markdown-first. It follows the same conductor pattern. Python does the deterministic moves. The skill dispatches agents for everything that requires judgment.
 
 ## Why markdown for orchestration
 
@@ -180,31 +180,31 @@ Each sibling skill is markdown-first and follows the same conductor pattern: Pyt
 
 - Atomic file operations need transactions.
 - Schema validation needs structured types.
-- Walking the AST needs a real parser.
-- The CLI is the **stable kernel**; markdown evolves on top.
+- An AST walk needs a real parser.
+- The CLI is the **stable kernel**. Markdown evolves on top.
 
 ## How agents are dispatched
 
 On Claude Code the skill uses the `Task` tool and named specialist types. The
-installed Codex copy maps read-only work to built-in `explorer`, implementation
-and artifact authoring to `worker`, and coordination/unmatched work to `default`,
-while inlining the same persona mandate. No `.claude/agents/` or equipment
-manifest is needed for that mapping.
+installed Codex copy maps read-only work to built-in `explorer`. It maps
+implementation and artifact authoring to `worker`, and it maps
+coordination/unmatched work to `default`. It also inlines the same persona
+mandate. That mapping needs no `.claude/agents/` or equipment manifest.
 
 Per dispatch:
 - The skill **reads the persona markdown** (`agents/dev.md`, `agents/architect.md`, or a `agents/critic-*.md`).
-- The skill **substitutes context**: the feature's JSON + source file list for the dev (stage 1); the dev's draft `plan.md` for the architect (stage 2); the finalised `plan.md` for the critics (stage 3); `features/<id>/docs.md` when it exists. For the dev, the `{{framework}}` slot is filled from stack detection, and the `{{framework_docs}}` slot carries verbatim Context7 excerpts when a `*context7*` MCP server is exposed (the lookup protocol lives in `council/55-context7.md`; a missing server is not a failure).
-- The skill **includes the doc-evidence directive** verbatim — "treat catalogued docs as hypotheses, verify against `map/symbols.json` before quoting; quote `high`/`medium` only, never `low`; flag any code-vs-doc conflict into the council audit log."
+- The skill **substitutes context**: the dev (stage 1) gets the feature's JSON + source file list. The architect (stage 2) gets the dev's draft `plan.md`, and the critics (stage 3) get the finalised `plan.md`. The skill also substitutes `features/<id>/docs.md` when it exists. For the dev, the skill fills the `{{framework}}` slot from stack detection. The `{{framework_docs}}` slot carries verbatim Context7 excerpts when a `*context7*` MCP server is exposed. The lookup protocol lives in `council/55-context7.md`, and a missing server is not a failure.
+- The skill **includes the doc-evidence directive** verbatim — "treat catalogued docs as hypotheses, verify against `map/symbols.json` before quoting. Quote `high`/`medium` only, never `low`. Flag any code-vs-doc conflict into the council audit log."
 - The skill passes the rendered prompt to the active host's subagent mechanism.
 - The subagent runs in its own context window.
-- The subagent **writes back** using the active host's editing mechanism or
+- The subagent **writes back** with the active host's edit mechanism or
   `dummyindex context section-write`.
 - The subagent **logs completion** via `dummyindex context council-log`.
 
 ## Why subagents instead of inline calls
 
-- Persona isolation. The dev shouldn't wear the security hat mid-paragraph; the security critic shouldn't soften a threat to please the architect.
-- Context window economics. Each stage gets a focused ~30K-token window scoped to its inputs, instead of one bloated context carrying every persona's concerns at once.
+- Persona isolation. The dev should not wear the security hat mid-paragraph. The security critic should not soften a threat to please the architect.
+- Context window economics. Each stage gets a focused ~30K-token window scoped to its inputs. One bloated context would carry every persona's concerns at once.
 - Resumability. Each stage's output is durable before the next starts — the pipeline resumes from `_council-log.json`.
 - Auditability. Each subagent's full prompt + response is recoverable from the audit log.
 
@@ -224,6 +224,6 @@ Per dispatch:
 
 - Numbered steps for procedural sections.
 - Tables for decision matrices.
-- Code blocks ONLY for CLI invocations agents will actually run.
-- No prose explaining what the user will see — that's redundant with `HOW_TO_USE.md`.
+- Code blocks ONLY for CLI invocations agents will run.
+- No prose that explains what the user will see. That is redundant with `HOW_TO_USE.md`.
 - Each procedure markdown stays under 200 lines.
