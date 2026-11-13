@@ -33,7 +33,7 @@ from dummyindex.context.domains.docbudget.constants import (
     STE_RULESET_VERSION,
     STYLE_RATCHET_REL,
 )
-from dummyindex.context.domains.restyle.constants import SNAPSHOT_NAME
+from dummyindex.context.domains.restyle.constants import RULESET_NAME, SNAPSHOT_NAME
 from dummyindex.context.domains.restyle.errors import (
     DocTokenLossError,
     RestyleRunError,
@@ -123,8 +123,10 @@ class RestyleDone:
 
 @dataclass(frozen=True)
 class RestyleStamp:
-    ruleset: int
+    ruleset: int | None  # None until every curated unit is covered
     docs: tuple[str, ...]  # restyled docs, relative to the context folder
+    covered: int
+    total: int
 
 
 def plan(context_dir: Path) -> RestylePlan:
@@ -186,7 +188,18 @@ def begin(
     if not current.units:
         raise RestyleRunError("nothing to restyle: the index has no curated docs")
 
-    chosen = current.units if max_units is None else current.units[:max_units]
+    if max_units is None:
+        chosen = current.units
+    else:
+        finished = _finished_units(context_dir)
+        chosen = tuple(u for u in current.units if u.unit_id not in finished)[
+            :max_units
+        ]
+        if not chosen:
+            raise RestyleRunError(
+                "every curated unit is already restyled in an earlier run — "
+                "finish with `dummyindex context restyle stamp`"
+            )
     docs_by_unit = {u.unit_id: u.docs for u in chosen}
     try:
         run = fleet.create_run(
@@ -200,18 +213,13 @@ def begin(
         raise RestyleRunError(str(exc)) from exc
 
     cache = _cache_dir(context_dir, run.run_dir.name)
-    snapshot: dict[str, dict[str, int]] = {}
-    for unit_id, docs in docs_by_unit.items():
-        snapshot[unit_id] = {}
-        for rel in docs:
-            source = context_dir / rel
-            copy = cache / rel
-            copy.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(source, copy)
-            snapshot[unit_id][rel] = source.stat().st_mtime_ns
-    write_text_atomic(
-        cache / SNAPSHOT_NAME, json.dumps(snapshot, indent=2, sort_keys=True) + "\n"
-    )
+    try:
+        _snapshot_docs(context_dir, cache, docs_by_unit)
+    except OSError as exc:
+        # A half-made run would block the next begin and leave `next` with no snapshot.
+        shutil.rmtree(run.run_dir, ignore_errors=True)
+        shutil.rmtree(cache, ignore_errors=True)
+        raise RestyleRunError(f"cannot snapshot docs for restyle: {exc}") from exc
     return RestyleBegin(
         run_dir=run.run_dir,
         units=tuple(docs_by_unit),
@@ -275,33 +283,49 @@ def stamp(context_dir: Path, run: str | None = None) -> RestyleStamp:
             f"{len(pending)} unit(s) still pending: {', '.join(pending)} — "
             "finish each with `dummyindex context restyle done <unit>`"
         )
-    snapshot = _read_snapshot(context_dir, loaded.run_dir.name)
-    rels = tuple(
-        rel
-        for unit in loaded.units
-        if unit.status is fleet.UnitStatus.DONE
-        for rel in snapshot[unit.feature_id]
-    )
+    finished = _finished_units(context_dir)
+    curated = _curated_units(context_dir)
+    covered = sum(1 for uid in curated if uid in finished)
+    rels = tuple(rel for docs in finished.values() for rel in docs)
 
+    # Read and validate everything before the first write: a bad input leaves no half-stamp.
     root = context_dir.parent
     scoped = [_CONTEXT_PREFIX + rel for rel in rels]
     context_ratchet = root / CONTEXT_RATCHET_REL
-    if context_ratchet.is_file():
-        fresh = reseed(read_ratchet(context_ratchet), root, scoped, BudgetGroup.CONTEXT)
-        write_ratchet(context_ratchet, fresh)
     style_ratchet = root / STYLE_RATCHET_REL
-    if style_ratchet.is_file():
-        header = read_ratchet_ruleset(style_ratchet) or None
-        fresh = reseed(read_ratchet(style_ratchet), root, scoped, BudgetGroup.STYLE)
-        write_ratchet(style_ratchet, fresh, header)
-
     meta_path = context_dir / _META_REL
+    try:
+        context_fresh = None
+        if context_ratchet.is_file():
+            context_fresh = reseed(
+                read_ratchet(context_ratchet), root, scoped, BudgetGroup.CONTEXT
+            )
+        style_fresh = style_header = None
+        if style_ratchet.is_file():
+            style_header = read_ratchet_ruleset(style_ratchet) or None
+            style_fresh = reseed(
+                read_ratchet(style_ratchet), root, scoped, BudgetGroup.STYLE
+            )
+    except (OSError, ValueError) as exc:
+        raise RestyleRunError(f"cannot re-seed the word ratchets: {exc}") from exc
     try:
         meta = read_meta(meta_path)
     except (OSError, ValueError) as exc:
         raise RestyleRunError(f"cannot read {meta_path}: {exc}") from exc
-    write_meta(meta_path, meta.with_updates(restyled_ruleset=STE_RULESET_VERSION))
-    return RestyleStamp(ruleset=STE_RULESET_VERSION, docs=rels)
+
+    stamped = bool(curated) and covered == len(curated)
+    if context_fresh is not None:
+        write_ratchet(context_ratchet, context_fresh)
+    if style_fresh is not None:
+        write_ratchet(style_ratchet, style_fresh, style_header)
+    if stamped:
+        write_meta(meta_path, meta.with_updates(restyled_ruleset=STE_RULESET_VERSION))
+    return RestyleStamp(
+        ruleset=STE_RULESET_VERSION if stamped else None,
+        docs=rels,
+        covered=covered,
+        total=len(curated),
+    )
 
 
 def status(context_dir: Path, run: str | None = None) -> dict[str, Any]:
@@ -380,6 +404,52 @@ def _read_snapshot(context_dir: Path, run_name: str) -> dict[str, dict[str, int]
     if not path.is_file():
         raise RestyleRunError(f"no snapshot for run {run_name} at {path}")
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _snapshot_docs(
+    context_dir: Path, cache: Path, docs_by_unit: dict[str, tuple[str, ...]]
+) -> None:
+    snapshot: dict[str, dict[str, int]] = {}
+    for unit_id, docs in docs_by_unit.items():
+        snapshot[unit_id] = {}
+        for rel in docs:
+            source = context_dir / rel
+            copy = cache / rel
+            copy.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, copy)
+            snapshot[unit_id][rel] = source.stat().st_mtime_ns
+    write_text_atomic(
+        cache / SNAPSHOT_NAME, json.dumps(snapshot, indent=2, sort_keys=True) + "\n"
+    )
+    write_text_atomic(cache / RULESET_NAME, f"{STE_RULESET_VERSION}\n")
+
+
+def _finished_units(context_dir: Path) -> dict[str, tuple[str, ...]]:
+    """Unit id -> docs for every unit a same-ruleset restyle run marked done."""
+    root = fleet.runs_root(context_dir)
+    if not root.is_dir():
+        return {}
+    finished: dict[str, tuple[str, ...]] = {}
+    for run_dir in sorted(root.glob("restyle-*")):
+        try:
+            loaded = fleet.load_run(run_dir)
+            snapshot = _read_snapshot(context_dir, run_dir.name)
+        except (fleet.FleetRunError, RestyleRunError, ValueError, OSError):
+            continue
+        if _run_ruleset(context_dir, run_dir.name) != STE_RULESET_VERSION:
+            continue
+        for unit in loaded.units:
+            if unit.status is fleet.UnitStatus.DONE and unit.feature_id in snapshot:
+                finished[unit.feature_id] = tuple(snapshot[unit.feature_id])
+    return finished
+
+
+def _run_ruleset(context_dir: Path, run_name: str) -> int | None:
+    path = _cache_dir(context_dir, run_name) / RULESET_NAME
+    try:
+        return int(path.read_text(encoding="utf-8").strip())
+    except (OSError, ValueError):
+        return None
 
 
 def _read(path: Path) -> str:

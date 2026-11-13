@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from dummyindex.context.build.meta import new_meta, read_meta, write_meta
+from dummyindex.context.domains import fleet
 from dummyindex.context.domains.docbudget.constants import STE_RULESET_VERSION
 from dummyindex.context.domains.docbudget.ratchet import (
     measure,
@@ -16,6 +17,7 @@ from dummyindex.context.domains.docbudget.ratchet import (
     write_ratchet,
 )
 from dummyindex.context.domains.fleet import create_run
+from dummyindex.context.domains.restyle import run as restyle_run
 from dummyindex.context.domains.restyle.errors import DocTokenLossError, RestyleRunError
 from dummyindex.context.domains.restyle.run import (
     begin,
@@ -313,3 +315,77 @@ def test_project_doc_unit_runs_begin_to_done(wide_ctx: Path) -> None:
     result = done(wide_ctx, "PROJECT.md")
     assert result.unit_id == "PROJECT.md"
     assert [doc for doc, _ in result.strict] == ["PROJECT.md"]
+
+
+@pytest.fixture
+def unique_runs(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Distinct run names: two begins inside one second would collide."""
+    counter = iter(range(1, 1000))
+    monkeypatch.setattr(
+        fleet, "_run_ts", lambda moment: f"2030{next(counter):04d}-000000"
+    )
+
+
+def _add_billing(context: Path) -> None:
+    _write(
+        context / "features" / "billing" / "spec.md",
+        "# Billing\n\nThe invoice is sent.\n",
+    )
+
+
+@pytest.mark.unit
+def test_partial_stamp_does_not_record_ruleset(ctx: Path, unique_runs: None) -> None:
+    _add_billing(ctx)
+    begin(ctx, all_units=False, max_units=1, force=False)
+    done(ctx, "auth")
+    result = stamp(ctx)
+    assert result.ruleset is None
+    assert (result.covered, result.total) == (1, 3)
+    assert read_meta(ctx / "meta.json").restyled_ruleset is None
+    assert plan(ctx).status == "ready"
+
+
+@pytest.mark.unit
+def test_max_units_resumes_past_earlier_done_units(
+    ctx: Path, unique_runs: None
+) -> None:
+    _add_billing(ctx)
+    for expected in ("auth", "billing", TESTING):
+        assert begin(ctx, all_units=False, max_units=1, force=False).units == (
+            expected,
+        )
+        done(ctx, expected)
+    result = stamp(ctx)
+    assert result.ruleset == STE_RULESET_VERSION
+    assert (result.covered, result.total) == (3, 3)
+    assert read_meta(ctx / "meta.json").restyled_ruleset == STE_RULESET_VERSION
+    assert plan(ctx).status == "already_restyled"
+
+
+@pytest.mark.unit
+def test_begin_snapshot_failure_leaves_no_run(
+    ctx: Path, unique_runs: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def refuse(src: object, dst: object, *args: object, **kwargs: object) -> None:
+        raise PermissionError(13, "locked", str(src))
+
+    monkeypatch.setattr(restyle_run.shutil, "copyfile", refuse)
+    with pytest.raises(RestyleRunError, match="snapshot"):
+        begin(ctx, all_units=True, max_units=None, force=False)
+    assert not list((ctx / "fleet").glob("restyle-*"))
+    assert not list((ctx / "cache" / "restyle").glob("*"))
+    monkeypatch.undo()
+    assert begin(ctx, all_units=True, max_units=None, force=False).units
+    assert status(ctx)["total"] == 2
+
+
+@pytest.mark.unit
+def test_stamp_bad_style_ratchet_writes_nothing(ctx: Path, unique_runs: None) -> None:
+    begin(ctx, all_units=True, max_units=None, force=False)
+    _finish_all(ctx)
+    (ctx / "style-budget.txt").write_text("this line has no tab\n", encoding="utf-8")
+    protected = ("doc-budget.txt", "meta.json")
+    before = {rel: (ctx / rel).read_bytes() for rel in protected}
+    with pytest.raises(RestyleRunError, match="style-budget"):
+        stamp(ctx)
+    assert {rel: (ctx / rel).read_bytes() for rel in protected} == before

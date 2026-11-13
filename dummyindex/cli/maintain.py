@@ -467,6 +467,7 @@ def _read_anchor(context_dir: Path) -> str | None:
 def _load_run(context_dir: Path, explicit: str | None):
     """Resolve + load the run; returns ``(run, error_message)``."""
     from dummyindex.context.domains.fleet import (
+        KIND_MAINTAIN,
         FleetRunError,
         load_run,
         resolve_run_dir,
@@ -482,9 +483,12 @@ def _load_run(context_dir: Path, explicit: str | None):
             "start one with `context maintain begin`"
         )
     try:
-        return load_run(run_dir), None
+        loaded = load_run(run_dir)
     except FleetRunError as exc:
         return None, str(exc)
+    if loaded.kind != KIND_MAINTAIN:
+        return None, f"{loaded.run_dir.name} is a {loaded.kind} run, not a maintain run"
+    return loaded, None
 
 
 def runs_root_display(context_dir: Path) -> str:
