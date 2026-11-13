@@ -42,14 +42,12 @@ This module never touches anything outside the resolved kind-root.
 
 from __future__ import annotations
 
-import json
 import shutil
 import subprocess
 from pathlib import Path
 
 from ..audit.workspace import audits_root
 from ..audit.workspace import validate_slug as validate_audit_slug
-from ..buildloop.checklist import counts, parse_checklist
 from ..proposals.errors import CloseoutError
 from ..proposals.retirement import retirement_block
 from ..proposals.store import proposals_root
@@ -57,6 +55,7 @@ from ..proposals.store import validate_slug as validate_proposal_slug
 from .constants import ARCHIVE_SENTINEL, PROPOSAL_KINDS
 from .enums import CandidateKind
 from .errors import GcPathError, GcTargetError
+from .liveness import _checklist_partial, _liveness_block, _proposal_status  # noqa: F401 — old names stay importable
 from .models import DeleteResult
 
 
@@ -229,52 +228,6 @@ def _reject_sentinel(slug: str) -> None:
         raise GcTargetError(slug, "leading-underscore slugs are sentinel containers")
     if slug in {".", ".."}:
         raise GcTargetError(slug, "'.'/'..' are never delete targets")
-
-
-def _liveness_block(target: Path) -> str | None:
-    """Return a refusal reason if the proposal is in-flight, else ``None``.
-
-    In-flight = ``proposal.json`` status ``in_progress`` or any unchecked
-    checklist box. An unreadable/absent file simply contributes no block.
-    """
-    if _proposal_status(target) == "in_progress":
-        return "in-flight (status in_progress)"
-    if _checklist_partial(target):
-        return "in-flight (checklist partial)"
-    return None
-
-
-def _proposal_status(target: Path) -> str | None:
-    """Read ``proposal.json``'s ``status`` field, tolerantly (``None`` on miss)."""
-    path = target / "proposal.json"
-    if not path.is_file():
-        return None
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return None
-    if not isinstance(payload, dict):
-        return None
-    status = payload.get("status")
-    return status if isinstance(status, str) else None
-
-
-def _checklist_partial(target: Path) -> bool:
-    """Whether ``checklist.md`` has any unchecked box (``done < total``).
-
-    An absent, unparseable or empty checklist is not partial (no block).
-    """
-    path = target / "checklist.md"
-    if not path.is_file():
-        return False
-    try:
-        items = parse_checklist(path)
-    except Exception:  # noqa: BLE001 — a malformed checklist must not block GC
-        return False
-    done, total = counts(items)
-    if total == 0:
-        return False
-    return done < total
 
 
 def _is_tracked(repo_root: Path, target: Path) -> bool:

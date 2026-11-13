@@ -17,6 +17,8 @@ from .models import Candidate
 
 def recommend(candidate: Candidate, context_dir: Path) -> tuple[Recommendation, str]:
     """Return ``(recommendation, one-line reason)``; first matching rule wins."""
+    if candidate.kind is CandidateKind.EQUIPMENT:
+        return _recommend_equipment(candidate)
     is_proposal = candidate.kind is CandidateKind.PROPOSAL
     kind = "proposal" if candidate.kind in PROPOSAL_KINDS else "audit"
     receipt = receipt_path(context_dir, kind, candidate.slug)
@@ -44,3 +46,13 @@ def recommend(candidate: Candidate, context_dir: Path) -> tuple[Recommendation, 
     ):
         return Recommendation.REVIEW, f"stale: {candidate.age_days} days old"
     return Recommendation.KEEP, "active or unfinished"
+
+
+def _recommend_equipment(candidate: Candidate) -> tuple[Recommendation, str]:
+    """Equipment carries no receipt; ``enumerate`` already set its signal tags."""
+    signals = set(candidate.signals)
+    if "task-finished" in signals:
+        if "pristine" in signals and not signals & {"evolved", "sourced"}:
+            return Recommendation.DELETE, "task finished; pristine copy"
+        return Recommendation.REVIEW, "task finished; edited, evolved or sourced"
+    return Recommendation.REVIEW, "legacy specialist the baseline does not produce"

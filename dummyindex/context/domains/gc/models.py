@@ -14,6 +14,10 @@ class Candidate:
     ``signals`` are deterministic tags only (``status:<v>``, ``untracked``,
     ``age-<n>d``, ...). ``recommendation`` and ``reason`` are the pre-council
     hint ``scan`` fills; the council assigns the ``Disposition``.
+
+    ``task_refs`` is set on EQUIPMENT candidates (``proposal:<slug>`` /
+    ``audit:<slug>``); ``orphans`` on proposal/audit candidates (the equipment
+    names whose last live task ref this workspace is).
     """
 
     kind: CandidateKind
@@ -25,6 +29,8 @@ class Candidate:
     age_days: int | None = None
     recommendation: str | None = None
     reason: str | None = None
+    task_refs: tuple[str, ...] = ()
+    orphans: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

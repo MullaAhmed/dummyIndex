@@ -76,7 +76,7 @@ def _ref_is_live(ref: str, context_dir: Path) -> bool:
     if not slug:
         return False
     if kind == "proposal":
-        from dummyindex.context.domains.gc.delete import _proposal_status
+        from dummyindex.context.domains.gc.liveness import _proposal_status
         from dummyindex.context.domains.proposals.errors import ProposalSlugError
         from dummyindex.context.domains.proposals.store import (
             proposals_root,

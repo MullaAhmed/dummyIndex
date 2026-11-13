@@ -2,9 +2,10 @@
 
 Walks only the immediate children of ``proposals_root`` and ``audits_root``,
 returning one :class:`Candidate` per workspace dir with structure and git facts
-only (no verdict; ``classify`` fills ``signals``). ``_``-prefixed sentinel
-containers and dot-dirs are skipped, except that ``_archive``'s children surface
-as :class:`CandidateKind.ARCHIVED`. GC never reaches ``.context/session-memory``.
+only (no verdict; ``classify`` fills ``signals``). Equipment items that a finished
+task orphaned or the baseline no longer produces come back as
+``EQUIPMENT``. ``_``-prefixed sentinel containers and dot-dirs are skipped,
+except that ``_archive``'s children surface as :class:`CandidateKind.ARCHIVED`. GC never reaches ``.context/session-memory``.
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ from ..audit.workspace import audits_root
 from ..proposals.store import proposals_root
 from .constants import ARCHIVE_SENTINEL
 from .enums import CandidateKind
+from .equipment import enumerate_equipment_candidates
 from .models import Candidate
 
 
@@ -39,6 +41,7 @@ def enumerate_candidates(
         _walk_proposals(proposals_root(context_dir), repo_root, reference)
     )
     candidates.extend(_walk_audits(audits_root(context_dir), repo_root, reference))
+    candidates.extend(enumerate_equipment_candidates(context_dir))
 
     return tuple(sorted(candidates, key=lambda c: (c.kind.value, c.slug)))
 
