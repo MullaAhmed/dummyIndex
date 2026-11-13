@@ -283,3 +283,42 @@ def test_blockquote_lines_are_separate_sentences_for_length() -> None:
     first = "Alpha " + " ".join(["word"] * 14) + "."
     second = "Beta " + " ".join(["word"] * 14) + "."
     assert _rules(f"> {first}\n> {second}\n") == []
+
+
+LONG_24 = " ".join(["word"] * 24) + "."
+_FRONT = "description: " + " ".join(["word"] * 30) + "."
+
+
+@pytest.mark.unit
+def test_html_entity_semicolon_ignored() -> None:
+    assert "semicolon" not in _rules("Use &lt;div&gt; here.")
+    assert "semicolon" not in _rules("Use &#123; and &#x1F; here.")
+
+
+@pytest.mark.unit
+def test_url_semicolon_ignored() -> None:
+    assert "semicolon" not in _rules("See https://x.test/a;b now.")
+
+
+@pytest.mark.unit
+def test_real_semicolon_still_flagged() -> None:
+    assert _rules("Use a; b here.") == ["semicolon"]
+
+
+@pytest.mark.unit
+def test_hr_rule_is_not_frontmatter() -> None:
+    text = f"---\n{LONG_24}\n---\n"
+    assert _rules(text) == ["long-sentence"]
+
+
+@pytest.mark.unit
+def test_real_frontmatter_skipped() -> None:
+    assert lint_text(f"---\n{_FRONT}\n---\nShort text.\n") == ()
+
+
+@pytest.mark.unit
+def test_frontmatter_crlf_bom() -> None:
+    text = f"\ufeff---\r\n{_FRONT}\r\n---\r\nShort text.\r\n"
+    assert lint_text(text) == ()
+    hr = f"\ufeff---\r\n{LONG_24}\r\n---\r\n"
+    assert _rules(hr) == ["long-sentence"]

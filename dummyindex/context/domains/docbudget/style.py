@@ -61,6 +61,10 @@ _CONTRACTION_RE = re.compile(
     re.IGNORECASE,
 )
 _SEMICOLON_RE = re.compile(";")
+# HTML entities and bare URLs may hold ";" without being a semicolon.
+_ENTITY_RE = re.compile(r"&(?:[A-Za-z][A-Za-z0-9]*|#\d+|#[xX][0-9A-Fa-f]+);")
+_URL_RE = re.compile(r"https?://\S+")
+_YAML_KEY_RE = re.compile(r"[A-Za-z_][\w-]*:")
 _ING_RE = re.compile(r"\b[a-z]{2,}ing\b", re.IGNORECASE)
 # Closed list of -ing words that are nouns, not verb forms.
 _ING_ALLOW = frozenset(
@@ -143,9 +147,8 @@ def _lint_unit(line: int, raw: str) -> list[StyleViolation]:
             _v(line, "contraction", sentence)
             for _ in _CONTRACTION_RE.finditer(sentence)
         )
-        out.extend(
-            _v(line, "semicolon", sentence) for _ in _SEMICOLON_RE.finditer(sentence)
-        )
+        bare = _URL_RE.sub("", _ENTITY_RE.sub("", sentence))
+        out.extend(_v(line, "semicolon", sentence) for _ in _SEMICOLON_RE.finditer(bare))
         out.extend(
             _v(line, "ing-form", sentence)
             for m in _ING_RE.finditer(sentence)
@@ -160,6 +163,9 @@ def _lint_unit(line: int, raw: str) -> list[StyleViolation]:
 def _frontmatter_end(lines: list[str]) -> int:
     """Index of the closing ``---`` of a leading YAML block, or -1."""
     if not lines or lines[0].strip() != "---":
+        return -1
+    first = next((ln.strip() for ln in lines[1:] if ln.strip()), "")
+    if not _YAML_KEY_RE.match(first):
         return -1
     for idx in range(1, len(lines)):
         if lines[idx].strip() == "---":
