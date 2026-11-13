@@ -143,10 +143,12 @@ Rules (each failure prints `path:line -> module (names)`):
 | R1 direction | shared→context, shared→evolve, or context→evolve outside the 3 root pairs (C1) |
 | R2 root pairs | a root pair is not lazy, or an allowlisted pair no longer exists (stale entry) |
 | R3 private names | a cross-layer import names `_x`, or a cross-layer alias reads `_x` (C2) |
-| R4 moved symbols | an import names a moved symbol (`EvolveError`, `safe_file`, `project_lock`, `rules_in`, `replace_bytes`, `write_text_atomic`, lesson names) from any module other than its shared home |
+| R4 moved symbols | an import takes one of 4 moved symbols from its old home: `evolve_gate.EvolveError`, `evolve_gate.safe_file`, `evolve_promotion.project_lock`, `living_rules.rules_in` (whole-module moves are R5) |
 | R5 old paths | an import names an old qualified path from `boundary-map.md` A1 (match `module` and `module.name`, no file check), or an old file exists again |
 | R6 resolution | a `dummyindex.*` import base resolves to no module or package |
-| R7 dynamic imports | a non-literal `import_module`/`__import__` exists outside `dummyindex/__init__.py` and `pipeline/extract/generic.py` |
+| R7 dynamic imports | a non-literal `import_module`/`__import__` exists outside `dummyindex/__init__.py:30` and `pipeline/extract/generic.py:25` |
+
+R6 and R7 were run on the proposal tree (`D:\temp\split_r6r7.py`): R6 finds 0 unresolved bases; R7 finds only the 2 allowlisted sites.
 
 Self-checks (`@pytest.mark.unit`):
 - Parametrized `tmp_path` trees, one per forbidden form: `TYPE_CHECKING`, literal `import_module`, `from dummyindex.evolve import probation`,
