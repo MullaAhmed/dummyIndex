@@ -1750,3 +1750,19 @@ def test_toml_hand_comments_survive_reconcile(tmp_path: Path) -> None:
     assert "# Team setup. Hand edits here must survive dummyindex writes." in (
         _toml_path(ctx).read_text(encoding="utf-8")
     )
+
+
+@pytest.mark.unit
+def test_read_config_falls_back_to_json_on_invalid_toml(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    ctx = _context_dir(tmp_path)
+    write_config(ctx, default_config())
+    json_wired = read_config(ctx).wired
+    _toml_path(ctx).write_text("[[plugins\nnot = toml", encoding="utf-8")
+
+    cfg = read_config(ctx)
+
+    assert cfg is not None
+    assert cfg.wired == json_wired
+    assert "config.toml" in capsys.readouterr().err

@@ -69,3 +69,25 @@ def test_toml_write_failure_warns_about_config_toml(
     err = capsys.readouterr().err
     assert "config.toml not updated: disk full" in err
     assert "config.json" not in err
+
+
+_OWNER_PIN = """\
+schema_version = 1
+
+[[plugins]]
+id = "a@b"
+version = "==7.0.0"
+"""
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("install_version", ["9.9.9", None])
+def test_write_back_never_clobbers_owner_pin(
+    tmp_path: Path, install_version: str | None
+) -> None:
+    project, ctx = _project(tmp_path)
+    (ctx / "config.toml").write_text(_OWNER_PIN, encoding="utf-8")
+
+    _write_back_wired(project, "a@b", install_version)
+
+    assert (ctx / "config.toml").read_text(encoding="utf-8") == _OWNER_PIN

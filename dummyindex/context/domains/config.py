@@ -10,6 +10,7 @@ take the ``.context/`` directory itself.
 from __future__ import annotations
 
 import json
+import sys
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from pathlib import Path
@@ -508,7 +509,13 @@ def read_config(context_dir: Path) -> Config | None:
     config = _read_config_json(context_dir)
     if config is None or not has_config_toml(context_dir):
         return config
-    return replace(config, wired=_wired_from_requirements(_load_toml(context_dir)))
+    try:
+        req = _load_toml(context_dir)
+    except ConfigError as exc:
+        # Fail open: a broken toml must not block audit/build/install; keep json wired.
+        print(f"warning: {exc}; using config.json wired", file=sys.stderr)
+        return config
+    return replace(config, wired=_wired_from_requirements(req))
 
 
 def _load_toml(context_dir: Path) -> Requirements:
@@ -541,37 +548,28 @@ def _wired_from_requirements(req: Requirements) -> tuple[WiredEntry, ...]:
 
 
 def upsert_toml_wired(context_dir: Path, entries: tuple[WiredEntry, ...]) -> None:
-    """Upsert plugin ``entries`` into ``config.toml`` by id, keeping unknown keys.
+    """Insert plugin ``entries`` missing from ``config.toml``; never rewrite a pin.
 
-    Existing plugin blocks keep their ``extra`` and take the new constraint;
-    absent ones are appended. Skills and comments are left as they are.
+    An owner's existing block (id, version, extra) stays byte-for-byte; only ids
+    absent from the file are appended. Skills and comments are left as they are.
     """
     from .requirements.errors import RequirementsError
     from .requirements.models import PluginRequirement
     from .requirements.seed import _constraint
     from .requirements.toml_io import write_requirements
 
-    plugin_entries = {e.target: e for e in entries if e.kind is WiredKind.PLUGIN}
     cur = _load_toml(context_dir)
-    merged: list[PluginRequirement] = []
-    for p in cur.plugins:
-        entry = plugin_entries.pop(p.id, None)
-        if entry is None:
-            merged.append(p)
-        else:
-            merged.append(
-                PluginRequirement(
-                    id=p.id, version=_constraint(entry.version), extra=p.extra
-                )
-            )
-    for entry in plugin_entries.values():
-        merged.append(
-            PluginRequirement(id=entry.target, version=_constraint(entry.version))
-        )
+    owned = {p.id for p in cur.plugins}
+    added = [
+        PluginRequirement(id=e.target, version=_constraint(e.version))
+        for e in entries
+        if e.kind is WiredKind.PLUGIN and e.target not in owned
+    ]
+    if not added:
+        return
+    merged = (*cur.plugins, *added)
     try:
-        write_requirements(
-            context_dir / _TOML_NAME, replace(cur, plugins=tuple(merged))
-        )
+        write_requirements(context_dir / _TOML_NAME, replace(cur, plugins=merged))
     except RequirementsError as exc:
         raise ConfigError(f"could not write config.toml: {exc}") from exc
 
@@ -684,7 +682,11 @@ def reconcile_wired_with_equipment(context_dir: Path) -> bool:
         return False
 
     if has_config_toml(context_dir):
-        upsert_toml_wired(context_dir, tuple(added))
+        try:
+            upsert_toml_wired(context_dir, tuple(added))
+        except ConfigError as exc:
+            print(f"warning: wired not recorded: {exc}", file=sys.stderr)
+            return False
     else:
         write_config(context_dir, replace(config, wired=config.wired + tuple(added)))
     return True
