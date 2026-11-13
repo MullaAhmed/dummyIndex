@@ -139,6 +139,13 @@ The nudge reads `N commits since last hygiene sweep — run /dummyindex-gc`. Cod
 | `gc stamp [--to SHA]` | advance the committed GC anchor in `gc/state.json` to HEAD (off-git no-op). |
 | `gc signal` | Claude's SessionStart throttle probe. Prints the nudge iff over threshold and not already signalled this session. |
 
+## Upgrade, requirements and grounding
+
+- `dummyindex context upgrade --if-stale` runs on install, on `context init` and at each Claude SessionStart. You do not run it by hand.
+- `.context/config.toml` is required and committed. `dummyindex context requirements check` reports gaps. `requirements sync` fixes them in another terminal.
+- Unmet requirements block the prompt until fixed. `requirements bypass --hours N` allows a temporary exception.
+- `.context/equipment/grounding/<name>.md` is generated. Never edit it. Read it before `dummyindex context query "<focus>"`.
+
 ## CI, linting & secret scanners
 
 - `sha256` fields in `map/files.json` and `source-docs/INDEX.json` are **content fingerprints** of source files, not credentials. Entropy scanners (e.g. detect-secrets' "Hex High Entropy String") flag them as false positives.
@@ -561,6 +568,29 @@ Use this when the user asks for a new capability not present yet (page, endpoint
 - Sneaking behavior changes into a "refactor" PR.
 - Renaming things en masse without checking call sites.
 - Skipping the tests-first step.
+""",
+    "gc-context": """\
+# Playbook — context-hygiene GC
+
+Use this when the user asks to retire stale proposals, audits or equipment.
+Run `/dummyindex-gc` on Claude or `$dummyindex-gc` on Codex.
+
+## 1. Read the candidates
+- Run `dummyindex context gc status --json`. Read each candidate and its signals.
+- Equipment with `scope=task` becomes a candidate after its proposal or audit ends.
+- An unproduced db or search specialist with no evidence is a `review` candidate.
+
+## 2. Confirm each item
+- Ask about one item at a time. A single "yes" never covers a group.
+- A user-edited equipment body needs its own confirmation before `--force`.
+
+## 3. Delete
+- Run `dummyindex context gc delete --kind equipment --slug <name> --yes`.
+- Add `--force` only for an item the user confirmed.
+- Library entries stay. Restore one with `dummyindex context equip reuse <name>`.
+
+## 4. Stamp
+- Run `dummyindex context gc stamp` to reset the sweep counter.
 """,
 }
 

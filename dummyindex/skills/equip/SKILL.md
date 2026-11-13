@@ -163,6 +163,14 @@ A capability a project agent already covers is **adopted, not regenerated**. An 
    ```
    The command copies the body. It refuses to overwrite a locally edited target unless `--force`.
 
+## Project config, requirements and grounding
+
+- `.context/config.toml` is required and committed. It sets plugins, skills, `min_version` and `require_native_adapters`.
+- `requirements check` reports gaps. `requirements sync` fixes them, in another terminal.
+- Unmet requirements block the prompt. `requirements bypass --hours N` (1–24) allows a temporary exception.
+- `.context/equipment/grounding/<name>.md` is CLI-generated. Never edit it. Agents read it before querying.
+- `equip apply --for-proposal <slug>` marks non-baseline items `scope=task`. They become GC candidates.
+
 ## Plugin manager (discover + install; Claude Code only)
 
 Equip is also a native Claude **plugin manager**. It finds

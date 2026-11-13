@@ -500,18 +500,16 @@ def test_update_skill_documents_version_pinning() -> None:
 
 
 @pytest.mark.unit
-def test_update_skill_documents_generated_tool_refresh() -> None:
-    """The update skill documents that `install` also refreshes equip-generated
-    tools: `equip refresh`, the never-clobber guarantee and the equipped-only guard."""
+def test_update_skill_documents_automatic_upgrade() -> None:
+    """The upgrade is automatic: install, context init and the SessionStart hook run
+    `context upgrade --if-stale`. The manual `equip refresh` fallback is gone."""
     text = (_SKILLS_DIR / "update" / "SKILL.md").read_text(encoding="utf-8")
-    assert "equip refresh" in text
-    assert "generated" in text
-    assert "USER_MODIFIED" in text or "hand-edited" in text
+    assert "dummyindex context upgrade --if-stale" in text
+    assert "SessionStart" in text
+    assert "no manual fallback" in text
+    assert "USER_MODIFIED" in text
     assert "equipment.json" in text
-    # It is a VERIFIED layer with an explicit fallback when install's best-effort
-    # refresh is skipped — not a silent hope.
-    assert "dummyindex context equip refresh" in text
-    assert "skipped" in text
+    assert "equip refresh" not in text
 
 
 @pytest.mark.unit

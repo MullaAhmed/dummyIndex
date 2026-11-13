@@ -220,13 +220,42 @@ def test_architecture_overview_unknown_dir_no_role_hint(tmp_path: Path) -> None:
 
 @pytest.mark.unit
 def test_playbook_ids_complete() -> None:
-    expected = {"add-feature", "add-endpoint", "add-migration", "fix-bug", "refactor"}
+    expected = {
+        "add-feature",
+        "add-endpoint",
+        "add-migration",
+        "fix-bug",
+        "refactor",
+        "gc-context",
+    }
     assert set(PLAYBOOK_IDS) == expected
 
 
 @pytest.mark.unit
+def test_how_to_use_md_documents_upgrade_requirements_and_grounding() -> None:
+    text = generate_how_to_use_md()
+    assert "upgrade --if-stale" in text
+    assert ".context/config.toml" in text
+    assert "requirements sync" in text
+    assert "requirements bypass --hours N" in text
+    assert ".context/equipment/grounding/" in text
+
+
+@pytest.mark.unit
+def test_gc_context_playbook_covers_equipment_confirm_and_force() -> None:
+    text = generate_playbook_md("gc-context")
+    assert "gc delete --kind equipment --slug <name> --yes" in text
+    assert "one item at a time" in text
+    assert "`--force` only" in text or "Add `--force` only" in text
+    assert "equip reuse" in text
+    assert "scope=task" in text
+    assert "review" in text
+
+
+@pytest.mark.unit
 @pytest.mark.parametrize(
-    "pid", ["add-feature", "add-endpoint", "add-migration", "fix-bug", "refactor"]
+    "pid",
+    ["add-feature", "add-endpoint", "add-migration", "fix-bug", "refactor", "gc-context"],
 )
 def test_playbook_returns_content(pid: str) -> None:
     text = generate_playbook_md(pid)
