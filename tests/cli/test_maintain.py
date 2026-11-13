@@ -193,3 +193,19 @@ def test_missing_context_errors(tmp_path: Path) -> None:
     rc, _, err = _run(tmp_path, "status")
     assert rc == 2
     assert "not found" in err
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("verb", ["next", "status"])
+def test_restyle_run_rejected_by_maintain(drifted_repo: Path, verb: str) -> None:
+    from dummyindex.context.domains.fleet import KIND_RESTYLE, create_run
+
+    run = create_run(
+        drifted_repo / ".context",
+        ("auth",),
+        stages_for_feature={"auth": ((1, "restyle"),)},
+        kind=KIND_RESTYLE,
+    )
+    rc, _, err = _run(drifted_repo, verb, "--run", run.run_dir.name)
+    assert rc != 0
+    assert "restyle" in err

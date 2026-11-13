@@ -281,7 +281,22 @@ def _stamp(args: list[str]) -> int:
         return _restyle_error(exc)
     if "json" in flags:
         print(
-            json.dumps({"ruleset": result.ruleset, "docs": list(result.docs)}, indent=2)
+            json.dumps(
+                {
+                    "ruleset": result.ruleset,
+                    "docs": list(result.docs),
+                    "covered": result.covered,
+                    "total": result.total,
+                },
+                indent=2,
+            )
+        )
+        return 0
+    if result.ruleset is None:
+        print(
+            f"restyle stamp: not stamped, {result.covered}/{result.total} unit(s) "
+            f"covered, {result.total - result.covered} left; run begin --max-units N "
+            "and stamp again"
         )
         return 0
     print(

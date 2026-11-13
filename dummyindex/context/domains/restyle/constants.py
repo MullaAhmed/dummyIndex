@@ -15,3 +15,5 @@ CONTRACTION_SPECIALS = (
 
 # Per-run snapshot file, kept under the gitignored cache folder with the originals.
 SNAPSHOT_NAME = "snapshot.json"
+# Ruleset a run's snapshot was taken under; a later ruleset ignores its finished units.
+RULESET_NAME = "ruleset.txt"
