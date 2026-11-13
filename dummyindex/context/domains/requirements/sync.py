@@ -1,22 +1,28 @@
 """Repair local setup from the committed requirements manifest.
 
 Sync only adds or restores. It never deletes extras and never overrides a
-dev's explicit ``enabledPlugins: false``.
+dev's explicit ``enabledPlugins: false``, in project or user settings.
 """
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
-from dummyindex.context.claude_settings import MalformedSettingsError
+from dummyindex.context.claude_plugins import (
+    PluginRegistryError,
+    installed_plugin_record,
+)
+from dummyindex.context.claude_settings import MalformedSettingsError, load_settings
 from dummyindex.context.default_plugins import (
     DEFAULT_PLUGINS,
     DefaultPlugin,
     Runner,
     WiredEntry,
     WiredKind,
+    _default_for_target,
     _effective_enabled,
     _install_one,
     _split_target,
@@ -37,10 +43,15 @@ from .models import PluginRequirement, Requirements
 SKILL_FAMILY_ARGV = ("dummyindex", "install", "--scope", "user", "--skill-only")
 Confirm = Callable[[str], bool]
 
+# Values reach argv unchanged, so a leading "-" would read as a CLI flag.
+_NAME_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]*\Z")
+_REPO_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*\Z")
+
 
 @dataclass(frozen=True)
 class SyncReport:
-    adapters: tuple[str, ...] = ()
+    adapters_written: tuple[str, ...] = ()
+    adapters_unchanged: tuple[str, ...] = ()
     adapters_kept: tuple[str, ...] = ()
     skill_family_ran: bool = False
     installed: tuple[str, ...] = ()
@@ -56,20 +67,23 @@ def sync_requirements(
     local_only: bool,
     runner: Runner,
     confirm: Confirm | None,
+    claude_config_dir: Path | None = None,
 ) -> SyncReport:
     """Restore local files, then (unless ``local_only``) install trusted and approved plugins.
 
     ``confirm`` is ``None`` when there is no TTY; an untrusted plugin then needs
-    ``approve`` or it is skipped and listed.
+    ``approve`` or it is skipped and listed. ``claude_config_dir`` enables the
+    user-scope ``enabledPlugins: false`` check and the already-installed skip.
     """
-    adapters: list[str] = []
+    written: list[str] = []
+    unchanged: list[str] = []
     kept: list[str] = []
     installed: list[str] = []
     skipped: list[tuple[str, str]] = []
     errors: list[tuple[str, str]] = []
 
     if requirements.require_native_adapters:
-        _sync_adapters(project_root, adapters, kept, errors)
+        _sync_adapters(project_root, written, unchanged, kept, errors)
 
     # The family is a user-scope install; it is local and runs even with local_only.
     skill_family_ran = any(skill.from_ == "dummyindex" for skill in requirements.skills)
@@ -92,13 +106,15 @@ def sync_requirements(
                 approve=approve,
                 confirm=confirm,
                 runner=runner,
+                claude_config_dir=claude_config_dir,
                 installed=installed,
                 skipped=skipped,
                 errors=errors,
             )
 
     return SyncReport(
-        adapters=tuple(adapters),
+        adapters_written=tuple(written),
+        adapters_unchanged=tuple(unchanged),
         adapters_kept=tuple(kept),
         skill_family_ran=skill_family_ran,
         installed=tuple(installed),
@@ -109,7 +125,8 @@ def sync_requirements(
 
 def _sync_adapters(
     root: Path,
-    adapters: list[str],
+    written: list[str],
+    unchanged: list[str],
     kept: list[str],
     errors: list[tuple[str, str]],
 ) -> None:
@@ -122,6 +139,7 @@ def _sync_adapters(
         errors.append(("equipment.json", str(exc)))
         return
     for item in manifest.items:
+        # Task-scoped items expire with their proposal; they never get an adapter.
         if item.scope is EquipmentScope.TASK:
             continue
         relative = native_adapter_path(item)
@@ -134,13 +152,24 @@ def _sync_adapters(
             continue
         # Passing the body's description keeps a restored adapter identical to a
         # freshly generated one; None would rewrite it to the generic line.
+        target = root / relative
+        before = _read_or_none(target)
         message = write_native_adapter(
             root, item, description=adapter_description(body)
         )
-        if message is None:
-            adapters.append(relative.as_posix())
-        else:
+        if message is not None:
             kept.append(message)
+        elif _read_or_none(target) != before:
+            written.append(relative.as_posix())
+        else:
+            unchanged.append(relative.as_posix())
+
+
+def _read_or_none(path: Path) -> str | None:
+    try:
+        return path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        return None
 
 
 def _sync_plugin(
@@ -150,6 +179,7 @@ def _sync_plugin(
     approve: bool,
     confirm: Confirm | None,
     runner: Runner,
+    claude_config_dir: Path | None,
     installed: list[str],
     skipped: list[tuple[str, str]],
     errors: list[tuple[str, str]],
@@ -164,16 +194,41 @@ def _sync_plugin(
     if repo is not None and not isinstance(repo, str):
         skipped.append((target, "repo must be a string"))
         return
+    if not _NAME_RE.match(name) or not _NAME_RE.match(marketplace):
+        skipped.append((target, "unsafe plugin or marketplace name"))
+        return
+
+    # A toml entry seeded without a repo means the reviewed built-in's repo.
+    default = _default_for_target(target)
+    if default is not None and repo is None:
+        repo = default.repo
+    if repo is not None and not _REPO_RE.match(repo):
+        skipped.append((target, "repo must be owner/name"))
+        return
 
     try:
-        if _effective_enabled(root, target) is False:
-            skipped.append((target, "disabled by you"))
-            return
-    except (MalformedSettingsError, OSError) as exc:
+        project_state = _effective_enabled(root, target)
+        user_value = _user_enabled(claude_config_dir, target)
+        record = (
+            installed_plugin_record(
+                target, config_dir=claude_config_dir, project_root=root
+            )
+            if claude_config_dir is not None
+            else None
+        )
+    except (MalformedSettingsError, PluginRegistryError, OSError) as exc:
         errors.append((target, str(exc)))
         return
 
-    if not _is_trusted(marketplace, repo) and not approve:
+    if project_state is False or user_value is False:
+        skipped.append((target, "disabled by you"))
+        return
+    if record is not None and (project_state is True or user_value is True):
+        skipped.append((target, "already installed and enabled"))
+        return
+
+    trusted = _is_trusted(marketplace, repo)
+    if not trusted and not approve:
         if confirm is None:
             skipped.append((target, "untrusted: no TTY and no --yes"))
             return
@@ -191,13 +246,24 @@ def _sync_plugin(
         skipped.extend(declared.needs_user)
         return
 
-    ok, err = _install_one(
-        DefaultPlugin(plugin=name, marketplace=marketplace, repo=repo), root, runner
+    install_as = (
+        default
+        if default is not None and repo == default.repo
+        else DefaultPlugin(plugin=name, marketplace=marketplace, repo=repo)
     )
+    ok, err = _install_one(install_as, root, runner)
     if ok:
         installed.append(target)
     else:
         errors.append((target, err or "install failed"))
+
+
+def _user_enabled(config_dir: Path | None, target: str) -> bool | None:
+    if config_dir is None:
+        return None
+    enabled = load_settings(config_dir / "settings.json").get("enabledPlugins")
+    value = enabled.get(target) if isinstance(enabled, dict) else None
+    return value if isinstance(value, bool) else None
 
 
 def _is_trusted(marketplace: str, repo: str | None) -> bool:
