@@ -487,3 +487,122 @@ def test_collision_identities_are_root_portable_and_input_order_independent(tmp_
     assert first["edges"] == second["edges"]
     assert first["hyperedges"] == second["hyperedges"]
     assert first["identity_ambiguities"] == second["identity_ambiguities"]
+
+
+def _sourceless_stub(label: str) -> dict:
+    """The placeholder the extractor emits for a name it cannot resolve in-file."""
+    return {
+        "id": "fakeconn",
+        "label": label,
+        "file_type": "code",
+        "source_file": "",
+        "source_location": "",
+    }
+
+
+@pytest.mark.unit
+def test_sourceless_stubs_sharing_a_slug_stay_distinct_and_edges_stay_ambiguous(
+    tmp_path,
+):
+    source = tmp_path / "src" / "a.py"
+    child = _make_id(str(source), "Child")
+    extraction = {
+        "nodes": [
+            {
+                "id": child,
+                "label": "Child",
+                "file_type": "code",
+                "source_file": str(source),
+            },
+            _sourceless_stub("_FakeConn"),
+            _sourceless_stub("FakeConn"),
+        ],
+        "edges": [
+            {
+                "source": child,
+                "target": "fakeconn",
+                "relation": "inherits",
+                "confidence": "EXTRACTED",
+                "source_file": str(source),
+            }
+        ],
+    }
+    before = copy.deepcopy(extraction)
+
+    result = normalize_extraction_paths(extraction, tmp_path)
+
+    stubs = [n for n in result["nodes"] if n.get("label") in {"_FakeConn", "FakeConn"}]
+    assert {n["label"] for n in stubs} == {"_FakeConn", "FakeConn"}
+    assert len({n["id"] for n in result["nodes"]}) == len(result["nodes"])
+    assert {n["original_id"] for n in stubs} == {"fakeconn"}
+    target = next(n for n in result["nodes"] if n["id"] == result["edges"][0]["target"])
+    assert target["resolution"] == "ambiguous"
+    assert target["candidate_ids"] == sorted(n["id"] for n in stubs)
+    assert extraction == before
+    assert normalize_extraction_paths(result, tmp_path) == result
+
+
+@pytest.mark.unit
+def test_sourceless_stub_collisions_are_input_order_independent(tmp_path):
+    def run(labels: list[str]) -> dict:
+        nodes = [_sourceless_stub(label) for label in labels]
+        return normalize_extraction_paths({"nodes": nodes}, tmp_path)
+
+    forward = run(["_FakeConn", "FakeConn"])
+    backward = run(["FakeConn", "_FakeConn"])
+
+    assert {n["id"]: n for n in forward["nodes"]} == {
+        n["id"]: n for n in backward["nodes"]
+    }
+    assert forward["identity_ambiguities"] == backward["identity_ambiguities"]
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "foreign", ["/another-machine/fake.py", "https://example.com/fake.py"]
+)
+def test_sourceless_stub_colliding_with_a_foreign_path_is_still_refused(
+    tmp_path, foreign
+):
+    extraction = {
+        "nodes": [
+            _sourceless_stub("_FakeConn"),
+            {**_sourceless_stub("FakeConn"), "source_file": foreign},
+        ]
+    }
+
+    with pytest.raises(ValueError, match="Portable graph node ID collision"):
+        normalize_extraction_paths(extraction, tmp_path)
+
+
+@pytest.mark.integration
+def test_real_extraction_of_underscore_and_plain_base_class_names_builds_a_graph(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "repo"
+    package = root / "pkg"
+    package.mkdir(parents=True)
+    sources = []
+    for name, text in {
+        "shared.py": "class _FakeConn:\n    pass\n\n\nclass FakeConn:\n    pass\n",
+        "a.py": "from pkg.shared import _FakeConn\n\n\n"
+        "class UnauthorizedConn(_FakeConn):\n    pass\n",
+        "b.py": "from pkg.shared import FakeConn\n\n\n"
+        "class OtherConn(FakeConn):\n    pass\n",
+    }.items():
+        path = package / name
+        path.write_text(text, encoding="utf-8")
+        sources.append(path)
+
+    extraction = normalize_extraction_paths(extract(sources, cache_root=root), root)
+    features = root / ".context" / "features"
+    build_graph(extraction, features, root=root)
+    graph = json.loads((features / "symbol-graph.json").read_text(encoding="utf-8"))
+
+    ids = [n["id"] for n in graph["nodes"]]
+    assert len(ids) == len(set(ids))
+    assert all(
+        link["source"] in ids and link["target"] in ids for link in graph["links"]
+    )
+    stub_labels = {n["label"] for n in graph["nodes"] if not n.get("source_file")}
+    assert {"_FakeConn", "FakeConn"} <= stub_labels
