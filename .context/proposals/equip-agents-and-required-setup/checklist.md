@@ -26,9 +26,9 @@
 
 ## Wave 4 — gating, upgrade pipeline, requirements CLI
 
-- [ ] T11 Evidence-gated db/search specialists + carry-forward rule. Catalog/specialist count tests use `_ALWAYS_ON`/`_EVIDENCE_GATED` (`dummyindex/context/domains/equip/generate/catalog.py`, `dummyindex/context/domains/equip/generate/specialists.py`, `dummyindex/context/domains/equip/generate/fresh.py`, `tests/context/domains/equip/test_equip_catalog.py`, `tests/context/domains/equip/test_equip_specialists.py`)
-- [ ] T17 Upgrade pipeline with lock, containment, stamp-last, newer-stamp no-op, gitignore warning (`dummyindex/context/build/context_upgrade.py`, `tests/context/build/test_context_upgrade.py`)
-- [ ] T18 Requirements CLI `check|sync|gate|bypass`. `is_present` skill presence in `wire`/`status` (`dummyindex/cli/requirements.py`, `dummyindex/context/enums.py`, `dummyindex/cli/__init__.py`, `dummyindex/cli/wire.py`, `dummyindex/cli/status.py`, `tests/cli/test_requirements_cli.py`)
+- [x] T11 Evidence-gated db/search specialists + carry-forward rule. Catalog/specialist count tests use `_ALWAYS_ON`/`_EVIDENCE_GATED` (`dummyindex/context/domains/equip/generate/catalog.py`, `dummyindex/context/domains/equip/generate/specialists.py`, `dummyindex/context/domains/equip/generate/fresh.py`, `tests/context/domains/equip/test_equip_catalog.py`, `tests/context/domains/equip/test_equip_specialists.py`)
+- [x] T17 Upgrade pipeline with lock, containment, stamp-last, newer-stamp no-op, gitignore warning (`dummyindex/context/build/context_upgrade.py`, `tests/context/build/test_context_upgrade.py`)
+- [x] T18 Requirements CLI `check|sync|gate|bypass`. `is_present` skill presence in `wire`/`status` (`dummyindex/cli/requirements.py`, `dummyindex/context/enums.py`, `dummyindex/cli/__init__.py`, `dummyindex/cli/wire.py`, `dummyindex/cli/status.py`, `tests/cli/test_requirements_cli.py`)
 
 ## Wave 5 — equip dispatch + GC candidates
 
