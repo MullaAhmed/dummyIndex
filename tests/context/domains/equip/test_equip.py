@@ -440,7 +440,13 @@ def test_three_way_identity_for_standard_generated_set() -> None:
     implementer/tester carry {stack}-; this is what makes the build loop's
     emitted ``subagent_type`` resolve to a real agent/skill by frontmatter name.
     """
-    profile = StackProfile(label="python")
+    # db / search are evidence-gated: the evidence makes them generate here so
+    # every templated specialist is covered by the identity check.
+    profile = StackProfile(
+        label="python",
+        data_stores=("sqlalchemy",),
+        search_backends=("faiss-cpu",),
+    )
     decision = build_catalog(
         profile=profile,
         conventions=(),

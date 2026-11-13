@@ -15,7 +15,9 @@ import pytest
 
 from dummyindex.cli.equip import project_slug
 from dummyindex.cli.equip import run as run_equip
-from dummyindex.context.domains.equip.generate.specialists import SPECIALIST_TEMPLATES
+from dummyindex.context.domains.equip.generate.specialists import (
+    ALWAYS_ON_CAPABILITIES,
+)
 
 
 def _project(tmp_path: Path, languages: list[str]) -> Path:
@@ -224,8 +226,10 @@ def test_summary_counts_file_writes_not_records(tmp_path: Path, capsys) -> None:
     assert run_equip(["apply", str(root)]) == 0
     out = capsys.readouterr().out
     # 4 core generated files (implementer/tester/reviewer/verify) plus one file
-    # per always-on specialist; the hook is a record, not a file write.
-    expected = 4 + sum(1 for t in SPECIALIST_TEMPLATES.values() if t.dimension is None)
+    # per baseline specialist. db/search are evidence-gated and this fixture
+    # carries no data-store or search evidence, so they are not written; the
+    # hook is a record, not a file write.
+    expected = 4 + len(ALWAYS_ON_CAPABILITIES)
     assert f"wrote {expected} file(s)" in out
 
 
