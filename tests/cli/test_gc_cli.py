@@ -845,6 +845,95 @@ def test_status_json_orphaned_anchor_should_signal(
     assert payload["should_signal"] is True
 
 
+def _write_equipment_task_item(tmp_path: Path, context_dir: Path) -> None:
+    """One pristine task-scoped specialist whose only ref (p1) is done."""
+    from dummyindex.context.domains.equip.constants import SCHEMA_VERSION
+    from dummyindex.context.domains.equip.enums import (
+        EquipmentKind,
+        EquipmentScope,
+        EquipmentSource,
+        RequestedBy,
+    )
+    from dummyindex.context.domains.equip.lifecycle.hashing import content_hash
+    from dummyindex.context.domains.equip.lifecycle.manifest import write_manifest
+    from dummyindex.context.domains.equip.models import (
+        EquipmentItem,
+        EquipmentManifest,
+    )
+
+    body = "# impl\n"
+    rel = ".claude/agents/impl-p1.md"
+    (tmp_path / rel).parent.mkdir(parents=True, exist_ok=True)
+    (tmp_path / rel).write_text(body, encoding="utf-8")
+    item = EquipmentItem(
+        kind=EquipmentKind.AGENT,
+        name="impl-p1",
+        path=rel,
+        source=EquipmentSource.GENERATED,
+        subagent_type="impl-p1",
+        version="1.0.0",
+        origin_hash=content_hash(body),
+        scope=EquipmentScope.TASK,
+        requested_by=RequestedBy.PROPOSAL,
+        task_refs=("proposal:p1",),
+    )
+    write_manifest(
+        context_dir,
+        EquipmentManifest(schema_version=SCHEMA_VERSION, items=(item,)),
+    )
+
+
+@pytest.mark.integration
+def test_signal_nudge_counts_equipment_candidates(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    context_dir = _orphan_anchor(tmp_path)
+    _write_proposal(context_dir, "p1", status="done")
+    _write_equipment_task_item(tmp_path, context_dir)
+    monkeypatch.setenv(_SESSION_ENV, "s-equip-text")
+
+    code = dispatch(["gc", "signal", "--root", str(tmp_path)])
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert out.strip().endswith("(1 equipment candidate(s))")
+
+
+@pytest.mark.integration
+def test_signal_json_reports_equipment_count_when_firing(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    context_dir = _orphan_anchor(tmp_path)
+    _write_proposal(context_dir, "p1", status="done")
+    _write_equipment_task_item(tmp_path, context_dir)
+    monkeypatch.setenv(_SESSION_ENV, "s-equip-json")
+
+    code = dispatch(["gc", "signal", "--json", "--root", str(tmp_path)])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 0
+    assert payload == {"should_signal": True, "equipment_candidates": 1}
+
+
+@pytest.mark.integration
+def test_signal_json_equipment_count_is_null_when_silent(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    context_dir = _init_repo(tmp_path)
+    _write_proposal(context_dir, "p1", status="done")
+    _write_equipment_task_item(tmp_path, context_dir)
+
+    code = dispatch(["gc", "signal", "--json", "--root", str(tmp_path)])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 0
+    assert payload == {"should_signal": False, "equipment_candidates": None}
+
+
 # ----- verb dispatch / usage ------------------------------------------------
 
 

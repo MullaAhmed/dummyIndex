@@ -9,7 +9,8 @@ An equipment item is a candidate when either:
     the baseline catalog no longer produces. Evidence-gated db/search specialists
     fall out of the baseline when the stack shows no evidence.
 
-``add_specialist`` items are never candidates. Recommendation lives in
+A task-scoped item with no refs has nothing left to wait on, so it is a review
+candidate. ``add_specialist`` items are never candidates. Recommendation lives in
 ``recommend.py``; this module only gathers the facts.
 """
 
@@ -77,9 +78,12 @@ def enumerate_equipment_candidates(context_dir: Path) -> tuple[Candidate, ...]:
         if state is ItemState.MISSING:
             continue
         if item.scope is EquipmentScope.TASK:
-            if not item.task_refs or not _refs_finished(context_dir, item.task_refs):
+            if not item.task_refs:
+                signals = ("task-unreferenced",)
+            elif _refs_finished(context_dir, item.task_refs):
+                signals = ("task-finished",)
+            else:
                 continue
-            signals = ("task-finished",)
         elif _unrequested(item):
             if baseline is None:
                 baseline = _baseline_names(root, context_dir, manifest)

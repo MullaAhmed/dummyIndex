@@ -233,3 +233,14 @@ def test_corrupt_manifest_yields_no_equipment_candidates(tmp_path: Path):
     (context_dir / "equipment.json").write_text("{not json", encoding="utf-8")
 
     assert enumerate_equipment_candidates(context_dir) == ()
+
+
+def test_task_item_without_refs_is_review_candidate(tmp_path: Path):
+    context_dir = _context(tmp_path)
+    _write(context_dir, _item(tmp_path, "impl-loose", task_refs=()))
+
+    report = scan(context_dir, tmp_path)
+    (row,) = [c for c in report.candidates if c.slug == "impl-loose"]
+
+    assert row.recommendation == Recommendation.REVIEW.value
+    assert row.reason == "task item without refs"

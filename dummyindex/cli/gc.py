@@ -245,7 +245,8 @@ def _gc_signal(args: list[str]) -> int:
 
     Prints the one-line nudge iff over threshold and not already signalled this
     session; silent otherwise. Always exit 0 (it is a hook probe, never a usage
-    failure surface).
+    failure surface). The equipment-candidate count is computed only when the
+    nudge fires; ``--json`` reports it as ``null`` otherwise.
     """
     from dummyindex.context.domains.gc import should_signal
     from dummyindex.context.domains.memory.transcript import resolve_session_id
@@ -258,27 +259,39 @@ def _gc_signal(args: list[str]) -> int:
     if missing:
         # A missing .context/ is just "nothing to nudge" for a hook probe.
         if "json" in flags:
-            print(json.dumps({"should_signal": False}))
+            print(json.dumps({"should_signal": False, "equipment_candidates": None}))
         return 0
 
     session_id = resolve_session_id() or ""
     fire = should_signal(context_dir, context_dir.parent, session_id)
 
+    equipment = _equipment_count(context_dir) if fire else None
+
     if "json" in flags:
-        print(json.dumps({"should_signal": fire}))
+        print(json.dumps({"should_signal": fire, "equipment_candidates": equipment}))
         return 0
     if fire:
         from dummyindex.context.domains.gc import anchor_orphaned, gc_commits_since
 
         if anchor_orphaned(context_dir, context_dir.parent):
-            print(
+            message = (
                 "GC anchor orphaned (history rewrite) — run /dummyindex-gc, "
                 "then gc stamp --to HEAD"
             )
         else:
             count = gc_commits_since(context_dir, context_dir.parent)
-            print(f"{count} commits since last hygiene sweep — run /dummyindex-gc")
+            message = f"{count} commits since last hygiene sweep — run /dummyindex-gc"
+        if equipment:
+            message += f" ({equipment} equipment candidate(s))"
+        print(message)
     return 0
+
+
+def _equipment_count(context_dir: Path) -> int:
+    """How many equipment items the GC would list as candidates."""
+    from dummyindex.context.domains.gc.equipment import enumerate_equipment_candidates
+
+    return len(enumerate_equipment_candidates(context_dir))
 
 
 # --- status rendering
