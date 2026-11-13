@@ -1,5 +1,5 @@
 dummyindex/skills/audit/SKILL.md	1057
-dummyindex/skills/build/SKILL.md	3156
+dummyindex/skills/build/SKILL.md	3157
 dummyindex/skills/equip/SKILL.md	3661
 dummyindex/skills/evolve/SKILL.md	1276
 dummyindex/skills/fleet/SKILL.md	1091

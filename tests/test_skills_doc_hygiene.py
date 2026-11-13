@@ -211,8 +211,8 @@ def test_build_skill_via_substitution_is_a_failure() -> None:
 @pytest.mark.unit
 def test_build_skill_verify_demands_tool_provenance() -> None:
     text = _build_skill()
-    # The verify step must require evidence the tagged tool actually ran.
-    assert "the tool actually ran" in text
+    # The verify step must require evidence the tagged tool ran.
+    assert "the tool ran and produced the result" in text
 
 
 @pytest.mark.unit
@@ -410,7 +410,7 @@ def test_build_delegates_selected_capability_and_policy_on_every_host() -> None:
     text = " ".join(_build_skill().split())
     assert "read `role_path`" in text
     assert "include the full capability mandate" in text
-    assert "policies actually selected in this session" in text
+    assert "only the policies that this session selected" in text
     assert "Never stop solely because Claude equipment is missing" in text
     assert "sanctioned seam on every host" in text
 

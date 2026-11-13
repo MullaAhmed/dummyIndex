@@ -78,7 +78,7 @@ reference.
    exploration or general-purpose delegate (`worker`, `explorer`, `default` on
    Codex). On Claude, use `general-purpose` when no named adapter is callable.
    Include task scope, relevant grounding, verification expectations and the
-   full instructions of policies actually selected in this session.
+   full instructions of only the policies that this session selected.
 
    Ponytail applies by default when exposed. When its Claude plugin hooks are
    active in this session, its `SubagentStart` hook already injects it into each
@@ -120,7 +120,7 @@ reference.
    - run the declared acceptance checks and affected tests / build / linter **once for the whole wave**. Broaden only for required checks or a concrete unresolved risk within the remaining budget. Then attribute failures to their causes.
    - read the files each agent claimed to change,
    - check that each change satisfies the *spec's* intent for its item, not merely that "something happened".
-   - **For a binding tool-tagged item, confirm the tool actually ran and produced the result.** If the tool records run state or artifacts, read that evidence (its provenance). Then verify the output came from the tool. Output that bypassed the tagged tool **fails verification regardless of code quality**. Leave it unticked and report it as a substitution failure.
+   - **For a binding tool-tagged item, confirm that the tool ran and produced the result.** If the tool records run state or artifacts, read that evidence (its provenance). Then verify the output came from the tool. Output that bypassed the tagged tool **fails verification regardless of code quality**. Leave it unticked and report it as a substitution failure.
 
    Preserve the current deliverable during verification. Never stash, reset,
    clean or switch its working tree to investigate baseline failures. Use a
