@@ -276,3 +276,10 @@ def test_nested_blockquote_split_and_counted() -> None:
 def test_blockquote_list_item_is_separate_unit() -> None:
     assert lint_text(f"> - {LONG_21}\n") != ()
     assert lint_text("> - Short item.\n> - Other short item.\n") == ()
+
+
+@pytest.mark.unit
+def test_blockquote_lines_are_separate_sentences_for_length() -> None:
+    first = "Alpha " + " ".join(["word"] * 14) + "."
+    second = "Beta " + " ".join(["word"] * 14) + "."
+    assert _rules(f"> {first}\n> {second}\n") == []
