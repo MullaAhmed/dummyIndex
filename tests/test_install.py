@@ -1862,6 +1862,126 @@ def test_default_config_import_oserror_is_not_masked_by_configerror_nameerror(
 
 
 @pytest.mark.integration
+def test_default_config_seeds_config_toml_on_first_install(tmp_path: Path) -> None:
+    """Upgrade runs before config.json exists, so the default writer seeds the toml."""
+    from dummyindex.installer.install import _write_default_config
+
+    ctx = tmp_path / ".context"
+    ctx.mkdir()
+
+    _write_default_config(tmp_path)
+
+    assert (ctx / "config.json").is_file()
+    assert (ctx / "config.toml").is_file()
+
+
+@pytest.mark.integration
+def test_default_config_keeps_an_existing_config_toml(tmp_path: Path) -> None:
+    from dummyindex.installer.install import _write_default_config
+
+    ctx = tmp_path / ".context"
+    ctx.mkdir()
+    sentinel = "# owned by the user\n"
+    (ctx / "config.toml").write_text(sentinel, encoding="utf-8")
+
+    _write_default_config(tmp_path)
+
+    assert (ctx / "config.toml").read_text(encoding="utf-8") == sentinel
+
+
+@pytest.mark.integration
+def test_auto_init_enriched_path_holds_stamp_when_an_upgrade_step_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The enriched refresh must not advance the stamp: a failed equipment step keeps
+    the old stamp so the next run still sees the index as stale and retries."""
+    from dummyindex.context.build import context_upgrade
+    from dummyindex.context.build.incremental import EnrichedIndexStatus
+    from dummyindex.context.build.meta import read_meta
+    from dummyindex.context.build.runner import build_all
+    from dummyindex.installer.common import PACKAGE_VERSION
+    from dummyindex.installer.install import _auto_init_project
+
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    build_all(repo, out_root=repo, bootstrap=False, dummyindex_version="0.0.1")
+    context_dir = repo / ".context"
+    monkeypatch.setattr(
+        "dummyindex.context.build.enriched_index_status",
+        lambda _ctx: EnrichedIndexStatus(enriched=True, desync=False),
+    )
+
+    def _broken_equipment(*_a, **_k):
+        raise RuntimeError("equipment step broke")
+
+    monkeypatch.setattr(context_upgrade, "_upgrade_equipment", _broken_equipment)
+
+    assert _auto_init_project(repo, platform="codex") is True
+
+    assert read_meta(context_dir / "meta.json").dummyindex_version == "0.0.1"
+    assert context_upgrade.is_stale(context_dir, PACKAGE_VERSION) is True
+
+
+@pytest.mark.integration
+def test_auto_init_enriched_path_advances_stamp_when_all_steps_succeed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from dummyindex.context.build import context_upgrade
+    from dummyindex.context.build.incremental import EnrichedIndexStatus
+    from dummyindex.context.build.meta import read_meta
+    from dummyindex.context.build.runner import build_all
+    from dummyindex.installer.common import PACKAGE_VERSION
+    from dummyindex.installer.install import _auto_init_project
+
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    build_all(repo, out_root=repo, bootstrap=False, dummyindex_version="0.0.1")
+    context_dir = repo / ".context"
+    monkeypatch.setattr(
+        "dummyindex.context.build.enriched_index_status",
+        lambda _ctx: EnrichedIndexStatus(enriched=True, desync=False),
+    )
+
+    assert _auto_init_project(repo, platform="codex") is True
+
+    assert read_meta(context_dir / "meta.json").dummyindex_version == PACKAGE_VERSION
+    assert context_upgrade.is_stale(context_dir, PACKAGE_VERSION) is False
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("force_downgrade", [False, True])
+def test_auto_init_enriched_refresh_advance_stamp_follows_force_downgrade(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, force_downgrade: bool
+) -> None:
+    from dummyindex.context.build.enriched_refresh import RefreshResult
+    from dummyindex.context.build.incremental import EnrichedIndexStatus
+    from dummyindex.installer.install import _auto_init_project
+
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    (repo / ".context").mkdir()
+    calls: list[dict] = []
+
+    def _refresh(*_a, **kwargs):
+        calls.append(kwargs)
+        return RefreshResult(context_dir=repo / ".context", written=())
+
+    _spy_upgrade(monkeypatch)
+    monkeypatch.setattr(
+        "dummyindex.context.build.enriched_index_status",
+        lambda _ctx: EnrichedIndexStatus(enriched=True, desync=False),
+    )
+    monkeypatch.setattr(
+        "dummyindex.context.build.refresh_deterministic_artifacts", _refresh
+    )
+
+    _auto_init_project(repo, platform="codex", force_downgrade=force_downgrade)
+
+    assert len(calls) == 1
+    assert calls[0]["advance_stamp"] is force_downgrade
+
+
+@pytest.mark.integration
 def test_install_auto_init_runs_for_submodule_git_file(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -2122,6 +2242,8 @@ def test_install_folds_equipped_plugin_into_wired(
 
     install(scope="project", project_dir=repo, defaults=True)
     context_dir = repo / ".context"
+    # A v1 repo predates config.toml: drop the toml the first install now seeds.
+    (context_dir / "config.toml").unlink()
 
     # An extra plugin in equipment.json plus a stale v1 config unaware of it.
     write_manifest(

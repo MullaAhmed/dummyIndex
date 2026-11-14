@@ -544,6 +544,28 @@ def test_onboard_defaults_writes_config(
 
 
 @pytest.mark.integration
+def test_onboard_defaults_seeds_config_toml_after_config_json(tmp_path: Path) -> None:
+    ctx = _context_dir(tmp_path)
+
+    rc = run_onboard(["--defaults", str(tmp_path)])
+
+    assert rc == 0
+    assert (ctx / "config.toml").is_file()
+
+
+@pytest.mark.integration
+def test_onboard_keeps_an_existing_config_toml_untouched(tmp_path: Path) -> None:
+    ctx = _context_dir(tmp_path)
+    sentinel = "# owned by the user\n"
+    (ctx / "config.toml").write_text(sentinel, encoding="utf-8")
+
+    rc = run_onboard(["--defaults", str(tmp_path)])
+
+    assert rc == 0
+    assert (ctx / "config.toml").read_text(encoding="utf-8") == sentinel
+
+
+@pytest.mark.integration
 def test_onboard_defaults_explicit_codex_platform_overrides_guidance(
     tmp_path: Path,
 ) -> None:

@@ -181,18 +181,13 @@ def run(args: list[str]) -> int:
             )
             return 2
 
-    try:
-        from importlib.metadata import version
-
-        di_version = version("dummyindex")
-    except Exception:
-        di_version = "unknown"
+    from dummyindex.installer.common import PACKAGE_VERSION
 
     result = build_all(
         scope,
         out_root=out_root,
         bootstrap=use_claude,
-        dummyindex_version=di_version,
+        dummyindex_version=PACKAGE_VERSION,
         extra_doc_roots=extra_doc_roots,
     )
     print(f"context init: wrote {len(result.written)} files to {result.context_dir}")
@@ -239,5 +234,7 @@ def run(args: list[str]) -> int:
 
     from dummyindex.installer.install.project_init import _built_refresh, _upgrade_step
 
+    # Full build: build_all stamped the index at write time, and a fresh
+    # deterministic index has no retryable step, so no stamp hold here.
     _upgrade_step(out_root, _built_refresh(out_root))
     return 0

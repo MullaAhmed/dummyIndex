@@ -24,11 +24,22 @@ from dummyindex.context.domains.config import (
     default_config,
     write_config,
 )
-from dummyindex.installer.common import normalize_platform_arg
+from dummyindex.installer.common import PACKAGE_VERSION, normalize_platform_arg
 
 from .common import parse_path_and_root, pull_repeatable_flag, resolve_context_root
 
 _E = TypeVar("_E", bound=Enum)
+
+
+def _seed_requirements_toml(context_dir: Path, config) -> None:
+    """Seed config.toml right after config.json, so onboarding leaves no toml gap."""
+    from dummyindex.context.build.context_upgrade import seed_config_toml
+
+    seed_config_toml(
+        context_dir,
+        cli_version=PACKAGE_VERSION,
+        claude_wired=bool(config.auto_refresh_hook),
+    )
 
 
 def _pull_value_flag(args: list[str], name: str) -> tuple[str | None, list[str]]:
@@ -156,6 +167,7 @@ def run(args: list[str]) -> int:
             return 2
 
     out_path = write_config(context_dir, config)
+    _seed_requirements_toml(context_dir, config)
     print(f"context onboard: wrote {out_path}")
     # ``write_config`` stamps the installed dummyindex version on a replacement
     # Config. Echo the bytes that actually landed rather than the pre-stamp

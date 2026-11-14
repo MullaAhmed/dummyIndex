@@ -128,7 +128,7 @@ def _run(
     )
     created = _attempt(
         "config",
-        lambda: _seed_config_toml(
+        lambda: seed_config_toml(
             context_dir, cli_version=package_version, claude_wired=claude_wired
         ),
         errors,
@@ -302,10 +302,14 @@ def _claude_wired(root: Path, context_dir: Path) -> bool:
     return False
 
 
-def _seed_config_toml(
+def seed_config_toml(
     context_dir: Path, *, cli_version: str, claude_wired: bool
 ) -> bool:
-    """Create ``config.toml`` once from a parseable ``config.json``; never touch json."""
+    """Create ``config.toml`` once from a parseable ``config.json``; never touch json.
+
+    Public so the install and onboard writers can seed it right after they write
+    ``config.json``; a later upgrade run would otherwise never backfill it.
+    """
     from dummyindex.context.domains.config import ConfigError, read_config
     from dummyindex.context.domains.requirements import (
         seed_requirements,
