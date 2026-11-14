@@ -39,7 +39,8 @@ from dummyindex.context.domains.equip.lifecycle.manifest import read_manifest
 from dummyindex.context.domains.equip.plugins.marketplace import SEED_MARKETPLACES
 from dummyindex.versioning import VersionOrder, compare_versions
 
-from .check import _split_constraint
+from .check import _family_skill_row, _split_constraint
+from .enums import RequirementStatus
 from .models import PluginRequirement, Requirements
 
 SKILL_FAMILY_ARGV = ("dummyindex", "install", "--scope", "user", "--skill-only")
@@ -70,12 +71,15 @@ def sync_requirements(
     runner: Runner,
     confirm: Confirm | None,
     claude_config_dir: Path,
+    family_stamp: str | None,
 ) -> SyncReport:
     """Restore local files, then (unless ``local_only``) install trusted and approved plugins.
 
     ``confirm`` is ``None`` when there is no TTY; an untrusted plugin then needs
     ``approve`` or it is skipped and listed. ``claude_config_dir`` is the user-scope
     settings and plugin registry used for the disable and already-installed checks.
+    ``family_stamp`` is the read skill-family stamp (``None`` when not installed); the
+    family install runs only when it is missing or below ``min_version``.
     """
     written: list[str] = []
     unchanged: list[str] = []
@@ -88,17 +92,21 @@ def sync_requirements(
         _sync_adapters(project_root, written, unchanged, kept, errors)
 
     # The family is a user-scope install; it is local and runs even with local_only.
-    skill_family_ran = any(skill.from_ == "dummyindex" for skill in requirements.skills)
-    if skill_family_ran:
-        result = runner(list(SKILL_FAMILY_ARGV), project_root)
-        if result.returncode != 0:
-            tail = (result.stderr or result.stdout).strip()
-            errors.append(
-                (
-                    " ".join(SKILL_FAMILY_ARGV),
-                    f"exit {result.returncode}: {tail[-200:]}",
+    skill_family_ran = False
+    if any(skill.from_ == "dummyindex" for skill in requirements.skills):
+        if _family_needs_install(requirements.min_version, family_stamp):
+            skill_family_ran = True
+            result = runner(list(SKILL_FAMILY_ARGV), project_root)
+            if result.returncode != 0:
+                tail = (result.stderr or result.stdout).strip()
+                errors.append(
+                    (
+                        " ".join(SKILL_FAMILY_ARGV),
+                        f"exit {result.returncode}: {tail[-200:]}",
+                    )
                 )
-            )
+        else:
+            skipped.append(("dummyindex skill family", "skill family current"))
 
     if not local_only:
         for plugin in requirements.plugins:
@@ -165,6 +173,12 @@ def _sync_adapters(
             written.append(relative.as_posix())
         else:
             unchanged.append(relative.as_posix())
+
+
+def _family_needs_install(min_version: str | None, family_stamp: str | None) -> bool:
+    """Same verdict as check.py's family row: anything but satisfied means install."""
+    row = _family_skill_row("dummyindex", min_version, family_stamp)
+    return row.status is not RequirementStatus.SATISFIED
 
 
 def _read_or_none(path: Path) -> str | None:

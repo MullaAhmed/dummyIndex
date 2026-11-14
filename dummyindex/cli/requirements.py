@@ -229,6 +229,7 @@ def _sync(args: list[str]) -> int:
         print("no .context/config.toml — no requirements declared, nothing to sync.")
         return 0
 
+    family_stamp = _family_stamp(root)
     report = sync_requirements(
         root,
         requirements,
@@ -237,6 +238,7 @@ def _sync(args: list[str]) -> int:
         runner=default_runner,
         confirm=_confirm if sys.stdin.isatty() else None,
         claude_config_dir=_claude_config_dir(),
+        family_stamp=family_stamp,
     )
     for name in report.installed:
         print(f"installed: {name}")

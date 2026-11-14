@@ -196,6 +196,22 @@ def test_sync_yes_passes_approve(
     assert call["claude_config_dir"] == config_dir
 
 
+def test_sync_passes_family_stamp_read_by_check(
+    project: Path, config_dir: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    recorder = _Recorder()
+    monkeypatch.setattr(
+        "dummyindex.context.domains.requirements.sync_requirements", recorder
+    )
+    _write_config(project, Requirements(min_version=VERSION))
+
+    rc = dispatch(["requirements", "sync", "--root", str(project)])
+
+    assert rc == 0
+    [call] = recorder.calls
+    assert call["family_stamp"] == VERSION
+
+
 def test_sync_prints_restart_hint_when_adapters_written(
     project: Path, config_dir: Path, monkeypatch: pytest.MonkeyPatch, capsys
 ) -> None:

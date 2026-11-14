@@ -91,8 +91,14 @@ def _requirements(
     plugins: tuple[PluginRequirement, ...] = (),
     skills: tuple[SkillRequirement, ...] = (),
     native: bool = False,
+    min_version: str | None = None,
 ) -> Requirements:
-    return Requirements(plugins=plugins, skills=skills, require_native_adapters=native)
+    return Requirements(
+        plugins=plugins,
+        skills=skills,
+        require_native_adapters=native,
+        min_version=min_version,
+    )
 
 
 def _caveman(**extra: str) -> PluginRequirement:
@@ -105,6 +111,7 @@ def _sync(root: Path, req: Requirements, runner: FakeRunner, **kwargs):
         "local_only": False,
         "confirm": None,
         "claude_config_dir": root / "claude-config",
+        "family_stamp": None,
     }
     options.update(kwargs)
     return sync_requirements(root, req, runner=runner, **options)
@@ -379,6 +386,67 @@ def test_skill_family_runs_through_runner(tmp_path: Path) -> None:
     assert report.skill_family_ran is True
     assert runner.calls == [SKILL_FAMILY]
     assert report.errors and report.errors[0][0].startswith("dummyindex install")
+
+
+FAMILY_REQ = _requirements(
+    skills=(SkillRequirement(name="dummyindex-plan"),), min_version="0.40.0"
+)
+
+
+def test_current_family_stamp_skips_runner(tmp_path: Path) -> None:
+    runner = FakeRunner()
+
+    report = _sync(tmp_path, FAMILY_REQ, runner, family_stamp="0.40.0")
+
+    assert report.skill_family_ran is False
+    assert runner.calls == []
+    assert report.skipped == (("dummyindex skill family", "skill family current"),)
+
+
+def test_newer_family_stamp_skips_runner(tmp_path: Path) -> None:
+    runner = FakeRunner()
+
+    report = _sync(tmp_path, FAMILY_REQ, runner, family_stamp="0.41.0")
+
+    assert runner.calls == []
+    assert report.errors == ()
+
+
+def test_family_stamp_below_min_version_runs_runner(tmp_path: Path) -> None:
+    runner = FakeRunner()
+
+    report = _sync(tmp_path, FAMILY_REQ, runner, family_stamp="0.39.0")
+
+    assert report.skill_family_ran is True
+    assert runner.calls == [SKILL_FAMILY]
+
+
+def test_unknown_family_stamp_runs_runner(tmp_path: Path) -> None:
+    runner = FakeRunner()
+
+    report = _sync(tmp_path, FAMILY_REQ, runner, family_stamp="not-a-release")
+
+    assert report.skill_family_ran is True
+    assert runner.calls == [SKILL_FAMILY]
+
+
+def test_missing_family_stamp_runs_runner(tmp_path: Path) -> None:
+    runner = FakeRunner()
+
+    report = _sync(tmp_path, FAMILY_REQ, runner, family_stamp=None)
+
+    assert report.skill_family_ran is True
+    assert runner.calls == [SKILL_FAMILY]
+
+
+def test_family_stamp_without_min_version_skips_runner(tmp_path: Path) -> None:
+    runner = FakeRunner()
+    req = _requirements(skills=(SkillRequirement(name="dummyindex-plan"),))
+
+    report = _sync(tmp_path, req, runner, family_stamp="0.1.0")
+
+    assert runner.calls == []
+    assert report.skipped == (("dummyindex skill family", "skill family current"),)
 
 
 def test_explicitly_disabled_plugin_is_left_alone(tmp_path: Path) -> None:
