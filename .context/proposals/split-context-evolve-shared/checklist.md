@@ -14,11 +14,11 @@
 
 ## Wave 2 — shared layer (BLOCKED until equip-bugs merges)
 
-- [ ] Create `dummyindex/shared/` (`atomic_io.py`, `errors.py`, `guard.py`, `lesson/`, `lesson/rules.py`), rename `_replace_bytes` and `_bump`, keep digest coverage, move tests to `tests/shared/`, and add boundary test v1 (plan task 2). Verify: `ruff check .` passes; `python -m pytest tests/test_import_boundaries.py tests/shared tests/context tests/cli tests/test_install.py -q` passes; `python -m pytest tests/ -q --tb=short` passes.
+- [ ] Create `dummyindex/shared/` (`atomic_io.py`, `errors.py`, `guard.py`, `lesson/`, `lesson/rules.py`), rename `_replace_bytes` and `_bump`, and keep digest coverage. Move tests to `tests/shared/` and add boundary test v1 (plan task 2). Verify: `ruff check .` passes. `python -m pytest tests/test_import_boundaries.py tests/shared tests/context tests/cli tests/test_install.py -q` passes. `python -m pytest tests/ -q --tb=short` passes.
 
 ## Wave 3 — evolve layer, seams, docs (BLOCKED until equip-bugs merges)
 
-- [ ] Create `dummyindex/evolve/` and `dummyindex/evolve/cli/`, add the 3 lazy root adapters and seams S1/S2, rename the C2 names, move tests to `tests/evolve/`, add the seam tests, and extend the boundary test to v2 (plan task 3). Verify: `ruff check .` passes; `python -m pytest tests/test_import_boundaries.py tests/evolve tests/context tests/cli -q` passes; `python -m pytest tests/ -q --tb=short` passes.
+- [ ] Create `dummyindex/evolve/` and `dummyindex/evolve/cli/`, add the 3 lazy root adapters and seams S1/S2, and rename the C2 names. Move tests to `tests/evolve/`, add the seam tests, and extend the boundary test to v2 (plan task 3). Verify: `ruff check .` passes. `python -m pytest tests/test_import_boundaries.py tests/evolve tests/context tests/cli -q` passes. `python -m pytest tests/ -q --tb=short` passes.
 - [ ] Update `docs/reference/01-conventions.md` with the 3-layer rule and its two exceptions (plan task 4). Verify: `python -m pytest tests/test_repo_doc_style.py -q` passes.
 
 ## Wave 4 — acceptance

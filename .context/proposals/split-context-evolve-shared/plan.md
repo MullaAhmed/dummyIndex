@@ -2,6 +2,7 @@
 
 Start only after the equip-bugs task merges (Wave 1 gate). Rerun the scan scripts in `D:\temp\` on the merged tree first.
 File lists below come from the scan at the proposal commit. `boundary-map.md` has the full lists.
+
 Every rename means: rename the definition and every use. Find uses with the AST scan or the symbol map. Keep no alias.
 
 ## Tasks
@@ -54,9 +55,12 @@ Every rename means: rename the definition and every use. Find uses with the AST 
 
 ## Reused symbols
 
-`write_text_atomic`, `replace_bytes` (`shared/atomic_io.py`); `EvolveError` (`shared/errors.py`); `safe_file`, `project_lock` (`shared/guard.py`);
-`validate_lesson`, `LearningStatus` (`shared/lesson/`); `closeout_from_file`, `learning_exit_code`, `learning_line`,
-`failed_record_path` (`context/domains/proposals/closeout.py`); `session_block` (`evolve/probation/`).
+- `write_text_atomic`, `replace_bytes` (`shared/atomic_io.py`)
+- `EvolveError` (`shared/errors.py`)
+- `safe_file`, `project_lock` (`shared/guard.py`)
+- `validate_lesson`, `LearningStatus` (`shared/lesson/`)
+- `closeout_from_file`, `learning_exit_code`, `learning_line`, `failed_record_path` (`context/domains/proposals/closeout.py`)
+- `session_block` (`evolve/probation/`)
 
 ## Tooling
 
