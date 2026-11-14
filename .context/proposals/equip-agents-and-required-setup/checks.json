@@ -155,6 +155,32 @@
     "task_id": "task-323c4c9a9a04624e",
     "task_sha256": "323c4c9a9a04624e05ab5769a80f086545a42e0756f8001d8bdbaf457b00a1df"
   },
+  "task-3b5f2b7093b76d0f": {
+    "artifacts": [
+      {
+        "path": "tests/context/build/test_context_upgrade.py",
+        "sha256": "bd53ba79706119f3c223e18ecaade34e35f02cda68cb71436130b29b107ea547"
+      },
+      {
+        "path": "tests/cli/test_upgrade_cli.py",
+        "sha256": "a449e4f9c3a911cc70960152913b7cb727b9d3b017667f7914f573fabe369563"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "dummyindex/context/build/context_upgrade.py",
+        "sha256": "5439746637bf29e9a1b99ca6d6217648f053ec1a29eaeaba7d50bed01d8657a2"
+      },
+      {
+        "path": "dummyindex/cli/upgrade.py",
+        "sha256": "9d6acdf9c53101a8c99f37040f21118565ededb46f81076046b52decbce00e27"
+      }
+    ],
+    "source_commit": "d78bfd27f6a86858a1a6bcd69e90f7f1fd2dfa5f",
+    "state": "verified",
+    "task_id": "task-3b5f2b7093b76d0f",
+    "task_sha256": "3b5f2b7093b76d0f8a7ba74463cd54c8afee98168662b5c58ba343b03f223556"
+  },
   "task-413e1e2743340d08": {
     "artifacts": [
       {
@@ -413,6 +439,40 @@
     "task_id": "task-81217a1ee3dfb70d",
     "task_sha256": "81217a1ee3dfb70dc7881c49d83f169f56a4ba054865a7d7fa6291f89629bfc8"
   },
+  "task-955e2eccb8bedcc5": {
+    "artifacts": [
+      {
+        "path": "tests/context/domains/requirements/test_check.py",
+        "sha256": "ca9ffe28fdf10cd530d5cad81cc22c6e389c224580f11e3a6d976e15846e353a"
+      },
+      {
+        "path": "tests/context/domains/requirements/test_sync.py",
+        "sha256": "c1e69e1cee794499ad2cf925516883ec99bdda466e3b920e585b1322bcc68fda"
+      },
+      {
+        "path": "tests/context/domains/requirements/test_gate.py",
+        "sha256": "b9aaef2134c3e1839d6198cc47c38546337147f62aaf70db68a20c562d7f235e"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "dummyindex/context/domains/requirements/check.py",
+        "sha256": "df4cae965b7721d4d9a7e2854b99da8366d63688b47ff60bf1ec53e77064cb29"
+      },
+      {
+        "path": "dummyindex/context/domains/requirements/sync.py",
+        "sha256": "3f7119e16d0de65b236ae9f3d696572d1d08a91b67c7aad5e2ee4016cbfc874f"
+      },
+      {
+        "path": "dummyindex/context/domains/requirements/gate.py",
+        "sha256": "3c23eab638cc07dcf7b469fdb725af9129ec97a6342a9eed62042d8ce83ba382"
+      }
+    ],
+    "source_commit": "d78bfd27f6a86858a1a6bcd69e90f7f1fd2dfa5f",
+    "state": "verified",
+    "task_id": "task-955e2eccb8bedcc5",
+    "task_sha256": "955e2eccb8bedcc53cd803989675b707e90a76cae07ffdec95971a59a34b1d51"
+  },
   "task-96ae5061fd0f4366": {
     "artifacts": [
       {
@@ -434,6 +494,32 @@
     "state": "verified",
     "task_id": "task-96ae5061fd0f4366",
     "task_sha256": "96ae5061fd0f4366369bbeb5849531faeb5287369b69f3ae4f5ff0dee4010e22"
+  },
+  "task-9d2f4f018f58c64b": {
+    "artifacts": [
+      {
+        "path": "tests/test_install.py",
+        "sha256": "05b4087338dffde361f402ac2e43dc89c2b20a52c9bae78b33f76b9a5d1a9671"
+      },
+      {
+        "path": "tests/cli/test_init_cli.py",
+        "sha256": "41e9b374a46b4acada1f4e1684678eb899694d437bd513d1d8899f0864a3074b"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "dummyindex/installer/install/project_init.py",
+        "sha256": "cb57d8c0cca886c7fa1d317c681a59a224dffa507e1fbb0c2bed2b5b41532eb0"
+      },
+      {
+        "path": "dummyindex/installer/install/orchestrate.py",
+        "sha256": "0143d4e5702a9166ce54c2170e6011fce0a39b2957e96e7efdc9f0f8d4c9a30c"
+      }
+    ],
+    "source_commit": "d78bfd27f6a86858a1a6bcd69e90f7f1fd2dfa5f",
+    "state": "verified",
+    "task_id": "task-9d2f4f018f58c64b",
+    "task_sha256": "9d2f4f018f58c64b930047f712bcd6f02fa7e41e5c16b3c4d2e5e88424e06f48"
   },
   "task-a4e4eb40d04fe470": {
     "artifacts": [
@@ -558,6 +644,70 @@
     "state": "verified",
     "task_id": "task-add49101c259e698",
     "task_sha256": "add49101c259e698c20bd6029b944838c94fe55334029c4f31e12401a0f0e509"
+  },
+  "task-b6019f001520dfed": {
+    "artifacts": [
+      {
+        "path": "pyproject.toml",
+        "sha256": "b476dc5de3225523cf0544632b7bf0d6367d9221ad9f1e037121c692b73eda67"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/conftest.py",
+        "sha256": "c9862887a06aa4f9d59892a52ea576ae6b7628e8eb880ca68e08af1c68cbf4c1"
+      }
+    ],
+    "source_commit": "efcc4a66f22b4bbe423dea87a1adf351c3c966d4",
+    "state": "verified",
+    "task_id": "task-b6019f001520dfed",
+    "task_sha256": "b6019f001520dfed87bd9093d2ee7ec7f7a8f6cb1b0a912cabf03ea75768e93f"
+  },
+  "task-c35f600ef5673dca": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/hooks_requirements.py",
+        "sha256": "04f3931ce04b50f5eae9732786471442bb4f419fc5a63ceb1b8c253267421351"
+      },
+      {
+        "path": "dummyindex/context/domains/gc/delete.py",
+        "sha256": "9e4dfa281c6453a9aee1efcadcacd034b8864e50c439f0e817b0428e17219fb1"
+      },
+      {
+        "path": "dummyindex/context/domains/requirements/sync.py",
+        "sha256": "2ebbc91568f8afc95239ed8ceb4e59f027b52d5552b75d7af38f52eadee07aff"
+      },
+      {
+        "path": "dummyindex/cli/gc.py",
+        "sha256": "adfe94cb94286b74b65062f0006f7342f2041bbec02f0df29338834537d29772"
+      },
+      {
+        "path": "dummyindex/context/domains/gc/liveness.py",
+        "sha256": "d0cf8c01f30ada1f167bddb6194d33708ae7e8133dec1ec097cb5b0dbdb4b59f"
+      },
+      {
+        "path": "dummyindex/context/build/context_upgrade.py",
+        "sha256": "5439746637bf29e9a1b99ca6d6217648f053ec1a29eaeaba7d50bed01d8657a2"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/test_hooks_requirements.py",
+        "sha256": "a95f43df6031d29db0ac2f835d003d3cfc1e49735b92b611cfa0311a4d75a388"
+      },
+      {
+        "path": "tests/context/domains/gc/test_equipment_delete.py",
+        "sha256": "80ecde3c51ef9144fd59f93b44dd56c84663b019fd8762bdbad3bd423b69a96c"
+      },
+      {
+        "path": "tests/context/domains/requirements/test_sync.py",
+        "sha256": "9292b7467c1556e374666ff689ee7c121d1608566df0599fe8423a7c2aae67db"
+      }
+    ],
+    "source_commit": "efcc4a66f22b4bbe423dea87a1adf351c3c966d4",
+    "state": "verified",
+    "task_id": "task-c35f600ef5673dca",
+    "task_sha256": "c35f600ef5673dca619c4c5c1055fe5d451c996056c5f2fa688eaf37754ddceb"
   },
   "task-cb4ce32ba8d849a4": {
     "artifacts": [

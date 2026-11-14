@@ -49,10 +49,10 @@
 - [ ] Acceptance: `test_context_upgrade.py` shows `legacy` backfill and the `specialist without evidence` report with no deletion
 - [ ] Acceptance: `test_equip_grounding.py` shows the sidecar content and the 6,000-byte line-boundary cut. It shows byte-identical output across two copies and CRLF. Body bytes stay unchanged after a feature-doc edit. All 17 templates render with no `{{` and no `the project's stack`
 - [ ] Acceptance: `test_toml_io.py`, `test_seed.py` and `test_config.py` show lossless round-trip and comment-keeping line edits. They show invalid-file cases, the `tomli` fallback, seeding rules and the single owner of `wired`
-- [ ] Acceptance: `test_check.py`, `test_sync.py` and `test_gate.py` show every row status and exit code. They show the `CLAUDE_CONFIG_DIR` case and the `(name, repo)` trust rule. They show the allowlisted prompts, fail-open cases and the bypass
+- [x] Acceptance: `test_check.py`, `test_sync.py` and `test_gate.py` show every row status and exit code. They show the `CLAUDE_CONFIG_DIR` case and the `(name, repo)` trust rule. They show the allowlisted prompts, fail-open cases and the bypass
 - [ ] Acceptance: `test_hooks_requirements.py` shows that the shell bodies block on a missing CLI and skip with no `config.toml`. They skip the spawn on a fresh `requirements.ok` or an equal stamp. They run globally despite old local hooks
-- [ ] Acceptance: `test_context_upgrade.py` and `test_upgrade_cli.py` show the full upgrade, the no-op second run and retry after a failed step. They show the newer-stamp no-op, path containment and the lock under two concurrent runs. They show `features/INDEX.json` byte-identity and the single gitignore warning. They show no `tree_sitter` import on a current stamp
-- [ ] Acceptance: `test_install.py` shows `upgrade_project` once per repo pass on both paths. It shows opt-out and malformed-config byte stability. It shows user-scope requirements hooks in the temp config dir
+- [x] Acceptance: `test_context_upgrade.py` and `test_upgrade_cli.py` show the full upgrade, the no-op second run and retry after a failed step. They show the newer-stamp no-op, path containment and the lock under two concurrent runs. They show `features/INDEX.json` byte-identity and the single gitignore warning. They show no `tree_sitter` import on a current stamp
+- [x] Acceptance: `test_install.py` shows `upgrade_project` once per repo pass on both paths. It shows opt-out and malformed-config byte stability. It shows user-scope requirements hooks in the temp config dir
 - [ ] Acceptance: `test_equip_apply_merge.py`, `test_equipment_candidates.py`, `test_equipment_delete.py` and `test_gc_cli.py` show task provenance and promotion. They show the candidate and liveness rules. They show deletion of the body, adapter, manifest and `config.toml` entry, with the library kept. They show the `--force` refusal
-- [ ] Acceptance: `uv run pytest -q` passes and `uv run ruff check .` is clean
-- [ ] Review the full diff — via /code-review
+- [x] Acceptance: `uv run pytest -q` passes and `uv run ruff check .` is clean
+- [x] Review the full diff — via /code-review
