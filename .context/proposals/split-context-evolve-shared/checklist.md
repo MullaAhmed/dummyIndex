@@ -23,5 +23,5 @@
 
 ## Wave 4 — acceptance
 
-- [ ] Acceptance: `ruff check .` passes and `python -m pytest tests/ -q --tb=short` passes on the split tree, including every R1–R7 self-check and the seam tests.
-- [ ] Acceptance: `git diff <GATE_SHA> HEAD -- pyproject.toml docs/COMMANDS.md dummyindex/skills dummyindex/context/hooks.py dummyindex/context/enums.py` is empty.
+- [x] Acceptance: `ruff check .` passes and `python -m pytest tests/ -q --tb=short` passes on the split tree, including every R1–R7 self-check and the seam tests.
+- [x] Acceptance: `git diff <GATE_SHA> HEAD -- pyproject.toml docs/COMMANDS.md dummyindex/skills dummyindex/context/hooks.py dummyindex/context/enums.py` is empty.

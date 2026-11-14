@@ -936,5 +936,77 @@
     "state": "verified",
     "task_id": "task-9d0b034dedba70ff",
     "task_sha256": "9d0b034dedba70ff69eb820c15e68a734e8444c763935a791dca451fd4ce5fa0"
+  },
+  "task-e3ee224071060a62": {
+    "artifacts": [
+      {
+        "path": "pyproject.toml",
+        "sha256": "b476dc5de3225523cf0544632b7bf0d6367d9221ad9f1e037121c692b73eda67"
+      },
+      {
+        "path": "docs/COMMANDS.md",
+        "sha256": "8c477f8840baf759fcae0e1ef645f8b72d86a64d92e35ea4469e727d8203a878"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "dummyindex/context/hooks.py",
+        "sha256": "2b79483bf455c6f7293a5bfb86b296677266876c7a65d4a7fc7586136b897d04"
+      },
+      {
+        "path": "dummyindex/context/enums.py",
+        "sha256": "56feb1c267ee04ac45f437c233e8a5bb1484fe77b1324f20e082537387b2c225"
+      }
+    ],
+    "source_commit": "f6c48248bf200c84a6a5f9380f7320fbe96630de",
+    "state": "verified",
+    "task_id": "task-e3ee224071060a62",
+    "task_sha256": "e3ee224071060a62fe4edd4b85690c81db7e5ec9fede9bfade45263318ddaed0"
+  },
+  "task-f8bab17a5286cfb7": {
+    "artifacts": [
+      {
+        "path": "dummyindex/cli/__init__.py",
+        "sha256": "2c264eb5e793ff1993536a68e1cceaccdee36454937f197850a61d6767899a8c"
+      },
+      {
+        "path": "dummyindex/evolve/evolve_learning.py",
+        "sha256": "6605159c22671b0cc609a731afc4c7d37893c78ad04e0ab2a9d842fc90aca76c"
+      },
+      {
+        "path": "dummyindex/context/domains/proposals/closeout.py",
+        "sha256": "99015be703d533f5d44da5a6d4b9762425827106fab4d13826f668be86784b91"
+      },
+      {
+        "path": "dummyindex/cli/memory.py",
+        "sha256": "e766f59e5d492a4bf376300ff2ee63cb09677ed4dcccf36e7bb9a7d2be95c773"
+      },
+      {
+        "path": "dummyindex/shared/guard.py",
+        "sha256": "7bc5841072ee4673d9f3c3b3fa52adf63012f4719ec9604ba8e8602659054deb"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/test_import_boundaries.py",
+        "sha256": "4fc9d95e2ca7beaaeed3d2800e9afcdce2c8f612a41f154c184c1499d4b2d6af"
+      },
+      {
+        "path": "tests/cli/test_closeout_exit_codes.py",
+        "sha256": "ee352b417ef39b0fc9744cf404adf69dd5420b7a0263c49b1647658e51eb0a77"
+      },
+      {
+        "path": "tests/context/domains/test_closeout.py",
+        "sha256": "ea8e1ec09b5ffe265a8f736d19b632ebbbea745ed08a2253cc6ca84d9d66245f"
+      },
+      {
+        "path": "tests/context/domains/memory/test_memory_cli.py",
+        "sha256": "22cbc90764806c942a60c83ee25d4e331ea549048196d55165f307826785877d"
+      }
+    ],
+    "source_commit": "f6c48248bf200c84a6a5f9380f7320fbe96630de",
+    "state": "verified",
+    "task_id": "task-f8bab17a5286cfb7",
+    "task_sha256": "f8bab17a5286cfb7b6623ab8a5c0712efa9e394623ac3f5856dbfed65724b898"
   }
 }
