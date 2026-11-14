@@ -1193,3 +1193,34 @@ def test_signal_nudge_survives_equipment_count_failure(
     assert code == 0
     assert "GC anchor orphaned" in out
     assert "equipment candidate" not in out
+
+
+def test_equipment_delete_prints_config_warning_on_success(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    context_dir = _init_repo(tmp_path)
+    _write_equipment_task_item(tmp_path, context_dir)
+    (context_dir / "config.toml").write_text(
+        "[dummyindex\nschema_version = = 1\n", encoding="utf-8"
+    )
+    _commit_all(tmp_path)
+
+    code = dispatch(
+        [
+            "gc",
+            "delete",
+            "--kind",
+            "equipment",
+            "--slug",
+            "impl-p1",
+            "--yes",
+            "--root",
+            str(tmp_path),
+        ]
+    )
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert "removed" in out
+    assert "warning:" in out
+    assert "config.toml unreadable" in out

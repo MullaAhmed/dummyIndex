@@ -225,6 +225,8 @@ def _gc_delete(args: list[str]) -> int:
         print("  pass --yes to delete (nothing removed)")
     elif result.deleted:
         print(f"context gc delete: removed {kind.value} {target_label}")
+        if result.reason:
+            print(f"  {result.reason}")
     elif result.refused:
         print(f"context gc delete: refused — {result.reason}")
     else:
