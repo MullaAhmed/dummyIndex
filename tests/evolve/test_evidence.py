@@ -8,14 +8,14 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.domains import evidence
-from dummyindex.context.domains.evidence import (
+from dummyindex.evolve import evidence
+from dummyindex.evolve.evidence import (
     digest,
     expose_case,
     read_ledger,
     scan_hosts,
 )
-from dummyindex.context.domains.observe import ledger as L
+from dummyindex.evolve.observe import ledger as L
 from dummyindex.shared.errors import EvolveError
 from dummyindex.shared.guard import project_lock
 

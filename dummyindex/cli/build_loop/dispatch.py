@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 from dummyindex.context.domains.buildloop import ChecklistItem
@@ -74,7 +75,11 @@ def pull_route_flags(rest: list[str]) -> tuple[list[str], list[str]]:
     return values, out
 
 
-def run(args: list[str]) -> int:
+def run(
+    args: list[str],
+    *,
+    after_closeout: Callable[[Path, Path, str, dict, dict], None] | None = None,
+) -> int:
     from dummyindex.context.domains.buildloop import (
         BuildLoopError,
         parse_checklist,
@@ -179,7 +184,11 @@ def run(args: list[str]) -> int:
 
         try:
             receipt = closeout_from_file(
-                context_dir, "proposal", proposal, Path(closeout_value)
+                context_dir,
+                "proposal",
+                proposal,
+                Path(closeout_value),
+                after_closeout=after_closeout,
             )
         except (CloseoutError, ProposalSlugError) as exc:
             print(f"error: {exc}", file=sys.stderr)

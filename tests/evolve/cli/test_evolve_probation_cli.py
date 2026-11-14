@@ -14,12 +14,12 @@ from types import SimpleNamespace
 import pytest
 
 from dummyindex.cli import dispatch
-from dummyindex.context.domains import evidence
-from dummyindex.context.domains.evidence import scan_hosts
-from dummyindex.context.domains.observe import corrections, record_exposure, session_key
-from dummyindex.context.domains.probation import store
-from dummyindex.context.domains.probation.enums import State
-from dummyindex.context.domains.probation.models import Item
+from dummyindex.evolve import evidence
+from dummyindex.evolve.evidence import scan_hosts
+from dummyindex.evolve.observe import corrections, record_exposure, session_key
+from dummyindex.evolve.probation import store
+from dummyindex.evolve.probation.enums import State
+from dummyindex.evolve.probation.models import Item
 
 pytestmark = pytest.mark.unit
 

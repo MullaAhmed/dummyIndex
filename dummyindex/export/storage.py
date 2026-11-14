@@ -24,11 +24,11 @@ from typing import Any
 
 DEFAULT_MAX_FILE_BYTES = 1_000_000
 SHARD_GRACE_SECONDS = 600
-_FORMAT = "dummyindex-symbol-graph"
+FORMAT = "dummyindex-symbol-graph"
 _VERSION = 1
 _PARTS_DIR = "symbol-graph.parts"
 _FAMILIES = ("nodes", "links", "hyperedges")
-_HASH_RE = re.compile(r"[0-9a-f]{64}")
+HASH_RE = re.compile(r"[0-9a-f]{64}")
 _SHARD_NAME_RE = re.compile(r"[0-9a-f]{64}\.json")
 _REPORTED_FAILURES = 5
 
@@ -127,7 +127,7 @@ def _read_bytes(path: Path, *, max_bytes: int | None = None) -> bytes:
     return content
 
 
-def _decode(content: bytes, path: Path) -> dict[str, Any]:
+def decode(content: bytes, path: Path) -> dict[str, Any]:
     try:
         data = json.loads(content)
     except (ValueError, UnicodeError) as exc:
@@ -140,7 +140,7 @@ def _decode(content: bytes, path: Path) -> dict[str, Any]:
 def _canonical_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
     """Sort complete records without changing IDs, paths or graph attributes."""
     data = dict(payload)
-    if data.get("format") == _FORMAT:
+    if data.get("format") == FORMAT:
         raise GraphStorageError("graph payload uses the reserved storage format marker")
     graph = data.get("graph", {})
     if not isinstance(graph, dict):
@@ -235,11 +235,11 @@ def shard_names(manifest_path: Path | str) -> frozenset[str]:
     """
     path = Path(manifest_path)
     try:
-        data = _decode(_read_bytes(path, max_bytes=DEFAULT_MAX_FILE_BYTES), path)
+        data = decode(_read_bytes(path, max_bytes=DEFAULT_MAX_FILE_BYTES), path)
     except (FileNotFoundError, GraphStorageError):
         return frozenset()
     shards = data.get("shards")
-    if data.get("format") != _FORMAT or not isinstance(shards, list):
+    if data.get("format") != FORMAT or not isinstance(shards, list):
         return frozenset()
     names: set[str] = set()
     for descriptor in shards:
@@ -375,7 +375,7 @@ def write_graph_payload(
                 }
             )
     manifest = {
-        "format": _FORMAT,
+        "format": FORMAT,
         "version": _VERSION,
         "max_file_bytes": max_file_bytes,
         "graph_sha256": graph_hash,
@@ -406,7 +406,7 @@ def _integer(value: object, *, minimum: int = 0) -> bool:
     return isinstance(value, int) and not isinstance(value, bool) and value >= minimum
 
 
-def _read_manifest(
+def read_manifest(
     data: dict[str, Any], path: Path, content_size: int
 ) -> dict[str, Any]:
     if data.get("version") != _VERSION or isinstance(data.get("version"), bool):
@@ -432,7 +432,7 @@ def _read_manifest(
     ):
         raise GraphStorageError("invalid graph manifest metadata or shard list")
     graph_hash = data.get("graph_sha256")
-    if not isinstance(graph_hash, str) or not _HASH_RE.fullmatch(graph_hash):
+    if not isinstance(graph_hash, str) or not HASH_RE.fullmatch(graph_hash):
         raise GraphStorageError("invalid graph payload hash")
     result = dict(metadata)
     result.update({family: [] for family in _FAMILIES})
@@ -448,7 +448,7 @@ def _read_manifest(
         if (
             family not in _FAMILIES
             or not isinstance(digest, str)
-            or not _HASH_RE.fullmatch(digest)
+            or not HASH_RE.fullmatch(digest)
         ):
             raise GraphStorageError("invalid graph shard family or hash")
         if (
@@ -468,7 +468,7 @@ def _read_manifest(
             ) from exc
         if len(content) != size or _sha256(content) != digest:
             raise GraphStorageError(f"graph shard hash/size mismatch: {shard_path}")
-        shard = _decode(content, shard_path)
+        shard = decode(content, shard_path)
         records = shard.get("records")
         if (
             shard.get("kind") != family
@@ -495,9 +495,9 @@ def read_graph_payload(path: Path | str) -> dict[str, Any]:
     """
     path = Path(path)
     content = _read_bytes(path)
-    data = _decode(content, path)
-    if data.get("format") == _FORMAT:
-        return _read_manifest(data, path, len(content))
+    data = decode(content, path)
+    if data.get("format") == FORMAT:
+        return read_manifest(data, path, len(content))
     if "links" not in data and "edges" in data:
         data["links"] = data.pop("edges")
     return data

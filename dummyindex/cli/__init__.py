@@ -8,8 +8,10 @@ Public surface, stable for ``__main__`` and tests: ``dispatch(argv)`` and
 
 from __future__ import annotations
 
+import functools
 import sys
 from collections.abc import Callable
+from pathlib import Path
 
 from dummyindex.context.enums import ContextSubcommand
 
@@ -28,7 +30,6 @@ from . import (
     drift_ack,
     enrich,
     equip,
-    evolve,
     features,
     fleet,
     gc,
@@ -85,6 +86,32 @@ def _wants_help(rest: list[str]) -> bool:
     return False
 
 
+def _evolve_run(args: list[str]) -> int:
+    from dummyindex.evolve.cli.evolve import run
+
+    return run(args)
+
+
+def _closeout_learning(
+    context_dir: Path, workspace: Path, kind: str, manifest: dict, receipt: dict
+) -> None:
+    try:
+        from dummyindex.evolve.evolve_learning import learn_after_closeout
+
+        learn_after_closeout(context_dir, workspace, kind, manifest, receipt)
+    except Exception as exc:  # keep closeout's exit-1 path, no traceback
+        receipt["learning"] = {
+            "status": "failed",
+            "error": f"{type(exc).__name__}: {exc}",
+        }
+
+
+def _probation_block(context_dir: Path, session_id: str) -> str:
+    from dummyindex.evolve.probation import session_block
+
+    return session_block(context_dir, session_id)
+
+
 _HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
     ContextSubcommand.INIT: init.run,
     ContextSubcommand.REBUILD: rebuild.run,
@@ -120,13 +147,17 @@ _HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
     ContextSubcommand.CONFIG: config.run,
     ContextSubcommand.PREFLIGHT: preflight.run,
     ContextSubcommand.DOC_REORG: doc_reorg.run,
-    ContextSubcommand.MEMORY: memory.run,
+    ContextSubcommand.MEMORY: functools.partial(
+        memory.run, session_block=_probation_block
+    ),
     ContextSubcommand.PROPOSE: propose.run,
     ContextSubcommand.EQUIP: equip.run,
-    ContextSubcommand.BUILD: build_loop.run,
+    ContextSubcommand.BUILD: functools.partial(
+        build_loop.run, after_closeout=_closeout_learning
+    ),
     ContextSubcommand.AUDIT: audit.run,
     ContextSubcommand.AUDIT_LOG: audit.run_log,
-    ContextSubcommand.GC: gc.run,
+    ContextSubcommand.GC: functools.partial(gc.run, after_closeout=_closeout_learning),
     ContextSubcommand.MAINTAIN: maintain.run,
     ContextSubcommand.RESTYLE: restyle.run,
     ContextSubcommand.REQUIREMENTS: requirements.run,
@@ -138,7 +169,7 @@ _HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
     ContextSubcommand.MIGRATE_DOCS: migrate_docs.run,
     ContextSubcommand.GUARD_DOC_WRITE: guard_doc_write.run,
     ContextSubcommand.DRIFT_ACK: drift_ack.run,
-    ContextSubcommand.EVOLVE: evolve.run,
+    ContextSubcommand.EVOLVE: _evolve_run,
     ContextSubcommand.UPGRADE: upgrade.run,
 }
 

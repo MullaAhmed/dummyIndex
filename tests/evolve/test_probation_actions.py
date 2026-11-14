@@ -6,9 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.domains.living_rules import plan_rule, sha256
-from dummyindex.context.domains.observe import record_exposure
-from dummyindex.context.domains.probation import (
+from dummyindex.evolve.living_rules import plan_rule, sha256
+from dummyindex.evolve.observe import record_exposure
+from dummyindex.evolve.probation import (
     State,
     demote,
     enter,
@@ -16,8 +16,8 @@ from dummyindex.context.domains.probation import (
     promote,
     store,
 )
-from dummyindex.context.domains.probation.models import Item
-from dummyindex.context.domains.probation.rules import CAP_REASON, HIGH_IMPACT
+from dummyindex.evolve.probation.models import Item
+from dummyindex.evolve.probation.rules import CAP_REASON, HIGH_IMPACT
 from dummyindex.shared.lesson.rules import rules_in
 
 pytestmark = pytest.mark.unit
@@ -276,7 +276,7 @@ def test_enter_writes_probation_item_and_caps(repo, tmp_path):
 
 
 def test_promote_event_log_failure_keeps_promoted(repo, monkeypatch):
-    import dummyindex.context.domains.probation.actions as actions_mod
+    import dummyindex.evolve.probation.actions as actions_mod
 
     real = actions_mod.record_event
 

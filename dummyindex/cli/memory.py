@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import sys
+from collections.abc import Callable
 from datetime import date, datetime
 from pathlib import Path
 
@@ -50,13 +51,15 @@ def resolve_transcript(hook: dict[str, object], root: Path) -> tuple[str, Path |
     return session_id, find_main_transcript(session_id=session_id or None, cwd=root)
 
 
-def _print_probation(root: Path) -> None:
+def _print_probation(
+    root: Path, session_block: Callable[[Path, str], str] | None
+) -> None:
     """Print the session's local probation block after the memory block; silent on error."""
+    if session_block is None:
+        return
     try:
         hook = read_hook_stdin()
         raw = hook.get("session_id")
-        from dummyindex.context.domains.probation import session_block
-
         extra = session_block(root / ".context", raw if isinstance(raw, str) else "")
         if extra:
             print(extra)
@@ -64,7 +67,11 @@ def _print_probation(root: Path) -> None:
         pass
 
 
-def run(args: list[str]) -> int:
+def run(
+    args: list[str],
+    *,
+    session_block: Callable[[Path, str], str] | None = None,
+) -> int:
     from dummyindex.context.domains.memory import (
         MemoryVerb,
         ensure_memory_store,
@@ -160,7 +167,7 @@ def run(args: list[str]) -> int:
         block = render_session_start(root)
         if block:
             print(block)
-        _print_probation(root)
+        _print_probation(root, session_block)
         return 0  # a SessionStart hook must never fail the session
 
     context_dir = root / ".context"

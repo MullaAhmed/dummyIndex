@@ -16,6 +16,7 @@ from dummyindex.context.domains.buildloop import (
     next_wave,
     parse_checklist,
 )
+from dummyindex.evolve.evolve_learning import learn_after_closeout
 
 pytestmark = pytest.mark.unit
 
@@ -960,6 +961,7 @@ def test_closeout_moves_flagged_live_item_unchanged(
                 {"item_id": item.item_id, "description": "Live test"}
             ],
         },
+        after_closeout=learn_after_closeout,
     )
     assert len(receipt["pending_verification"]) == 1
     assert all(i.done for i in parse_checklist(cl))

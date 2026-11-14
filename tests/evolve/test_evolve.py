@@ -1,4 +1,4 @@
-"""Tests for ``context/domains/evolve.py`` — the self-improvement loop domain.
+"""Tests for ``evolve/evolve.py`` — the self-improvement loop domain.
 
 Covers: harvest parsers keep citations intact; candidate validation + scope guard
 (source code / spec bodies / loop state denied, ≤5 targets); tolerant JSONL reads;
@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.domains.evolve import (
+from dummyindex.evolve.evolve import (
     CANDIDATES_NAME,
     EVOLUTION_REL,
     Candidate,

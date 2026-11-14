@@ -1,6 +1,6 @@
 """CLI closeout/learning commands exit non-zero only on a failed learning status.
 
-The CLI has no learner seam, so the stored learning event that closeout reads
+The CLI runs the real learner, so the stored learning event that closeout reads
 on re-run is seeded through the real event file: a stale identity makes the
 real learner fail; an evaluated/blocked verdict is a settled status.
 """
@@ -13,11 +13,11 @@ from pathlib import Path
 import pytest
 
 from dummyindex.cli import dispatch
-from dummyindex.context.domains.evolve_learning import _path as event_path
 from dummyindex.context.domains.proposals.retirement import (
     ADMIN_FILES,
     workspace_inventory,
 )
+from dummyindex.evolve.evolve_learning import _path as event_path
 
 _BLOCKED = {"state": "evaluated", "verdict": "blocked", "status": "blocked"}
 _FAILED = {"identity": "stale-identity"}
@@ -125,3 +125,36 @@ def test_evolve_learning_exit_code_follows_status(
 
     assert rc == code
     assert f"learning: {status}" in capsys.readouterr().err
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("kind", ["proposal", "audit"])
+def test_closeout_cli_path_writes_learning_event(tmp_path: Path, kind: str) -> None:
+    workspace = _workspace(tmp_path, kind)
+    manifest = tmp_path / "m.json"
+    _write_manifest(workspace, manifest)
+
+    assert dispatch([*_argv(kind, manifest), "--root", str(tmp_path)]) == 0
+    assert _event_files(tmp_path)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("kind", ["proposal", "audit"])
+def test_learning_adapter_failure_exits_one_without_traceback(
+    tmp_path: Path, capsys, monkeypatch: pytest.MonkeyPatch, kind: str
+) -> None:
+    workspace = _workspace(tmp_path, kind)
+    manifest = tmp_path / "m.json"
+    _write_manifest(workspace, manifest)
+
+    def boom(*_args, **_kwargs):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr("dummyindex.evolve.evolve_learning.learn_after_closeout", boom)
+    capsys.readouterr()
+
+    assert dispatch([*_argv(kind, manifest), "--root", str(tmp_path)]) == 1
+    captured = capsys.readouterr()
+    assert "learning: failed" in captured.out
+    assert "RuntimeError: boom" in captured.out
+    assert "Traceback" not in captured.out + captured.err

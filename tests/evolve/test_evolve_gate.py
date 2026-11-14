@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.domains.evolve_gate import (
+from dummyindex.evolve.evolve_gate import (
     _working_inputs,
     check_receipt,
     run_gate,
@@ -22,7 +22,7 @@ pytestmark = pytest.mark.integration
 def test_default_runner_isolates_host_configuration(tmp_path, monkeypatch):
     import sys
 
-    from dummyindex.context.domains.evolve_gate import _default_runner
+    from dummyindex.evolve.evolve_gate import _default_runner
 
     monkeypatch.setenv("CODEX_HOME", str(tmp_path / "real-codex"))
     monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(tmp_path / "real-claude"))
@@ -108,7 +108,7 @@ def test_git_inventory_reads_dirty_and_untracked_working_bytes(
     (tmp_path / "untracked.py").write_text("new working content", encoding="utf-8")
     (tmp_path / "ignored.py").write_text("excluded by git", encoding="utf-8")
     monkeypatch.setattr(
-        "dummyindex.context.domains.evolve_gate.subprocess.run",
+        "dummyindex.evolve.evolve_gate.subprocess.run",
         lambda *a, **k: subprocess.CompletedProcess(
             a[0], 0, b"tracked.py\0untracked.py\0", b""
         ),

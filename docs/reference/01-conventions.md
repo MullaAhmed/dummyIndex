@@ -50,6 +50,36 @@ dummyindex/
 ├── __main__.py              # thin entrypoint: --version / help + dispatch to installer / cli / usage
 ├── codex_guidance.py        # Codex home/config/fallback-name policy shared across layers
 │
+├── shared/                  # primitives used by context and evolve
+│   ├── __init__.py          # shared layer package
+│   ├── atomic_io.py         # atomic writes: `write_text_atomic`, `replace_bytes`
+│   ├── errors.py            # `EvolveError`
+│   ├── guard.py             # `safe_file` path guard, `project_lock` writer lock
+│   └── lesson/              # lesson contract
+│       ├── __init__.py
+│       ├── enums.py         # `LearningStatus`
+│       ├── models.py
+│       └── rules.py         # `rules_in`
+│
+├── evolve/                  # self-evolve loop
+│   ├── __init__.py
+│   ├── evolve.py
+│   ├── evolve_experiments.py
+│   ├── evolve_gate.py
+│   ├── evolve_learning.py
+│   ├── evolve_native.py
+│   ├── evolve_native_response.py
+│   ├── evolve_native_snapshot.py
+│   ├── evolve_promotion.py
+│   ├── evidence.py
+│   ├── living_rules.py
+│   ├── observe/
+│   ├── probation/
+│   └── cli/                 # evolve CLI verbs (see §2.1, exception 2)
+│       ├── __init__.py
+│       ├── evolve.py
+│       └── evolve_probation.py
+│
 ├── installer/               # `dummyindex install` / `uninstall`
 │   ├── __init__.py          # public installer surface + Claude/Codex skill paths
 │   ├── common.py            # host-aware skill paths/rendering + command helpers
@@ -58,7 +88,7 @@ dummyindex/
 │   └── uninstall.py         # scoped, ownership-aware removal
 │
 ├── cli/                     # `dummyindex context <subcommand>` dispatch
-│   ├── __init__.py          # public: dispatch, resolve_context_root + handlers table
+│   ├── __init__.py          # public: dispatch, resolve_context_root + handlers table; composition root
 │   ├── help.py              # `USAGE` help text
 │   ├── common.py            # arg parsing + scope/root resolution
 │   ├── migrate.py           # legacy `.context/` layout migrations
@@ -174,7 +204,6 @@ dummyindex/
 │   │   └── viewer.py        # `.context/features/` HTML scaffold
 │   └── domains/             # behaviour rooted in a particular .context/ area
 │       ├── __init__.py
-│       ├── atomic_io.py     # shared atomic JSON read/write helpers
 │       ├── log_scan.py      # shared resumption-log scan helper (no cross-domain dep)
 │       ├── enrich.py        # enrich-plan + enrich-apply work-list
 │       ├── query.py         # PageIndex-style retrieval
@@ -267,6 +296,42 @@ outgrows a flat folder (≳ 10 modules), nest it by concern the way
 
 ## 2. Layering rules
 
+### 2.1 Three layers
+
+The package has three layers. Each module belongs to one layer.
+
+| Layer | Path | Contents |
+|---|---|---|
+| shared | `dummyindex/shared/` | Primitives that context and evolve both use. |
+| evolve | `dummyindex/evolve/` | The self-evolve loop, its evidence, living rules, observe, probation and CLI verbs. |
+| context | every other module under `dummyindex/` | Creates, manages and updates `.context/`. |
+
+"Context" includes `pipeline/`, `analysis/`, `export/`, `usage/`, `installer/` and `cli/`.
+
+Import rules. The boundary test enforces them:
+
+| Layer | Can import | Cannot import |
+|---|---|---|
+| shared | shared, standard library | context, evolve |
+| context | context, shared | evolve |
+| evolve | evolve, shared, public context names | private context names |
+
+A name that starts with `_` stays inside its layer. A cross-layer import or attribute read must not use one.
+
+Exceptions:
+
+1. **Composition root.** `dummyindex/cli/__init__.py` may import three evolve modules. It imports each one inside a function:
+   - `dummyindex.evolve.cli.evolve` (`run`)
+   - `dummyindex.evolve.evolve_learning` (`learn_after_closeout`)
+   - `dummyindex.evolve.probation` (`session_block`)
+
+   `evolve/cli/evolve.py` imports `dummyindex.cli.common`. That import runs `dummyindex/cli/__init__.py`. A module-level evolve import there causes an import cycle. Context code receives evolve behavior through parameters, such as `after_closeout` and `session_block`. The root injects them.
+2. **Evolve CLI verbs.** They live in `dummyindex/evolve/cli/`. §3 lists this as the only exception to `cli/<subcommand>.py`.
+
+The boundary test is `tests/test_import_boundaries.py`. It scans every module with the `ast` module. Rules R1–R7 cover direction, root pairs, private names, moved symbols, old paths, unresolved imports and dynamic imports.
+
+### 2.2 Rules inside the context layer
+
 ```
 __main__   → installer, cli, context (public surface), usage
 installer  → context
@@ -293,9 +358,8 @@ usage      → (stdlib only)
 
 > There was once a `runtime/` layer (stdlib-only cross-cutting helpers). Its
 > only member — `security.py`'s `sanitize_label` — was removed with the
-> legacy `export.to_html` path, so the package is gone. Re-introduce a
-> `runtime/` layer at the bottom of this table if a genuinely cross-cutting,
-> stdlib-only helper appears again.
+> legacy `export.to_html` path, so the package is gone. A primitive that
+> context and evolve both use belongs in `shared/` (§2.1).
 
 **The CLI dispatcher is wire-only.** Each subcommand module parses its
 args, calls a domain function (under `context/` or `pipeline/`), and
@@ -311,10 +375,12 @@ prints/exits. No business logic in the dispatcher.
 | Cross-file resolution shared by N languages | `pipeline/extract/resolve.py` |
 | Output format (HTML/JSON/SVG/…) for graph/structure | `export/<format>.py` |
 | `.context/` domain logic (features, memory, equip, proposals, …) | `context/domains/<domain>.py` or `context/domains/<domain>/` |
-| CLI subcommand dispatcher | `cli/<subcommand>.py` (or `cli/<subcommand>/` once it needs private siblings) |
+| CLI subcommand dispatcher | `cli/<subcommand>.py` (or `cli/<subcommand>/` once it needs private siblings). Evolve verbs are the exception: see below. |
+| Evolve CLI verb | `evolve/cli/<verb>.py` (§2.1, exception 2) |
+| Self-evolve code (loop, evidence, living rules, observe, probation) | `evolve/<file>.py` or `evolve/<package>/` |
 | Skill install/uninstall surface | `installer/<file>.py` |
 | Pure analytics on the graph | `analysis/<file>.py` |
-| Cross-cutting helper used by ≥ 2 areas, no I/O | `runtime/<file>.py` |
+| Primitive used by context and evolve (atomic I/O, errors, path guard, lock, lesson contract) | `shared/<file>.py` |
 | Token reporting over Claude Code transcripts (`dummyindex usage`) | `usage/<file>.py` |
 | Bundled markdown shipped with the skill (incl. slash commands) | `skills/...` |
 
@@ -602,6 +668,7 @@ Each domain area that raises errors defines a typed exception in its
 package:
 
 ```
+shared/errors.py                     # EvolveError: shared by context and evolve
 context/domains/features/errors.py    # FeatureRenameError
 context/domains/proposals/errors.py   # ProposalError → ProposalExistsError, ProposalSlugError
 context/domains/equip/errors.py       # EquipError → TemplateError, ResetError, PatchError, …
@@ -626,6 +693,8 @@ Rules:
 All `.context/` artefacts are JSON. Use the existing helpers in
 `pipeline/io/cache.py` and the per-domain serialisers — do not re-implement
 `json.dumps(..., default=...)` ad-hoc.
+
+The shared atomic-write helpers live in `shared/atomic_io.py`. Context and evolve both import them.
 
 When serialising a frozen dataclass, write a `_to_dict()` helper next to
 the class (or use `dataclasses.asdict`). When loading, use a sibling
@@ -695,7 +764,8 @@ sprinkle `logging.getLogger(__name__)` calls ad-hoc.
 - Framework: **pytest** with markers (`unit`, `integration`).
 - Tests mirror `dummyindex/` layout under `tests/` (`tests/cli/`,
   `tests/context/build/`, `tests/context/output/`,
-  `tests/context/domains/…`). A domain with two or more test files gets
+  `tests/context/domains/…`, `tests/evolve/`, `tests/shared/`).
+  A domain with two or more test files gets
   its own subdirectory (`domains/equip/`, `domains/memory/`, …); a
   single-file domain stays a flat `domains/test_<domain>.py`.
 - Filesystem anchors come from `tests/paths.py` (`REPO_ROOT`,

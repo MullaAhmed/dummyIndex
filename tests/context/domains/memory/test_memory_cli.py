@@ -14,9 +14,9 @@ from dummyindex.context.domains.memory.miner import (
     skill_feedback_cache_path,
     write_skill_feedback,
 )
-from dummyindex.context.domains.probation import store
-from dummyindex.context.domains.probation.enums import State
-from dummyindex.context.domains.probation.models import Item
+from dummyindex.evolve.probation import store
+from dummyindex.evolve.probation.enums import State
+from dummyindex.evolve.probation.models import Item
 
 pytestmark = pytest.mark.integration
 
@@ -109,7 +109,7 @@ def test_session_start_raising_probation_block_is_silent(
     def boom(*_args, **_kwargs):
         raise RuntimeError("probation broke")
 
-    monkeypatch.setattr("dummyindex.context.domains.probation.session_block", boom)
+    monkeypatch.setattr("dummyindex.evolve.probation.session_block", boom)
     monkeypatch.setattr("sys.stdin", io.StringIO('{"session_id": "s1"}'))
     rc = dispatch(["memory", "session-start", "--root", str(tmp_path)])
     assert rc == 0
@@ -238,3 +238,33 @@ def test_prompt_context_is_fail_open_with_no_partial_json(
     captured = capsys.readouterr()
     assert captured.out == ""
     assert captured.err == ""
+
+
+def test_session_start_without_probation_hook_prints_no_probation(
+    monkeypatch: pytest.MonkeyPatch, tmp_path, capsys
+) -> None:
+    from dummyindex.cli import memory
+
+    dispatch(["memory", "init", "--root", str(tmp_path)])
+    capsys.readouterr()
+    monkeypatch.setattr(
+        "dummyindex.evolve.probation.session_block", lambda *_a, **_k: "PROBATION-MARK"
+    )
+    monkeypatch.setattr("sys.stdin", io.StringIO('{"session_id": "s1"}'))
+    rc = memory.run(["session-start", "--root", str(tmp_path)], session_block=None)
+    assert rc == 0
+    assert "PROBATION-MARK" not in capsys.readouterr().out
+
+
+def test_session_start_dispatch_injects_probation_hook(
+    monkeypatch: pytest.MonkeyPatch, tmp_path, capsys
+) -> None:
+    dispatch(["memory", "init", "--root", str(tmp_path)])
+    capsys.readouterr()
+    monkeypatch.setattr(
+        "dummyindex.evolve.probation.session_block", lambda *_a, **_k: "PROBATION-MARK"
+    )
+    monkeypatch.setattr("sys.stdin", io.StringIO('{"session_id": "s1"}'))
+    rc = dispatch(["memory", "session-start", "--root", str(tmp_path)])
+    assert rc == 0
+    assert "PROBATION-MARK" in capsys.readouterr().out

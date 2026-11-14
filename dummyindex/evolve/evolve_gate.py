@@ -230,10 +230,13 @@ def _managed_overlay(
     inputs: dict[str, bytes], edits: dict[str, bytes], *, normalize: bool = False
 ) -> dict[str, bytes]:
     """Rebaseline generated bodies without changing measured bytes at promotion."""
-    from .equip.generate.render import set_frontmatter_version
-    from .equip.lifecycle.hashing import content_hash
-    from .equip.lifecycle.status import bump, is_lifecycle_managed
-    from .equip.models import EquipmentManifest
+    from dummyindex.context.domains.equip.generate.render import set_frontmatter_version
+    from dummyindex.context.domains.equip.lifecycle.hashing import content_hash
+    from dummyindex.context.domains.equip.lifecycle.status import (
+        bump,
+        is_lifecycle_managed,
+    )
+    from dummyindex.context.domains.equip.models import EquipmentManifest
 
     manifest_path = ".context/equipment.json"
     if manifest_path not in inputs or not any(

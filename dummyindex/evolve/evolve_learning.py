@@ -4,10 +4,14 @@ from __future__ import annotations
 
 import json
 import warnings
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
 
-from dummyindex.shared.atomic_io import write_text_atomic
+from dummyindex.context.domains.proposals.closeout import failed_record_path
+from dummyindex.context.domains.proposals.errors import CloseoutError
+from dummyindex.context.domains.proposals.retirement import digest as receipt_digest
+from dummyindex.context.domains.proposals.retirement import receipt_path
+from dummyindex.shared.atomic_io import replace_bytes, write_text_atomic
 from dummyindex.shared.errors import EvolveError
 from dummyindex.shared.guard import project_lock, safe_file
 from dummyindex.shared.lesson import lesson_to_delta, validate_lesson
@@ -430,3 +434,78 @@ def run_learning(
     if reflection and queued.get("state") != "ignored":
         return finish_learning(context_dir, event_id, reflection, tests=tests)
     return queued
+
+
+Learner = Callable[..., dict]
+
+_SETTLED = {
+    LearningStatus.APPLIED,
+    LearningStatus.EVALUATED,
+    LearningStatus.BLOCKED,
+    LearningStatus.NO_ENTRY,
+    LearningStatus.IGNORED,
+}
+
+
+def learn_after_closeout(
+    context_dir: Path,
+    workspace: Path,
+    kind: str,
+    manifest: dict,
+    receipt: dict,
+    learner: Learner | None = None,
+) -> None:
+    """Run learning once; persist its status beside, never inside, the receipt.
+
+    The receipt bytes feed the event ID, so ``receipt["learning"]`` is in-memory
+    only. A settled stored status is reported as-is; ``failed`` or ``pending``
+    is retried on the next closeout.
+    """
+    reflection = manifest.get("learning_reflection")
+    if not (manifest.get("transfers") or reflection):
+        return
+    root = context_dir.parent
+    event_id = ""
+    failed = None
+    try:
+        failed = safe_file(
+            root,
+            failed_record_path(context_dir, kind, workspace.name)
+            .relative_to(root)
+            .as_posix(),
+            exists=False,
+        )
+        path = receipt_path(context_dir, kind, workspace.name)
+        encoded = (json.dumps(receipt, indent=2, sort_keys=True) + "\n").encode()
+        if path.read_bytes() != encoded:
+            raise CloseoutError("closeout receipt changed before learning intake")
+        event_id = f"closeout:{kind}:{workspace.name}:{receipt_digest(encoded)}"
+        stored = read_event(context_dir, event_id)
+        if stored is not None and learning_status(stored) in _SETTLED:
+            receipt["learning"] = stored
+            failed.unlink(missing_ok=True)
+            return
+        receipt["learning"] = (learner or run_learning)(
+            context_dir,
+            event_id=event_id,
+            evidence=[path.relative_to(root).as_posix()],
+            cue="Review accepted closeout knowledge for one narrow convention update",
+            reflection=reflection or None,
+            tests=tuple(reflection.get("tests", [])) if reflection else (),
+        )
+        failed.unlink(missing_ok=True)
+    except Exception as exc:  # Closeout committed; persist learning failure.
+        error = f"{type(exc).__name__}: {exc}"
+        event = mark_failed(context_dir, event_id, error) if event_id else None
+        if event is None:
+            record = {"kind": kind, "slug": workspace.name, "state": "failed"}
+            record.update(status="failed", error=error)
+            if failed is not None:
+                replace_bytes(
+                    failed,
+                    (json.dumps(record, sort_keys=True, indent=2) + "\n").encode(),
+                )
+        receipt["learning"] = event or record
+    else:
+        if receipt["learning"].get("status") is None:
+            receipt["learning"]["status"] = learning_status(receipt["learning"])

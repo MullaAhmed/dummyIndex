@@ -364,7 +364,7 @@ def test_second_write_failure_restores_all_targets_and_keeps_journal(
     repo: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from dummyindex.context.domains import evolve_promotion
+    from dummyindex.evolve import evolve_promotion
 
     run, targets = _two_targets(repo)
     assert _apply(repo) == 0
@@ -489,7 +489,7 @@ def test_failed_managed_manifest_write_restores_body_and_manifest(
     repo: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from dummyindex.context.domains import evolve_promotion
+    from dummyindex.evolve import evolve_promotion
 
     run, target, original_body, original_manifest = _managed_candidate(repo)
     assert _apply(repo) == 0
@@ -559,7 +559,7 @@ def test_interrupted_rollback_can_resume_without_overwriting_human_edits(
     monkeypatch: pytest.MonkeyPatch,
     human_edit: bool,
 ) -> None:
-    from dummyindex.context.domains import evolve_promotion
+    from dummyindex.evolve import evolve_promotion
 
     run, targets = _two_targets(repo)
     assert _apply(repo) == 0
@@ -609,7 +609,7 @@ def test_failed_candidate_cannot_be_overridden_when_baseline_is_unavailable(
     repo: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from dummyindex.context.domains import evolve_gate
+    from dummyindex.evolve import evolve_gate
 
     _prepared(repo)
     codes = iter((4, 1))
