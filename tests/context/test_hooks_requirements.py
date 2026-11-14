@@ -402,6 +402,73 @@ def test_gate_bypass_env_passes_without_cli(tmp_path: Path, native_sh: str) -> N
 
 
 @pytest.mark.integration
+def test_gate_bypass_env_with_cli_defers_to_gate(
+    tmp_path: Path, native_sh: str
+) -> None:
+    """With the CLI present the bypass is the CLI's job (it adds the warning)."""
+    (tmp_path / ".context").mkdir()
+    (tmp_path / ".context" / "config.toml").write_text(
+        "schema_version = 1\n", encoding="utf-8"
+    )
+    log = tmp_path / "cli.log"
+    _fake_cli(tmp_path / "bin", log)
+    settings = tmp_path / "settings.json"
+    install_requirements_hooks(settings, cli_version=_CLI_VERSION)
+
+    result = _run(
+        native_sh,
+        _gate_command(settings),
+        tmp_path,
+        path="./bin:/usr/bin:/bin",
+        extra_env={"DUMMYINDEX_ALLOW_UNMET_REQUIREMENTS": "1"},
+    )
+    assert result.returncode == 0
+    assert log.read_text(encoding="utf-8").strip() == "context requirements gate"
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "nested",
+    [
+        ".claude/skills/foo/SKILL.md",
+        ".agents/skills/bar/SKILL.md",
+    ],
+)
+def test_gate_fresh_marker_respects_nested_skill_removal(
+    tmp_path: Path, native_sh: str, nested: str
+) -> None:
+    """Deleting a skill file moves only its parent dir's mtime, so that dir is checked."""
+    ctx = tmp_path / ".context"
+    (ctx / "cache").mkdir(parents=True)
+    config = ctx / "config.toml"
+    config.write_text("schema_version = 1\n", encoding="utf-8")
+    _set_mtime(config, _OLD_MTIME)
+    skill = tmp_path / nested
+    skill.parent.mkdir(parents=True)
+    skill.write_text("# skill\n", encoding="utf-8")
+    # Both dirs predate the marker; removing the file moves only skill.parent's mtime.
+    _set_mtime(skill.parent, _OLD_MTIME + 10)
+    _set_mtime(skill.parent.parent, _OLD_MTIME + 10)
+    marker = ctx / "cache" / "requirements.ok"
+    marker.write_text("ok\n", encoding="utf-8")
+    _set_mtime(marker, _OLD_MTIME + 50)
+    log = tmp_path / "cli.log"
+    _fake_cli(tmp_path / "bin", log)
+    settings = tmp_path / "settings.json"
+    install_requirements_hooks(settings, cli_version=_CLI_VERSION)
+    command = _gate_command(settings)
+
+    fresh = _run(native_sh, command, tmp_path, path="./bin:/usr/bin:/bin")
+    assert fresh.returncode == 0
+    assert not log.exists()
+
+    skill.unlink()
+    stale = _run(native_sh, command, tmp_path, path="./bin:/usr/bin:/bin")
+    assert stale.returncode == 0
+    assert log.read_text(encoding="utf-8").strip() == "context requirements gate"
+
+
+@pytest.mark.integration
 def test_gate_fresh_marker_respects_new_agent_entry(
     tmp_path: Path, native_sh: str
 ) -> None:
@@ -437,8 +504,8 @@ def test_gate_fresh_marker_respects_new_agent_entry(
 def test_refresh_hooks_writes_requirements_entries_once(tmp_path: Path) -> None:
     """The upgrade hook refresh must not add a second requirements entry per event."""
     install(tmp_path)
-    _refresh_hooks(tmp_path, _CLI_VERSION)
-    _refresh_hooks(tmp_path, _CLI_VERSION)
+    _refresh_hooks(tmp_path)
+    _refresh_hooks(tmp_path)
     settings = tmp_path / ".claude" / "settings.json"
     assert len(_commands(settings, "UserPromptSubmit")) == 1
     assert len(_commands(settings, "SessionStart")) == 1

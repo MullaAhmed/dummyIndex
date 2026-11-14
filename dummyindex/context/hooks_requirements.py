@@ -53,20 +53,28 @@ _GATE_BODY = (
     "  stale=0\n"
     # Directories too: their mtime moves when entries are added or removed, which
     # changes the native adapter and project SKILL.md set the marker certifies.
+    # Per-skill globs: deleting `skills/foo/SKILL.md` moves only `skills/foo`'s mtime.
+    # An unmatched glob stays literal and fails the `-e` test, so it is harmless.
     '  for f in "$ROOT/.context/config.toml" "$ROOT/.context/equipment.json" '
     '"$ROOT/.claude/settings.json" "$ROOT/.claude/settings.local.json" '
-    '"$ROOT/.claude/agents" "$ROOT/.claude/skills" '
+    '"$ROOT/.claude/agents" "$ROOT/.claude/skills" "$ROOT"/.claude/skills/* '
+    '"$ROOT/.agents/skills" "$ROOT"/.agents/skills/* '
     '"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json" '
     '"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/plugins/installed_plugins.json"; do\n'
     '    if [ -e "$f" ] && [ "$f" -nt "$OK" ]; then stale=1; break; fi\n'
     "  done\n"
     '  [ "$stale" = 0 ] && exit 0\n'
     "fi\n"
-    '[ "${DUMMYINDEX_ALLOW_UNMET_REQUIREMENTS:-}" = 1 ] && exit 0\n'
-    "command -v dummyindex >/dev/null 2>&1 || { printf '%s\\n' "
+    "if ! command -v dummyindex >/dev/null 2>&1; then\n"
+    # Bypass applies only here: with the CLI present, `requirements gate` honours it
+    # and emits its warning.
+    '  [ "${DUMMYINDEX_ALLOW_UNMET_REQUIREMENTS:-}" = 1 ] && exit 0\n'
+    "  printf '%s\\n' "
     '\'{"decision":"block","reason":"dummyindex CLI not found. Install: '
     "pip install --user dummyindex (or uv tool install dummyindex), then "
-    "resend.\"}'; exit 0; }\n"
+    "resend.\"}'\n"
+    "  exit 0\n"
+    "fi\n"
     # Fail open: a non-zero exit (missing verb, internal error) would block the prompt.
     "dummyindex context requirements gate || exit 0\n"
 )

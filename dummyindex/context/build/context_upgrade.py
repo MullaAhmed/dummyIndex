@@ -164,7 +164,7 @@ def _run(
         changed = changed or equipment
 
     # 4. managed project hooks, only where the repo already has them.
-    hooks = _attempt("hooks", lambda: _refresh_hooks(root, package_version), errors)
+    hooks = _attempt("hooks", lambda: _refresh_hooks(root), errors)
     if hooks:
         steps.append("hooks")
         changed = True
@@ -452,7 +452,7 @@ def _write_adapter(
     return True
 
 
-def _refresh_hooks(root: Path, package_version: str) -> bool:
+def _refresh_hooks(root: Path) -> bool:
     from dummyindex.context import hooks
 
     if not hooks.local_install_present(root):
