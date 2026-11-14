@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from dummyindex.context.default_plugins import RunResult
 from dummyindex.context.domains.equip.enums import (
     EquipmentKind,
@@ -19,6 +21,8 @@ from dummyindex.context.domains.requirements import (
     SkillRequirement,
 )
 from dummyindex.context.domains.requirements.sync import sync_requirements
+
+pytestmark = pytest.mark.unit
 
 CAVEMAN = "caveman@caveman"
 CAVEMAN_REPO = ("repo", "JuliusBrussee/caveman")

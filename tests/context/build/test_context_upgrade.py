@@ -718,3 +718,42 @@ def test_upgrade_refreshes_project_binding_stack_of_pristine_item(tmp_path: Path
 
     refreshed = next(i for i in read_manifest(context_dir).items if i.name == name)
     assert refreshed.project_binding["stack"] == "python"
+
+
+@pytest.mark.integration
+def test_real_refresh_step_leaves_features_index_bytes_and_advances_stamp(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    """No refresh stub: step 1 really runs the deterministic refresh on a built repo."""
+    from importlib.metadata import version as package_version
+
+    from dummyindex.context.build.runner import build_all
+
+    (tmp_path / "app.py").write_text(
+        "def greet(name: str) -> str:\n    return f'hi {name}'\n\n"
+        "def main():\n    return greet('x')\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "util.py").write_text("def helper():\n    return 1\n", encoding="utf-8")
+    (tmp_path / ".git").mkdir()
+    (tmp_path / ".git" / "HEAD").write_text("ref: refs/heads/main\n", encoding="utf-8")
+    build_all(tmp_path, out_root=tmp_path, bootstrap=False, dummyindex_version="0.30.0")
+    context_dir = tmp_path / ".context"
+    index = context_dir / "features" / "INDEX.json"
+    index_before = index.read_bytes()
+    meta = read_meta(context_dir / "meta.json")
+    write_meta(
+        context_dir / "meta.json",
+        dataclasses.replace(meta, dummyindex_version="0.30.0"),
+    )
+    current = package_version("dummyindex")
+
+    report = upgrade_project(
+        tmp_path, package_version=current, refresh=None, runner=_runner(ignored=True)
+    )
+
+    assert "refresh" in report.steps
+    assert not report.errors
+    assert report.stamp_advanced
+    assert read_meta(context_dir / "meta.json").dummyindex_version == current
+    assert index.read_bytes() == index_before

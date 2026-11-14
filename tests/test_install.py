@@ -3148,6 +3148,12 @@ def test_auto_init_enriched_path_upgrades_once_with_the_refresh_result(
     (repo / ".context").mkdir()
     refresh = RefreshResult(context_dir=repo / ".context", written=("tree.json",))
     refreshes = _spy_upgrade(monkeypatch)
+    from subprocess import CompletedProcess
+
+    monkeypatch.setattr(
+        "dummyindex.context.git.run_git",
+        lambda *_a, **_k: CompletedProcess([], 1, "", ""),
+    )
     monkeypatch.setattr(
         "dummyindex.context.build.enriched_index_status",
         lambda _ctx: EnrichedIndexStatus(enriched=True, desync=False),
@@ -3172,6 +3178,12 @@ def test_auto_init_full_build_path_upgrades_once_without_a_second_refresh(
     repo = tmp_path / "repo"
     _make_repo_with_source(repo)
     refreshes = _spy_upgrade(monkeypatch)
+    from subprocess import CompletedProcess
+
+    monkeypatch.setattr(
+        "dummyindex.context.git.run_git",
+        lambda *_a, **_k: CompletedProcess([], 1, "", ""),
+    )
 
     assert _auto_init_project(repo, platform="codex") is True
 
@@ -3225,6 +3237,38 @@ def test_user_scope_requirements_hooks_land_in_claude_config_dir_only(
     assert "UserPromptSubmit" in settings and "SessionStart" in settings
     assert not home_claude.exists()
     assert "requirements" in capsys.readouterr().out
+
+
+@pytest.mark.unit
+def test_user_scope_claude_skill_only_writes_requirements_hooks_to_config_dir(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """User-scope Claude install writes only the requirements hooks into the config dir."""
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
+    config_dir = tmp_path / "claude-config"
+    config_dir.mkdir()
+    monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(config_dir))
+    clean_cwd = tmp_path / "cwd"
+    clean_cwd.mkdir()
+    monkeypatch.chdir(clean_cwd)
+
+    install(scope="user", platform="claude", skill_only=True)
+
+    settings = json.loads((config_dir / "settings.json").read_text(encoding="utf-8"))
+    assert set(settings) == {"hooks"}
+    assert set(settings["hooks"]) == {"UserPromptSubmit", "SessionStart"}
+    commands = [
+        hook["command"]
+        for entries in settings["hooks"].values()
+        for entry in entries
+        for hook in entry["hooks"]
+    ]
+    assert commands and all("DUMMYINDEX_REQUIREMENTS" in c for c in commands)
+    assert not (fake_home / ".claude" / "settings.json").exists()
 
 
 @pytest.mark.integration

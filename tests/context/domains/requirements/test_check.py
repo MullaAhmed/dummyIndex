@@ -146,9 +146,11 @@ def test_dev_explicit_false_is_missing_disabled_by_you(dirs):
     )
     _registry(config_dir, {PLUGIN: _user_record()})
     req = Requirements(plugins=(PluginRequirement(id=PLUGIN),))
-    row = _row(_check(project, config_dir, req), RequirementKind.PLUGIN, PLUGIN)
+    rows = _check(project, config_dir, req)
+    row = _row(rows, RequirementKind.PLUGIN, PLUGIN)
     assert row.status is _S.MISSING
     assert row.reason == "disabled by you"
+    assert exit_code(rows) == 3
 
 
 @pytest.mark.unit
@@ -157,9 +159,11 @@ def test_user_scope_explicit_false_is_missing_disabled_by_you(dirs):
     _enable_user(config_dir, value=False)
     _registry(config_dir, {PLUGIN: _user_record()})
     req = Requirements(plugins=(PluginRequirement(id=PLUGIN),))
-    row = _row(_check(project, config_dir, req), RequirementKind.PLUGIN, PLUGIN)
+    rows = _check(project, config_dir, req)
+    row = _row(rows, RequirementKind.PLUGIN, PLUGIN)
     assert row.status is _S.MISSING
     assert row.reason == "disabled by you"
+    assert exit_code(rows) == 3
 
 
 @pytest.mark.unit
@@ -322,8 +326,10 @@ def test_plugin_skill_reuses_plugin_judgement(dirs):
 def test_project_skill_missing_is_missing(dirs):
     project, config_dir = dirs
     req = Requirements(skills=(SkillRequirement(name="repo-helper", from_="project"),))
-    row = _row(_check(project, config_dir, req), RequirementKind.SKILL, "repo-helper")
+    rows = _check(project, config_dir, req)
+    row = _row(rows, RequirementKind.SKILL, "repo-helper")
     assert row.status is _S.MISSING
+    assert exit_code(rows) == 3
 
 
 @pytest.mark.unit
