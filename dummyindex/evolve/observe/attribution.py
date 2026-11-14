@@ -6,12 +6,12 @@ import json
 from datetime import datetime
 from pathlib import Path
 
+from dummyindex.context.domains.config import current_dummyindex_version
+from dummyindex.context.domains.memory.miner.signatures import canonical_signature
 from dummyindex.shared.atomic_io import write_text_atomic
 from dummyindex.shared.errors import EvolveError
 from dummyindex.shared.guard import safe_file
 
-from ..config import current_dummyindex_version
-from ..memory.miner.signatures import canonical_signature
 from . import ledger
 from .enums import CorrectionStatus, ExposureVia, Verdict
 from .importer import DETECTOR_VERSION, human_text

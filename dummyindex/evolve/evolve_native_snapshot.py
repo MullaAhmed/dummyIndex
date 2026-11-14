@@ -56,9 +56,9 @@ def _inputs(root):
         return inputs
     # Omit generated history only after verifying the complete captured generation.
     try:
-        data = graph_storage._decode(inputs[manifest], root / manifest)
-        if data.get("format") == graph_storage._FORMAT:
-            graph_storage._read_manifest(data, root / manifest, len(inputs[manifest]))
+        data = graph_storage.decode(inputs[manifest], root / manifest)
+        if data.get("format") == graph_storage.FORMAT:
+            graph_storage.read_manifest(data, root / manifest, len(inputs[manifest]))
             active = {".context/features/" + d["path"] for d in data["shards"]}
             if any(
                 ".context/features/" + d["path"] not in inputs
@@ -83,7 +83,7 @@ def _inputs(root):
         or not (
             p.startswith(prefix)
             and p.endswith(".json")
-            and graph_storage._HASH_RE.fullmatch(p[len(prefix) : -5])
+            and graph_storage.HASH_RE.fullmatch(p[len(prefix) : -5])
         )
     }
 

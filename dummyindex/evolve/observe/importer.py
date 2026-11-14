@@ -9,11 +9,11 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 
+from dummyindex.context.domains.config import current_dummyindex_version
+from dummyindex.context.domains.memory.miner.scan import human_prompt_text
 from dummyindex.shared.errors import EvolveError
 from dummyindex.shared.lesson.rules import rules_in
 
-from ..config import current_dummyindex_version
-from ..memory.miner.scan import _human_prompt_text
 from .enums import CorrectionStatus
 from .keys import keyed_id, session_key
 from .models import Correction
@@ -50,7 +50,7 @@ _EMPTY_HASH = hashlib.sha256(b"").hexdigest()
 
 def human_text(obj: dict) -> str | None:
     """External human prompt text, or None for injected, learning or synthetic rows."""
-    text = _human_prompt_text(obj)
+    text = human_prompt_text(obj)
     if text is None or text.lstrip().startswith(INJECTED) or LEARNING_MARK in text:
         return None
     return text

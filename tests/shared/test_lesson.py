@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.domains.living_rules import plan_rule, sha256
+from dummyindex.evolve.living_rules import plan_rule, sha256
 from dummyindex.shared.errors import EvolveError
 from dummyindex.shared.lesson import (
     Confidence,

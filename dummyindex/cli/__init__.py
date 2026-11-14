@@ -28,7 +28,6 @@ from . import (
     drift_ack,
     enrich,
     equip,
-    evolve,
     features,
     fleet,
     gc,
@@ -85,6 +84,12 @@ def _wants_help(rest: list[str]) -> bool:
     return False
 
 
+def _evolve_run(args: list[str]) -> int:
+    from dummyindex.evolve.cli.evolve import run
+
+    return run(args)
+
+
 _HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
     ContextSubcommand.INIT: init.run,
     ContextSubcommand.REBUILD: rebuild.run,
@@ -138,7 +143,7 @@ _HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
     ContextSubcommand.MIGRATE_DOCS: migrate_docs.run,
     ContextSubcommand.GUARD_DOC_WRITE: guard_doc_write.run,
     ContextSubcommand.DRIFT_ACK: drift_ack.run,
-    ContextSubcommand.EVOLVE: evolve.run,
+    ContextSubcommand.EVOLVE: _evolve_run,
     ContextSubcommand.UPGRADE: upgrade.run,
 }
 

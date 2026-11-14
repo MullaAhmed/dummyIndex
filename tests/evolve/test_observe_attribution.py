@@ -6,8 +6,8 @@ from datetime import datetime, timezone
 
 import pytest
 
-from dummyindex.context.domains.living_rules import durable_evidence
-from dummyindex.context.domains.observe import (
+from dummyindex.evolve.living_rules import durable_evidence
+from dummyindex.evolve.observe import (
     attributions,
     commit_evidence_stub,
     corrections,
@@ -20,8 +20,8 @@ from dummyindex.context.domains.observe import (
     session_key,
     session_tool_calls,
 )
-from dummyindex.context.domains.observe import importer as I
-from dummyindex.context.domains.observe import ledger as L
+from dummyindex.evolve.observe import importer as I
+from dummyindex.evolve.observe import ledger as L
 from dummyindex.shared.errors import EvolveError
 
 pytestmark = pytest.mark.unit

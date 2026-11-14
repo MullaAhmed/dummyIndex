@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.domains.evolve_experiments import (
+from dummyindex.evolve.evolve_experiments import (
     _execute,
     run_experiment,
     utility_status,
@@ -290,7 +290,7 @@ def test_infra_is_unmeasured_and_total_budget_keeps_incumbent(
     result = run_experiment(context, run, specification)
     assert result["stages"][1]["status"] == "infra_error"
     assert result["current"] == "incumbent"
-    from dummyindex.context.domains import evolve_experiments
+    from dummyindex.evolve import evolve_experiments
 
     original_execute = evolve_experiments._execute
     calls = 0
@@ -395,7 +395,7 @@ def test_runner_output_is_bounded_while_process_is_alive(tmp_path: Path) -> None
 def test_timeout_kills_descendant_processes(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from dummyindex.context.domains import evolve_experiments
+    from dummyindex.evolve import evolve_experiments
 
     if sys.platform == "win32":
         import _winapi

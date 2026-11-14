@@ -13,11 +13,11 @@ from pathlib import Path
 import pytest
 
 from dummyindex.cli import dispatch
-from dummyindex.context.domains.evolve_learning import _path as event_path
 from dummyindex.context.domains.proposals.retirement import (
     ADMIN_FILES,
     workspace_inventory,
 )
+from dummyindex.evolve.evolve_learning import _path as event_path
 
 _BLOCKED = {"state": "evaluated", "verdict": "blocked", "status": "blocked"}
 _FAILED = {"identity": "stale-identity"}

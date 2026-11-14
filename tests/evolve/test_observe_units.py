@@ -9,19 +9,19 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.domains.observe.enums import (
+from dummyindex.evolve.observe.enums import (
     CorrectionStatus,
     ExposureVia,
     Verdict,
 )
-from dummyindex.context.domains.observe.keys import (
+from dummyindex.evolve.observe.keys import (
     evidence_key,
     evolution_enabled,
     keyed_id,
     retention_days,
 )
-from dummyindex.context.domains.observe.models import Attribution, Correction, Exposure
-from dummyindex.context.domains.observe.security import scan_text
+from dummyindex.evolve.observe.models import Attribution, Correction, Exposure
+from dummyindex.evolve.observe.security import scan_text
 
 pytestmark = pytest.mark.unit
 

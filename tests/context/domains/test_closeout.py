@@ -12,12 +12,6 @@ import pytest
 
 from dummyindex.cli import dispatch
 from dummyindex.context.domains.buildloop import parse_checklist
-from dummyindex.context.domains.evolve_learning import (
-    enqueue_learning,
-    prepare_learning,
-    read_event,
-    run_learning,
-)
 from dummyindex.context.domains.gc import CandidateKind, GcTargetError, delete_workspace
 from dummyindex.context.domains.proposals import CloseoutError, closeout_workspace
 from dummyindex.context.domains.proposals.closeout import learning_exit_code
@@ -27,6 +21,12 @@ from dummyindex.context.domains.proposals.retirement import (
     durable_references,
     retirement_block,
     workspace_inventory,
+)
+from dummyindex.evolve.evolve_learning import (
+    enqueue_learning,
+    prepare_learning,
+    read_event,
+    run_learning,
 )
 
 

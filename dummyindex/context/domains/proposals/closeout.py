@@ -280,14 +280,13 @@ def _learn_after_closeout(
     failed = None
     mark_failed = _no_mark
     try:
-        from dummyindex.shared.guard import safe_file
-
-        from ..evolve_learning import (
+        from dummyindex.evolve.evolve_learning import (
             learning_status,
             mark_failed,
             read_event,
             run_learning,
         )
+        from dummyindex.shared.guard import safe_file
 
         failed = safe_file(
             root,

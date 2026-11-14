@@ -5,7 +5,7 @@ import os
 
 import pytest
 
-from dummyindex.context.domains.evolve_experiments import run_experiment, utility_status
+from dummyindex.evolve.evolve_experiments import run_experiment, utility_status
 from dummyindex.shared.errors import EvolveError
 
 
@@ -223,7 +223,7 @@ def test_native_action_budget_and_deadline_do_not_reset(native, monkeypatch):
 
 
 def test_native_late_response_rejected(native, monkeypatch):
-    from dummyindex.context.domains import evolve_native
+    from dummyindex.evolve import evolve_native
 
     context, run, spec = native
     view = run_experiment(context, run, spec)
@@ -264,7 +264,7 @@ def test_native_invalid_budget_is_domain_error(native):
 
 
 def test_native_interrupted_accept_never_redispatches(native, monkeypatch):
-    from dummyindex.context.domains import evolve_native
+    from dummyindex.evolve import evolve_native
 
     context, run, spec = native
     view = run_experiment(context, run, spec)
@@ -281,7 +281,7 @@ def test_native_interrupted_accept_never_redispatches(native, monkeypatch):
 
 
 def test_native_snapshot_keeps_python_source_in_cache(tmp_path):
-    from dummyindex.context.domains.evolve_native_snapshot import _tree
+    from dummyindex.evolve.evolve_native_snapshot import _tree
 
     cache = tmp_path / "src/__pycache__"
     cache.mkdir(parents=True)
@@ -294,8 +294,8 @@ def test_native_snapshot_keeps_python_source_in_cache(tmp_path):
 def test_native_snapshot_keeps_active_graph_without_copying_old_generations(
     tmp_path, generation
 ):
-    from dummyindex.context.domains.evolve_gate import _working_inputs
-    from dummyindex.context.domains.evolve_native_snapshot import _inputs, _materialize
+    from dummyindex.evolve.evolve_gate import _working_inputs
+    from dummyindex.evolve.evolve_native_snapshot import _inputs, _materialize
     from dummyindex.export.storage import read_graph_payload, write_graph_payload
 
     graph = tmp_path / ".context/features/symbol-graph.json"
@@ -333,7 +333,7 @@ def test_native_snapshot_keeps_active_graph_without_copying_old_generations(
 
 
 def test_native_expired_pending_becomes_stable_terminal(native, monkeypatch):
-    from dummyindex.context.domains import evolve_native
+    from dummyindex.evolve import evolve_native
 
     context, run, spec = native
     view = run_experiment(context, run, spec)
@@ -410,7 +410,7 @@ def test_native_resume_ignores_host_dispatch_id_but_pins_model_environment(
 
 
 def test_native_runtime_profile_invalidates_resume(native, monkeypatch):
-    from dummyindex.context.domains import evolve_native_snapshot
+    from dummyindex.evolve import evolve_native_snapshot
 
     context, run, spec = native
     run_experiment(context, run, spec)
@@ -437,7 +437,7 @@ def test_native_grader_preserves_and_binds_executor_modes(native):
 
 
 def test_native_accepted_response_remains_idempotent_after_expiry(native, monkeypatch):
-    from dummyindex.context.domains import evolve_native
+    from dummyindex.evolve import evolve_native
 
     context, run, spec = native
     view = run_experiment(context, run, spec)
@@ -501,7 +501,7 @@ def _outcomes(statuses, controls=True):
 def test_native_preserves_optional_passes_and_required_controls(
     candidate_statuses, controls, eligible
 ):
-    from dummyindex.context.domains.evolve_native import _preserves_passes
+    from dummyindex.evolve.evolve_native import _preserves_passes
 
     assert (
         _preserves_passes(
@@ -514,8 +514,8 @@ def test_native_preserves_optional_passes_and_required_controls(
 def test_native_heldout_aggregate_gain_cannot_mask_optional_regression(
     native, monkeypatch
 ):
-    from dummyindex.context.domains import evolve_native
-    from dummyindex.context.domains.evolve_experiments import _comparison_reason
+    from dummyindex.evolve import evolve_native
+    from dummyindex.evolve.evolve_experiments import _comparison_reason
 
     context, _, _ = native
     incumbent = _outcomes(["pass", "fail", "fail"])

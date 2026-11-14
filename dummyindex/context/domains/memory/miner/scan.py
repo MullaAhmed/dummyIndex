@@ -105,7 +105,7 @@ def _iter_skill_json_lines(path: Path) -> Iterator[tuple[int, dict]]:
         with path.open("r", encoding="utf-8", errors="replace") as fh:
             for line_number, raw in enumerate(fh):
                 # Claude's JSONL writer uses one of these two layouts. Non-user rows
-                # can't satisfy `_human_prompt_text`; skip their large payloads.
+                # can't satisfy `human_prompt_text`; skip their large payloads.
                 if '"type":"user"' not in raw and '"type": "user"' not in raw:
                     continue
                 lowered = raw.lower()
@@ -188,7 +188,7 @@ def _resolved_cwd_matches(value: object, repo_root: Path) -> bool:
         return False
 
 
-def _human_prompt_text(obj: dict) -> str | None:
+def human_prompt_text(obj: dict) -> str | None:
     """Extract only an external human prompt, never a synthetic user row."""
     if obj.get("type") != "user" or obj.get("userType") != "external":
         return None
@@ -257,7 +257,7 @@ def parse_skill_directive_events(
     for line_number, obj in _iter_skill_json_lines(path):
         if not _resolved_cwd_matches(obj.get("cwd"), resolved_root):
             continue
-        text = _human_prompt_text(obj)
+        text = human_prompt_text(obj)
         if text is None:
             continue
         timestamp = obj.get("timestamp")

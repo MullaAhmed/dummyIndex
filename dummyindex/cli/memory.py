@@ -55,7 +55,7 @@ def _print_probation(root: Path) -> None:
     try:
         hook = read_hook_stdin()
         raw = hook.get("session_id")
-        from dummyindex.context.domains.probation import session_block
+        from dummyindex.evolve.probation import session_block
 
         extra = session_block(root / ".context", raw if isinstance(raw, str) else "")
         if extra:

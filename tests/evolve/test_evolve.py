@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.domains.evolve import (
+from dummyindex.evolve.evolve import (
     CANDIDATES_NAME,
     EVOLUTION_REL,
     Candidate,

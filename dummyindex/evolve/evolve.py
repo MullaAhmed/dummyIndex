@@ -15,6 +15,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
+from dummyindex.context.build.reconcile import compute_reconcile_report
+from dummyindex.context.domains.gc.constants import AUDITS_REL, GC_STATE_REL
 from dummyindex.shared.errors import EvolveError
 from dummyindex.shared.guard import safe_file
 from dummyindex.usage.transcripts import (
@@ -22,9 +24,7 @@ from dummyindex.usage.transcripts import (
     encode_project_slug,
 )
 
-from ..build.reconcile import compute_reconcile_report
 from .evolve_gate import GateResult, GateStage, run_gate
-from .gc.constants import AUDITS_REL, GC_STATE_REL
 
 __all__ = [
     "AUDITS_REL",
@@ -479,7 +479,7 @@ def harvest(
     items.extend(_harvest_reconcile(context_dir, project_root))
     root = projects_root if projects_root is not None else default_projects_root()
     if root.is_dir():
-        from .memory.miner.scope import project_dir_name
+        from dummyindex.context.domains.memory.miner.scope import project_dir_name
 
         for transcript in sorted(
             {

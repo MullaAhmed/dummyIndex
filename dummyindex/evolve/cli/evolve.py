@@ -14,7 +14,8 @@ import shutil
 import sys
 from pathlib import Path
 
-from .common import resolve_context_root, usage_error
+from dummyindex.cli.common import resolve_context_root, usage_error
+
 from .evolve_probation import run_attribute, run_probation
 
 _EVOLVE_USAGE = (
@@ -57,7 +58,7 @@ def run(args: list[str]) -> int:
 
 def _evolve_evidence(args: list[str]) -> int:
     """Import project-scoped Claude/Codex evidence without copying prompt text."""
-    from dummyindex.context.domains.evidence import scan_hosts
+    from dummyindex.evolve.evidence import scan_hosts
     from dummyindex.shared.errors import EvolveError
 
     values, _flags, err = _parse_flags(
@@ -92,14 +93,14 @@ def _evolve_evidence(args: list[str]) -> int:
 
 def _evolve_learning(args: list[str]) -> int:
     """At closeout dispatch one pending reflection, then prepare or NO_ENTRY."""
-    from dummyindex.context.domains.evolve_learning import (
-        finish_learning,
-        learning_status,
-        pending_learning,
-    )
     from dummyindex.context.domains.proposals.closeout import (
         learning_exit_code,
         learning_line,
+    )
+    from dummyindex.evolve.evolve_learning import (
+        finish_learning,
+        learning_status,
+        pending_learning,
     )
     from dummyindex.shared.errors import EvolveError
 
@@ -148,7 +149,7 @@ def _evolve_learning(args: list[str]) -> int:
 
 
 def _evolve_rules(args: list[str]) -> int:
-    from dummyindex.context.domains.living_rules import rule_status
+    from dummyindex.evolve.living_rules import rule_status
     from dummyindex.shared.errors import EvolveError
 
     values, _flags, err = _parse_flags(args, value_keys={"root"}, bool_keys={"json"})
@@ -166,7 +167,7 @@ def _evolve_rules(args: list[str]) -> int:
 
 
 def _evolve_utility(args: list[str]) -> int:
-    from dummyindex.context.domains.evolve_experiments import utility_status
+    from dummyindex.evolve.evolve_experiments import utility_status
     from dummyindex.shared.errors import EvolveError
 
     values, _flags, err = _parse_flags(args, value_keys={"root"}, bool_keys={"json"})
@@ -184,8 +185,8 @@ def _evolve_utility(args: list[str]) -> int:
 
 
 def _evolve_experiment(args: list[str]) -> int:
-    from dummyindex.context.domains.evolve import run_dir_for
-    from dummyindex.context.domains.evolve_experiments import run_experiment
+    from dummyindex.evolve.evolve import run_dir_for
+    from dummyindex.evolve.evolve_experiments import run_experiment
     from dummyindex.shared.errors import EvolveError
 
     values, _flags, err = _parse_flags(
@@ -322,7 +323,7 @@ def _candidate_index(raw: object) -> int | None:
 
 def _load_candidate_lines(run_dir: Path) -> list[dict]:
     """Non-empty lines of ``candidates.jsonl`` as parsed objects (corrupt → [])."""
-    from dummyindex.context.domains.evolve import CANDIDATES_NAME
+    from dummyindex.evolve.evolve import CANDIDATES_NAME
 
     path = run_dir / CANDIDATES_NAME
     lines: list[dict] = []
@@ -344,14 +345,14 @@ def _load_candidate_lines(run_dir: Path) -> list[dict]:
 
 def _evolve_harvest(args: list[str]) -> int:
     """`evolve harvest [--since DATE] [--sleep] [--json] [--run NAME]` (exit 0)."""
-    from dummyindex.context.domains.evolve import (
+    from dummyindex.evolve.evolve import (
         EVOLVE_DIR_REL,
         HARVEST_NAME,
         check_predictions,
         mint_run_dir,
         record_event,
     )
-    from dummyindex.context.domains.evolve import (
+    from dummyindex.evolve.evolve import (
         harvest as harvest_domain,
     )
     from dummyindex.shared.atomic_io import write_text_atomic
@@ -432,7 +433,7 @@ def _evolve_harvest(args: list[str]) -> int:
 
 def _evolve_diagnose(args: list[str]) -> int:
     """`evolve diagnose --run NAME --from-file FILE [--json]`."""
-    from dummyindex.context.domains.evolve import (
+    from dummyindex.evolve.evolve import (
         CANDIDATES_NAME,
         HARVEST_NAME,
         MAX_CANDIDATES,
@@ -547,7 +548,7 @@ def _evolve_diagnose(args: list[str]) -> int:
 
 def _evolve_apply(args: list[str]) -> int:
     """`evolve apply --candidate N --run NAME [--json]` — stage + gate (exit 0)."""
-    from dummyindex.context.domains.evolve import (
+    from dummyindex.evolve.evolve import (
         CANDIDATES_NAME,
         GATE_NAME_FMT,
         EvolveError,
@@ -654,15 +655,15 @@ def _evolve_apply(args: list[str]) -> int:
 
 def _evolve_promote(args: list[str]) -> int:
     """Adopt only the exact qualified content, with a recoverable multi-file write."""
-    from dummyindex.context.domains.evolve import (
+    from dummyindex.evolve.evolve import (
         EvolveError,
         parse_candidate,
         record_event,
         run_dir_for,
         validate_candidate,
     )
-    from dummyindex.context.domains.evolve_gate import check_receipt
-    from dummyindex.context.domains.evolve_promotion import promote_files
+    from dummyindex.evolve.evolve_gate import check_receipt
+    from dummyindex.evolve.evolve_promotion import promote_files
     from dummyindex.shared.guard import project_lock, safe_file
 
     values, _flags, err = _parse_flags(
@@ -752,7 +753,7 @@ def _evolve_promote(args: list[str]) -> int:
 
 def _evolve_rollback(args: list[str]) -> int:
     """`evolve rollback --candidate N --run NAME` — restore pre-promote content."""
-    from dummyindex.context.domains.evolve import (
+    from dummyindex.evolve.evolve import (
         EvolveError,
         record_event,
         run_dir_for,
@@ -786,7 +787,7 @@ def _evolve_rollback(args: list[str]) -> int:
     except EvolveError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
-    from dummyindex.context.domains.evolve_promotion import rollback_files
+    from dummyindex.evolve.evolve_promotion import rollback_files
     from dummyindex.shared.guard import project_lock
 
     try:
@@ -817,7 +818,7 @@ def _evolve_rollback(args: list[str]) -> int:
 
 def _evolve_discard(args: list[str]) -> int:
     """`evolve discard --candidate N --run NAME` — drop the staged copy."""
-    from dummyindex.context.domains.evolve import (
+    from dummyindex.evolve.evolve import (
         BACKUP_DIR_NAME,
         STAGED_DIR_NAME,
         EvolveError,

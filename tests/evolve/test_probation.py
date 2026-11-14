@@ -10,25 +10,25 @@ from types import SimpleNamespace
 
 import pytest
 
-from dummyindex.context.domains import evidence
-from dummyindex.context.domains.evidence import scan_hosts
-from dummyindex.context.domains.evolve_learning import (
+from dummyindex.evolve import evidence
+from dummyindex.evolve.evidence import scan_hosts
+from dummyindex.evolve.evolve_learning import (
     enqueue_learning,
     finish_learning,
     prepare_learning,
 )
-from dummyindex.context.domains.living_rules import sha256
-from dummyindex.context.domains.observe import (
+from dummyindex.evolve.living_rules import sha256
+from dummyindex.evolve.observe import (
     corrections,
     exposures,
     record_attribution,
     record_exposure,
     session_key,
 )
-from dummyindex.context.domains.probation import render, rules, store
-from dummyindex.context.domains.probation.enums import Followed, Route, State
-from dummyindex.context.domains.probation.models import Item
-from dummyindex.context.domains.probation.sync import eligible_ids, sync
+from dummyindex.evolve.probation import render, rules, store
+from dummyindex.evolve.probation.enums import Followed, Route, State
+from dummyindex.evolve.probation.models import Item
+from dummyindex.evolve.probation.sync import eligible_ids, sync
 from dummyindex.shared.errors import EvolveError
 
 pytestmark = pytest.mark.unit
