@@ -69,6 +69,32 @@
     "task_id": "task-0570130417a521ff",
     "task_sha256": "0570130417a521ffe5b81b4484447ba2c92f5447094d17610ef4729325129428"
   },
+  "task-10b8feb65d36f3f5": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/gc/delete.py",
+        "sha256": "43dac946e33cbdea1e6882e001408c1d25fcca7f8c7a63f1cc2335801ccfc983"
+      },
+      {
+        "path": "dummyindex/cli/gc.py",
+        "sha256": "c53cfff77b5d227fe87fdb8c000f147f629e46e73f0075a6664013e0211ccc1c"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/gc/test_equipment_delete.py",
+        "sha256": "e75e0cb7787c61cb45fbdb2cbd2dfa967807dc75cbf39e521c16c65dab1201f9"
+      },
+      {
+        "path": "tests/cli/test_gc_cli.py",
+        "sha256": "7842ea9ddde8fc1910eb59d3649656907c7777fc40f2bbd6e0e8a78d95debe43"
+      }
+    ],
+    "source_commit": "107a3e73327b075e15f6b24f24fab6799fe77f1f",
+    "state": "verified",
+    "task_id": "task-10b8feb65d36f3f5",
+    "task_sha256": "10b8feb65d36f3f58ec7385c9414fc39978ec57039813e25b334e829265f992a"
+  },
   "task-221c4f179be40977": {
     "artifacts": [
       {
@@ -86,6 +112,48 @@
     "state": "verified",
     "task_id": "task-221c4f179be40977",
     "task_sha256": "221c4f179be40977b900c744d9b407394f46e1a1de06a3b4c05f1981ee30e992"
+  },
+  "task-323c4c9a9a04624e": {
+    "artifacts": [
+      {
+        "path": "dummyindex/cli/upgrade.py",
+        "sha256": "c0afe976c7bf6b07d760ae57b8045679395a8e672d1cb2373ec302413e614bc5"
+      },
+      {
+        "path": "dummyindex/context/enums.py",
+        "sha256": "56feb1c267ee04ac45f437c233e8a5bb1484fe77b1324f20e082537387b2c225"
+      },
+      {
+        "path": "dummyindex/cli/__init__.py",
+        "sha256": "7c846e959e6d755245625cf563a265f4d02b74feba231198f416bbc7baa3ed57"
+      },
+      {
+        "path": "dummyindex/cli/help.py",
+        "sha256": "de7648a6375f87bfcbaffd3a0a70078cbac607ee0b45c94725f0ec29f6b496de"
+      },
+      {
+        "path": "docs/COMMANDS.md",
+        "sha256": "8c477f8840baf759fcae0e1ef645f8b72d86a64d92e35ea4469e727d8203a878"
+      },
+      {
+        "path": "docs/guide/07-cli.md",
+        "sha256": "6a444411ae9ac03b805d2cd54524d189244c7ac313b149b51d989ec05d2753b7"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/cli/test_upgrade_cli.py",
+        "sha256": "b307d4106c4dc43ab615320c3de53694f5b648e01e852ef6f0f67c1f1d6f94e4"
+      },
+      {
+        "path": "tests/cli/test_cli_doc_sync.py",
+        "sha256": "dfe5afcf8e78ada3749654483dc7b8c0aca4a974d749a9a38dcd932912143e73"
+      }
+    ],
+    "source_commit": "107a3e73327b075e15f6b24f24fab6799fe77f1f",
+    "state": "verified",
+    "task_id": "task-323c4c9a9a04624e",
+    "task_sha256": "323c4c9a9a04624e05ab5769a80f086545a42e0756f8001d8bdbaf457b00a1df"
   },
   "task-413e1e2743340d08": {
     "artifacts": [
@@ -168,6 +236,90 @@
     "state": "verified",
     "task_id": "task-4df3b3dfd9fe6048",
     "task_sha256": "4df3b3dfd9fe60480c3a0e427efa37181a3cb9c69584dcc787e969122730fde5"
+  },
+  "task-53b2284d68ece120": {
+    "artifacts": [
+      {
+        "path": "dummyindex/skills/update/SKILL.md",
+        "sha256": "3b0de250b68e40f1331ea17b6100eac189837e711daf17238d9bb2851339583e"
+      },
+      {
+        "path": "dummyindex/skills/equip/SKILL.md",
+        "sha256": "e82d7f261afd084bf01f9ebc711604ee18fe75d67f89f9c413b2c78b4a57fed4"
+      },
+      {
+        "path": "dummyindex/skills/gc/SKILL.md",
+        "sha256": "2d8d18453f70558c0c92251fae4a9854bc5f730944801935ddd88c806678e484"
+      },
+      {
+        "path": "dummyindex/context/output/instructions.py",
+        "sha256": "7189970808572f9b4ffb28f06d16127a415fe72de619e34d40fd4203f9577477"
+      },
+      {
+        "path": "tests/data/skill-budget.txt",
+        "sha256": "290f1867b838dc98a6fc79c70196b312b312e7832a14cc83860e23ce29cb9a55"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/test_skills_doc_hygiene.py",
+        "sha256": "f67e55ce8b6217e9656a8dc53e07adcd49b1440a0ff0bfd578df923cdb5a10eb"
+      },
+      {
+        "path": "tests/context/output/test_instructions.py",
+        "sha256": "1154c7a03f6f86b75e3ec2d102e689aacd05be702f8b463a6fd1112df085b203"
+      }
+    ],
+    "source_commit": "f34b578faebe9f46761933396e4d3486d2b1ab13",
+    "state": "verified",
+    "task_id": "task-53b2284d68ece120",
+    "task_sha256": "53b2284d68ece1201024ebdf0cdedac194916010bfe4c1e686c6143f5c1642a2"
+  },
+  "task-6b5489d555a4baeb": {
+    "artifacts": [
+      {
+        "path": "dummyindex/installer/install/project_init.py",
+        "sha256": "cb57d8c0cca886c7fa1d317c681a59a224dffa507e1fbb0c2bed2b5b41532eb0"
+      },
+      {
+        "path": "dummyindex/installer/install/__init__.py",
+        "sha256": "891d59dc98f770ab694698b409112ee5f5ac0e9e465aa3a15b92cc3aa5d27c96"
+      },
+      {
+        "path": "dummyindex/installer/install/orchestrate.py",
+        "sha256": "0143d4e5702a9166ce54c2170e6011fce0a39b2957e96e7efdc9f0f8d4c9a30c"
+      },
+      {
+        "path": "dummyindex/cli/init.py",
+        "sha256": "c009215426d74a876c217234700dab9e16e58738bf90da6e6db7de2e0dcfca8c"
+      },
+      {
+        "path": "dummyindex/cli/onboard.py",
+        "sha256": "744581f59d94298848a20b81180dfd6d180a9c266649c7c08600d2067bb01348"
+      },
+      {
+        "path": "dummyindex/context/build/context_upgrade.py",
+        "sha256": "18f0f179a8c94244a7948910b0a987f7b53da919bb3a04cc20d3f62eb8709b24"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/test_install.py",
+        "sha256": "aac75e6e4c559822d27197b8bf8a8c8bd9dddc32fd533def4667279b6f577acc"
+      },
+      {
+        "path": "tests/cli/test_init_cli.py",
+        "sha256": "41e9b374a46b4acada1f4e1684678eb899694d437bd513d1d8899f0864a3074b"
+      },
+      {
+        "path": "tests/context/build/test_context_upgrade.py",
+        "sha256": "f7053f359676f219071ede9bd72273b4c9784ff5e2733a2f3191eef4371b5952"
+      }
+    ],
+    "source_commit": "a26e17a616bf7a26711c630c4137b4ff68ee2920",
+    "state": "verified",
+    "task_id": "task-6b5489d555a4baeb",
+    "task_sha256": "6b5489d555a4baeba3cf62a8f162535c90721de3e2ea0296b76f407888ae5cad"
   },
   "task-6fb0aeeac7bffc36": {
     "artifacts": [

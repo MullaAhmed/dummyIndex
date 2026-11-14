@@ -37,10 +37,10 @@
 
 ## Wave 6 — GC delete, upgrade CLI, installer, docs
 
-- [ ] T19 GC delete for equipment with `--force` (`dummyindex/context/domains/gc/delete.py`, `dummyindex/cli/gc.py`, `tests/context/domains/gc/test_equipment_delete.py`, `tests/cli/test_gc_cli.py`)
-- [ ] T20 `context upgrade [--if-stale]` + help and docs for `requirements`, `upgrade`, `gc delete --kind equipment` (`dummyindex/cli/upgrade.py`, `dummyindex/context/enums.py`, `dummyindex/cli/__init__.py`, `dummyindex/cli/help.py`, `docs/COMMANDS.md`, `docs/guide/07-cli.md`, `tests/cli/test_upgrade_cli.py`, `tests/cli/test_cli_doc_sync.py`)
-- [ ] T21 Installer, `context init` and the Codex path call `upgrade_project`. Delete `_refresh_equipment_step`. A user-scope install writes the requirements hooks (`dummyindex/installer/install/project_init.py`, `dummyindex/installer/install/__init__.py`, `dummyindex/installer/install/orchestrate.py`, `dummyindex/cli/init.py`, `tests/test_install.py`, `tests/cli/test_init_cli.py`)
-- [ ] T22 Skill and guidance text for the update, equip and gc skills. Also the `instructions.py` generator (`dummyindex/skills/update/SKILL.md`, `dummyindex/skills/equip/SKILL.md`, `dummyindex/skills/gc/SKILL.md`, `dummyindex/context/output/instructions.py`, `tests/test_skills_doc_hygiene.py`, `tests/context/output/test_instructions.py`, `tests/data/skill-budget.txt`)
+- [x] T19 GC delete for equipment with `--force` (`dummyindex/context/domains/gc/delete.py`, `dummyindex/cli/gc.py`, `tests/context/domains/gc/test_equipment_delete.py`, `tests/cli/test_gc_cli.py`)
+- [x] T20 `context upgrade [--if-stale]` + help and docs for `requirements`, `upgrade`, `gc delete --kind equipment` (`dummyindex/cli/upgrade.py`, `dummyindex/context/enums.py`, `dummyindex/cli/__init__.py`, `dummyindex/cli/help.py`, `docs/COMMANDS.md`, `docs/guide/07-cli.md`, `tests/cli/test_upgrade_cli.py`, `tests/cli/test_cli_doc_sync.py`)
+- [x] T21 Installer, `context init` and the Codex path call `upgrade_project`. Delete `_refresh_equipment_step`. A user-scope install writes the requirements hooks (`dummyindex/installer/install/project_init.py`, `dummyindex/installer/install/__init__.py`, `dummyindex/installer/install/orchestrate.py`, `dummyindex/cli/init.py`, `tests/test_install.py`, `tests/cli/test_init_cli.py`)
+- [x] T22 Skill and guidance text for the update, equip and gc skills. Also the `instructions.py` generator (`dummyindex/skills/update/SKILL.md`, `dummyindex/skills/equip/SKILL.md`, `dummyindex/skills/gc/SKILL.md`, `dummyindex/context/output/instructions.py`, `tests/test_skills_doc_hygiene.py`, `tests/context/output/test_instructions.py`, `tests/data/skill-budget.txt`)
 
 ## Wave 7 — acceptance
 
