@@ -18,8 +18,8 @@
 
 ## Wave 3 — evolve layer, seams, docs (BLOCKED until equip-bugs merges)
 
-- [ ] Create `dummyindex/evolve/` and `dummyindex/evolve/cli/`, add the 3 lazy root adapters and seams S1/S2, and rename the C2 names. Move tests to `tests/evolve/`, add the seam tests, and extend the boundary test to v2 (plan task 3). Verify: `ruff check .` passes. `python -m pytest tests/test_import_boundaries.py tests/evolve tests/context tests/cli -q` passes. `python -m pytest tests/ -q --tb=short` passes.
-- [ ] Update `docs/reference/01-conventions.md` with the 3-layer rule and its two exceptions (plan task 4). Verify: `python -m pytest tests/test_repo_doc_style.py -q` passes.
+- [x] Create `dummyindex/evolve/` and `dummyindex/evolve/cli/`, add the 3 lazy root adapters and seams S1/S2, and rename the C2 names. Move tests to `tests/evolve/`, add the seam tests, and extend the boundary test to v2 (plan task 3). Verify: `ruff check .` passes. `python -m pytest tests/test_import_boundaries.py tests/evolve tests/context tests/cli -q` passes. `python -m pytest tests/ -q --tb=short` passes.
+- [x] Update `docs/reference/01-conventions.md` with the 3-layer rule and its two exceptions (plan task 4). Verify: `python -m pytest tests/test_repo_doc_style.py -q` passes.
 
 ## Wave 4 — acceptance
 
