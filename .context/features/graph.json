@@ -1,8 +1,8 @@
 {
   "schema_version": 2,
   "project": {
-    "name": "fleet-base",
-    "slug": "fleet-base"
+    "name": "split-context-evolve-shared-dorian",
+    "slug": "split-context-evolve-shared-dorian"
   },
   "stats": {
     "agents": 0,
@@ -26,16 +26,6 @@
         "evidence": "EXTRACTED"
       },
       {
-        "id": "feature-taxonomy",
-        "label": "Feature taxonomy engine",
-        "kind": "service",
-        "sub": "34 files",
-        "detail": "The `context/domains/features/` domain that builds, validates, places and renders per-feature `.context/features/<id>/` docs and indexes, plus the bundled HTML graph viewer shipped beside `features/g\u2026",
-        "sourceRef": "dummyindex/context/domains/features/__init__.py",
-        "symbolRef": "enums_confidencelevel",
-        "evidence": "EXTRACTED"
-      },
-      {
         "id": "audit-panel",
         "label": "Audit panel & onboarding",
         "kind": "service",
@@ -46,6 +36,16 @@
         "evidence": "EXTRACTED"
       },
       {
+        "id": "feature-taxonomy",
+        "label": "Feature taxonomy engine",
+        "kind": "service",
+        "sub": "34 files",
+        "detail": "The `context/domains/features/` domain that builds, validates, places and renders per-feature `.context/features/<id>/` docs and indexes, plus the bundled HTML graph viewer shipped beside `features/g\u2026",
+        "sourceRef": "dummyindex/context/domains/features/__init__.py",
+        "symbolRef": "enums_confidencelevel",
+        "evidence": "EXTRACTED"
+      },
+      {
         "id": "session-memory",
         "label": "Session memory & drift sign\u2026",
         "kind": "service",
@@ -53,16 +53,6 @@
         "detail": "The `context/domains/memory/` handoff store (now/recent/archive roll, breadcrumb, nudge, transcript parsing) together with the drift + reconcile-gate SessionStart signal it feeds.",
         "sourceRef": "dummyindex/cli/memory.py",
         "symbolRef": "enums_confidencelevel",
-        "evidence": "EXTRACTED"
-      },
-      {
-        "id": "install-surface",
-        "label": "Install surface",
-        "kind": "service",
-        "sub": "34 files",
-        "detail": "The `installer/` package (args, install, uninstall, common) plus default-plugin enable/install, equipment refresh, and the managed Claude hook set it wires at install time.",
-        "sourceRef": "dummyindex/__main__.py",
-        "symbolRef": "default_plugins_wiredentry",
         "evidence": "EXTRACTED"
       },
       {
@@ -79,17 +69,17 @@
         "id": "evolution",
         "label": "Evidence and bounded evolut\u2026",
         "kind": "service",
-        "sub": "19 files",
+        "sub": "23 files",
         "detail": "Learn from attributable outcomes, replay exact candidates and promote reviewed guidance with recoverable receipts.",
-        "sourceRef": "dummyindex/cli/evolve.py",
-        "symbolRef": "evolve_gate_evolveerror",
+        "sourceRef": "dummyindex/evolve/__init__.py",
+        "symbolRef": "errors_evolveerror",
         "evidence": "EXTRACTED"
       },
       {
         "id": "install-surface",
         "label": "Install surface",
         "kind": "service",
-        "sub": "32 files",
+        "sub": "34 files",
         "detail": "The `installer/` package (args, install, uninstall, common) plus default-plugin enable/install, equipment refresh, and the managed Claude hook set it wires at install time.",
         "sourceRef": "dummyindex/__main__.py",
         "symbolRef": "default_plugins_wiredentry",
@@ -102,7 +92,7 @@
         "sub": "50 files",
         "detail": "Build and refresh portable, scoped navigation while preserving authored context and explicit reconciliation.",
         "sourceRef": "dummyindex/context/build/__init__.py",
-        "symbolRef": "runner_build_all",
+        "symbolRef": "enriched_refresh_refreshresult",
         "evidence": "EXTRACTED"
       },
       {
@@ -186,23 +176,33 @@
         "evidence": "EXTRACTED"
       },
       {
+        "id": "proposals",
+        "label": "Proposal store & scaffolding",
+        "kind": "service",
+        "sub": "14 files",
+        "detail": "The `context/domains/proposals/` domain + `cli/propose.py` that scan, model and persist `.context/proposals/<slug>/` planning artifacts.",
+        "sourceRef": "dummyindex/cli/propose.py",
+        "symbolRef": "errors_closeouterror",
+        "evidence": "EXTRACTED"
+      },
+      {
         "id": "probation",
         "label": "Evolution probation lifecyc\u2026",
         "kind": "service",
         "sub": "14 files",
         "detail": "Probation state machine for promoted evolve rules: enter, probe, sync, render and session blocks.",
-        "sourceRef": "dummyindex/cli/evolve_probation.py",
+        "sourceRef": "dummyindex/evolve/cli/evolve_probation.py",
         "symbolRef": "models_item",
         "evidence": "EXTRACTED"
       },
       {
-        "id": "graph-query",
-        "label": "Symbol-graph query verbs",
+        "id": "observe",
+        "label": "Evolution observation ledger",
         "kind": "service",
-        "sub": "12 files",
-        "detail": "The context/domains/graph_query/ package + cli/graph.py: bounded, file:line-cited query verbs (callers-of, callees-of, impact, path, neighbors, dead-code, community) over features/symbol-graph.json,\u2026",
-        "sourceRef": "dummyindex/cli/graph.py",
-        "symbolRef": "models_symbolgraph",
+        "sub": "11 files",
+        "detail": "Keyed ledger of corrections and exposures, scanned for injection markers, feeding evolve evidence and probation.",
+        "sourceRef": "dummyindex/evolve/observe/__init__.py",
+        "symbolRef": "enums_correctionstatus",
         "evidence": "EXTRACTED"
       },
       {
@@ -226,26 +226,6 @@
         "evidence": "EXTRACTED"
       },
       {
-        "id": "proposals",
-        "label": "Proposal store & scaffolding",
-        "kind": "service",
-        "sub": "14 files",
-        "detail": "The `context/domains/proposals/` domain + `cli/propose.py` that scan, model and persist `.context/proposals/<slug>/` planning artifacts.",
-        "sourceRef": "dummyindex/cli/propose.py",
-        "symbolRef": "errors_closeouterror",
-        "evidence": "EXTRACTED"
-      },
-      {
-        "id": "observe",
-        "label": "Evolution observation ledger",
-        "kind": "service",
-        "sub": "11 files",
-        "detail": "Keyed, secret-scanned ledger of corrections and exposures that feeds evolve evidence and probation.",
-        "sourceRef": "dummyindex/context/domains/observe/__init__.py",
-        "symbolRef": "enums_correctionstatus",
-        "evidence": "EXTRACTED"
-      },
-      {
         "id": "reality-check",
         "label": "Reality-check verifier",
         "kind": "service",
@@ -253,16 +233,6 @@
         "detail": "The `context/domains/reality_check.py` domain + CLI that checks feature-doc claims against the real on-disk source tree and reports divergences.",
         "sourceRef": "dummyindex/cli/reality_check.py",
         "symbolRef": "models_realityreport",
-        "evidence": "EXTRACTED"
-      },
-      {
-        "id": "lesson",
-        "label": "Lesson records",
-        "kind": "service",
-        "sub": "4 files",
-        "detail": "Canonical cue/lesson/evidence/confidence record: validation, learning-status enum, and conversion to evolve deltas.",
-        "sourceRef": "dummyindex/context/domains/lesson/__init__.py",
-        "symbolRef": "enums_verdict",
         "evidence": "EXTRACTED"
       },
       {
@@ -283,6 +253,16 @@
         "detail": "Word-count ratchet for authored .context docs and packaged skills, enforced by context check --budget.",
         "sourceRef": "dummyindex/context/domains/docbudget/__init__.py",
         "symbolRef": "models_budgetviolation",
+        "evidence": "EXTRACTED"
+      },
+      {
+        "id": "lesson",
+        "label": "Lesson records",
+        "kind": "service",
+        "sub": "5 files",
+        "detail": "Canonical cue/lesson/evidence/confidence record: validation, learning-status enum, and conversion to evolve deltas.",
+        "sourceRef": "dummyindex/shared/lesson/__init__.py",
+        "symbolRef": "enums_learningstatus",
         "evidence": "EXTRACTED"
       },
       {
@@ -336,23 +316,22 @@
         "evidence": "EXTRACTED"
       },
       {
+        "id": "repo-tooling",
+        "label": "Release & test scaffolding",
+        "kind": "service",
+        "sub": "29 files",
+        "detail": "Cross-cutting repo plumbing with no single product domain: the release script, shared pytest fixtures/conftest, path helpers, the TS web fixture, the PowerShell statusline script, and the skill-doc/s\u2026",
+        "sourceRef": ".gitattributes",
+        "symbolRef": "release_main",
+        "evidence": "EXTRACTED"
+      },
+      {
         "id": "maintenance",
         "label": "Scoped maintenance",
         "kind": "service",
         "sub": "7 files",
         "detail": "Report maintenance and drift acknowledgements without taking ownership of unrelated session work.",
         "sourceRef": "dummyindex/cli/drift_ack.py",
-        "symbolRef": "maintain_maintain_begin",
-        "evidence": "EXTRACTED"
-      },
-      {
-        "id": "repo-tooling",
-        "label": "Release & test scaffolding",
-        "kind": "service",
-        "sub": "24 files",
-        "detail": "Cross-cutting repo plumbing with no single product domain: the release script, shared pytest fixtures/conftest, path helpers, the TS web fixture, the PowerShell statusline script, and the skill-doc/s\u2026",
-        "sourceRef": ".gitattributes",
-        "symbolRef": "release_main",
         "evidence": "EXTRACTED"
       },
       {
@@ -375,10 +354,9 @@
       },
       {
         "id": "retrieval-eval",
-        "label": "Correctness-gated retrieval\u2026",
+        "label": "retrieval-eval",
         "kind": "service",
         "sub": "4 files",
-        "detail": "Deterministic benchmark over the SAMPLE_REPO index gating context-query retrieval on hit-rate@3 + MRR against a committed baseline, with a negative control proving the gate is non-vacuous.",
         "sourceRef": "tests/eval/BASELINE.md",
         "evidence": "EXTRACTED"
       },
@@ -415,12 +393,12 @@
       },
       {
         "from": "probation",
-        "to": "evolution",
+        "to": "observe",
         "kind": "calls"
       },
       {
         "from": "probation",
-        "to": "observe",
+        "to": "evolution",
         "kind": "calls"
       },
       {
@@ -439,8 +417,8 @@
         "kind": "calls"
       },
       {
-        "from": "session-memory",
-        "to": "index-lifecycle",
+        "from": "index-lifecycle",
+        "to": "cli-dispatch",
         "kind": "calls"
       },
       {
@@ -451,11 +429,6 @@
       {
         "from": "session-memory",
         "to": "index-lifecycle",
-        "kind": "calls"
-      },
-      {
-        "from": "cli-dispatch",
-        "to": "equip",
         "kind": "calls"
       },
       {
@@ -470,6 +443,11 @@
       },
       {
         "from": "tree-enrich",
+        "to": "equip",
+        "kind": "calls"
+      },
+      {
+        "from": "cli-dispatch",
         "to": "equip",
         "kind": "calls"
       },
@@ -494,8 +472,8 @@
         "kind": "calls"
       },
       {
-        "from": "council",
-        "to": "cli-dispatch",
+        "from": "evolution",
+        "to": "equip",
         "kind": "calls"
       },
       {
@@ -539,11 +517,6 @@
         "kind": "calls"
       },
       {
-        "from": "evolution",
-        "to": "equip",
-        "kind": "calls"
-      },
-      {
         "from": "extraction-pipeline",
         "to": "source-docs",
         "kind": "calls"
@@ -566,6 +539,11 @@
       {
         "from": "extraction-pipeline",
         "to": "index-lifecycle",
+        "kind": "calls"
+      },
+      {
+        "from": "index-lifecycle",
+        "to": "extraction-pipeline",
         "kind": "calls"
       },
       {
@@ -599,13 +577,18 @@
         "kind": "calls"
       },
       {
-        "from": "extraction-pipeline",
-        "to": "feature-taxonomy",
+        "from": "evolution",
+        "to": "observe",
         "kind": "calls"
       },
       {
-        "from": "index-lifecycle",
-        "to": "extraction-pipeline",
+        "from": "evolution",
+        "to": "probation",
+        "kind": "calls"
+      },
+      {
+        "from": "extraction-pipeline",
+        "to": "feature-taxonomy",
         "kind": "calls"
       },
       {
@@ -614,13 +597,8 @@
         "kind": "calls"
       },
       {
-        "from": "observe",
+        "from": "equip",
         "to": "evolution",
-        "kind": "calls"
-      },
-      {
-        "from": "tree-enrich",
-        "to": "index-lifecycle",
         "kind": "calls"
       },
       {
@@ -635,17 +613,27 @@
       },
       {
         "from": "equip",
+        "to": "extraction-pipeline",
+        "kind": "calls"
+      },
+      {
+        "from": "evolution",
+        "to": "extraction-pipeline",
+        "kind": "calls"
+      },
+      {
+        "from": "observe",
         "to": "evolution",
+        "kind": "calls"
+      },
+      {
+        "from": "tree-enrich",
+        "to": "index-lifecycle",
         "kind": "calls"
       },
       {
         "from": "doc-reorg",
         "to": "cli-dispatch",
-        "kind": "calls"
-      },
-      {
-        "from": "evolution",
-        "to": "observe",
         "kind": "calls"
       },
       {
@@ -674,8 +662,8 @@
         "kind": "calls"
       },
       {
-        "from": "lesson",
-        "to": "evolution",
+        "from": "evolution",
+        "to": "usage-report",
         "kind": "calls"
       },
       {
@@ -689,13 +677,8 @@
         "kind": "calls"
       },
       {
-        "from": "evolution",
-        "to": "usage-report",
-        "kind": "calls"
-      },
-      {
-        "from": "maintenance",
-        "to": "fleet",
+        "from": "lesson",
+        "to": "evolution",
         "kind": "calls"
       },
       {
@@ -716,6 +699,11 @@
       {
         "from": "build-loop",
         "to": "evolution",
+        "kind": "calls"
+      },
+      {
+        "from": "evolution",
+        "to": "lesson",
         "kind": "calls"
       },
       {
@@ -770,6 +758,11 @@
       },
       {
         "from": "equip",
+        "to": "audit-panel",
+        "kind": "calls"
+      },
+      {
+        "from": "equip",
         "to": "index-lifecycle",
         "kind": "calls"
       },
@@ -780,12 +773,12 @@
       },
       {
         "from": "maintenance",
-        "to": "index-lifecycle",
+        "to": "fleet",
         "kind": "calls"
       },
       {
-        "from": "observe",
-        "to": "lesson",
+        "from": "maintenance",
+        "to": "index-lifecycle",
         "kind": "calls"
       },
       {
@@ -810,11 +803,6 @@
       },
       {
         "from": "equip",
-        "to": "audit-panel",
-        "kind": "calls"
-      },
-      {
-        "from": "equip",
         "to": "proposals",
         "kind": "calls"
       },
@@ -824,13 +812,13 @@
         "kind": "calls"
       },
       {
-        "from": "fleet",
-        "to": "equip",
+        "from": "evolution",
+        "to": "proposals",
         "kind": "calls"
       },
       {
-        "from": "gc",
-        "to": "build-loop",
+        "from": "fleet",
+        "to": "equip",
         "kind": "calls"
       },
       {
@@ -866,11 +854,6 @@
       {
         "from": "proposals",
         "to": "cli-dispatch",
-        "kind": "calls"
-      },
-      {
-        "from": "proposals",
-        "to": "evolution",
         "kind": "calls"
       },
       {
@@ -919,26 +902,6 @@
         "kind": "calls"
       },
       {
-        "from": "equip",
-        "to": "install-surface",
-        "kind": "calls"
-      },
-      {
-        "from": "evolution",
-        "to": "extraction-pipeline",
-        "kind": "calls"
-      },
-      {
-        "from": "evolution",
-        "to": "index-lifecycle",
-        "kind": "calls"
-      },
-      {
-        "from": "evolution",
-        "to": "probation",
-        "kind": "calls"
-      },
-      {
         "from": "extraction-pipeline",
         "to": "equip",
         "kind": "calls"
@@ -959,6 +922,11 @@
         "kind": "calls"
       },
       {
+        "from": "index-lifecycle",
+        "to": "install-surface",
+        "kind": "calls"
+      },
+      {
         "from": "observe",
         "to": "audit-panel",
         "kind": "calls"
@@ -971,6 +939,21 @@
       {
         "from": "probation",
         "to": "cli-dispatch",
+        "kind": "calls"
+      },
+      {
+        "from": "probation",
+        "to": "lesson",
+        "kind": "calls"
+      },
+      {
+        "from": "proposals",
+        "to": "evolution",
+        "kind": "calls"
+      },
+      {
+        "from": "proposals",
+        "to": "extraction-pipeline",
         "kind": "calls"
       },
       {
@@ -1020,12 +1003,17 @@
       },
       {
         "from": "equip",
-        "to": "preflight",
+        "to": "install-surface",
         "kind": "calls"
       },
       {
         "from": "evolution",
-        "to": "proposals",
+        "to": "index-lifecycle",
+        "kind": "calls"
+      },
+      {
+        "from": "evolution",
+        "to": "session-memory",
         "kind": "calls"
       },
       {
@@ -1049,18 +1037,13 @@
         "kind": "calls"
       },
       {
-        "from": "fleet",
-        "to": "tree-enrich",
+        "from": "gc",
+        "to": "build-loop",
         "kind": "calls"
       },
       {
         "from": "gc",
         "to": "equip",
-        "kind": "calls"
-      },
-      {
-        "from": "gc",
-        "to": "index-lifecycle",
         "kind": "calls"
       },
       {
@@ -1089,13 +1072,13 @@
         "kind": "calls"
       },
       {
-        "from": "proposals",
-        "to": "audit-panel",
+        "from": "probation",
+        "to": "extraction-pipeline",
         "kind": "calls"
       },
       {
         "from": "proposals",
-        "to": "index-lifecycle",
+        "to": "audit-panel",
         "kind": "calls"
       },
       {
@@ -1154,6 +1137,11 @@
         "kind": "calls"
       },
       {
+        "from": "cli-dispatch",
+        "to": "extraction-pipeline",
+        "kind": "calls"
+      },
+      {
         "from": "context-query",
         "to": "index-lifecycle",
         "kind": "calls"
@@ -1180,7 +1168,12 @@
       },
       {
         "from": "equip",
-        "to": "extraction-pipeline",
+        "to": "preflight",
+        "kind": "calls"
+      },
+      {
+        "from": "equip",
+        "to": "session-memory",
         "kind": "calls"
       },
       {
@@ -1190,12 +1183,7 @@
       },
       {
         "from": "evolution",
-        "to": "lesson",
-        "kind": "calls"
-      },
-      {
-        "from": "evolution",
-        "to": "session-memory",
+        "to": "audit-panel",
         "kind": "calls"
       },
       {
@@ -1239,6 +1227,11 @@
         "kind": "calls"
       },
       {
+        "from": "lesson",
+        "to": "index-lifecycle",
+        "kind": "calls"
+      },
+      {
         "from": "maintenance",
         "to": "audit-panel",
         "kind": "calls"
@@ -1259,6 +1252,16 @@
         "kind": "calls"
       },
       {
+        "from": "observe",
+        "to": "extraction-pipeline",
+        "kind": "calls"
+      },
+      {
+        "from": "observe",
+        "to": "lesson",
+        "kind": "calls"
+      },
+      {
         "from": "preflight",
         "to": "bootstrap",
         "kind": "calls"
@@ -1266,6 +1269,11 @@
       {
         "from": "proposals",
         "to": "context-query",
+        "kind": "calls"
+      },
+      {
+        "from": "proposals",
+        "to": "lesson",
         "kind": "calls"
       },
       {
@@ -1286,6 +1294,11 @@
       {
         "from": "session-memory",
         "to": "extraction-pipeline",
+        "kind": "calls"
+      },
+      {
+        "from": "session-memory",
+        "to": "probation",
         "kind": "calls"
       },
       {

@@ -139,7 +139,7 @@ by default. The flag re-baselines at HEAD with a loud warning
 `memory session-start` prints a local probation block after the memory block.
 `_print_probation` reads the hook's `session_id`, calls `session_block`, and prints any
 result. It is silent on any error (`dummyindex/cli/memory.py:59-70`; call at `:169`).
-It renders via `dummyindex/context/domains/probation/render.py:48`. Semantics belong to
+It renders via `dummyindex/evolve/probation/render.py:48`. Semantics belong to
 the `probation` feature. A SessionStart hook never fails the session
 (`dummyindex/cli/memory.py:170`).
 
