@@ -126,7 +126,9 @@ def test_active_project_writer_refuses_retirement_until_retried(
         context_dir,
         kind.value,
         "closed-work",
-        {"reviewed_files": workspace_inventory(workspace)}, after_closeout=learn_after_closeout,)
+        {"reviewed_files": workspace_inventory(workspace)},
+        after_closeout=learn_after_closeout,
+    )
     monkeypatch.setattr(
         "dummyindex.context.domains.gc.delete._is_tracked", lambda *_args: True
     )

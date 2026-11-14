@@ -960,7 +960,9 @@ def test_closeout_moves_flagged_live_item_unchanged(
             "pending_verification": [
                 {"item_id": item.item_id, "description": "Live test"}
             ],
-        }, after_closeout=learn_after_closeout,)
+        },
+        after_closeout=learn_after_closeout,
+    )
     assert len(receipt["pending_verification"]) == 1
     assert all(i.done for i in parse_checklist(cl))
     assert "Live test" not in cl.read_text()

@@ -130,4 +130,6 @@ def test_unedited_draft_is_rejected_on_closeout(tmp_path):
     with pytest.raises(
         CloseoutError, match="discarded entries require an explicit reason"
     ):
-        closeout_from_file(context, "proposal", "feat", path, after_closeout=learn_after_closeout)
+        closeout_from_file(
+            context, "proposal", "feat", path, after_closeout=learn_after_closeout
+        )

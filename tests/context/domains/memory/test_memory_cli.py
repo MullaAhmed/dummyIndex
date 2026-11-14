@@ -251,9 +251,7 @@ def test_session_start_without_probation_hook_prints_no_probation(
         "dummyindex.evolve.probation.session_block", lambda *_a, **_k: "PROBATION-MARK"
     )
     monkeypatch.setattr("sys.stdin", io.StringIO('{"session_id": "s1"}'))
-    rc = memory.run(
-        ["session-start", "--root", str(tmp_path)], session_block=None
-    )
+    rc = memory.run(["session-start", "--root", str(tmp_path)], session_block=None)
     assert rc == 0
     assert "PROBATION-MARK" not in capsys.readouterr().out
 

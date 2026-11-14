@@ -100,7 +100,10 @@ def _closeout_learning(
 
         learn_after_closeout(context_dir, workspace, kind, manifest, receipt)
     except Exception as exc:  # keep closeout's exit-1 path, no traceback
-        receipt["learning"] = {"status": "failed", "error": f"{type(exc).__name__}: {exc}"}
+        receipt["learning"] = {
+            "status": "failed",
+            "error": f"{type(exc).__name__}: {exc}",
+        }
 
 
 def _probation_block(context_dir: Path, session_id: str) -> str:
