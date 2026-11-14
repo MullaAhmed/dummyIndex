@@ -3276,12 +3276,12 @@ def test_agents_install_refreshes_shared_capabilities_without_native_setup(tmp_p
     import dataclasses
 
     from dummyindex.cli.equip import run as equip
-    from dummyindex.context.domains.atomic_io import write_text_atomic
     from dummyindex.context.domains.equip import (
         content_hash,
         read_manifest,
         write_manifest,
     )
+    from dummyindex.shared.atomic_io import write_text_atomic
 
     repo = tmp_path / "repo"
     _make_repo_with_source(repo)

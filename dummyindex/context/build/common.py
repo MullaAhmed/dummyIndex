@@ -15,9 +15,9 @@ from dummyindex.codex_guidance import (
     is_project_instruction_path,
     project_instruction_paths,
 )
-from dummyindex.context.domains.atomic_io import normalize_eof_newline
 from dummyindex.context.domains.source_docs import discover_default_doc_paths
 from dummyindex.pipeline.io import cache as cache_module
+from dummyindex.shared.atomic_io import normalize_eof_newline
 
 _DOC_WALK_EXTENSIONS = frozenset(
     {

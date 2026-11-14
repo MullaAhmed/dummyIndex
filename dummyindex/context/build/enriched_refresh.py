@@ -223,7 +223,7 @@ def refresh_deterministic_artifacts(
         and meta.indexed_commit
         and commit_exists(root, meta.indexed_commit) is False
     ):
-        from dummyindex.context.domains.atomic_io import write_text_atomic
+        from dummyindex.shared.atomic_io import write_text_atomic
 
         for feature in (context_dir / "features").glob("*/feature.json"):
             marker = feature.parent / ".pending-enrichment"

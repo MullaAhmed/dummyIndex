@@ -8,9 +8,10 @@ from contextlib import ExitStack, contextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from ..atomic_io import write_text_atomic
-from ..evolve_gate import EvolveError, safe_file
-from ..evolve_promotion import project_lock
+from dummyindex.shared.atomic_io import write_text_atomic
+from dummyindex.shared.errors import EvolveError
+from dummyindex.shared.guard import project_lock, safe_file
+
 from .keys import retention_days
 
 LEDGER_REL = ".context/cache/evolution/ledger.json"

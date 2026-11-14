@@ -14,7 +14,6 @@ from pathlib import Path
 import pytest
 
 from dummyindex.context.claude_settings import install_hook_entry
-from dummyindex.context.domains.atomic_io import write_text_atomic
 from dummyindex.context.domains.equip import (
     EQUIP_SENTINEL,
     EQUIPMENT_REL,
@@ -37,6 +36,7 @@ from dummyindex.context.domains.equip.lifecycle.status import (
     status,
     uninstall,
 )
+from dummyindex.shared.atomic_io import write_text_atomic
 
 # --- fixture helpers
 

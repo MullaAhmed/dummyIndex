@@ -25,8 +25,8 @@ from dummyindex.context.build.upgrade import (
     migrate_context_layout,
     retire_paths,
 )
-from dummyindex.context.domains import atomic_io
-from dummyindex.context.domains.atomic_io import is_link
+from dummyindex.shared import atomic_io
+from dummyindex.shared.atomic_io import is_link
 from tests.paths import FIXTURES_DIR
 
 pytestmark = pytest.mark.unit

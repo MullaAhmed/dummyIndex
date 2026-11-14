@@ -6,7 +6,10 @@ import json
 import time
 from pathlib import Path
 
-from .atomic_io import write_text_atomic
+from dummyindex.shared.atomic_io import write_text_atomic
+from dummyindex.shared.errors import EvolveError
+from dummyindex.shared.guard import project_lock, safe_file
+
 from .evidence import digest, expose_case
 from .evolve import MAX_CANDIDATES, validate_candidate
 from .evolve_experiments import (
@@ -19,7 +22,6 @@ from .evolve_experiments import (
     _utility,
     _write,
 )
-from .evolve_gate import EvolveError, safe_file
 from .evolve_native_response import _charge, _preflight
 from .evolve_native_snapshot import (
     _artifact,
@@ -31,7 +33,6 @@ from .evolve_native_snapshot import (
     _runtime,
     _tree,
 )
-from .evolve_promotion import project_lock
 
 
 def _save(path, state):

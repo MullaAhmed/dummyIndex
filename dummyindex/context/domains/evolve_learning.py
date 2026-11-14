@@ -7,13 +7,16 @@ import warnings
 from collections.abc import Mapping
 from pathlib import Path
 
-from .atomic_io import write_text_atomic
+from dummyindex.shared.atomic_io import write_text_atomic
+from dummyindex.shared.errors import EvolveError
+from dummyindex.shared.guard import project_lock, safe_file
+from dummyindex.shared.lesson import lesson_to_delta, validate_lesson
+from dummyindex.shared.lesson.enums import LearningStatus
+
 from .evidence import digest
 from .evolve import CANDIDATES_NAME, HARVEST_NAME, record_event, validate_candidate
-from .evolve_gate import CommandRunner, EvolveError, check_receipt, run_gate, safe_file
-from .evolve_promotion import project_lock, promote_files
-from .lesson import lesson_to_delta, validate_lesson
-from .lesson.enums import LearningStatus
+from .evolve_gate import CommandRunner, check_receipt, run_gate
+from .evolve_promotion import promote_files
 from .living_rules import durable_evidence, plan_rule
 
 _BASE = ".context/gc/learning"

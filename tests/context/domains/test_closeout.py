@@ -278,7 +278,7 @@ def test_audit_reflection_uses_managed_learning_gate_and_is_idempotent(
         assert first["learning"]["state"] == "applied"
         revised = convention.read_bytes()
         assert revised.startswith(owner_bytes)
-        from dummyindex.context.domains.living_rules import rules_in
+        from dummyindex.shared.lesson.rules import rules_in
 
         managed = rules_in(revised.decode("utf-8"))
         assert len(managed) == 1
@@ -509,7 +509,7 @@ def test_second_write_failure_restores_preexisting_destination(
 
     module = importlib.import_module("dummyindex.context.domains.proposals.closeout")
     context, workspace = _workspace(tmp_path, kind="audit")
-    original = module._replace_bytes
+    original = module.replace_bytes
     calls = 0
 
     def failing(path, data):
@@ -519,7 +519,7 @@ def test_second_write_failure_restores_preexisting_destination(
             raise OSError("injected failure")
         return original(path, data)
 
-    monkeypatch.setattr(module, "_replace_bytes", failing)
+    monkeypatch.setattr(module, "replace_bytes", failing)
     with pytest.raises(CloseoutError, match="injected failure"):
         closeout_workspace(context, "audit", "work", _manifest(workspace))
     assert (context / "conventions/coding.md").read_text() == "# Existing conventions\n"
@@ -544,7 +544,7 @@ def test_interruption_before_receipt_protects_even_metadata_only_workspace(
             "description": "Verify deployment",
         }
     ]
-    original = module._replace_bytes
+    original = module.replace_bytes
     calls = 0
 
     def interrupted(path, data):
@@ -554,14 +554,14 @@ def test_interruption_before_receipt_protects_even_metadata_only_workspace(
             raise KeyboardInterrupt("simulated process interruption")
         original(path, data)
 
-    monkeypatch.setattr(module, "_replace_bytes", interrupted)
+    monkeypatch.setattr(module, "replace_bytes", interrupted)
     with pytest.raises(KeyboardInterrupt):
         closeout_workspace(context, "proposal", "work", manifest)
     assert json.loads((workspace / "proposal.json").read_text())["status"] == "done"
     assert "interrupted closeout" in retirement_block(
         context, workspace, kind="proposal"
     )
-    monkeypatch.setattr(module, "_replace_bytes", original)
+    monkeypatch.setattr(module, "replace_bytes", original)
     resumed = _manifest(workspace, transfers=[])
     resumed["pending_verification"] = manifest["pending_verification"]
     resumed["resume_interrupted"] = True

@@ -12,7 +12,6 @@ import pytest
 
 from dummyindex.context.domains import evidence
 from dummyindex.context.domains.evidence import scan_hosts
-from dummyindex.context.domains.evolve_gate import EvolveError
 from dummyindex.context.domains.evolve_learning import (
     enqueue_learning,
     finish_learning,
@@ -30,6 +29,7 @@ from dummyindex.context.domains.probation import render, rules, store
 from dummyindex.context.domains.probation.enums import Followed, Route, State
 from dummyindex.context.domains.probation.models import Item
 from dummyindex.context.domains.probation.sync import eligible_ids, sync
+from dummyindex.shared.errors import EvolveError
 
 pytestmark = pytest.mark.unit
 

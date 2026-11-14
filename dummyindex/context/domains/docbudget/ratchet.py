@@ -7,7 +7,8 @@ import re
 from collections.abc import Iterable
 from pathlib import Path
 
-from ..atomic_io import write_text_atomic
+from dummyindex.shared.atomic_io import write_text_atomic
+
 from .constants import (
     CONTEXT_CEILING,
     RATCHET_SEPARATOR,

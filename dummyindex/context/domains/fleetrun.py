@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
 
-from .atomic_io import write_text_atomic
+from dummyindex.shared.atomic_io import write_text_atomic
 
 # The `.context/` namespace this domain owns. Maintenance runs share the
 # directory under the `maintain-*` prefix; discovery here only ever

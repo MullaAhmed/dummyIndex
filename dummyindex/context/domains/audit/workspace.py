@@ -15,7 +15,8 @@ from collections.abc import Sequence
 from pathlib import Path
 from types import EllipsisType
 
-from ..atomic_io import write_text_atomic
+from dummyindex.shared.atomic_io import write_text_atomic
+
 from ..config import (
     ConfigError,
     CouncilMode,

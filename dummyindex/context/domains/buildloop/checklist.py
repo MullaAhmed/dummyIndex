@@ -262,8 +262,8 @@ def skip_item(path: Path, key: int | str, reason: str) -> ChecklistItem:
 @contextmanager
 def _mutation_lock(path: Path):
     """Serialize cooperating task writers, including parallel wave completions."""
-    from ..evolve_gate import EvolveError
-    from ..evolve_promotion import project_lock
+    from dummyindex.shared.errors import EvolveError
+    from dummyindex.shared.guard import project_lock
 
     root = (
         path.parents[3]

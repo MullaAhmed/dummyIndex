@@ -13,7 +13,6 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.domains.atomic_io import write_text_atomic
 from dummyindex.context.domains.equip import (
     EQUIPMENT_REL,
     EquipmentItem,
@@ -34,6 +33,7 @@ from dummyindex.context.domains.equip.lifecycle.status import (
     status,
     uninstall,
 )
+from dummyindex.shared.atomic_io import write_text_atomic
 
 # --- fixtures
 

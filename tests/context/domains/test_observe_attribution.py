@@ -6,7 +6,6 @@ from datetime import datetime, timezone
 
 import pytest
 
-from dummyindex.context.domains.evolve_gate import EvolveError
 from dummyindex.context.domains.living_rules import durable_evidence
 from dummyindex.context.domains.observe import (
     attributions,
@@ -23,6 +22,7 @@ from dummyindex.context.domains.observe import (
 )
 from dummyindex.context.domains.observe import importer as I
 from dummyindex.context.domains.observe import ledger as L
+from dummyindex.shared.errors import EvolveError
 
 pytestmark = pytest.mark.unit
 

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.domains.evolve_gate import EvolveError, run_gate
+from dummyindex.context.domains.evolve_gate import run_gate
 from dummyindex.context.domains.evolve_learning import (
     enqueue_learning,
     finish_learning,
@@ -13,13 +13,14 @@ from dummyindex.context.domains.evolve_learning import (
 from dummyindex.context.domains.living_rules import (
     plan_rule,
     rule_status,
-    rules_in,
     sha256,
 )
 from dummyindex.context.domains.probation import store
 from dummyindex.context.domains.probation.enums import State
 from dummyindex.context.domains.probation.models import Item
 from dummyindex.context.domains.probation.rules import CAP_REASON, HIGH_IMPACT
+from dummyindex.shared.errors import EvolveError
+from dummyindex.shared.lesson.rules import rules_in
 
 CHAT_CUE = "A human correction was attributed to .context/conventions/testing.md."
 RULE_TEST = 'from pathlib import Path\ndef test_rule():\n    assert "dummyindex:rule" in Path(".context/conventions/testing.md").read_text()\n'

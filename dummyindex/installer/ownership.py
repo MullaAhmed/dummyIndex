@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path, PurePosixPath
 
-from dummyindex.context.domains.atomic_io import write_text_atomic
+from dummyindex.shared.atomic_io import write_text_atomic
 
 MANIFEST_NAME = ".dummyindex-files.json"
 VERSION_NAME = ".dummyindex_version"

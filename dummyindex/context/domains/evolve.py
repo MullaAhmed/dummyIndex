@@ -15,13 +15,15 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
+from dummyindex.shared.errors import EvolveError
+from dummyindex.shared.guard import safe_file
 from dummyindex.usage.transcripts import (
     default_projects_root,
     encode_project_slug,
 )
 
 from ..build.reconcile import compute_reconcile_report
-from .evolve_gate import EvolveError, GateResult, GateStage, run_gate, safe_file
+from .evolve_gate import GateResult, GateStage, run_gate
 from .gc.constants import AUDITS_REL, GC_STATE_REL
 
 __all__ = [

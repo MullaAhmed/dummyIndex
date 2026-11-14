@@ -9,11 +9,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from ..atomic_io import write_text_atomic
+from dummyindex.shared.atomic_io import write_text_atomic
+from dummyindex.shared.errors import EvolveError
+from dummyindex.shared.guard import project_lock, safe_file
+from dummyindex.shared.lesson.rules import rules_in
+
 from ..evolve import CANDIDATES_NAME, record_event, validate_candidate
-from ..evolve_gate import CommandRunner, EvolveError, check_receipt, run_gate, safe_file
-from ..evolve_promotion import project_lock, promote_files
-from ..living_rules import plan_rule, rules_in, sha256
+from ..evolve_gate import CommandRunner, check_receipt, run_gate
+from ..evolve_promotion import promote_files
+from ..living_rules import plan_rule, sha256
 from ..observe import corrections, exposures
 from . import rules, store
 from .constants import MAX_LIVE_PER_TARGET, MAX_LIVE_TOTAL

@@ -7,13 +7,11 @@ import json
 import re
 from pathlib import Path, PurePosixPath
 
-from .evolve_gate import EvolveError, safe_file
+from dummyindex.shared.errors import EvolveError
+from dummyindex.shared.guard import safe_file
+from dummyindex.shared.lesson.rules import rules_in
 
 _ID = re.compile(r"[a-z0-9][a-z0-9_.-]{0,63}\Z")
-_BLOCK = re.compile(
-    r"<!-- dummyindex:rule (\{[^\n]+\}) -->\r?\n(.*?)\r?\n<!-- dummyindex:rule:end ([a-z0-9_.-]+) -->",
-    re.S,
-)
 MAX_RULE_BYTES = 4000
 MAX_RULES = 40
 
@@ -45,31 +43,6 @@ def durable_evidence(context_dir: Path, citations: tuple[str, ...]) -> dict[str,
             )
         snapshots[canonical + suffix] = sha256(safe_file(root, canonical).read_bytes())
     return snapshots
-
-
-def rules_in(text: str) -> list[dict]:
-    rules = []
-    ids = set()
-    for match in _BLOCK.finditer(text):
-        try:
-            meta = json.loads(match[1])
-            if (
-                not isinstance(meta, dict)
-                or meta.get("id") != match[3]
-                or match[3] in ids
-            ):
-                raise ValueError("duplicate or mismatched rule ID")
-        except ValueError as exc:
-            raise EvolveError(f"invalid managed convention rule: {exc}") from exc
-        ids.add(match[3])
-        rules.append(
-            {**meta, "body": match[2], "start": match.start(), "end": match.end()}
-        )
-    if text.count("<!-- dummyindex:rule ") != len(rules):
-        raise EvolveError(
-            "malformed managed rule markers; preserve and repair document"
-        )
-    return rules
 
 
 def plan_rule(

@@ -39,8 +39,13 @@ Counts (AST scan, current tree, 397 source + 261 test modules):
 | shared | 4 moved + 4 new (`shared/__init__.py`, `errors.py`, `guard.py`, `lesson/rules.py`) | 2 |
 
 The full per-module table is in `boundary-map.md` (sections A1–A3). A script generated it. Do not edit it by hand.
-The scan scripts are in `D:\temp\` as the mission brief requires: `split_scan.py` (edges), `split_contract.py` (tables),
-`split_waves.py` (file sets per item), `split_privattr.py` (private attribute reads).
+
+The scan scripts are in `D:\temp\` as the mission brief requires:
+- `split_scan.py` (edges)
+- `split_contract.py` (tables)
+- `split_waves.py` (file sets per item)
+- `split_privattr.py` (private attribute reads)
+
 The Wave 2 boundary test replaces them as the durable scanner.
 
 ## Contracts
@@ -50,8 +55,8 @@ The Wave 2 boundary test replaces them as the durable scanner.
 - shared imports only shared and the standard library.
 - context imports context and shared. It never imports evolve.
 - evolve imports evolve, shared and the public names of context.
-- One exception: the composition root `dummyindex/cli/__init__.py` may import exactly these 3 evolve modules, each lazily inside a function:
-  `dummyindex.evolve.cli.evolve` (`run`), `dummyindex.evolve.evolve_learning` (`learn_after_closeout`), `dummyindex.evolve.probation` (`session_block`).
+- One exception: the composition root `dummyindex/cli/__init__.py` may import exactly these 3 evolve modules.
+  It imports each one lazily inside a function: `dummyindex.evolve.cli.evolve` (`run`), `dummyindex.evolve.evolve_learning` (`learn_after_closeout`), `dummyindex.evolve.probation` (`session_block`).
 - Reason for lazy: `evolve/cli/evolve.py` imports `dummyindex.cli.common`. That runs `dummyindex/cli/__init__.py`.
   A module-level import of evolve there makes an import cycle when evolve loads first.
 
@@ -148,12 +153,14 @@ Rules (each failure prints `path:line -> module (names)`):
 | R6 resolution | a `dummyindex.*` import base resolves to no module or package |
 | R7 dynamic imports | a non-literal `import_module`/`__import__` exists outside `dummyindex/__init__.py:30` and `pipeline/extract/generic.py:25` |
 
-R6 and R7 were run on the proposal tree (`D:\temp\split_r6r7.py`): R6 finds 0 unresolved bases; R7 finds only the 2 allowlisted sites.
+We ran R6 and R7 on the proposal tree (`D:\temp\split_r6r7.py`). R6 finds 0 unresolved bases. R7 finds only the 2 allowlisted sites.
 
 Self-checks (`@pytest.mark.unit`):
-- Parametrized `tmp_path` trees, one per forbidden form: `TYPE_CHECKING`, literal `import_module`, `from dummyindex.evolve import probation`,
-  a relative import in an `__init__.py`, shared→context, shared→evolve, a cross-layer `_name`, a cross-layer `alias._x`,
-  a moved symbol from its old home, an old-path import. Each asserts the exact message.
+- Parametrized `tmp_path` trees, one per forbidden form. Each asserts the exact message. The forms:
+  - `TYPE_CHECKING`, literal `import_module`, `from dummyindex.evolve import probation`.
+  - A relative import in an `__init__.py`, shared→context, shared→evolve.
+  - A cross-layer `_name`, a cross-layer `alias._x`.
+  - A moved symbol from its old home, an old-path import.
 - One allowed tree (context→shared, evolve→context public name, lazy root pair) reports 0 violations.
 - Real-tree sanity: files scanned equal the `rglob` count. At least 1 real edge exists for context→shared, evolve→shared, evolve→context and root→evolve.
 
@@ -216,9 +223,9 @@ Each conflict file has one owner task:
 
 - [ ] `python -m pytest tests/test_import_boundaries.py -q` passes on the split tree. Every R1–R7 self-check reports its planted edge.
 - [ ] `python -m pytest tests/ -q --tb=short` passes (the CI command), and `ruff check .` passes.
-- [ ] `closeout_from_file(..., after_closeout=None)` writes no learning event; a recording hook is called once with `(context_dir, workspace, kind, manifest, receipt)`.
+- [ ] `closeout_from_file(..., after_closeout=None)` writes no learning event. A recording hook is called once with `(context_dir, workspace, kind, manifest, receipt)`.
 - [ ] `dispatch` of `gc closeout` and of the build closeout both write the learning event, as today.
-- [ ] `memory.run(args, session_block=None)` prints no probation block; `dispatch` of the memory session-start verb prints the block from a monkeypatched `session_block`.
+- [ ] `memory.run(args, session_block=None)` prints no probation block. `dispatch` of the memory session-start verb prints the block from a monkeypatched `session_block`.
 - [ ] `git diff <GATE_SHA> HEAD -- pyproject.toml docs/COMMANDS.md dummyindex/skills dummyindex/context/hooks.py dummyindex/context/enums.py` is empty.
 
 ## Open questions

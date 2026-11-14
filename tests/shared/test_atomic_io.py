@@ -1,4 +1,4 @@
-"""Tests for dummyindex.context.domains.atomic_io — shared write helpers."""
+"""Tests for dummyindex.shared.atomic_io — shared write helpers."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.domains.atomic_io import (
+from dummyindex.shared.atomic_io import (
     normalize_eof_newline,
     write_text_atomic,
 )

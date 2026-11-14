@@ -20,7 +20,8 @@ import shutil
 from pathlib import Path
 from typing import Any
 
-from ..atomic_io import write_text_atomic
+from dummyindex.shared.atomic_io import write_text_atomic
+
 from .constants import (
     BUNDLE_MANIFEST,
     BUNDLE_MCP_FILE,

@@ -2,15 +2,15 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.domains.evolve_gate import EvolveError
-from dummyindex.context.domains.lesson import (
+from dummyindex.context.domains.living_rules import plan_rule, sha256
+from dummyindex.shared.errors import EvolveError
+from dummyindex.shared.lesson import (
     Confidence,
     DeltaOp,
     Verdict,
     lesson_to_delta,
     validate_lesson,
 )
-from dummyindex.context.domains.living_rules import plan_rule, sha256
 
 pytestmark = pytest.mark.unit
 
