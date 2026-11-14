@@ -238,3 +238,35 @@ def test_prompt_context_is_fail_open_with_no_partial_json(
     captured = capsys.readouterr()
     assert captured.out == ""
     assert captured.err == ""
+
+
+def test_session_start_without_probation_hook_prints_no_probation(
+    monkeypatch: pytest.MonkeyPatch, tmp_path, capsys
+) -> None:
+    from dummyindex.cli import memory
+
+    dispatch(["memory", "init", "--root", str(tmp_path)])
+    capsys.readouterr()
+    monkeypatch.setattr(
+        "dummyindex.evolve.probation.session_block", lambda *_a, **_k: "PROBATION-MARK"
+    )
+    monkeypatch.setattr("sys.stdin", io.StringIO('{"session_id": "s1"}'))
+    rc = memory.run(
+        ["session-start", "--root", str(tmp_path)], session_block=None
+    )
+    assert rc == 0
+    assert "PROBATION-MARK" not in capsys.readouterr().out
+
+
+def test_session_start_dispatch_injects_probation_hook(
+    monkeypatch: pytest.MonkeyPatch, tmp_path, capsys
+) -> None:
+    dispatch(["memory", "init", "--root", str(tmp_path)])
+    capsys.readouterr()
+    monkeypatch.setattr(
+        "dummyindex.evolve.probation.session_block", lambda *_a, **_k: "PROBATION-MARK"
+    )
+    monkeypatch.setattr("sys.stdin", io.StringIO('{"session_id": "s1"}'))
+    rc = dispatch(["memory", "session-start", "--root", str(tmp_path)])
+    assert rc == 0
+    assert "PROBATION-MARK" in capsys.readouterr().out

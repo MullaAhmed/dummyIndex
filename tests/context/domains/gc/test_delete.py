@@ -20,6 +20,7 @@ from dummyindex.context.domains.gc.delete import delete_workspace
 from dummyindex.context.domains.gc.enums import CandidateKind
 from dummyindex.context.domains.gc.errors import GcPathError, GcTargetError
 from dummyindex.context.domains.proposals.errors import ProposalSlugError
+from dummyindex.evolve.evolve_learning import learn_after_closeout
 
 # A complete checklist (every box ticked) — liveness must NOT refuse this.
 _CHECKLIST_DONE = (
@@ -125,8 +126,7 @@ def test_active_project_writer_refuses_retirement_until_retried(
         context_dir,
         kind.value,
         "closed-work",
-        {"reviewed_files": workspace_inventory(workspace)},
-    )
+        {"reviewed_files": workspace_inventory(workspace)}, after_closeout=learn_after_closeout,)
     monkeypatch.setattr(
         "dummyindex.context.domains.gc.delete._is_tracked", lambda *_args: True
     )

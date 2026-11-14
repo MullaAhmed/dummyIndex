@@ -1,7 +1,9 @@
+
 """Closeout preserves accepted knowledge without retaining disposable plans."""
 
 from __future__ import annotations
 
+import functools
 import json
 import re
 import subprocess
@@ -13,7 +15,11 @@ import pytest
 from dummyindex.cli import dispatch
 from dummyindex.context.domains.buildloop import parse_checklist
 from dummyindex.context.domains.gc import CandidateKind, GcTargetError, delete_workspace
-from dummyindex.context.domains.proposals import CloseoutError, closeout_workspace
+from dummyindex.context.domains.proposals import (
+    CloseoutError,
+    closeout_from_file,
+    closeout_workspace,
+)
 from dummyindex.context.domains.proposals.closeout import learning_exit_code
 from dummyindex.context.domains.proposals.retirement import (
     ADMIN_FILES,
@@ -24,6 +30,7 @@ from dummyindex.context.domains.proposals.retirement import (
 )
 from dummyindex.evolve.evolve_learning import (
     enqueue_learning,
+    learn_after_closeout,
     prepare_learning,
     read_event,
     run_learning,
@@ -153,7 +160,7 @@ def test_transfer_live_verification_and_retirement_preserve_durable_work(
         }
     ]
 
-    receipt = closeout_workspace(context, "proposal", "work", manifest)
+    receipt = closeout_workspace(context, "proposal", "work", manifest, after_closeout=learn_after_closeout)
 
     assert receipt["state"] == "implemented"
     assert len(receipt["pending_verification"]) == 1
@@ -179,7 +186,7 @@ def test_audit_knowledge_requires_same_transfer_before_retirement(
     context, workspace = _workspace(tmp_path, kind="audit")
     with pytest.raises(GcTargetError, match="knowledge review"):
         delete_workspace(context, kind=CandidateKind.AUDIT, slug="work")
-    closeout_workspace(context, "audit", "work", _manifest(workspace))
+    closeout_workspace(context, "audit", "work", _manifest(workspace), after_closeout=learn_after_closeout)
     assert retirement_block(context, workspace, kind="audit") is None
 
 
@@ -307,14 +314,14 @@ def test_stale_review_missing_assets_and_unevaluated_claims_fail_without_writes(
     manifest = _manifest(workspace)
     (workspace / "new-asset.txt").write_text("unique evidence", encoding="utf-8")
     with pytest.raises(CloseoutError, match="reviewed_files"):
-        closeout_workspace(context, "proposal", "work", manifest)
+        closeout_workspace(context, "proposal", "work", manifest, after_closeout=learn_after_closeout)
     manifest["reviewed_files"] = workspace_inventory(workspace)
     with pytest.raises(CloseoutError, match="unreviewed knowledge"):
-        closeout_workspace(context, "proposal", "work", manifest)
+        closeout_workspace(context, "proposal", "work", manifest, after_closeout=learn_after_closeout)
     manifest["discarded"]["new-asset.txt"] = "Superseded by the accepted lesson"
     manifest["state"] = "verified"
     with pytest.raises(CloseoutError, match="outcome evidence"):
-        closeout_workspace(context, "proposal", "work", manifest)
+        closeout_workspace(context, "proposal", "work", manifest, after_closeout=learn_after_closeout)
     assert (context / "conventions/coding.md").read_text() == "# Existing conventions\n"
     assert (
         json.loads((workspace / "proposal.json").read_text())["status"] == "in_progress"
@@ -332,19 +339,19 @@ def test_inbound_durable_dependencies_and_source_escape_fail_closed(
         'fixture = ".context/proposals/work/fixture.json"\n', encoding="utf-8"
     )
     with pytest.raises(CloseoutError, match="durable references"):
-        closeout_workspace(context, "proposal", "work", _manifest(workspace))
+        closeout_workspace(context, "proposal", "work", _manifest(workspace), after_closeout=learn_after_closeout)
     dependent.unlink()
     manifest = _manifest(workspace)
     manifest["transfers"][0]["source"] = "../../outside.md"
     with pytest.raises(CloseoutError, match="escapes allowed root"):
-        closeout_workspace(context, "proposal", "work", manifest)
+        closeout_workspace(context, "proposal", "work", manifest, after_closeout=learn_after_closeout)
     assert workspace.exists()
 
 
 @pytest.mark.unit
 def test_changed_accepted_unit_requires_explicit_supersession(tmp_path: Path) -> None:
     context, workspace = _workspace(tmp_path)
-    receipt = closeout_workspace(context, "proposal", "work", _manifest(workspace))
+    receipt = closeout_workspace(context, "proposal", "work", _manifest(workspace), after_closeout=learn_after_closeout)
     convention = context / "conventions/coding.md"
     convention.write_text("# Current\nUse the replacement parser.\n", encoding="utf-8")
     assert "accepted knowledge" in retirement_block(context, workspace, kind="proposal")
@@ -352,7 +359,7 @@ def test_changed_accepted_unit_requires_explicit_supersession(tmp_path: Path) ->
     manifest["superseded"] = {
         receipt["transfers"][0]["id"]: "Replaced with the new parser contract"
     }
-    closeout_workspace(context, "proposal", "work", manifest)
+    closeout_workspace(context, "proposal", "work", manifest, after_closeout=learn_after_closeout)
     assert retirement_block(context, workspace, kind="proposal") is None
 
 
@@ -372,12 +379,12 @@ def test_reclose_preserves_moved_live_checks_through_gc(
     }
     manifest = _manifest(workspace)
     manifest["pending_verification"] = [pending]
-    first = closeout_workspace(context, "proposal", "work", manifest)
+    first = closeout_workspace(context, "proposal", "work", manifest, after_closeout=learn_after_closeout)
     assert "Verify deployed parser" not in checklist.read_text()
     followup = _manifest(workspace)
     if explicit_pending:
         followup["pending_verification"] = [pending]
-    second = closeout_workspace(context, "proposal", "work", followup)
+    second = closeout_workspace(context, "proposal", "work", followup, after_closeout=learn_after_closeout)
     assert second["pending_verification"] == first["pending_verification"]
     assert retirement_block(context, workspace, kind="proposal") is None
     delete_workspace(context, kind=CandidateKind.PROPOSAL, slug="work")
@@ -394,12 +401,12 @@ def test_pending_check_resolution_requires_reason_and_durable_evidence(
     context, workspace = _workspace(tmp_path)
     manifest = _manifest(workspace)
     manifest["pending_verification"] = [{"description": "Verify deployed parser"}]
-    first = closeout_workspace(context, "proposal", "work", manifest)
+    first = closeout_workspace(context, "proposal", "work", manifest, after_closeout=learn_after_closeout)
     identity = first["pending_verification"][0]["verification_id"]
     followup = _manifest(workspace)
     followup["pending_verification"] = []
     assert (
-        closeout_workspace(context, "proposal", "work", followup)[
+        closeout_workspace(context, "proposal", "work", followup, after_closeout=learn_after_closeout)[
             "pending_verification"
         ]
         == first["pending_verification"]
@@ -409,7 +416,7 @@ def test_pending_check_resolution_requires_reason_and_durable_evidence(
         identity: {"state": resolution_state, "reason": "Deployment regression passed"}
     }
     with pytest.raises(CloseoutError, match="durable evidence"):
-        closeout_workspace(context, "proposal", "work", followup)
+        closeout_workspace(context, "proposal", "work", followup, after_closeout=learn_after_closeout)
     evidence = tmp_path / "deployment-verification.txt"
     evidence.write_text("Deployed parser regression passed.\n", encoding="utf-8")
     resolution = followup["resolved_verification"][identity]
@@ -418,9 +425,9 @@ def test_pending_check_resolution_requires_reason_and_durable_evidence(
     ]
     resolution["reason"] = ""
     with pytest.raises(CloseoutError, match="and a reason"):
-        closeout_workspace(context, "proposal", "work", followup)
+        closeout_workspace(context, "proposal", "work", followup, after_closeout=learn_after_closeout)
     resolution["reason"] = "Deployment regression passed"
-    final = closeout_workspace(context, "proposal", "work", followup)
+    final = closeout_workspace(context, "proposal", "work", followup, after_closeout=learn_after_closeout)
     assert final["pending_verification"] == []
     assert (
         final["resolved_verification"][identity]["check"]
@@ -453,7 +460,7 @@ def test_closeout_outcome_evidence_rejects_resolved_ephemeral_paths(
         {"path": evidence_path, "sha256": digest(evidence.read_bytes())}
     ]
     with pytest.raises(CloseoutError, match="disposable"):
-        closeout_workspace(context, "proposal", "work", manifest)
+        closeout_workspace(context, "proposal", "work", manifest, after_closeout=learn_after_closeout)
     assert not (context / "gc/closeouts/proposal-work.json").exists()
     assert (context / "conventions/coding.md").read_text() == "# Existing conventions\n"
 
@@ -468,7 +475,7 @@ def test_gc_rechecks_durable_closeout_outcome_hash(tmp_path: Path) -> None:
     manifest["evidence"] = [
         {"path": evidence.name, "sha256": digest(evidence.read_bytes())}
     ]
-    closeout_workspace(context, "proposal", "work", manifest)
+    closeout_workspace(context, "proposal", "work", manifest, after_closeout=learn_after_closeout)
     assert retirement_block(context, workspace, kind="proposal") is None
     evidence.write_text('{"passed": false}\n', encoding="utf-8")
     assert "outcome evidence" in retirement_block(context, workspace, kind="proposal")
@@ -481,7 +488,7 @@ def test_accepted_unit_id_cannot_replace_prior_identity(tmp_path: Path) -> None:
     context, workspace = _workspace(tmp_path, kind="audit")
     manifest = _manifest(workspace)
     manifest["transfers"][0]["id"] = "lesson-one"
-    closeout_workspace(context, "audit", "work", manifest)
+    closeout_workspace(context, "audit", "work", manifest, after_closeout=learn_after_closeout)
     convention = context / "conventions/coding.md"
     convention.write_text("# Current conventions\n", encoding="utf-8")
     (workspace / "lesson.md").write_text(
@@ -490,13 +497,13 @@ def test_accepted_unit_id_cannot_replace_prior_identity(tmp_path: Path) -> None:
     followup = _manifest(workspace)
     followup["transfers"][0]["id"] = "lesson-one"
     with pytest.raises(CloseoutError, match="ID cannot be rebound"):
-        closeout_workspace(context, "audit", "work", followup)
+        closeout_workspace(context, "audit", "work", followup, after_closeout=learn_after_closeout)
     assert retirement_block(context, workspace, kind="audit") is not None
     followup["transfers"][0]["id"] = "lesson-two"
     with pytest.raises(CloseoutError, match="prior accepted unit is missing"):
-        closeout_workspace(context, "audit", "work", followup)
+        closeout_workspace(context, "audit", "work", followup, after_closeout=learn_after_closeout)
     followup["superseded"] = {"lesson-one": "Replaced by the new parser contract"}
-    final = closeout_workspace(context, "audit", "work", followup)
+    final = closeout_workspace(context, "audit", "work", followup, after_closeout=learn_after_closeout)
     assert {unit["id"] for unit in final["transfers"]} == {"lesson-one", "lesson-two"}
     assert retirement_block(context, workspace, kind="audit") is None
 
@@ -521,7 +528,7 @@ def test_second_write_failure_restores_preexisting_destination(
 
     monkeypatch.setattr(module, "replace_bytes", failing)
     with pytest.raises(CloseoutError, match="injected failure"):
-        closeout_workspace(context, "audit", "work", _manifest(workspace))
+        closeout_workspace(context, "audit", "work", _manifest(workspace), after_closeout=learn_after_closeout)
     assert (context / "conventions/coding.md").read_text() == "# Existing conventions\n"
     assert not (context / "gc/closeouts/audit-work.json").exists()
 
@@ -556,7 +563,7 @@ def test_interruption_before_receipt_protects_even_metadata_only_workspace(
 
     monkeypatch.setattr(module, "replace_bytes", interrupted)
     with pytest.raises(KeyboardInterrupt):
-        closeout_workspace(context, "proposal", "work", manifest)
+        closeout_workspace(context, "proposal", "work", manifest, after_closeout=learn_after_closeout)
     assert json.loads((workspace / "proposal.json").read_text())["status"] == "done"
     assert "interrupted closeout" in retirement_block(
         context, workspace, kind="proposal"
@@ -565,7 +572,7 @@ def test_interruption_before_receipt_protects_even_metadata_only_workspace(
     resumed = _manifest(workspace, transfers=[])
     resumed["pending_verification"] = manifest["pending_verification"]
     resumed["resume_interrupted"] = True
-    closeout_workspace(context, "proposal", "work", resumed)
+    closeout_workspace(context, "proposal", "work", resumed, after_closeout=learn_after_closeout)
     assert retirement_block(context, workspace, kind="proposal") is None
 
 
@@ -675,7 +682,7 @@ def test_every_learning_status_is_persisted_and_only_failed_exits_nonzero(
     state: dict = {}
     learner = _learner_for(status, state)
 
-    receipt = closeout_workspace(context, "audit", "work", manifest, learner=learner)
+    receipt = closeout_workspace(context, "audit", "work", manifest, after_closeout=functools.partial(learn_after_closeout, learner=learner))
 
     assert receipt["learning"]["status"] == status
     assert learning_exit_code(receipt["learning"]) == (1 if status == "failed" else 0)
@@ -700,7 +707,7 @@ def test_every_learning_status_is_persisted_and_only_failed_exits_nonzero(
 
     if status in {"applied", "evaluated", "blocked", "no_entry"}:
         # Settled statuses are reported from storage; the learner is not re-run.
-        again = closeout_workspace(context, "audit", "work", manifest, learner=learner)
+        again = closeout_workspace(context, "audit", "work", manifest, after_closeout=functools.partial(learn_after_closeout, learner=learner))
         assert again["learning"]["status"] == status
         assert state["calls"] == 1
 
@@ -712,7 +719,7 @@ def test_failed_learning_keeps_receipt_bytes_and_rerun_retries(tmp_path: Path) -
     receipt_file = context / "gc/closeouts/audit-work.json"
 
     first = closeout_workspace(
-        context, "audit", "work", manifest, learner=_learner_for("failed", {})
+        context, "audit", "work", manifest, after_closeout=functools.partial(learn_after_closeout, learner=_learner_for("failed", {}))
     )
     assert first["learning"]["status"] == "failed"
     failed = context / "gc/learning/audit-work.failed.json"
@@ -720,7 +727,7 @@ def test_failed_learning_keeps_receipt_bytes_and_rerun_retries(tmp_path: Path) -
     receipt_bytes = receipt_file.read_bytes()
     assert b'"learning"' not in receipt_bytes
 
-    second = closeout_workspace(context, "audit", "work", manifest)
+    second = closeout_workspace(context, "audit", "work", manifest, after_closeout=learn_after_closeout)
     assert second["learning"]["status"] == "pending"
     assert receipt_file.read_bytes() == receipt_bytes
     assert not failed.exists()
@@ -731,14 +738,14 @@ def test_settled_status_clears_stale_failed_record(tmp_path: Path) -> None:
     context, _, manifest = _learning_audit(tmp_path, tests=[])
     manifest.pop("learning_reflection")
     closeout_workspace(
-        context, "audit", "work", manifest, learner=_learner_for("failed", {})
+        context, "audit", "work", manifest, after_closeout=functools.partial(learn_after_closeout, learner=_learner_for("failed", {}))
     )
     failed = context / "gc/learning/audit-work.failed.json"
     assert failed.is_file()
     closeout_workspace(
-        context, "audit", "work", manifest, learner=_learner_for("no_entry", {})
+        context, "audit", "work", manifest, after_closeout=functools.partial(learn_after_closeout, learner=_learner_for("no_entry", {}))
     )
-    closeout_workspace(context, "audit", "work", manifest)
+    closeout_workspace(context, "audit", "work", manifest, after_closeout=learn_after_closeout)
     assert not failed.exists()
 
 
@@ -758,13 +765,13 @@ def test_failed_event_after_creation_is_marked_and_retried(tmp_path: Path) -> No
         )
         raise RuntimeError("died after event creation")
 
-    first = closeout_workspace(context, "audit", "work", manifest, learner=late_failure)
+    first = closeout_workspace(context, "audit", "work", manifest, after_closeout=functools.partial(learn_after_closeout, learner=late_failure))
     assert first["learning"]["status"] == "failed"
     assert first["learning"]["state"] == "pending"
     assert not (context / "gc/learning/audit-work.failed.json").exists()
     assert rules.read_bytes() == owner
 
-    second = closeout_workspace(context, "audit", "work", manifest)
+    second = closeout_workspace(context, "audit", "work", manifest, after_closeout=learn_after_closeout)
     assert second["learning"]["status"] == "applied"
     assert "parser-rule" in rules.read_text(encoding="utf-8")
 
@@ -775,7 +782,7 @@ def test_legacy_reflection_closes_flagged_legacy_shape_not_failed(
 ) -> None:
     context, _, manifest = _learning_audit(tmp_path, tests=["tests/test_ok.py"])
     with pytest.warns(UserWarning, match="legacy_shape"):
-        receipt = closeout_workspace(context, "audit", "work", manifest)
+        receipt = closeout_workspace(context, "audit", "work", manifest, after_closeout=learn_after_closeout)
     assert receipt["learning"]["status"] == "applied"
     assert receipt["learning"]["legacy_shape"] is True
     assert learning_exit_code(receipt["learning"]) == 0
@@ -789,7 +796,7 @@ def test_malformed_lesson_reflection_is_rejected_before_closeout(
     context, workspace, manifest = _learning_audit(tmp_path, tests=[])
     manifest["learning_reflection"] = bad
     with pytest.raises(CloseoutError, match="learning_reflection"):
-        closeout_workspace(context, "audit", "work", manifest)
+        closeout_workspace(context, "audit", "work", manifest, after_closeout=learn_after_closeout)
     assert not (context / "gc/closeouts/audit-work.json").exists()
 
 
@@ -845,3 +852,39 @@ def test_generated_context_index_is_not_a_durable_reference(
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
     assert durable_references(context, workspace) == expected
+
+
+@pytest.mark.integration
+def test_closeout_without_after_closeout_skips_learning(tmp_path: Path) -> None:
+    context, workspace = _workspace(tmp_path)
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(json.dumps(_manifest(workspace)), encoding="utf-8")
+
+    receipt = closeout_from_file(context, "proposal", "work", manifest_path)
+
+    assert "learning" not in receipt
+    assert not (context / "gc" / "learning").exists()
+
+
+@pytest.mark.integration
+def test_closeout_after_closeout_hook_runs_once_with_committed_receipt(
+    tmp_path: Path,
+) -> None:
+    context, workspace = _workspace(tmp_path)
+    manifest = _manifest(workspace)
+    calls: list[tuple] = []
+
+    def hook(*args) -> None:
+        calls.append(args)
+
+    receipt = closeout_workspace(
+        context, "proposal", "work", manifest, after_closeout=hook
+    )
+
+    assert len(calls) == 1
+    got_context, got_workspace, kind, got_manifest, got_receipt = calls[0]
+    assert got_context == context.resolve()
+    assert got_workspace.name == "work"
+    assert kind == "proposal"
+    assert got_manifest is manifest
+    assert got_receipt is receipt

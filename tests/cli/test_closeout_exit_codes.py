@@ -1,6 +1,6 @@
 """CLI closeout/learning commands exit non-zero only on a failed learning status.
 
-The CLI has no learner seam, so the stored learning event that closeout reads
+The CLI runs the real learner, so the stored learning event that closeout reads
 on re-run is seeded through the real event file: a stale identity makes the
 real learner fail; an evaluated/blocked verdict is a settled status.
 """
@@ -125,3 +125,14 @@ def test_evolve_learning_exit_code_follows_status(
 
     assert rc == code
     assert f"learning: {status}" in capsys.readouterr().err
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("kind", ["proposal", "audit"])
+def test_closeout_cli_path_writes_learning_event(tmp_path: Path, kind: str) -> None:
+    workspace = _workspace(tmp_path, kind)
+    manifest = tmp_path / "m.json"
+    _write_manifest(workspace, manifest)
+
+    assert dispatch([*_argv(kind, manifest), "--root", str(tmp_path)]) == 0
+    assert _event_files(tmp_path)

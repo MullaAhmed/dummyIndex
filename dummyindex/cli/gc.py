@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import json
 import sys
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import Any
 
@@ -39,7 +39,11 @@ from .common import resolve_context_root, usage_error
 _GC_USAGE = "usage: dummyindex context gc status|delete|closeout|stamp|signal ..."
 
 
-def run(args: list[str]) -> int:
+def run(
+    args: list[str],
+    *,
+    after_closeout: Callable[[Path, Path, str, dict, dict], None] | None = None,
+) -> int:
     """`dummyindex context gc status|delete|closeout|stamp|signal ...`.
 
     ``-h``/``--help`` is intercepted at the dispatcher (``cli/__init__``), so it
@@ -54,7 +58,7 @@ def run(args: list[str]) -> int:
     if verb == "delete":
         return _gc_delete(rest)
     if verb == "closeout":
-        return _gc_closeout(rest)
+        return _gc_closeout(rest, after_closeout)
     if verb == "stamp":
         return _gc_stamp(rest)
     if verb == "signal":
@@ -66,7 +70,10 @@ def run(args: list[str]) -> int:
     return 2
 
 
-def _gc_closeout(args: list[str]) -> int:
+def _gc_closeout(
+    args: list[str],
+    after_closeout: Callable[[Path, Path, str, dict, dict], None] | None,
+) -> int:
     """`gc closeout --kind K --slug S (--manifest FILE | --draft) [--root DIR]`."""
     from dummyindex.context.domains.audit import AuditSlugError
     from dummyindex.context.domains.proposals import (
@@ -110,7 +117,11 @@ def _gc_closeout(args: list[str]) -> int:
         return 0
     try:
         receipt = closeout_from_file(
-            context_dir, values["kind"], values["slug"], Path(values["manifest"])
+            context_dir,
+            values["kind"],
+            values["slug"],
+            Path(values["manifest"]),
+            after_closeout=after_closeout,
         )
     except (CloseoutError, ProposalSlugError) as exc:
         print(f"error: {exc}", file=sys.stderr)
