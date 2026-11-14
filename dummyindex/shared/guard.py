@@ -1,5 +1,7 @@
 """Path guard and project writer lock shared by evolve and context writers."""
 
+from __future__ import annotations
+
 import os
 from contextlib import contextmanager
 from pathlib import Path, PurePosixPath, PureWindowsPath

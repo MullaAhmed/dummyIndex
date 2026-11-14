@@ -1,7 +1,6 @@
 """Shared I/O helper for domain store modules.
 
-Kept in the `domains` package so any domain store can import without
-creating cross-domain dependencies.
+Lives in the shared layer, so context and evolve modules can both import it.
 """
 
 from __future__ import annotations

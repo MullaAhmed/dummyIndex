@@ -1,5 +1,7 @@
 """Managed convention rule blocks parsed from authored docs."""
 
+from __future__ import annotations
+
 import json
 import re
 

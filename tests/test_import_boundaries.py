@@ -180,7 +180,9 @@ def _edge_violations(edge: Edge, modules: set[str]) -> list[str]:
             add("R1")
     if set(edge.names) & MOVED.get(edge.module.rpartition(".")[2], set()):  # R4
         add("R4")
-    if any(edge.module == prefix or edge.module.startswith(prefix + ".") for prefix in OLD_PREFIXES):  # R5
+    # `from pkg import old_name` names a module that no longer exists, so also match pkg.old_name.
+    targets = (edge.module, *(f"{edge.module}.{name}" for name in edge.names))
+    if any(target == prefix or target.startswith(prefix + ".") for target in targets for prefix in OLD_PREFIXES):
         add("R5")
     if top == PKG and edge.module not in modules:  # R6
         add("R6")
@@ -287,6 +289,55 @@ CASES = [
         {"dummyindex/context/user.py": "import importlib\n\n\ndef load(name):\n    return importlib.import_module(name)\n"},
         ["R7 dummyindex/context/user.py:5 -> import_module (dynamic)"],
         id="dynamic-import-module",
+    ),
+    pytest.param(
+        {
+            "dummyindex/context/user.py": "from dummyindex.context.domains import atomic_io\n",
+            "dummyindex/context/domains/__init__.py": "",
+        },
+        ["R5 dummyindex/context/user.py:1 -> dummyindex.context.domains (atomic_io)"],
+        id="old-module-as-name-absolute",
+    ),
+    pytest.param(
+        {
+            "dummyindex/context/user.py": "from dummyindex.context.domains import lesson\n",
+            "dummyindex/context/domains/__init__.py": "",
+        },
+        ["R5 dummyindex/context/user.py:1 -> dummyindex.context.domains (lesson)"],
+        id="old-package-as-name-absolute",
+    ),
+    pytest.param(
+        {"dummyindex/context/domains/user.py": "from . import atomic_io\n"},
+        ["R5 dummyindex/context/domains/user.py:1 -> dummyindex.context.domains (atomic_io)"],
+        id="old-module-as-name-relative",
+    ),
+    pytest.param(
+        {
+            "dummyindex/shared/a.py": "from dummyindex.evolve import probation\n",
+            "dummyindex/evolve/probation/__init__.py": "",
+        },
+        ["R1 dummyindex/shared/a.py:1 -> dummyindex.evolve.probation (probation)"],
+        id="shared-to-evolve-module-resolved",
+    ),
+    pytest.param(
+        {"dummyindex/shared/a.py": "import requests\n"},
+        ["R1 dummyindex/shared/a.py:1 -> requests (import)"],
+        id="shared-to-third-party",
+    ),
+    pytest.param(
+        {"dummyindex/shared/a.py": '__import__("dummyindex.context.x")\n', "dummyindex/context/x.py": ""},
+        ["R1 dummyindex/shared/a.py:1 -> dummyindex.context.x (__import__)"],
+        id="shared-dunder-import-to-context",
+    ),
+    pytest.param(
+        {"dummyindex/context/user.py": 'import importlib\nimportlib.import_module("dummyindex.nope")\n'},
+        ["R6 dummyindex/context/user.py:2 -> dummyindex.nope (import_module)"],
+        id="literal-import-module-unresolved",
+    ),
+    pytest.param(
+        {"dummyindex/context/domains/user.py": "from ..nope import thing\n"},
+        ["R6 dummyindex/context/domains/user.py:1 -> dummyindex.context.nope (thing)"],
+        id="relative-unresolved",
     ),
 ]
 
