@@ -100,7 +100,7 @@ Rows that need `--allow-untracked` or `--force-partial` are **excluded from the 
 
 An `in_progress` / `checklist-partial` proposal is delete-blocked unless the user explicitly okays `--force-partial`. Confirmation always gates deletion. No doc or code is removed without the explicit go-ahead surfaced here.
 
-**Equipment candidates.** A `scope=task` item becomes a candidate only when all its refs end: proposal done or superseded, audit closed, or no workspace. An in-progress ref blocks it. Evidence-free db or search specialists (`review`) are candidates too. Confirm each item separately.
+**Equipment candidates.** A `scope=task` item becomes a candidate when all refs end. That means proposal done or superseded, audit closed, or no workspace. An in-progress ref blocks it. Evidence-free db or search specialists (`review`) are candidates too. Confirm each item separately.
 
 ### 5. Execute, per category (only user-confirmed items)
 
