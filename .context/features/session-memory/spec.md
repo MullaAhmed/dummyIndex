@@ -167,8 +167,8 @@ Nothing reads `failure-patterns.md`. `render_session_start` surfaces NOW/RECENT/
 
 ### Shared I/O
 
-- `write_text_atomic(path: Path, text: str) -> None` — byte-faithful by contract (`atomic_io.py:37-47`)
-- `normalize_eof_newline(path: Path) -> bool` (`atomic_io.py:50-67`)
+- `write_text_atomic(path: Path, text: str) -> None` — byte-faithful by contract (`atomic_io.py:36-46`)
+- `normalize_eof_newline(path: Path) -> bool` (`atomic_io.py:49-66`)
 
 ### CLI helpers
 
@@ -201,7 +201,7 @@ Enums: `MemoryTier`, `MemoryVerb`, `AUTO_BREADCRUMB_TAG`, `TIER_HEADINGS` (`memo
 4. `_iter_skill_json_lines` rejects every line lacking `"type":"user"` and one of `skill`/`normal mode`/`adhd mode` before parsing JSON. A 40 MB transcript costs a substring scan, not 40 MB of `json.loads` (`scan.py:109-137`).
 5. The surviving prompt matches the fourth positive pattern (`corrections.py:62-72`). `normalize_skill_slug` folds `i-have-adhd` through the alias set (`corrections.py:111,115-123`). `directive_events` attaches a sha256 `event_key` from the row's `uuid` and drops the text (`corrections.py:191-238`).
 6. The 2026-08-04 event plus one earlier event, with no later revocation, makes `aggregate_skill_corrections` emit `RecurringSkillCorrection(skill="i-have-adhd", corrections=2, sessions=2)` (`corrections.py:251-293`).
-7. `write_skill_feedback` renders it. It compares against the file's current bytes. It rewrites `.context/cache/skill-feedback.json` atomically, and only if changed (`feedback.py:101-133`, `atomic_io.py:37-47`). Hook stdout was redirected to `/dev/null`, so the user sees nothing.
+7. `write_skill_feedback` renders it. It compares against the file's current bytes. It rewrites `.context/cache/skill-feedback.json` atomically, and only if changed (`feedback.py:101-133`, `atomic_io.py:36-46`). Hook stdout was redirected to `/dev/null`, so the user sees nothing.
 8. The next prompt fires UserPromptSubmit, which runs `dummyindex context memory prompt-context`. `read_skill_feedback` validates the cache fail-closed. `extract_skill_directives` finds no directive in this prompt. `render_skill_feedback` emits the header and the `i-have-adhd` ADHD rule (`feedback.py:25-33,203-247`). The CLI prints `{"hookSpecificOutput":{"hookEventName":"UserPromptSubmit","additionalContext":"…"},"suppressOutput":true}` (`cli/memory.py:128-139`). The model gets the policy as a system reminder.
 9. If that same prompt had said `normal mode`, step 8's `current` directive would be a `REVOCATION`. The cached `i-have-adhd` line would drop from that very turn's render (`feedback.py:210-225`).
 

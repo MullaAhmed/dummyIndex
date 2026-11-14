@@ -82,7 +82,7 @@ Both families share `helpers.py` (atomic writers, slug validation). They raise t
 
 ## Key decisions
 
-- **Validate-before-write and atomic persistence.** Every op validates fully, then writes each artifact via tmp-file+`replace` (`helpers.py:131-140`). This is the *local* reimplementation of the project-wide `write_text_atomic` shape. Convention `data-access.md` names the canonical helper at `atomic_io.py:11-24`. Paths are repo-relative POSIX only. JSON is sorted and stable, for byte-identical re-runs.
+- **Validate-before-write and atomic persistence.** Every op validates fully, then writes each artifact via tmp-file+`replace` (`helpers.py:131-140`). This is the *local* reimplementation of the project-wide `write_text_atomic` shape. Convention `data-access.md` names the canonical helper at `atomic_io.py:10-23`. Paths are repo-relative POSIX only. JSON is sorted and stable, for byte-identical re-runs.
 - **Members derived, never re-clustered.** Placement recomputes members from `symbols.json` over the file union or remainder. Clustering happens exactly once, at build time, in `scaffold_features`.
 - **`community-*` ids reserved** (`_RESERVED_ID_PREFIX`, checked in `_validate_placement_id`, `placement.py:395`). Hand-scaffolded features cannot collide with a future Leiden re-cluster. `scaffold-feature` rejects them.
 - **Enrichment preserved on mutation.** Assign, unassign, and rename touch only `feature.json` and indexes, never curated section markdown. Merge appends prose under sentinels, so re-merge never clobbers.

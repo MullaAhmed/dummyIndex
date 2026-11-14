@@ -4,23 +4,23 @@
 
 Evolution updates one convention, playbook or capability from cited outcomes. It stages one candidate, gates exact content with a content-bound receipt, then promotes with recoverable rollback.
 
-Closeout enqueues one idempotent learning event. A verified narrow reflection (`cue`, `lesson`, `evidence`, `confidence`) has rule body `When <cue>: <lesson>`; `legacy_shape` passes. Only a passing gate applies. Missing checks stay `evaluated/blocked`. Unsupported reflection becomes `no_entry`. Closed statuses: `applied|evaluated|blocked|no_entry|pending|ignored|failed`. Only persisted `failed` exits non-zero; failures persist and retry. `evolve learning` returns 1 on `EvolveError`/`OSError`/`ValueError` (`dummyindex/cli/evolve.py:161-163`). Learning, evolution and experiment events never self-trigger. An empty test list selects no checks and blocks promotion. Unrelated tests cannot qualify a reflection; `evolve apply` without tests keeps target-based discovery (`dummyindex/context/domains/evolve_gate.py:187-219`, `dummyindex/context/domains/evolve_learning.py:178-303`).
+Closeout enqueues one idempotent learning event. A verified narrow reflection (`cue`, `lesson`, `evidence`, `confidence`) has rule body `When <cue>: <lesson>`; `legacy_shape` passes. Only a passing gate applies. Missing checks stay `evaluated/blocked`. Unsupported reflection becomes `no_entry`. Closed statuses: `applied|evaluated|blocked|no_entry|pending|ignored|failed`. Only persisted `failed` exits non-zero; failures persist and retry. `evolve learning` returns 1 on `EvolveError`/`OSError`/`ValueError` (`dummyindex/evolve/cli/evolve.py:162-164`). Learning, evolution and experiment events never self-trigger. An empty test list selects no checks and blocks promotion. Unrelated tests cannot qualify a reflection; `evolve apply` without tests keeps target-based discovery (`dummyindex/evolve/evolve_gate.py:160-192`, `dummyindex/evolve/evolve_learning.py:185-310`).
 
 ## Chat learning and probation
 
 - `chat:` runs stage under `.context/cache/evolution/runs/`, uncommitted. High-impact body or cue blocks at once.
-- A passing gate calls `probation.actions.enter` (`dummyindex/context/domains/evolve_learning.py:363`). It writes no `evolution.jsonl` event.
+- A passing gate calls `probation.actions.enter` (`dummyindex/evolve/evolve_learning.py:370`). It writes no `evolution.jsonl` event.
 - Qualification reads `project tests only; no model-quality claim`.
 - Probation items live in `.context/cache/evolution/probation/`. Only the author's sessions load them, labelled provisional.
 - Blast radius: `.context/features/**` routes to reconcile. `naming.md`, skills, equipment and playbooks need explicit `/dummyindex-evolve`.
 - Human corrections seed `chat:` probation. Closeout, runtime and legacy `human:` learning auto-apply.
 - Ignored rules get `needs_enforcement`, never rollback. Each `evolve probation report` states its output, even `ran, found nothing`.
 - Thresholds are uncalibrated defaults. Reports give a detector-limited 95% upper bound; no improvement claim.
-- Lifecycle, states and thresholds belong to the `probation` feature. Promotion: `evolve probation promote` (`dummyindex/cli/evolve_probation.py:144`).
+- Lifecycle, states and thresholds belong to the `probation` feature. Promotion: `evolve probation promote` (`dummyindex/evolve/cli/evolve_probation.py:144`).
 
 ## Evidence import
 
-Evidence import belongs to `observe`. It runs locked, bounded to 20 s. Committed `.context/gc/evidence.json` holds exposure only, schema 2. Schema-1 data migrates into the local ledger on write (`dummyindex/context/domains/evidence.py:94`). Local source paths live in `.context/cache/evidence-sources.json`, never committed. Probation seeds write committed stubs with schema_version, id, host, day and detector only. Case exposure and ancestry survive raw-history cleanup, so development cases never become clean held-out cases.
+Evidence import belongs to `observe`. It runs locked, bounded to 20 s. Committed `.context/gc/evidence.json` holds exposure only, schema 2. Schema-1 data migrates into the local ledger on write (`dummyindex/evolve/evidence.py:94`). Local source paths live in `.context/cache/evidence-sources.json`, never committed. Probation seeds write committed stubs with schema_version, id, host, day and detector only. Case exposure and ancestry survive raw-history cleanup, so development cases never become clean held-out cases.
 
 ## Experiments and native specs
 

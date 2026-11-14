@@ -54,7 +54,7 @@ RunResult]` type alias. Its `default_runner` default arg lets tests inject a fak
 
 `default_runner` uses fixed argv and no shell. It sets `check=False`. A missing executable maps to returncode 127. It never raises on non-zero (`sources.py:33-48`). Same precedent governs `context/build/git_delta.py` (`sources.py:5-8`).
 
-File writes are atomic: tmp file + `replace`. They are byte-faithful by contract. Otherwise equip hash-baselines misread a silent rewrite as a user edit (`dummyindex/context/domains/atomic_io.py:11-24`).
+File writes are atomic: tmp file + `replace`. They are byte-faithful by contract. Otherwise equip hash-baselines misread a silent rewrite as a user edit (`dummyindex/shared/atomic_io.py:10-23`).
 
 ## Sync vs async — N/A here
 
