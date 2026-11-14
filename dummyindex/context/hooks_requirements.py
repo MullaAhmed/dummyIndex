@@ -4,7 +4,9 @@ Two Claude Code hooks, kept apart from :mod:`context.hooks` because they have th
 own sentinel and never go through its ``_guard_body``:
 
 - **UserPromptSubmit gate** blocks a prompt while ``.context/config.toml`` requirements
-  are unmet. Fail-open: any missing piece exits 0 silently.
+  are unmet. A missing ``dummyindex`` CLI blocks with the install command;
+  ``DUMMYINDEX_ALLOW_UNMET_REQUIREMENTS=1`` lets the prompt through. A CLI error
+  (non-zero exit) fails open.
 - **SessionStart upgrade** runs ``context upgrade --if-stale`` when the stamped
   ``.context/`` version differs from the CLI version baked in at install time.
 
@@ -49,14 +51,18 @@ _GATE_BODY = (
     'OK="$ROOT/.context/cache/requirements.ok"\n'
     'if [ -f "$OK" ]; then\n'
     "  stale=0\n"
+    # Directories too: their mtime moves when entries are added or removed, which
+    # changes the native adapter and project SKILL.md set the marker certifies.
     '  for f in "$ROOT/.context/config.toml" "$ROOT/.context/equipment.json" '
     '"$ROOT/.claude/settings.json" "$ROOT/.claude/settings.local.json" '
+    '"$ROOT/.claude/agents" "$ROOT/.claude/skills" '
     '"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json" '
     '"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/plugins/installed_plugins.json"; do\n'
-    '    if [ -f "$f" ] && [ "$f" -nt "$OK" ]; then stale=1; break; fi\n'
+    '    if [ -e "$f" ] && [ "$f" -nt "$OK" ]; then stale=1; break; fi\n'
     "  done\n"
     '  [ "$stale" = 0 ] && exit 0\n'
     "fi\n"
+    '[ "${DUMMYINDEX_ALLOW_UNMET_REQUIREMENTS:-}" = 1 ] && exit 0\n'
     "command -v dummyindex >/dev/null 2>&1 || { printf '%s\\n' "
     '\'{"decision":"block","reason":"dummyindex CLI not found. Install: '
     "pip install --user dummyindex (or uv tool install dummyindex), then "

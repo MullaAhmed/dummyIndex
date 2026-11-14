@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from dummyindex.context.build.context_upgrade import _refresh_hooks
 from dummyindex.context.claude_settings import load_settings
 from dummyindex.context.hooks import install, uninstall
 from dummyindex.context.hooks_requirements import (
@@ -377,3 +378,67 @@ def test_upgrade_with_equal_stamp_does_not_spawn(
     )
     assert result.returncode == 0
     assert not log.exists()
+
+
+@pytest.mark.integration
+def test_gate_bypass_env_passes_without_cli(tmp_path: Path, native_sh: str) -> None:
+    (tmp_path / ".context").mkdir()
+    (tmp_path / ".context" / "config.toml").write_text(
+        "schema_version = 1\n", encoding="utf-8"
+    )
+    settings = tmp_path / "settings.json"
+    install_requirements_hooks(settings, cli_version=_CLI_VERSION)
+
+    result = _run(
+        native_sh,
+        _gate_command(settings),
+        tmp_path,
+        path="/usr/bin:/bin",
+        extra_env={"DUMMYINDEX_ALLOW_UNMET_REQUIREMENTS": "1"},
+    )
+    assert result.returncode == 0
+    assert result.stdout == ""
+    assert result.stderr == ""
+
+
+@pytest.mark.integration
+def test_gate_fresh_marker_respects_new_agent_entry(
+    tmp_path: Path, native_sh: str
+) -> None:
+    """A new `.claude/agents` entry moves the directory mtime past the marker."""
+    ctx = tmp_path / ".context"
+    (ctx / "cache").mkdir(parents=True)
+    config = ctx / "config.toml"
+    config.write_text("schema_version = 1\n", encoding="utf-8")
+    _set_mtime(config, _OLD_MTIME)
+    agents = tmp_path / ".claude" / "agents"
+    agents.mkdir(parents=True)
+    _set_mtime(agents, _OLD_MTIME + 10)
+    marker = ctx / "cache" / "requirements.ok"
+    marker.write_text("ok\n", encoding="utf-8")
+    _set_mtime(marker, _OLD_MTIME + 50)
+    log = tmp_path / "cli.log"
+    _fake_cli(tmp_path / "bin", log)
+    settings = tmp_path / "settings.json"
+    install_requirements_hooks(settings, cli_version=_CLI_VERSION)
+    command = _gate_command(settings)
+
+    fresh = _run(native_sh, command, tmp_path, path="./bin:/usr/bin:/bin")
+    assert fresh.returncode == 0
+    assert not log.exists()
+
+    (agents / "x.md").write_text("# x\n", encoding="utf-8")
+    stale = _run(native_sh, command, tmp_path, path="./bin:/usr/bin:/bin")
+    assert stale.returncode == 0
+    assert log.read_text(encoding="utf-8").strip() == "context requirements gate"
+
+
+@pytest.mark.integration
+def test_refresh_hooks_writes_requirements_entries_once(tmp_path: Path) -> None:
+    """The upgrade hook refresh must not add a second requirements entry per event."""
+    install(tmp_path)
+    _refresh_hooks(tmp_path, _CLI_VERSION)
+    _refresh_hooks(tmp_path, _CLI_VERSION)
+    settings = tmp_path / ".claude" / "settings.json"
+    assert len(_commands(settings, "UserPromptSubmit")) == 1
+    assert len(_commands(settings, "SessionStart")) == 1

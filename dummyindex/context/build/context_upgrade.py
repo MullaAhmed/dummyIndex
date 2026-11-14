@@ -454,17 +454,15 @@ def _write_adapter(
 
 def _refresh_hooks(root: Path, package_version: str) -> bool:
     from dummyindex.context import hooks
-    from dummyindex.context.hooks_requirements import install_requirements_hooks
 
     if not hooks.local_install_present(root):
         return False
+    # hooks.install also writes the requirements gate/upgrade entries, stamped
+    # with the CLI version it resolves itself; calling them again would duplicate work.
     result = hooks.install(root)
     if result.errors:
         raise RuntimeError("; ".join(f"{name}: {msg}" for name, msg in result.errors))
-    wrote = install_requirements_hooks(
-        root / ".claude" / "settings.json", cli_version=package_version
-    )
-    return bool(result.installed or result.refreshed or wrote)
+    return bool(result.installed or result.refreshed)
 
 
 def _is_gitignored(root: Path, runner: GitRunner) -> bool:
