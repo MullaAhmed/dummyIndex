@@ -6,7 +6,7 @@
 - Scans stop at 20 s, reporting `complete: false`; retry resumes.
 - Captured guidance bytes are a size proxy that breaks ties last.
 - Correction capture is a regex prefilter; it only records. Attribution needs the host LLM resolver. Codex corrections stay unattributable.
-- Exposure covers only `Read`/`Skill` calls and loader injections. Hostile-text scan covers tool results (`observe/importer.py:322`).
+- Exposure covers only `Read`/`Skill` calls and loader injections. Hostile-text scan covers tool results (`observe/importer.py:323`).
 - Local evidence in `.context/cache/evolution/` expires with host transcripts and retention. Human-correction learning waits for probation; closeout continues.
 - Lesson `confidence` and verdicts are unmeasured claims. Legacy-shape reflections pass with a warning.
 - Case identities and ancestry must be honest. Held-out fixtures are absent from development snapshots; undeclared prior exposure cannot be undone.
