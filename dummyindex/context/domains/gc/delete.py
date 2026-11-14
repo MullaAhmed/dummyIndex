@@ -291,10 +291,11 @@ def delete_equipment_item(
                 return DeleteResult(
                     deleted=False, refused=False, reason="nothing to delete"
                 )
-            _equipment_apply(root, plan)
+            apply_warning = _equipment_apply(root, plan)
     except EvolveError as exc:
         raise GcTargetError(name, str(exc)) from exc
-    return DeleteResult(deleted=True, refused=False, reason=plan.warning)
+    notes = [w for w in (plan.warning, apply_warning) if w]
+    return DeleteResult(deleted=True, refused=False, reason="; ".join(notes) or None)
 
 
 def _equipment_plan(root: Path, name: str, *, force: bool) -> _EquipmentPlan | None:
@@ -371,13 +372,16 @@ def _is_project_row(skill: SkillRequirement, name: str) -> bool:
     return skill.name == name and skill.from_ == SkillOrigin.PROJECT.value
 
 
-def _equipment_apply(root: Path, plan: _EquipmentPlan) -> None:
-    """Config row first, then files; on any failure config.toml is restored.
+def _equipment_apply(root: Path, plan: _EquipmentPlan) -> str | None:
+    """Config row first, then files. Returns a warning when only the sidecar stays.
 
     ``remove_item`` deletes the body, removes the native adapter only when it is
     still the generated pointer, and drops the manifest row. The library entry
-    is not touched. If any step raises, config.toml gets back its exact original
-    bytes before the error propagates, so a failed delete leaves no half state.
+    is not touched. If a step before the sidecar raises, config.toml is restored
+    to its exact original bytes and the error is raised as ``GcTargetError``;
+    config.toml is restored on failure, and a retry finishes the delete. A
+    sidecar that cannot be removed after the delete is done is a warning, not a
+    rollback.
     """
     config = root / CONFIG_TOML_REL
     original = config.read_bytes() if plan.requirements is not None else None
@@ -387,11 +391,21 @@ def _equipment_apply(root: Path, plan: _EquipmentPlan) -> None:
         remove_item(root, plan.manifest, plan.name, delete_file=True)
     except Exception as exc:
         if original is not None:
-            _restore_bytes(config, original)
-        if isinstance(exc, (EquipError, RequirementsError)):
+            try:
+                _restore_bytes(config, original)
+            except OSError as restore_exc:
+                raise GcTargetError(
+                    plan.name,
+                    f"{exc}; restoring {CONFIG_TOML_REL} also failed: {restore_exc}",
+                ) from exc
+        if isinstance(exc, (EquipError, RequirementsError, OSError)):
             raise GcTargetError(plan.name, str(exc)) from exc
         raise
-    plan.sidecar.unlink(missing_ok=True)
+    try:
+        plan.sidecar.unlink(missing_ok=True)
+    except OSError as exc:
+        return f"warning: sidecar {plan.sidecar} not removed ({exc}); delete it by hand"
+    return None
 
 
 def _restore_bytes(path: Path, data: bytes) -> None:

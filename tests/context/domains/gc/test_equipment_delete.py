@@ -361,3 +361,58 @@ def test_invalid_config_does_not_block_agent_delete_and_warns(
     assert not (tmp_path / ".claude" / "agents" / "impl-p1.md").exists()
     assert read_manifest(tmp_path / ".context").items == ()
     assert (tmp_path / ".context" / "config.toml").read_bytes() == before
+
+
+def test_manifest_write_oserror_restores_config_and_raises_guard_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from dummyindex.context.domains.equip.lifecycle import remove as remove_mod
+
+    _seed(tmp_path)
+    _seed_library_and_config(tmp_path)
+    before_config = (tmp_path / ".context" / "config.toml").read_bytes()
+
+    def _disk_full(*args, **kwargs):
+        raise OSError("disk full")
+
+    monkeypatch.setattr(remove_mod, "write_manifest", _disk_full)
+
+    with pytest.raises(GcTargetError, match="disk full"):
+        _delete(tmp_path)
+
+    assert (tmp_path / ".context" / "config.toml").read_bytes() == before_config
+    assert [i.name for i in read_manifest(tmp_path / ".context").items] == ["impl-p1"]
+
+    # remove_item unlinks the body before its manifest write, so the body is gone
+    # here; a retry must still finish the delete cleanly.
+    monkeypatch.undo()
+    result = _delete(tmp_path)
+
+    assert result.deleted is True
+    assert read_manifest(tmp_path / ".context").items == ()
+
+
+def test_sidecar_unlink_permission_error_is_a_warning_not_a_rollback(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _seed(tmp_path)
+    _seed_library_and_config(tmp_path)
+    sidecar = tmp_path / ".context" / "equipment" / "grounding" / "impl-p1.md"
+    real_unlink = Path.unlink
+
+    def _locked(self: Path, missing_ok: bool = False) -> None:
+        if self == sidecar:
+            raise PermissionError("file in use")
+        real_unlink(self, missing_ok=missing_ok)
+
+    monkeypatch.setattr(Path, "unlink", _locked)
+
+    result = _delete(tmp_path)
+
+    assert result.deleted is True
+    assert result.refused is False
+    assert result.reason is not None
+    assert "warning:" in result.reason
+    assert str(sidecar) in result.reason
+    assert read_manifest(tmp_path / ".context").items == ()
+    assert not (tmp_path / ".context" / "equipment" / "impl-p1.md").exists()

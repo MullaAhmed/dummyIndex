@@ -244,3 +244,32 @@ def test_task_item_without_refs_is_review_candidate(tmp_path: Path):
 
     assert row.recommendation == Recommendation.REVIEW.value
     assert row.reason == "task item without refs"
+
+
+@pytest.mark.parametrize(
+    "ref",
+    ["foo:bar", "proposal:", "proposal:../x", "audit:"],
+)
+def test_unresolvable_task_ref_is_a_review_candidate_never_carried_silently(
+    tmp_path: Path, ref: str
+):
+    from dummyindex.context.domains.gc.enums import Recommendation
+    from dummyindex.context.domains.gc.recommend import recommend
+
+    context_dir = _context(tmp_path)
+    _proposal(context_dir, "p1", "done")
+    _write(
+        context_dir,
+        _item(tmp_path, "impl-p1", task_refs=("proposal:p1", ref)),
+    )
+
+    candidate = _candidates(context_dir)["impl-p1"]
+
+    assert "unresolvable-ref" in candidate.signals
+    assert recommend(candidate, context_dir) == (
+        Recommendation.REVIEW,
+        "task ref cannot be resolved",
+    )
+    report = scan(context_dir, tmp_path)
+    (row,) = [c for c in report.candidates if c.slug == "impl-p1"]
+    assert row.recommendation == Recommendation.REVIEW.value

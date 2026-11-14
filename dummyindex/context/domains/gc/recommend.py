@@ -53,6 +53,8 @@ def _recommend_equipment(candidate: Candidate) -> tuple[Recommendation, str]:
     signals = set(candidate.signals)
     if "task-unreferenced" in signals:
         return Recommendation.REVIEW, "task item without refs"
+    if "unresolvable-ref" in signals:
+        return Recommendation.REVIEW, "task ref cannot be resolved"
     if "task-finished" in signals:
         if "pristine" in signals and not signals & {"evolved", "sourced"}:
             return Recommendation.DELETE, "task finished; pristine copy"

@@ -21,6 +21,28 @@ from ..proposals.store import validate_slug as validate_proposal_slug
 _FINISHED_PROPOSAL_STATUSES = frozenset({"done", "superseded"})
 
 
+def ref_resolvable(ref: str) -> bool:
+    """Whether a task ref names a valid proposal or audit slug at all.
+
+    A malformed kind or slug (``foo:bar``, ``proposal:``, ``proposal:../x``) can
+    never resolve to a workspace, so GC surfaces it instead of carrying it forever.
+    """
+    kind, _, slug = ref.partition(":")
+    if kind == "proposal":
+        try:
+            validate_proposal_slug(slug)
+        except ProposalSlugError:
+            return False
+        return True
+    if kind == "audit":
+        try:
+            validate_audit_slug(slug)
+        except AuditSlugError:
+            return False
+        return True
+    return False
+
+
 def ref_finished(context_dir: Path, ref: str) -> bool:
     """Whether a ``proposal:<slug>`` / ``audit:<slug>`` task ref is finished.
 

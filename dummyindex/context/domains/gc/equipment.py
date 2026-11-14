@@ -36,7 +36,7 @@ from ..equip.lifecycle.status import classify_item, is_evolved, is_sourced
 from ..equip.models import EquipmentItem, EquipmentManifest
 from ..preflight import build_preflight_report
 from .enums import CandidateKind
-from .liveness import ref_finished
+from .liveness import ref_finished, ref_resolvable
 from .models import Candidate
 
 _SPECIALIST_KINDS = (EquipmentKind.AGENT, EquipmentKind.SKILL)
@@ -73,6 +73,8 @@ def enumerate_equipment_candidates(context_dir: Path) -> tuple[Candidate, ...]:
         if item.scope is EquipmentScope.TASK:
             if not item.task_refs:
                 signals = ("task-unreferenced",)
+            elif not all(ref_resolvable(ref) for ref in item.task_refs):
+                signals = ("unresolvable-ref",)
             elif _refs_finished(context_dir, item.task_refs):
                 signals = ("task-finished",)
             else:
