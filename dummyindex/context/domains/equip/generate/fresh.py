@@ -66,45 +66,14 @@ def _carries_forward(item: EquipmentItem, context_dir: Path | None) -> bool:
 
 
 def _ref_is_live(ref: str, context_dir: Path) -> bool:
-    """A ``proposal:<slug>`` / ``audit:<slug>`` ref whose workspace is not finished.
+    """A task ref is live exactly when GC's shared ``ref_finished`` says it is not.
 
-    Finished (contract 18): a proposal ``done`` or ``superseded``, an audit with
-    its ``report.md`` written, or no workspace at all. Lazy imports keep the
-    liveness readers out of this module's import path.
+    The liveness definition lives in ``gc/liveness.py`` only. The lazy import
+    keeps the GC domain out of this module's import path.
     """
-    kind, _, slug = ref.partition(":")
-    if not slug:
-        return False
-    if kind == "proposal":
-        from dummyindex.context.domains.gc.liveness import _proposal_status
-        from dummyindex.context.domains.proposals.errors import ProposalSlugError
-        from dummyindex.context.domains.proposals.store import (
-            proposals_root,
-            validate_slug,
-        )
+    from dummyindex.context.domains.gc.liveness import ref_finished
 
-        try:
-            target = proposals_root(context_dir) / validate_slug(slug)
-        except ProposalSlugError:
-            return False
-        return target.is_dir() and _proposal_status(target) not in {
-            "done",
-            "superseded",
-        }
-    if kind == "audit":
-        from dummyindex.context.domains.audit.errors import AuditSlugError
-        from dummyindex.context.domains.audit.workspace import (
-            audit_dir,
-            report_written,
-        )
-
-        try:
-            target = audit_dir(context_dir, slug)
-            closed = report_written(context_dir, slug)
-        except AuditSlugError:
-            return False
-        return target.is_dir() and not closed
-    return False
+    return not ref_finished(context_dir, ref)
 
 
 def drop_generated_stems(

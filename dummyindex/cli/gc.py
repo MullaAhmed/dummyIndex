@@ -299,11 +299,17 @@ def _gc_signal(args: list[str]) -> int:
     return 0
 
 
-def _equipment_count(context_dir: Path) -> int:
-    """How many equipment items the GC would list as candidates."""
+def _equipment_count(context_dir: Path) -> int | None:
+    """How many equipment items the GC would list; ``None`` when it cannot tell.
+
+    The nudge is a hook probe: any failure here drops only the count, never the nudge.
+    """
     from dummyindex.context.domains.gc.equipment import enumerate_equipment_candidates
 
-    return len(enumerate_equipment_candidates(context_dir))
+    try:
+        return len(enumerate_equipment_candidates(context_dir))
+    except Exception:  # noqa: BLE001 — a candidate-count fault must not hide the nudge
+        return None
 
 
 # --- status rendering

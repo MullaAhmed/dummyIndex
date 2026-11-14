@@ -19,9 +19,6 @@ from __future__ import annotations
 import dataclasses
 from pathlib import Path
 
-from ..audit.errors import AuditSlugError
-from ..audit.workspace import audit_dir, report_written
-from ..audit.workspace import validate_slug as validate_audit_slug
 from ..equip.enums import (
     EquipmentKind,
     EquipmentScope,
@@ -38,15 +35,11 @@ from ..equip.lifecycle.manifest import read_manifest
 from ..equip.lifecycle.status import classify_item, is_evolved, is_sourced
 from ..equip.models import EquipmentItem, EquipmentManifest
 from ..preflight import build_preflight_report
-from ..proposals.errors import ProposalSlugError
-from ..proposals.store import proposal_dir
-from ..proposals.store import validate_slug as validate_proposal_slug
 from .enums import CandidateKind
-from .liveness import _liveness_block, _proposal_status
+from .liveness import ref_finished
 from .models import Candidate
 
 _SPECIALIST_KINDS = (EquipmentKind.AGENT, EquipmentKind.SKILL)
-_FINISHED_PROPOSAL_STATUSES = frozenset({"done", "superseded"})
 
 
 def enumerate_equipment_candidates(context_dir: Path) -> tuple[Candidate, ...]:
@@ -120,31 +113,7 @@ def _state_signals(state: ItemState, item: EquipmentItem) -> tuple[str, ...]:
 
 def _refs_finished(context_dir: Path, refs: tuple[str, ...]) -> bool:
     """Every ref finished and none in-flight. Unknown refs count as unfinished."""
-    return all(_ref_finished(context_dir, ref) for ref in refs)
-
-
-def _ref_finished(context_dir: Path, ref: str) -> bool:
-    kind, _, slug = ref.partition(":")
-    if kind == "proposal":
-        try:
-            target = proposal_dir(context_dir, validate_proposal_slug(slug))
-        except ProposalSlugError:
-            return False
-        if not target.is_dir():
-            return True
-        if _liveness_block(target) is not None:
-            return False
-        return _proposal_status(target) in _FINISHED_PROPOSAL_STATUSES
-    if kind == "audit":
-        try:
-            validate_audit_slug(slug)
-            target = audit_dir(context_dir, slug)
-        except AuditSlugError:
-            return False
-        if not target.is_dir():
-            return True
-        return report_written(context_dir, slug)
-    return False
+    return all(ref_finished(context_dir, ref) for ref in refs)
 
 
 def _baseline_names(

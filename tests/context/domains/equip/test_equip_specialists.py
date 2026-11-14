@@ -839,3 +839,56 @@ def test_task_item_carries_conservatively_without_context_dir() -> None:
         )
     )
     assert specialist_caps_from_manifest(manifest) == (Capability.PERFORMANCE,)
+
+
+# --- one liveness definition: status done + open checklist stays live everywhere
+
+
+def test_done_status_with_open_checklist_is_live_for_carry_forward_and_gc(
+    tmp_path: Path,
+) -> None:
+    from dummyindex.context.domains.equip.constants import SCHEMA_VERSION
+    from dummyindex.context.domains.equip.enums import EquipmentKind, EquipmentSource
+    from dummyindex.context.domains.equip.lifecycle.hashing import content_hash
+    from dummyindex.context.domains.equip.lifecycle.manifest import write_manifest
+    from dummyindex.context.domains.equip.models import (
+        EquipmentItem,
+        EquipmentManifest,
+    )
+    from dummyindex.context.domains.gc.equipment import (
+        enumerate_equipment_candidates,
+    )
+
+    context_dir = tmp_path / ".context"
+    workspace = context_dir / "proposals" / "p1"
+    workspace.mkdir(parents=True)
+    (workspace / "proposal.json").write_text(
+        json.dumps({"slug": "p1", "title": "p1", "status": "done"}), encoding="utf-8"
+    )
+    (workspace / "checklist.md").write_text("- [ ] T9 still open\n", encoding="utf-8")
+    body = "# impl\n"
+    rel = ".claude/agents/impl-p1.md"
+    (tmp_path / rel).parent.mkdir(parents=True)
+    (tmp_path / rel).write_text(body, encoding="utf-8")
+    item = EquipmentItem(
+        kind=EquipmentKind.AGENT,
+        name="impl-p1",
+        path=rel,
+        source=EquipmentSource.GENERATED,
+        capabilities=("database",),
+        subagent_type="impl-p1",
+        version="1.0.0",
+        origin_hash=content_hash(body),
+        scope=EquipmentScope.TASK,
+        requested_by=RequestedBy.PROPOSAL,
+        task_refs=("proposal:p1",),
+    )
+    manifest = EquipmentManifest(schema_version=SCHEMA_VERSION, items=(item,))
+    write_manifest(context_dir, manifest)
+
+    # Open checklist box keeps the ref live: the capability is carried forward.
+    assert specialist_caps_from_manifest(manifest, context_dir=context_dir) == (
+        "database",
+    )
+    # ...and GC must not offer the same item for deletion.
+    assert enumerate_equipment_candidates(context_dir) == ()

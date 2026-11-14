@@ -43,6 +43,7 @@ This module never touches anything outside the resolved kind-root.
 from __future__ import annotations
 
 import dataclasses
+import os
 import shutil
 import subprocess
 from dataclasses import dataclass
@@ -260,6 +261,8 @@ class _EquipmentPlan:
     user_modified: bool
     # config.toml with the same-named project skill row dropped; None leaves the file alone.
     requirements: Requirements | None
+    # One line for the operator when config.toml was skipped; None otherwise.
+    warning: str | None = None
 
 
 def delete_equipment_item(
@@ -291,17 +294,29 @@ def delete_equipment_item(
             _equipment_apply(root, plan)
     except EvolveError as exc:
         raise GcTargetError(name, str(exc)) from exc
-    return DeleteResult(deleted=True, refused=False, reason=None)
+    return DeleteResult(deleted=True, refused=False, reason=plan.warning)
 
 
 def _equipment_plan(root: Path, name: str, *, force: bool) -> _EquipmentPlan | None:
-    """Run every equipment guard; ``None`` when the manifest has no such item."""
+    """Run every equipment guard; ``None`` when the manifest has no such item.
+
+    An unreadable or unsupported config.toml never blocks the delete: the project
+    skill row step is skipped with a warning and the file is left untouched.
+    """
     context_dir = root / ".context"
     try:
         manifest = read_manifest(context_dir)
-        requirements = read_requirements(root / CONFIG_TOML_REL)
-    except (EquipError, RequirementsError) as exc:
+    except EquipError as exc:
         raise GcTargetError(name, str(exc)) from exc
+    requirements: Requirements | None = None
+    warning: str | None = None
+    try:
+        requirements = read_requirements(root / CONFIG_TOML_REL)
+    except RequirementsError as exc:
+        warning = (
+            f"warning: {CONFIG_TOML_REL} unreadable ({exc}); "
+            "project skill row not checked, file left unchanged"
+        )
     item = next((i for i in manifest.items if i.name == name), None)
     if item is None:
         return None
@@ -335,6 +350,7 @@ def _equipment_plan(root: Path, name: str, *, force: bool) -> _EquipmentPlan | N
         sidecar=sidecar,
         user_modified=user_modified,
         requirements=_without_project_skill(requirements, name),
+        warning=warning,
     )
 
 
@@ -356,19 +372,33 @@ def _is_project_row(skill: SkillRequirement, name: str) -> bool:
 
 
 def _equipment_apply(root: Path, plan: _EquipmentPlan) -> None:
-    """Config row first (the only step that can fail validation), then files.
+    """Config row first, then files; on any failure config.toml is restored.
 
     ``remove_item`` deletes the body, removes the native adapter only when it is
     still the generated pointer, and drops the manifest row. The library entry
-    is not touched.
+    is not touched. If any step raises, config.toml gets back its exact original
+    bytes before the error propagates, so a failed delete leaves no half state.
     """
+    config = root / CONFIG_TOML_REL
+    original = config.read_bytes() if plan.requirements is not None else None
     try:
         if plan.requirements is not None:
-            write_requirements(root / CONFIG_TOML_REL, plan.requirements)
+            write_requirements(config, plan.requirements)
         remove_item(root, plan.manifest, plan.name, delete_file=True)
-    except (EquipError, RequirementsError) as exc:
-        raise GcTargetError(plan.name, str(exc)) from exc
+    except Exception as exc:
+        if original is not None:
+            _restore_bytes(config, original)
+        if isinstance(exc, (EquipError, RequirementsError)):
+            raise GcTargetError(plan.name, str(exc)) from exc
+        raise
     plan.sidecar.unlink(missing_ok=True)
+
+
+def _restore_bytes(path: Path, data: bytes) -> None:
+    """Write ``data`` back to ``path`` atomically (temp file, then replace)."""
+    tmp = path.with_name(path.name + ".gc-restore")
+    tmp.write_bytes(data)
+    os.replace(tmp, path)
 
 
 def _describe(plan: _EquipmentPlan) -> str:
@@ -383,6 +413,8 @@ def _describe(plan: _EquipmentPlan) -> str:
     text = "remove " + ", ".join(steps) + "; library entry kept"
     if plan.user_modified:
         text += " (user-edited body, --force given)"
+    if plan.warning is not None:
+        text += f"; {plan.warning}"
     return text
 
 

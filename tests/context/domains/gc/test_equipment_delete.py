@@ -304,3 +304,60 @@ def test_equipment_kind_rejects_a_path_target(tmp_path: Path) -> None:
             path=str(tmp_path / ".context" / "equipment" / "impl-p1.md"),
         )
     assert (tmp_path / ".context" / "equipment" / "impl-p1.md").is_file()
+
+
+# --- config.toml is never left half-written on a failed delete
+
+
+def test_failed_remove_restores_config_bytes_and_keeps_files(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from dummyindex.context.domains.equip.errors import EquipError
+    from dummyindex.context.domains.gc import delete as delete_mod
+
+    _seed(tmp_path)
+    _seed_library_and_config(tmp_path)
+    before_config = (tmp_path / ".context" / "config.toml").read_bytes()
+    before_body = (tmp_path / ".context" / "equipment" / "impl-p1.md").read_bytes()
+
+    def _boom(*args, **kwargs):
+        raise EquipError("simulated remove failure")
+
+    monkeypatch.setattr(delete_mod, "remove_item", _boom)
+
+    with pytest.raises(GcTargetError, match="simulated remove failure"):
+        _delete(tmp_path)
+
+    assert (tmp_path / ".context" / "config.toml").read_bytes() == before_config
+    assert (tmp_path / ".context" / "equipment" / "impl-p1.md").read_bytes() == (
+        before_body
+    )
+    assert [i.name for i in read_manifest(tmp_path / ".context").items] == ["impl-p1"]
+    assert not (tmp_path / ".context" / "config.toml.gc-restore").exists()
+
+
+# --- an unreadable config.toml never blocks deleting an agent
+
+
+def test_invalid_config_does_not_block_agent_delete_and_warns(
+    tmp_path: Path,
+) -> None:
+    _seed(tmp_path)
+    broken = "[dummyindex\nschema_version = = 1\n"
+    _seed_library_and_config(tmp_path, broken)
+    before = (tmp_path / ".context" / "config.toml").read_bytes()
+
+    dry = _delete(tmp_path, dry_run=True)
+    assert dry.would_delete is True
+    assert "warning:" in (dry.reason or "")
+    assert "config.toml" in (dry.reason or "")
+
+    result = _delete(tmp_path)
+
+    assert result.deleted is True
+    assert result.refused is False
+    assert "warning:" in (result.reason or "")
+    assert not (tmp_path / ".context" / "equipment" / "impl-p1.md").exists()
+    assert not (tmp_path / ".claude" / "agents" / "impl-p1.md").exists()
+    assert read_manifest(tmp_path / ".context").items == ()
+    assert (tmp_path / ".context" / "config.toml").read_bytes() == before

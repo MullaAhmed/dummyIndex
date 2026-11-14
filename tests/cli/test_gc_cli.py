@@ -1168,3 +1168,28 @@ def test_force_rejected_for_workspace_kinds(
 
     assert code == 2
     assert "--force applies to --kind equipment only" in err
+
+
+@pytest.mark.integration
+def test_signal_nudge_survives_equipment_count_failure(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from dummyindex.context.domains.gc import equipment as equipment_mod
+
+    context_dir = _orphan_anchor(tmp_path)
+    _write_proposal(context_dir, "p1", status="done")
+
+    def _raise(_context_dir: Path):
+        raise OSError("unreadable equipment file")
+
+    monkeypatch.setattr(equipment_mod, "enumerate_equipment_candidates", _raise)
+    monkeypatch.setenv(_SESSION_ENV, "s-equip-fail")
+
+    code = dispatch(["gc", "signal", "--root", str(tmp_path)])
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert "GC anchor orphaned" in out
+    assert "equipment candidate" not in out
