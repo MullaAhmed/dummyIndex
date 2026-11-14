@@ -8,11 +8,12 @@ from collections.abc import Callable, Mapping
 from contextlib import contextmanager
 from pathlib import Path
 
+from dummyindex.shared.atomic_io import replace_bytes
+from dummyindex.shared.lesson.enums import LearningStatus
+
 from ...build.git_delta import head_commit
-from ..atomic_io import _replace_bytes
 from ..buildloop import parse_checklist
 from ..docguard.citations import cites_disposable
-from ..lesson.enums import LearningStatus
 from .errors import CloseoutError
 from .retirement import (
     ADMIN_FILES,
@@ -149,8 +150,8 @@ def _close(context_dir: Path, workspace: Path, kind: str, manifest: dict) -> dic
     pending, resolved = _verification(context_dir, manifest, old, previous)
     reflection = manifest.get("learning_reflection")
     if reflection is not None:
-        from ..evolve_gate import EvolveError
-        from ..lesson import validate_lesson
+        from dummyindex.shared.errors import EvolveError
+        from dummyindex.shared.lesson import validate_lesson
 
         try:
             validate_lesson(reflection)
@@ -279,7 +280,8 @@ def _learn_after_closeout(
     failed = None
     mark_failed = _no_mark
     try:
-        from ..evolve_gate import safe_file
+        from dummyindex.shared.guard import safe_file
+
         from ..evolve_learning import (
             learning_status,
             mark_failed,
@@ -320,7 +322,7 @@ def _learn_after_closeout(
             record = {"kind": kind, "slug": workspace.name, "state": "failed"}
             record.update(status="failed", error=error)
             if failed is not None:
-                _replace_bytes(
+                replace_bytes(
                     failed,
                     (json.dumps(record, sort_keys=True, indent=2) + "\n").encode(),
                 )
@@ -581,8 +583,8 @@ def _evidence(context_dir: Path, rows: list) -> list[dict]:
 
 @contextmanager
 def _locked(context_dir: Path):
-    from ..evolve_gate import EvolveError
-    from ..evolve_promotion import project_lock
+    from dummyindex.shared.errors import EvolveError
+    from dummyindex.shared.guard import project_lock
 
     try:
         with project_lock(context_dir.parent):
@@ -602,7 +604,7 @@ def _apply(
         for p in writes
     }
     applied = []
-    _replace_bytes(
+    replace_bytes(
         intent,
         (
             json.dumps(
@@ -622,7 +624,7 @@ def _apply(
             current = path.read_bytes() if path.exists() else None
             if current != before[path]:
                 raise CloseoutError(f"destination changed during closeout: {path}")
-            _replace_bytes(path, data)
+            replace_bytes(path, data)
             applied.append(path)
         intent.unlink()
     except Exception:
@@ -634,7 +636,7 @@ def _apply(
             if before[path] is None:
                 path.unlink()
             else:
-                _replace_bytes(path, before[path])
+                replace_bytes(path, before[path])
         if restored:
             intent.unlink(missing_ok=True)
         raise

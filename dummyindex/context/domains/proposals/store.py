@@ -12,7 +12,8 @@ import dataclasses
 import json
 from pathlib import Path
 
-from ..atomic_io import write_text_atomic
+from dummyindex.shared.atomic_io import write_text_atomic
+
 from .enums import ProposalStatus
 from .errors import ProposalExistsError, ProposalSlugError
 from .models import ConsistencyHits, Proposal

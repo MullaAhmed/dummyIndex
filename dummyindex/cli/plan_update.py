@@ -13,8 +13,8 @@ import json
 import sys
 from pathlib import Path
 
-from dummyindex.context.domains.atomic_io import write_text_atomic
 from dummyindex.context.drift import compute_badge, compute_drift, render_drift_summary
+from dummyindex.shared.atomic_io import write_text_atomic
 
 from .common import parse_path_and_root, resolve_context_root
 

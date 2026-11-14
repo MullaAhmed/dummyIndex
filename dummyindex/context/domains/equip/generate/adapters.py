@@ -7,7 +7,7 @@ import re
 import unicodedata
 from pathlib import Path
 
-from dummyindex.context.domains.atomic_io import write_text_atomic
+from dummyindex.shared.atomic_io import write_text_atomic
 
 from ..enums import EquipmentKind, EquipmentSource
 from ..lifecycle.hashing import content_hash

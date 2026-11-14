@@ -14,7 +14,6 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
-from dummyindex.context.domains.atomic_io import write_text_atomic
 from dummyindex.context.output.bootstrap import (
     BEGIN_MARKER,
     END_MARKER,
@@ -23,6 +22,7 @@ from dummyindex.context.output.bootstrap import (
     ensure_guidance_target_in_scope,
     generate_managed_block,
 )
+from dummyindex.shared.atomic_io import write_text_atomic
 
 
 class ClaudeMdAction(str, Enum):

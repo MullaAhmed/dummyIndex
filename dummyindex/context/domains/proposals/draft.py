@@ -5,7 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from ..atomic_io import write_text_atomic
+from dummyindex.shared.atomic_io import write_text_atomic
+
 from ..audit.workspace import audit_dir, report_written
 from ..buildloop.checklist import counts, parse_checklist
 from ..buildloop.errors import BuildLoopError

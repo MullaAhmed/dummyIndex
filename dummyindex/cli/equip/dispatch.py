@@ -534,7 +534,7 @@ def _apply_write(
     migrated_adapters: list[tuple[Path, bytes, bytes]] = []
 
     def restore_migrations() -> None:
-        from dummyindex.context.domains.atomic_io import write_text_atomic
+        from dummyindex.shared.atomic_io import write_text_atomic
 
         for adapter, original, expected in reversed(migrated_adapters):
             try:
@@ -964,7 +964,7 @@ def _description_of(path: Path) -> str | None:
 
 
 def _write_file(target: Path, content: str) -> int:
-    from dummyindex.context.domains.atomic_io import write_text_atomic
+    from dummyindex.shared.atomic_io import write_text_atomic
 
     try:
         write_text_atomic(target, content)

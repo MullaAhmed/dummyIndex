@@ -11,7 +11,8 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from ..atomic_io import write_text_atomic
+from dummyindex.shared.atomic_io import write_text_atomic
+
 from .detect import remember_plugin_present
 from .enums import AUTO_BREADCRUMB_TAG, MemoryTier
 from .parse import read_text_or_empty, section_date, split_sections

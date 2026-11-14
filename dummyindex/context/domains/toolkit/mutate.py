@@ -18,7 +18,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from ..atomic_io import write_text_atomic
+from dummyindex.shared.atomic_io import write_text_atomic
+
 from .bundle import (
     bundle_dir,
     find_item,

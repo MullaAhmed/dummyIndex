@@ -144,7 +144,7 @@ def cache_dir(root: Path = Path(".")) -> Path:
 def _write_bytes_atomic(path: Path, data: bytes) -> None:
     """Replace ``path`` from a unique temporary sibling; never creates parents.
 
-    Same shape as ``context/domains/atomic_io._replace_bytes`` (which
+    Same shape as ``shared/atomic_io.replace_bytes`` (which
     ``pipeline`` cannot import — layering is one-way ``context → pipeline``).
     The tmp name is unique so two concurrent writers never share a tmp file.
     """

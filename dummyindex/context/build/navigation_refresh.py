@@ -7,10 +7,10 @@ import re
 from collections import Counter
 from pathlib import Path
 
-from dummyindex.context.domains.atomic_io import write_text_atomic
 from dummyindex.context.domains.source_docs import DocCatalog
 from dummyindex.context.output.docs import generate_project_md
 from dummyindex.context.output.instructions import generate_architecture_overview_md
+from dummyindex.shared.atomic_io import write_text_atomic
 
 from .maps import FilesMap, SymbolsMap
 from .meta import Meta

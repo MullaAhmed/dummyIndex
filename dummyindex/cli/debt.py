@@ -110,7 +110,7 @@ def _persist(context_dir: Path, markdown: str) -> None:
     writing. Unlike the best-effort badge cache, a ``--write`` the user asked
     for surfaces its failure rather than swallowing it.
     """
-    from dummyindex.context.domains.atomic_io import write_text_atomic
+    from dummyindex.shared.atomic_io import write_text_atomic
 
     context_dir.mkdir(parents=True, exist_ok=True)
     write_text_atomic(context_dir / _LEDGER_FILENAME, markdown)

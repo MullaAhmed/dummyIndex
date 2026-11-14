@@ -12,7 +12,8 @@ import json
 import re
 from pathlib import Path
 
-from ...atomic_io import write_text_atomic
+from dummyindex.shared.atomic_io import write_text_atomic
+
 from ...query import query
 from ..enums import EquipmentKind, EquipmentSource
 from ..models import EquipmentItem

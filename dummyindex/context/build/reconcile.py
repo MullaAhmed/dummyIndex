@@ -33,10 +33,10 @@ from dummyindex.context.build.git_delta import (
 from dummyindex.context.build.manifest import write_manifest
 from dummyindex.context.build.meta import read_meta, write_meta
 from dummyindex.context.build.scope import scan_root
-from dummyindex.context.domains.atomic_io import write_text_atomic
 from dummyindex.context.domains.config import ConfigError, read_config
 from dummyindex.context.domains.features import PENDING_ENRICHMENT_MARKER
 from dummyindex.pipeline.io.detect import detect
+from dummyindex.shared.atomic_io import write_text_atomic
 
 
 class AnchorStatus(str, Enum):

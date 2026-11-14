@@ -15,7 +15,6 @@ from pathlib import Path
 from dummyindex.context.claude_plugins import add_marketplace, enable_plugin
 from dummyindex.context.claude_settings import MalformedSettingsError, load_settings
 from dummyindex.context.default_plugins import WiredEntry, WiredKind
-from dummyindex.context.domains.atomic_io import write_text_atomic
 from dummyindex.context.domains.config import (
     ConfigError,
     has_config_toml,
@@ -48,6 +47,7 @@ from dummyindex.context.domains.equip import (
     vendored_item,
     write_manifest,
 )
+from dummyindex.shared.atomic_io import write_text_atomic
 
 from ..common import usage_error
 from . import discover
