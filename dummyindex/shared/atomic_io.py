@@ -34,7 +34,7 @@ def is_link(path: Path) -> bool:
     )
 
 
-def _replace_bytes(path: Path, data: bytes) -> None:
+def replace_bytes(path: Path, data: bytes) -> None:
     """Replace ``path`` from a unique temporary sibling.
 
     The temporary name must be unique because hooks from two Claude profiles
@@ -76,7 +76,7 @@ def write_text_atomic(path: Path, text: str) -> None:
     generated artifact look user-edited. For pre-commit-clean output, run
     :func:`normalize_eof_newline` *after* writing.
     """
-    _replace_bytes(path, text.encode("utf-8"))
+    replace_bytes(path, text.encode("utf-8"))
 
 
 def normalize_eof_newline(path: Path) -> bool:
@@ -94,5 +94,5 @@ def normalize_eof_newline(path: Path) -> bool:
     normalized = data.rstrip(b"\r\n") + ending
     if normalized == data:
         return False
-    _replace_bytes(path, normalized)
+    replace_bytes(path, normalized)
     return True

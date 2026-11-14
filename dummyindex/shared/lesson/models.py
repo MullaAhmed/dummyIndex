@@ -7,8 +7,9 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Any
 
-from ..evolve_gate import EvolveError
-from ..living_rules import rules_in
+from dummyindex.shared.errors import EvolveError
+from dummyindex.shared.lesson.rules import rules_in
+
 from .enums import Confidence, DeltaOp, Verdict
 
 REQUIRED_FIELDS = ("cue", "lesson", "evidence", "confidence")

@@ -18,7 +18,11 @@ import tempfile
 from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass
-from pathlib import Path, PurePosixPath, PureWindowsPath
+from pathlib import Path, PurePosixPath
+
+from dummyindex.shared import guard
+from dummyindex.shared.errors import EvolveError
+from dummyindex.shared.guard import safe_file
 
 CommandRunner = Callable[[list[str], Path], tuple[int, str]]
 _IGNORED_DIRS = frozenset(
@@ -35,10 +39,6 @@ _IGNORED_DIRS = frozenset(
 )
 _STATE_PREFIXES = (".context/cache/", ".context/gc/evolve/")
 _CONFIGS = ("pytest.ini", ".pytest.ini", "pyproject.toml", "tox.ini", "setup.cfg")
-
-
-class EvolveError(Exception):
-    """An evolve operation could not safely complete."""
 
 
 @dataclass(frozen=True)
@@ -75,33 +75,6 @@ def _digest(value: bytes) -> str:
 
 def _json_digest(value: object) -> str:
     return _digest(json.dumps(value, sort_keys=True, separators=(",", ":")).encode())
-
-
-def safe_file(root: Path, relative: str, *, exists: bool = True) -> Path:
-    """Resolve a regular file without following any symlink or escaping root."""
-    pure = PurePosixPath(relative)
-    if (
-        not relative
-        or "\\" in relative
-        or pure.is_absolute()
-        or PureWindowsPath(relative).drive
-        or ".." in pure.parts
-        or str(pure) == "."
-    ):
-        raise EvolveError(f"unsafe relative file path: {relative!r}")
-    root = root.absolute()
-    path = root
-    for part in pure.parts:
-        path = path / part
-        if path.is_symlink():
-            raise EvolveError(f"symlink is not an evolve input or destination: {path}")
-    if not path.resolve().is_relative_to(root.resolve()):
-        raise EvolveError(f"path escapes its workspace: {path}")
-    if exists and not path.is_file():
-        raise EvolveError(f"required file missing: {path}")
-    if path.exists() and not path.is_file():
-        raise EvolveError(f"expected a regular file: {path}")
-    return path
 
 
 def staged_files(
@@ -239,7 +212,9 @@ def _profile() -> dict:
         "python": sys.executable,
         "python_version": sys.version,
         "pytest_version": importlib.metadata.version("pytest"),
-        "gate_code_sha256": _digest(Path(__file__).read_bytes()),
+        "gate_code_sha256": _digest(
+            Path(__file__).read_bytes() + Path(guard.__file__).read_bytes()
+        ),
         "promotion_code_sha256": _digest(
             Path(__file__).with_name("evolve_promotion.py").read_bytes()
         ),
@@ -257,7 +232,7 @@ def _managed_overlay(
     """Rebaseline generated bodies without changing measured bytes at promotion."""
     from .equip.generate.render import set_frontmatter_version
     from .equip.lifecycle.hashing import content_hash
-    from .equip.lifecycle.status import _bump, is_lifecycle_managed
+    from .equip.lifecycle.status import bump, is_lifecycle_managed
     from .equip.models import EquipmentManifest
 
     manifest_path = ".context/equipment.json"
@@ -307,7 +282,7 @@ def _managed_overlay(
             raise EvolveError(
                 f"managed capability was edited outside evolve: {item.path}"
             )
-        version = _bump(item.version, "patch")
+        version = bump(item.version, "patch")
         normalized = set_frontmatter_version(content, version).encode("utf-8")
         if not normalize and normalized != edits[item.path]:
             raise EvolveError(

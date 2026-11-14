@@ -23,17 +23,17 @@ import tempfile
 import time
 from pathlib import Path
 
-from .atomic_io import write_text_atomic
+from dummyindex.shared.atomic_io import write_text_atomic
+from dummyindex.shared.errors import EvolveError
+from dummyindex.shared.guard import project_lock, safe_file
+
 from .evidence import digest, expose_case
 from .evolve import parse_candidate, validate_candidate
 from .evolve_gate import (
-    EvolveError,
     _environment,
     _working_inputs,
-    safe_file,
     staged_files,
 )
-from .evolve_promotion import project_lock
 
 _BASE = ".context/gc/experiments"
 _UTILITY = ".context/gc/guidance-utility.json"

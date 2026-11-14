@@ -25,13 +25,13 @@ def run_attribute(args: list[str]) -> int:
     if err is not None:
         return usage_error("evolve attribute", err)
 
-    from dummyindex.context.domains.evolve_gate import EvolveError
     from dummyindex.context.domains.observe import (
         evolution_enabled,
         record_attribution,
         resolution_packet,
     )
     from dummyindex.context.domains.probation import sync
+    from dummyindex.shared.errors import EvolveError
 
     if not evolution_enabled():
         print(DISABLED)
@@ -114,7 +114,6 @@ def run_probation(args: list[str]) -> int:
     if verb == "demote" and len(ids) != 1:
         return usage_error("evolve probation", "demote needs exactly one --item ID")
 
-    from dummyindex.context.domains.evolve_gate import EvolveError
     from dummyindex.context.domains.observe import evolution_enabled
     from dummyindex.context.domains.probation import (
         demote,
@@ -124,6 +123,7 @@ def run_probation(args: list[str]) -> int:
         report,
         sync,
     )
+    from dummyindex.shared.errors import EvolveError
 
     if not evolution_enabled():
         print(DISABLED)

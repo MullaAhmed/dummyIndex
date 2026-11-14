@@ -9,9 +9,10 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 
+from dummyindex.shared.errors import EvolveError
+from dummyindex.shared.lesson.rules import rules_in
+
 from ..config import current_dummyindex_version
-from ..evolve_gate import EvolveError
-from ..living_rules import rules_in
 from ..memory.miner.scan import _human_prompt_text
 from .enums import CorrectionStatus
 from .keys import keyed_id, session_key

@@ -58,7 +58,7 @@ def run(args: list[str]) -> int:
 def _evolve_evidence(args: list[str]) -> int:
     """Import project-scoped Claude/Codex evidence without copying prompt text."""
     from dummyindex.context.domains.evidence import scan_hosts
-    from dummyindex.context.domains.evolve_gate import EvolveError
+    from dummyindex.shared.errors import EvolveError
 
     values, _flags, err = _parse_flags(
         args,
@@ -92,7 +92,6 @@ def _evolve_evidence(args: list[str]) -> int:
 
 def _evolve_learning(args: list[str]) -> int:
     """At closeout dispatch one pending reflection, then prepare or NO_ENTRY."""
-    from dummyindex.context.domains.evolve_gate import EvolveError
     from dummyindex.context.domains.evolve_learning import (
         finish_learning,
         learning_status,
@@ -102,6 +101,7 @@ def _evolve_learning(args: list[str]) -> int:
         learning_exit_code,
         learning_line,
     )
+    from dummyindex.shared.errors import EvolveError
 
     values, flags, err = _parse_flags(
         args,
@@ -148,8 +148,8 @@ def _evolve_learning(args: list[str]) -> int:
 
 
 def _evolve_rules(args: list[str]) -> int:
-    from dummyindex.context.domains.evolve_gate import EvolveError
     from dummyindex.context.domains.living_rules import rule_status
+    from dummyindex.shared.errors import EvolveError
 
     values, _flags, err = _parse_flags(args, value_keys={"root"}, bool_keys={"json"})
     if err:
@@ -167,7 +167,7 @@ def _evolve_rules(args: list[str]) -> int:
 
 def _evolve_utility(args: list[str]) -> int:
     from dummyindex.context.domains.evolve_experiments import utility_status
-    from dummyindex.context.domains.evolve_gate import EvolveError
+    from dummyindex.shared.errors import EvolveError
 
     values, _flags, err = _parse_flags(args, value_keys={"root"}, bool_keys={"json"})
     if err:
@@ -186,7 +186,7 @@ def _evolve_utility(args: list[str]) -> int:
 def _evolve_experiment(args: list[str]) -> int:
     from dummyindex.context.domains.evolve import run_dir_for
     from dummyindex.context.domains.evolve_experiments import run_experiment
-    from dummyindex.context.domains.evolve_gate import EvolveError
+    from dummyindex.shared.errors import EvolveError
 
     values, _flags, err = _parse_flags(
         args,
@@ -344,7 +344,6 @@ def _load_candidate_lines(run_dir: Path) -> list[dict]:
 
 def _evolve_harvest(args: list[str]) -> int:
     """`evolve harvest [--since DATE] [--sleep] [--json] [--run NAME]` (exit 0)."""
-    from dummyindex.context.domains.atomic_io import write_text_atomic
     from dummyindex.context.domains.evolve import (
         EVOLVE_DIR_REL,
         HARVEST_NAME,
@@ -355,6 +354,7 @@ def _evolve_harvest(args: list[str]) -> int:
     from dummyindex.context.domains.evolve import (
         harvest as harvest_domain,
     )
+    from dummyindex.shared.atomic_io import write_text_atomic
 
     values, flags, err = _parse_flags(
         args,
@@ -622,7 +622,7 @@ def _evolve_apply(args: list[str]) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     gate_payload = {"candidate": index, **result.to_dict()}
-    from dummyindex.context.domains.atomic_io import write_text_atomic
+    from dummyindex.shared.atomic_io import write_text_atomic
 
     write_text_atomic(
         run_dir / GATE_NAME_FMT.format(index),
@@ -661,11 +661,9 @@ def _evolve_promote(args: list[str]) -> int:
         run_dir_for,
         validate_candidate,
     )
-    from dummyindex.context.domains.evolve_gate import (
-        check_receipt,
-        safe_file,
-    )
-    from dummyindex.context.domains.evolve_promotion import project_lock, promote_files
+    from dummyindex.context.domains.evolve_gate import check_receipt
+    from dummyindex.context.domains.evolve_promotion import promote_files
+    from dummyindex.shared.guard import project_lock, safe_file
 
     values, _flags, err = _parse_flags(
         args,
@@ -788,7 +786,8 @@ def _evolve_rollback(args: list[str]) -> int:
     except EvolveError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
-    from dummyindex.context.domains.evolve_promotion import project_lock, rollback_files
+    from dummyindex.context.domains.evolve_promotion import rollback_files
+    from dummyindex.shared.guard import project_lock
 
     try:
         with project_lock(project_root):

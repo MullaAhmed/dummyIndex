@@ -6,7 +6,7 @@ import os
 import pytest
 
 from dummyindex.context.domains.evolve_experiments import run_experiment, utility_status
-from dummyindex.context.domains.evolve_gate import EvolveError
+from dummyindex.shared.errors import EvolveError
 
 
 @pytest.fixture

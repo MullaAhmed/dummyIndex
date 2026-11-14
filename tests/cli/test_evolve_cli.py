@@ -592,7 +592,7 @@ def test_interrupted_rollback_can_resume_without_overwriting_human_edits(
 
 
 def test_busy_project_writer_refuses_promote_and_rollback(repo: Path) -> None:
-    from dummyindex.context.domains.evolve_promotion import project_lock
+    from dummyindex.shared.guard import project_lock
 
     run = _prepared(repo)
     assert _apply(repo) == 0

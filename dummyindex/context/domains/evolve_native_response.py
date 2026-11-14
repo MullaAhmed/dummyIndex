@@ -2,9 +2,10 @@
 
 import json
 
+from dummyindex.shared.errors import EvolveError
+
 from .evolve import validate_candidate
 from .evolve_experiments import _finite, _measurement
-from .evolve_gate import EvolveError
 
 
 def _charge(state, result):

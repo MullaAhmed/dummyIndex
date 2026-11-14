@@ -10,14 +10,14 @@ from __future__ import annotations
 import dataclasses
 from pathlib import Path
 
-from dummyindex.context.domains.atomic_io import write_text_atomic
+from dummyindex.shared.atomic_io import write_text_atomic
 
 from ..errors import PatchError
 from ..generate.render import set_frontmatter_version
 from ..models import EquipmentItem, EquipmentManifest
 from .hashing import content_hash
 from .manifest import write_manifest
-from .status import _bump, is_lifecycle_managed
+from .status import bump, is_lifecycle_managed
 
 
 def apply_patch(
@@ -52,7 +52,7 @@ def apply_patch(
             f"found {occurrences} occurrence(s)"
         )
 
-    bumped = _bump(target_item.version, "patch")
+    bumped = bump(target_item.version, "patch")
     # Sync the artifact's frontmatter to the bumped version in the same write —
     # the manifest is the version source of truth, the file mirrors it.
     patched = set_frontmatter_version(content.replace(old, new, 1), bumped)

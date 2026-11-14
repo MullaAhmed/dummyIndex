@@ -9,9 +9,12 @@ import sys
 from pathlib import Path
 
 from dummyindex.export import storage as graph_storage
+from dummyindex.shared import atomic_io, guard
+from dummyindex.shared.errors import EvolveError
+from dummyindex.shared.guard import safe_file
 
 from .evidence import digest
-from .evolve_gate import EvolveError, _environment, _working_inputs, safe_file
+from .evolve_gate import _environment, _working_inputs
 
 
 def _hashes(inputs):
@@ -31,10 +34,13 @@ def _controller():
                 "evolve_gate.py",
                 "evidence.py",
                 "evolve_promotion.py",
-                "atomic_io.py",
             )
         }
-        | {"export/storage.py": Path(graph_storage.__file__).read_bytes()}
+        | {
+            "export/storage.py": Path(graph_storage.__file__).read_bytes(),
+            "atomic_io.py": Path(atomic_io.__file__).read_bytes(),
+            "guard.py": Path(guard.__file__).read_bytes(),
+        }
     )
 
 

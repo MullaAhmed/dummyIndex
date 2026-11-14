@@ -16,7 +16,7 @@ from dummyindex.context.domains.evolve_experiments import (
     run_experiment,
     utility_status,
 )
-from dummyindex.context.domains.evolve_gate import EvolveError
+from dummyindex.shared.errors import EvolveError
 
 _RUNNER = """import argparse,json,pathlib,hashlib
 p=argparse.ArgumentParser();p.add_argument('--request');a=p.parse_args()

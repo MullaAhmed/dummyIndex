@@ -15,9 +15,9 @@ from dummyindex.context.domains.evidence import (
     read_ledger,
     scan_hosts,
 )
-from dummyindex.context.domains.evolve_gate import EvolveError
-from dummyindex.context.domains.evolve_promotion import project_lock
 from dummyindex.context.domains.observe import ledger as L
+from dummyindex.shared.errors import EvolveError
+from dummyindex.shared.guard import project_lock
 
 CORRECTION = "Wrong, use the accepted contract instead."
 SLUG = "proj"
