@@ -199,6 +199,8 @@ def _upgrade_step(project_root: Path, refresh: RefreshResult | None) -> None:
         return
     for err in report.errors:
         print(f"  upgrade warning  ->  {err}", file=sys.stderr)
+    for warning in report.warnings:
+        print(f"  upgrade warning  ->  {warning}", file=sys.stderr)
     if report.changed and not report.errors:
         print(f"  upgrade          ->  upgraded ({', '.join(report.steps)})")
     elif not report.errors:
@@ -267,7 +269,7 @@ def _seed_toml_after_config(project_root: Path, config) -> None:
             cli_version=PACKAGE_VERSION,
             claude_wired=bool(config.auto_refresh_hook),
         )
-    except (OSError, ValueError) as exc:  # pragma: no cover - defensive
+    except Exception as exc:  # RequirementsError is not an OSError/ValueError
         print(f"  config.toml      ->  skipped ({exc})", file=sys.stderr)
 
 

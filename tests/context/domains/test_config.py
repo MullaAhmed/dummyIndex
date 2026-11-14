@@ -565,6 +565,31 @@ def test_onboard_keeps_an_existing_config_toml_untouched(tmp_path: Path) -> None
     assert (ctx / "config.toml").read_text(encoding="utf-8") == sentinel
 
 
+@pytest.mark.unit
+def test_onboard_survives_a_requirements_error_on_toml_seed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from dummyindex.context.domains.requirements import RequirementsError
+
+    _context_dir(tmp_path)
+
+    def _malformed(*_a, **_k):
+        raise RequirementsError("config.toml is malformed")
+
+    monkeypatch.setattr(
+        "dummyindex.context.build.context_upgrade.seed_config_toml", _malformed
+    )
+
+    rc = run_onboard(["--defaults", str(tmp_path)])
+
+    assert rc == 0
+    assert (
+        "config.toml not seeded (config.toml is malformed)" in capsys.readouterr().err
+    )
+
+
 @pytest.mark.integration
 def test_onboard_defaults_explicit_codex_platform_overrides_guidance(
     tmp_path: Path,

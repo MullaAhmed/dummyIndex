@@ -35,11 +35,14 @@ def _seed_requirements_toml(context_dir: Path, config) -> None:
     """Seed config.toml right after config.json, so onboarding leaves no toml gap."""
     from dummyindex.context.build.context_upgrade import seed_config_toml
 
-    seed_config_toml(
-        context_dir,
-        cli_version=PACKAGE_VERSION,
-        claude_wired=bool(config.auto_refresh_hook),
-    )
+    try:
+        seed_config_toml(
+            context_dir,
+            cli_version=PACKAGE_VERSION,
+            claude_wired=bool(config.auto_refresh_hook),
+        )
+    except Exception as exc:  # RequirementsError must not fail onboarding
+        print(f"context onboard: config.toml not seeded ({exc})", file=sys.stderr)
 
 
 def _pull_value_flag(args: list[str], name: str) -> tuple[str | None, list[str]]:

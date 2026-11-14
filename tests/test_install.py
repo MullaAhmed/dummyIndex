@@ -1862,6 +1862,70 @@ def test_default_config_import_oserror_is_not_masked_by_configerror_nameerror(
 
 
 @pytest.mark.integration
+def test_stale_enriched_install_prints_gitignore_warning_once(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A stale index in a repo that gitignores .claude/ warns on the upgrading install
+    only: the stamp moves, so the next install is no longer stale and stays quiet."""
+    from subprocess import CompletedProcess
+
+    from dummyindex.context.build.context_upgrade import GITIGNORE_WARNING
+    from dummyindex.context.build.incremental import EnrichedIndexStatus
+    from dummyindex.context.build.runner import build_all
+    from dummyindex.installer.install import _auto_init_project
+
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    (repo / ".gitignore").write_text(".claude/\n", encoding="utf-8")
+    build_all(repo, out_root=repo, bootstrap=False, dummyindex_version="0.0.1")
+    monkeypatch.setattr(
+        "dummyindex.context.build.enriched_index_status",
+        lambda _ctx: EnrichedIndexStatus(enriched=True, desync=False),
+    )
+
+    def _check_ignore(root, *args):
+        listed = (Path(root) / ".gitignore").read_text(encoding="utf-8")
+        ignored = "check-ignore" in args and ".claude/" in listed
+        return CompletedProcess(args, 0 if ignored else 1, "", "")
+
+    monkeypatch.setattr("dummyindex.context.git.run_git", _check_ignore)
+
+    assert _auto_init_project(repo, platform="codex") is True
+    assert capsys.readouterr().err.count(GITIGNORE_WARNING) == 1
+
+    assert _auto_init_project(repo, platform="codex") is True
+    assert GITIGNORE_WARNING not in capsys.readouterr().err
+
+
+@pytest.mark.unit
+def test_default_config_survives_a_requirements_error_on_toml_seed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from dummyindex.context.domains.requirements import RequirementsError
+    from dummyindex.installer.install import _write_default_config
+
+    (tmp_path / ".context").mkdir()
+
+    def _malformed(*_a, **_k):
+        raise RequirementsError("config.toml is malformed")
+
+    monkeypatch.setattr(
+        "dummyindex.context.build.context_upgrade.seed_config_toml", _malformed
+    )
+
+    _write_default_config(tmp_path)  # must not raise
+
+    assert (
+        "config.toml      ->  skipped (config.toml is malformed)"
+        in capsys.readouterr().err
+    )
+
+
+@pytest.mark.integration
 def test_default_config_seeds_config_toml_on_first_install(tmp_path: Path) -> None:
     """Upgrade runs before config.json exists, so the default writer seeds the toml."""
     from dummyindex.installer.install import _write_default_config
