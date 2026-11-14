@@ -100,7 +100,7 @@ Rows that need `--allow-untracked` or `--force-partial` are **excluded from the 
 
 An `in_progress` / `checklist-partial` proposal is delete-blocked unless the user explicitly okays `--force-partial`. Confirmation always gates deletion. No doc or code is removed without the explicit go-ahead surfaced here.
 
-**Equipment candidates.** Task-scoped items (`scope=task`) and evidence-free db or search specialists (`review`) are candidates. Confirm each item separately.
+**Equipment candidates.** A `scope=task` item becomes a candidate only when all its refs end: proposal done or superseded, audit closed, or no workspace. An in-progress ref blocks it. Evidence-free db or search specialists (`review`) are candidates too. Confirm each item separately.
 
 ### 5. Execute, per category (only user-confirmed items)
 
@@ -109,11 +109,12 @@ An `in_progress` / `checklist-partial` proposal is delete-blocked unless the use
   dummyindex context gc delete --kind proposal --slug <slug> --yes
   dummyindex context gc delete --kind audit    --slug <slug> --yes
   ```
+  One failure does not stop the others. A row refused at `--yes` is reported `blocked at delete`, with its reason. Add `--allow-untracked` only when the user explicitly okayed permanent deletion of that workspace. Add `--force-partial` only when the user explicitly okayed deleting that `in_progress` / `checklist-partial` proposal. Never add either speculatively. Re-deleting a gone target is an idempotent no-op (exit 0).
 - **Equipment → CLI delete, one confirmed item at a time.**
   ```bash
   dummyindex context gc delete --kind equipment --slug <name> --yes
   ```
-  `--force` only after that item's confirm. Library entries stay. Add `--allow-untracked` only when the user explicitly okayed permanent deletion of that workspace. Add `--force-partial` only when the user explicitly okayed deleting that `in_progress` / `checklist-partial` proposal. Never add either speculatively. Re-deleting a gone target is an idempotent no-op (exit 0).
+  `--force` only after that item's confirm. Library entries stay.
 - **Trivially-dead code → implementer+tester (PROVE it green).** Dispatch the implementer to remove the symbol. Dispatch the tester to prove the full suite stays green. Keep the removal only if green. If anything goes red, the symbol was not dead: revert, route to a proposal.
 
   The graph proposes. The green suite disposes. GC never edits source directly. This path does.

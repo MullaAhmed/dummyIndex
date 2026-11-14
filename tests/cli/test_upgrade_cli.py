@@ -181,6 +181,24 @@ def test_first_line_names_the_upgraded_version(
     assert first == f"dummyindex: upgraded .context/ to {pinned_version}"
 
 
+def test_failed_upgrade_does_not_claim_upgraded(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    pinned_version: str,
+) -> None:
+    _stub_upgrade(
+        monkeypatch,
+        UpgradeReport(changed=True, errors=("refresh maps: boom",)),
+    )
+
+    assert upgrade.run(["--root", str(tmp_path)]) == 1
+
+    captured = capsys.readouterr()
+    assert "upgraded .context/" not in captured.out
+    assert "error: refresh maps: boom" in captured.err
+
+
 def test_no_output_when_nothing_changed(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,

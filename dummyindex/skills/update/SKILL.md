@@ -117,7 +117,7 @@ The bounded legacy catalog recognizes exact official stock bytes from one prior 
 
 **Configuration stays separate.** Existing managed guidance/block and settings merge rules remain in force. Keep user configuration and project scope. A same-version source mismatch still needs preparation. A preserved customization is reported as customized/incomplete, not as a verified update.
 
-Equipped projects upgrade automatically. `install`, `context init` and the Claude SessionStart hook run `dummyindex context upgrade --if-stale`. Only pristine, non-evolved generated capabilities are refreshed. USER_MODIFIED or evolved bodies stay intact.
+Equipped projects upgrade automatically. `install` and `context init` run the same upgrade in-process. The Claude SessionStart hook runs `dummyindex context upgrade --if-stale`. Only pristine, non-evolved generated capabilities are refreshed. USER_MODIFIED or evolved bodies stay intact.
 
 The upgrade needs an existing `.context/equipment.json`. It adds no evaluation scaffolding. There is no manual fallback command. Restart Claude Code after an adapter is written, so it loads the adapter.
 

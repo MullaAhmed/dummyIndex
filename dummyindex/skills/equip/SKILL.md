@@ -51,7 +51,7 @@ reset, patch, remove, uninstall and plugin operations remain available.
 
 ## Generated vs adopted
 
-- **GENERATED specialist** — `.context/equipment/<proj>-<cap>-specialist.md` with the `<!-- dummyindex:generated -->` marker and a `version` + `origin_hash` + `grounded_in` manifest record. Editable, refreshable, lifecycle-managed. Produced where a template backs: **db / security / performance / docs / search / frontend / api / migration / ci**. Only frontend/api/migration/ci yield `<proj>-<cap>-procedure` and `-domain` specialists. The db/security/performance/docs/search capabilities yield one `<proj>-<cap>-specialist`. `dimension`-less manifests stay valid.
+- **GENERATED specialist** — `.context/equipment/<proj>-<cap>-specialist.md` with the `<!-- dummyindex:generated -->` marker and a `version` + `origin_hash` + `grounded_in` manifest record. Editable, refreshable, lifecycle-managed. Produced where a template backs: **db / security / performance / docs / search / frontend / api / migration / ci**. Only frontend/api/migration/ci yield `-procedure` and `-domain` specialists.
 - **ADOPTED specialist** — manifest-only pointer (`"path": ""`, `"source": "installed"`, no `origin_hash`) to a project or registry agent. No file is written. Produced for a capability no template backs.
 
 A capability a project agent already covers is **adopted, not regenerated**. An explicit `add-specialist` always **generates**.
@@ -69,14 +69,9 @@ A capability a project agent already covers is **adopted, not regenerated**. An 
   dummyindex's own `DUMMYINDEX_AUTO_REFRESH` SessionStart entry) stay
   untouched. An unparseable `settings.json` is **left alone**. Equip skips and
   reports the hook, and the files still land.
-- **Status / dry-run FIRST.** Never run `refresh`, `patch`, or `uninstall`
-  before you first show the user what it will touch. Show it with
-  `equip status`, then with the `--dry-run` of the verb. Show the patch intent
-  (the old→new diff) before you apply it.
-- **No-arg is help, never apply.** A bare `dummyindex context equip` prints
-  usage and exits 2. It never mutates. `apply` is the explicit write verb.
-  `equip --dry-run` is the only read-only verbless form. So a probe of equip to
-  see what it does is always safe.
+- **Status / dry-run FIRST.** Before `refresh`, `patch` or `uninstall`, show
+  `equip status` and the verb's `--dry-run`. Show the old→new diff first.
+- **No-arg is help.** A bare `dummyindex context equip` prints usage and exits 2 without mutating.
 
 ## The lifecycle (verbs)
 
@@ -161,15 +156,15 @@ A capability a project agent already covers is **adopted, not regenerated**. An 
    ```bash
    dummyindex context equip reuse <capability_id> [--force]
    ```
-   The command copies the body. It refuses to overwrite a locally edited target unless `--force`.
+   It refuses to overwrite a locally edited target unless `--force`.
 
 ## Project config, requirements and grounding
 
-- `.context/config.toml` is required and committed. It sets plugins, skills, `min_version` and `require_native_adapters`.
-- `requirements check` reports gaps. `requirements sync` fixes them, in another terminal.
-- Unmet requirements block the prompt. `requirements bypass --hours N` (1–24) allows a temporary exception.
-- `.context/equipment/grounding/<name>.md` is CLI-generated. Never edit it. Agents read it before querying.
-- `equip apply --for-proposal <slug>` marks non-baseline items `scope=task`. They become GC candidates.
+- `.context/config.toml` declares the required setup. Its gate applies only when the file exists.
+- `dummyindex context requirements check|sync` reports and fixes gaps.
+- Unmet requirements block the prompt. `requirements bypass --hours N` allows a temporary exception.
+- `.context/equipment/grounding/<name>.md` is generated. Never edit it.
+- `equip apply --for-proposal <slug>` marks non-baseline items `scope=task`. They become GC candidates once their refs end.
 
 ## Plugin manager (discover + install; Claude Code only)
 

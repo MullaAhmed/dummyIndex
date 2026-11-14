@@ -44,7 +44,8 @@ def _print_report(report: UpgradeReport, version: str) -> int:
     if _LOCK_WARNING in report.warnings:
         print(_LOCK_WARNING)
         return 0
-    if report.changed:
+    # Only a clean run advances the stamp, so only a clean run is "upgraded".
+    if report.changed and not report.errors:
         print(f"dummyindex: upgraded .context/ to {version}")
     if report.adapters_written:
         print(_RESTART_HINT)

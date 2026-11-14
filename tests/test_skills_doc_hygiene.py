@@ -510,6 +510,22 @@ def test_update_skill_documents_automatic_upgrade() -> None:
     assert "USER_MODIFIED" in text
     assert "equipment.json" in text
     assert "equip refresh" not in text
+    assert "run the same upgrade in-process" in text
+
+
+@pytest.mark.unit
+def test_gc_skill_keeps_dead_docs_and_equipment_text_separate() -> None:
+    """Dead-docs flags and the no-op note stay under the dead-docs row, not equipment."""
+    text = (_SKILLS_DIR / "gc" / "SKILL.md").read_text(encoding="utf-8")
+    docs_row = text.split("- **Dead docs → CLI delete")[1].split("- **Equipment")[0]
+    equip_row = text.split("- **Equipment → CLI delete")[1].split("- **Trivially-dead")[0]
+    assert "One failure does not stop the others." in docs_row
+    assert "--force-partial" in docs_row
+    assert "idempotent no-op" in docs_row
+    assert "--force-partial" not in equip_row
+    assert "--allow-untracked" not in equip_row
+    assert "`--force` only after that item's confirm." in equip_row
+    assert "Library entries stay." in equip_row
 
 
 @pytest.mark.unit

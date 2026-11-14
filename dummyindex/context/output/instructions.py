@@ -141,9 +141,10 @@ The nudge reads `N commits since last hygiene sweep — run /dummyindex-gc`. Cod
 
 ## Upgrade, requirements and grounding
 
-- `dummyindex context upgrade --if-stale` runs on install, on `context init` and at each Claude SessionStart. You do not run it by hand.
-- `.context/config.toml` is required and committed. `dummyindex context requirements check` reports gaps. `requirements sync` fixes them in another terminal.
-- Unmet requirements block the prompt until fixed. `requirements bypass --hours N` allows a temporary exception.
+- `install` and `context init` run the upgrade in-process. The Claude SessionStart hook runs `dummyindex context upgrade --if-stale`.
+- `.context/config.toml` declares the required setup. Its gate applies only when the file exists.
+- `dummyindex context requirements check|sync` reports and fixes gaps. Run `sync` in another terminal.
+- Unmet requirements block the prompt. `requirements bypass --hours N` allows a temporary exception.
 - `.context/equipment/grounding/<name>.md` is generated. Never edit it. Read it before `dummyindex context query "<focus>"`.
 
 ## CI, linting & secret scanners
@@ -577,19 +578,25 @@ Run `/dummyindex-gc` on Claude or `$dummyindex-gc` on Codex.
 
 ## 1. Read the candidates
 - Run `dummyindex context gc status --json`. Read each candidate and its signals.
-- Equipment with `scope=task` becomes a candidate after its proposal or audit ends.
-- An unproduced db or search specialist with no evidence is a `review` candidate.
+- A `scope=task` equipment item is a candidate only when all its refs end. An in-progress ref blocks it.
+- An evidence-free db or search specialist is a `review` candidate.
 
-## 2. Confirm each item
-- Ask about one item at a time. A single "yes" never covers a group.
-- A user-edited equipment body needs its own confirmation before `--force`.
+## 2. Close out and dry-run docs
+- For a finished workspace, run `dummyindex context gc closeout --draft`. Fill the draft.
+- Then run `dummyindex context gc closeout --manifest <file>`.
+- Run `dummyindex context gc delete --kind proposal|audit --slug <slug>` without `--yes`. It removes nothing.
 
-## 3. Delete
-- Run `dummyindex context gc delete --kind equipment --slug <name> --yes`.
-- Add `--force` only for an item the user confirmed.
-- Library entries stay. Restore one with `dummyindex context equip reuse <name>`.
+## 3. Confirm
+- Docs: show one batch table. Ask for one explicit confirmation.
+- Equipment: ask about one item at a time. Never delete a group on one "yes".
+- Add `--allow-untracked` or `--force-partial` only for a row the user confirmed alone.
 
-## 4. Stamp
+## 4. Delete
+- Docs: run `dummyindex context gc delete --kind proposal|audit --slug <slug> --yes`. One failure does not stop the others.
+- Equipment: run `dummyindex context gc delete --kind equipment --slug <slug> --yes`. Add `--force` only after that item's confirm.
+- Library entries stay. Restore one with `dummyindex context equip reuse <capability_id>`.
+
+## 5. Stamp
 - Run `dummyindex context gc stamp` to reset the sweep counter.
 """,
 }
@@ -630,7 +637,14 @@ def write_architecture_overview_md(
     )
 
 
+# Playbooks a repo may hand-edit. Written only when missing, so a rebuild
+# never overwrites the curated copy.
+_CREATE_ONLY_PLAYBOOKS: frozenset[str] = frozenset({"gc-context"})
+
+
 def write_playbook_md(path: Path, playbook_id: str) -> None:
+    if playbook_id in _CREATE_ONLY_PLAYBOOKS and path.exists():
+        return
     _atomic_write(path, generate_playbook_md(playbook_id))
 
 
