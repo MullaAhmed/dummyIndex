@@ -15,6 +15,9 @@ The five verbs:
   [--force-partial] [--root DIR]`` — without ``--yes`` a dry-run that runs the
   full guard ladder and deletes nothing; with ``--yes`` the bounded
   ``gc.delete_workspace``.
+- ``delete --kind equipment --slug S [--yes] [--force] [--root DIR]`` — the same
+  dry-run/``--yes`` split for one generated agent or skill; ``--force`` confirms
+  deleting a body the user edited.
 - ``closeout --kind proposal|audit --slug S (--manifest FILE | --draft)`` —
   ``--draft`` writes a manifest draft under ``.context/cache/gc/``; ``--manifest``
   applies a filled one.
@@ -166,19 +169,25 @@ def _gc_delete(args: list[str]) -> int:
     values, flags, err = _parse_flags(
         args,
         value_keys={"kind", "slug", "path", "root"},
-        bool_keys={"yes", "allow-untracked", "force-partial"},
+        bool_keys={"yes", "allow-untracked", "force-partial", "force"},
     )
     if err is not None:
         return usage_error("gc", f"{err} (for `gc delete`)")
 
     kind_raw = values.get("kind")
     if not kind_raw:
-        return usage_error("gc", "--kind proposal|audit is required (for `gc delete`)")
+        return usage_error(
+            "gc", "--kind proposal|audit|equipment is required (for `gc delete`)"
+        )
     kind = _resolve_kind(kind_raw, CandidateKind)
     if kind is None:
         return usage_error(
-            "gc", f"--kind must be proposal|audit, got {kind_raw!r} (for `gc delete`)"
+            "gc",
+            f"--kind must be proposal|audit|equipment, got {kind_raw!r} "
+            "(for `gc delete`)",
         )
+    if "force" in flags and kind is not CandidateKind.EQUIPMENT:
+        return usage_error("gc", "--force applies to --kind equipment only")
 
     slug = values.get("slug")
     path = values.get("path")
@@ -203,6 +212,7 @@ def _gc_delete(args: list[str]) -> int:
             allow_untracked="allow-untracked" in flags,
             force_partial="force-partial" in flags,
             dry_run="yes" not in flags,
+            force="force" in flags,
         )
     except (ProposalSlugError, AuditSlugError, GcTargetError, GcPathError) as exc:
         print(f"error: {exc}", file=sys.stderr)
@@ -210,6 +220,8 @@ def _gc_delete(args: list[str]) -> int:
 
     if result.would_delete:
         print(f"context gc delete (dry-run): would delete {kind.value} {target_label}")
+        if result.reason:
+            print(f"  {result.reason}")
         print("  pass --yes to delete (nothing removed)")
     elif result.deleted:
         print(f"context gc delete: removed {kind.value} {target_label}")
@@ -368,16 +380,20 @@ def _recommendation_counts(candidates: Iterable[Any]) -> dict[str, int]:
 
 
 def _resolve_kind(kind_raw: str, candidate_kind: type) -> object | None:
-    """Map a ``--kind`` value (``proposal``/``audit``) to a ``CandidateKind``.
+    """Map a ``--kind`` value (``proposal``/``audit``/``equipment``) to a ``CandidateKind``.
 
-    Only the two user-facing kinds are accepted; the enum's internal members
+    Only the user-facing kinds are accepted; the enum's internal members
     (``orphan_scaffold`` / ``archived``) are never selectable on the CLI.
     """
     try:
         kind = candidate_kind(kind_raw)
     except ValueError:
         return None
-    if kind not in (candidate_kind.PROPOSAL, candidate_kind.AUDIT):
+    if kind not in (
+        candidate_kind.PROPOSAL,
+        candidate_kind.AUDIT,
+        candidate_kind.EQUIPMENT,
+    ):
         return None
     return kind
 

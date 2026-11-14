@@ -42,18 +42,33 @@ This module never touches anything outside the resolved kind-root.
 
 from __future__ import annotations
 
+import dataclasses
 import shutil
 import subprocess
+from dataclasses import dataclass
 from pathlib import Path
 
 from ..audit.workspace import audits_root
 from ..audit.workspace import validate_slug as validate_audit_slug
+from ..equip.enums import EquipmentKind, EquipmentScope
+from ..equip.errors import EquipError
+from ..equip.generate.grounding import contained_path, grounding_path
+from ..equip.lifecycle.manifest import read_manifest
+from ..equip.lifecycle.remove import remove_item
+from ..equip.lifecycle.status import classify_item, is_lifecycle_managed, is_user_owned
+from ..equip.models import EquipmentItem, EquipmentManifest
 from ..proposals.errors import CloseoutError
 from ..proposals.retirement import retirement_block
 from ..proposals.store import proposals_root
 from ..proposals.store import validate_slug as validate_proposal_slug
+from ..requirements.constants import CONFIG_TOML_REL
+from ..requirements.enums import SkillOrigin
+from ..requirements.errors import RequirementsError
+from ..requirements.models import Requirements, SkillRequirement
+from ..requirements.toml_io import read_requirements, write_requirements
 from .constants import ARCHIVE_SENTINEL, PROPOSAL_KINDS
 from .enums import CandidateKind
+from .equipment import _refs_finished
 from .errors import GcPathError, GcTargetError
 from .liveness import _checklist_partial, _liveness_block, _proposal_status  # noqa: F401 — old names stay importable
 from .models import DeleteResult
@@ -68,15 +83,24 @@ def delete_workspace(
     allow_untracked: bool = False,
     force_partial: bool = False,
     dry_run: bool = False,
+    force: bool = False,
 ) -> DeleteResult:
     """Hold the shared project writer lock across all guards and deletion.
 
     An active closeout, receipt or policy writer refuses deletion with a retry
     instruction. ``dry_run`` runs every guard, takes no lock, and deletes nothing.
+    ``kind=EQUIPMENT`` routes to :func:`delete_equipment_item` (``force`` applies
+    only there); workspace kinds never see ``force``.
     """
     from ..evolve_gate import EvolveError
     from ..evolve_promotion import project_lock
 
+    if kind is CandidateKind.EQUIPMENT:
+        if slug is None or path is not None:
+            raise GcTargetError(path or "", "equipment is deleted by --slug only")
+        return delete_equipment_item(
+            context_dir.parent, slug, force=force, dry_run=dry_run
+        )
     if dry_run:
         return _delete_workspace_locked(
             context_dir,
@@ -201,6 +225,9 @@ def _delete_workspace_locked(
 
 def _kind_root(context_dir: Path, kind: CandidateKind) -> Path:
     """``.context/proposals`` or ``.context/audits`` for the candidate kind."""
+    if kind is CandidateKind.EQUIPMENT:
+        # Equipment never has a workspace dir; an equipment slug must not reach audits/.
+        raise GcTargetError("", "equipment has no workspace root")
     if kind in PROPOSAL_KINDS:
         return proposals_root(context_dir)
     return audits_root(context_dir)
@@ -208,9 +235,155 @@ def _kind_root(context_dir: Path, kind: CandidateKind) -> Path:
 
 def _validate(kind: CandidateKind, slug: str) -> str:
     """Run the kind's own slug validator (raises the typed slug error)."""
+    if kind is CandidateKind.EQUIPMENT:
+        raise GcTargetError(slug, "equipment has no workspace slug validator")
     if kind in PROPOSAL_KINDS:
         return validate_proposal_slug(slug)
     return validate_audit_slug(slug)
+
+
+# --- equipment (contract 19): retire one generated agent/skill
+
+
+_EQUIPMENT_KINDS = frozenset({EquipmentKind.AGENT, EquipmentKind.SKILL})
+
+
+@dataclass(frozen=True)
+class _EquipmentPlan:
+    """Every fact the equipment delete needs, gathered before the first write."""
+
+    name: str
+    manifest: EquipmentManifest
+    item: EquipmentItem
+    body: Path
+    sidecar: Path
+    user_modified: bool
+    # config.toml with the same-named project skill row dropped; None leaves the file alone.
+    requirements: Requirements | None
+
+
+def delete_equipment_item(
+    root: Path, name: str, *, force: bool = False, dry_run: bool = False
+) -> DeleteResult:
+    """Retire one generated equipment item: body, adapter, sidecar, manifest row.
+
+    The library entry is kept so ``equip reuse`` can restore it. Every refusal
+    raises ``GcTargetError`` before anything is written; a user-edited body needs
+    ``force``. ``dry_run`` runs the same checks and reports what would go.
+    """
+    from ..evolve_gate import EvolveError
+    from ..evolve_promotion import project_lock
+
+    if dry_run:
+        plan = _equipment_plan(root, name, force=force)
+        if plan is None:
+            return DeleteResult(
+                deleted=False, refused=False, reason="nothing to delete"
+            )
+        return DeleteResult(would_delete=True, reason=_describe(plan))
+    try:
+        with project_lock(root):
+            plan = _equipment_plan(root, name, force=force)
+            if plan is None:
+                return DeleteResult(
+                    deleted=False, refused=False, reason="nothing to delete"
+                )
+            _equipment_apply(root, plan)
+    except EvolveError as exc:
+        raise GcTargetError(name, str(exc)) from exc
+    return DeleteResult(deleted=True, refused=False, reason=None)
+
+
+def _equipment_plan(root: Path, name: str, *, force: bool) -> _EquipmentPlan | None:
+    """Run every equipment guard; ``None`` when the manifest has no such item."""
+    context_dir = root / ".context"
+    try:
+        manifest = read_manifest(context_dir)
+        requirements = read_requirements(root / CONFIG_TOML_REL)
+    except (EquipError, RequirementsError) as exc:
+        raise GcTargetError(name, str(exc)) from exc
+    item = next((i for i in manifest.items if i.name == name), None)
+    if item is None:
+        return None
+    if item.kind not in _EQUIPMENT_KINDS or not is_lifecycle_managed(item):
+        raise GcTargetError(
+            name,
+            "only generated agents and skills are GC-deletable; "
+            "use `equip remove` for other items",
+        )
+    body = contained_path(root, item.path)
+    sidecar = contained_path(root, grounding_path(name))
+    if body is None or sidecar is None:
+        raise GcPathError(item.path, str(root))
+    if item.scope is EquipmentScope.TASK and not _refs_finished(
+        context_dir, item.task_refs
+    ):
+        raise GcTargetError(name, "task has a live ref (in-flight proposal or audit)")
+    state = classify_item(root, item)
+    user_modified = is_user_owned(state)
+    if user_modified and not force:
+        raise GcTargetError(
+            name,
+            f"{item.path} is {state.value} (edited since generation); "
+            "confirm with the user, then pass --force",
+        )
+    return _EquipmentPlan(
+        name=name,
+        manifest=manifest,
+        item=item,
+        body=body,
+        sidecar=sidecar,
+        user_modified=user_modified,
+        requirements=_without_project_skill(requirements, name),
+    )
+
+
+def _without_project_skill(
+    requirements: Requirements | None, name: str
+) -> Requirements | None:
+    if requirements is None:
+        return None
+    if not any(_is_project_row(s, name) for s in requirements.skills):
+        return None
+    return dataclasses.replace(
+        requirements,
+        skills=tuple(s for s in requirements.skills if not _is_project_row(s, name)),
+    )
+
+
+def _is_project_row(skill: SkillRequirement, name: str) -> bool:
+    return skill.name == name and skill.from_ == SkillOrigin.PROJECT.value
+
+
+def _equipment_apply(root: Path, plan: _EquipmentPlan) -> None:
+    """Config row first (the only step that can fail validation), then files.
+
+    ``remove_item`` deletes the body, removes the native adapter only when it is
+    still the generated pointer, and drops the manifest row. The library entry
+    is not touched.
+    """
+    try:
+        if plan.requirements is not None:
+            write_requirements(root / CONFIG_TOML_REL, plan.requirements)
+        remove_item(root, plan.manifest, plan.name, delete_file=True)
+    except (EquipError, RequirementsError) as exc:
+        raise GcTargetError(plan.name, str(exc)) from exc
+    plan.sidecar.unlink(missing_ok=True)
+
+
+def _describe(plan: _EquipmentPlan) -> str:
+    steps = [
+        f"body {plan.item.path}",
+        "native adapter",
+        grounding_path(plan.name),
+        "manifest entry",
+    ]
+    if plan.requirements is not None:
+        steps.append("config.toml project skill row")
+    text = "remove " + ", ".join(steps) + "; library entry kept"
+    if plan.user_modified:
+        text += " (user-edited body, --force given)"
+    return text
 
 
 def _reject_sentinel(slug: str) -> None:

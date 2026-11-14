@@ -964,3 +964,207 @@ def test_status_missing_context_exits_2(
     err = capsys.readouterr().err
     assert code == 2
     assert "not found" in err
+
+
+# ----- gc delete --kind equipment -------------------------------------------
+
+
+def _seed_equipment(tmp_path: Path, *, body: str = "# impl\n") -> Path:
+    """One pristine generated agent at the canonical path, plus its adapter."""
+    from dummyindex.context.domains.equip.constants import SCHEMA_VERSION
+    from dummyindex.context.domains.equip.enums import (
+        EquipmentKind,
+        EquipmentScope,
+        EquipmentSource,
+        RequestedBy,
+    )
+    from dummyindex.context.domains.equip.generate.adapters import (
+        native_adapter_content,
+    )
+    from dummyindex.context.domains.equip.lifecycle.hashing import content_hash
+    from dummyindex.context.domains.equip.lifecycle.manifest import write_manifest
+    from dummyindex.context.domains.equip.models import (
+        EquipmentItem,
+        EquipmentManifest,
+    )
+
+    context_dir = tmp_path / ".context"
+    item = EquipmentItem(
+        kind=EquipmentKind.AGENT,
+        name="impl-p1",
+        path=".context/equipment/impl-p1.md",
+        source=EquipmentSource.GENERATED,
+        subagent_type="impl-p1",
+        version="1.0.0",
+        origin_hash=content_hash("# impl\n"),
+        scope=EquipmentScope.PROJECT,
+        requested_by=RequestedBy.PROPOSAL,
+    )
+    body_path = tmp_path / item.path
+    body_path.parent.mkdir(parents=True, exist_ok=True)
+    body_path.write_text(body, encoding="utf-8")
+    adapter = tmp_path / ".claude" / "agents" / "impl-p1.md"
+    adapter.parent.mkdir(parents=True, exist_ok=True)
+    adapter.write_text(native_adapter_content(item), encoding="utf-8")
+    write_manifest(
+        context_dir, EquipmentManifest(schema_version=SCHEMA_VERSION, items=(item,))
+    )
+    return body_path
+
+
+@pytest.mark.unit
+def test_equipment_delete_yes_removes_body_and_adapter(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    body = _seed_equipment(tmp_path)
+
+    code = dispatch(
+        [
+            "gc",
+            "delete",
+            "--kind",
+            "equipment",
+            "--slug",
+            "impl-p1",
+            "--yes",
+            "--root",
+            str(tmp_path),
+        ]
+    )
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert "removed equipment --slug impl-p1" in out
+    assert not body.exists()
+    assert not (tmp_path / ".claude" / "agents" / "impl-p1.md").exists()
+
+
+@pytest.mark.unit
+def test_equipment_delete_without_yes_is_a_dry_run(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    body = _seed_equipment(tmp_path)
+
+    code = dispatch(
+        [
+            "gc",
+            "delete",
+            "--kind",
+            "equipment",
+            "--slug",
+            "impl-p1",
+            "--root",
+            str(tmp_path),
+        ]
+    )
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert "would delete equipment --slug impl-p1" in out
+    assert ".context/equipment/impl-p1.md" in out
+    assert "pass --yes to delete (nothing removed)" in out
+    assert body.is_file()
+
+
+@pytest.mark.unit
+def test_equipment_user_modified_body_exits_2_and_changes_nothing(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    body = _seed_equipment(tmp_path, body="# hand-edited\n")
+
+    code = dispatch(
+        [
+            "gc",
+            "delete",
+            "--kind",
+            "equipment",
+            "--slug",
+            "impl-p1",
+            "--yes",
+            "--root",
+            str(tmp_path),
+        ]
+    )
+    err = capsys.readouterr().err
+
+    assert code == 2
+    assert "edited since generation" in err
+    assert body.read_text(encoding="utf-8") == "# hand-edited\n"
+    assert (tmp_path / ".claude" / "agents" / "impl-p1.md").is_file()
+
+
+@pytest.mark.unit
+def test_equipment_user_modified_body_removed_with_force(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    body = _seed_equipment(tmp_path, body="# hand-edited\n")
+
+    code = dispatch(
+        [
+            "gc",
+            "delete",
+            "--kind",
+            "equipment",
+            "--slug",
+            "impl-p1",
+            "--yes",
+            "--force",
+            "--root",
+            str(tmp_path),
+        ]
+    )
+
+    assert code == 0
+    assert not body.exists()
+
+
+@pytest.mark.unit
+def test_equipment_slug_leaves_same_named_audit_alone(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _seed_equipment(tmp_path)
+    decoy = tmp_path / ".context" / "audits" / "impl-p1" / "report.md"
+    decoy.parent.mkdir(parents=True)
+    decoy.write_text("# findings\n", encoding="utf-8")
+
+    code = dispatch(
+        [
+            "gc",
+            "delete",
+            "--kind",
+            "equipment",
+            "--slug",
+            "impl-p1",
+            "--yes",
+            "--root",
+            str(tmp_path),
+        ]
+    )
+
+    assert code == 0
+    assert decoy.read_text(encoding="utf-8") == "# findings\n"
+
+
+@pytest.mark.unit
+def test_force_rejected_for_workspace_kinds(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _init_repo(tmp_path)
+
+    code = dispatch(
+        [
+            "gc",
+            "delete",
+            "--kind",
+            "proposal",
+            "--slug",
+            "x",
+            "--force",
+            "--root",
+            str(tmp_path),
+        ]
+    )
+    err = capsys.readouterr().err
+
+    assert code == 2
+    assert "--force applies to --kind equipment only" in err
