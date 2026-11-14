@@ -83,8 +83,31 @@ def _pristine_db(root: Path, context_dir: Path, *, requested_by=None) -> Equipme
     return item
 
 
+def _as_rendered(renders: dict[str, str], context_dir: Path):
+    """Shape a name -> content stub like ``fresh_rendered``'s (item, rel, content) tuples."""
+    by_name = {item.name: item for item in read_manifest(context_dir).items}
+    rendered = []
+    for name, content in renders.items():
+        item = by_name.get(name) or EquipmentItem(
+            kind=EquipmentKind.AGENT,
+            name=name,
+            path=f".context/equipment/{name}.md",
+            source=EquipmentSource.GENERATED,
+            capabilities=(),
+            version="1.0.0",
+            origin_hash=content_hash(content),
+            requested_by=None,
+        )
+        rendered.append((item, item.path, content))
+    return tuple(rendered)
+
+
 def _stub_fresh(monkeypatch: pytest.MonkeyPatch, renders: dict[str, str]) -> None:
-    monkeypatch.setattr(equip_fresh, "fresh_renders", lambda root, ctx: dict(renders))
+    monkeypatch.setattr(
+        equip_fresh,
+        "fresh_rendered",
+        lambda root, ctx: _as_rendered(renders, ctx),
+    )
 
 
 def _refresh(context_dir: Path) -> RefreshResult:
@@ -279,9 +302,9 @@ def test_concurrent_run_reports_in_progress_while_first_run_holds_lock(
                 runner=_runner(False),
             )
         )
-        return {"db": BODY}
+        return _as_rendered({"db": BODY}, ctx)
 
-    monkeypatch.setattr(equip_fresh, "fresh_renders", renders_then_race)
+    monkeypatch.setattr(equip_fresh, "fresh_rendered", renders_then_race)
 
     outer = upgrade_project(
         tmp_path,
@@ -506,9 +529,9 @@ def test_two_threads_one_holds_the_lock_and_the_other_reports_in_progress(
     def slow_renders(root, ctx):
         holding.set()
         release.wait(timeout=10)
-        return {}
+        return ()
 
-    monkeypatch.setattr(equip_fresh, "fresh_renders", slow_renders)
+    monkeypatch.setattr(equip_fresh, "fresh_rendered", slow_renders)
     results: dict[str, context_upgrade.UpgradeReport] = {}
 
     def run(key: str) -> None:
@@ -653,3 +676,45 @@ def test_real_fresh_render_re_renders_a_pristine_body_that_drifted_from_the_temp
     assert heading in after
     assert item.version == "1.1.0"
     assert item.origin_hash == content_hash(after)
+
+
+@pytest.mark.unit
+def test_upgrade_refreshes_project_binding_stack_of_pristine_item(tmp_path: Path):
+    """A pristine item rendered for a generic repo picks up the stack detected later."""
+    import dataclasses
+    import json
+
+    context_dir = _project(tmp_path)
+    (context_dir / "map").mkdir()
+    files_json = context_dir / "map" / "files.json"
+    files_json.write_text(json.dumps({"files": []}), encoding="utf-8")
+    generic = equip_fresh.fresh_renders(tmp_path, context_dir)
+    # Stack-named specialists (python-implementer) are renamed by stack, so pick a
+    # project-named one whose name survives the stack change.
+    name = next(n for n in generic if n.endswith("-reviewer"))
+    body = generic[name]
+    body_rel = f".context/equipment/{name}.md"
+    (tmp_path / body_rel).parent.mkdir(parents=True, exist_ok=True)
+    (tmp_path / body_rel).write_text(body, encoding="utf-8")
+    item = EquipmentItem(
+        kind=EquipmentKind.AGENT,
+        name=name,
+        path=body_rel,
+        source=EquipmentSource.GENERATED,
+        capabilities=("security",),
+        version="1.0.0",
+        origin_hash=content_hash(body),
+    )
+    _with_items(
+        context_dir, dataclasses.replace(item, project_binding={"stack": "generic"})
+    )
+
+    (tmp_path / "app.py").write_text("def main():\n    return 1\n", encoding="utf-8")
+    files_json.write_text(
+        json.dumps({"files": [{"path": "app.py", "language": "python"}]}),
+        encoding="utf-8",
+    )
+    _run_once(tmp_path, context_dir)
+
+    refreshed = next(i for i in read_manifest(context_dir).items if i.name == name)
+    assert refreshed.project_binding["stack"] == "python"

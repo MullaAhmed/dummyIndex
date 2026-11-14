@@ -230,13 +230,14 @@ def run(args: list[str]) -> int:
             for name, err in hook_result.errors:
                 print(f"  hooks warning ({name}): {err}", file=sys.stderr)
 
-    if not use_claude:
-        return 0
+    if use_claude:
+        _wire_default_plugins_step(
+            out_root,
+            platform=platform,
+            no_default_plugins=no_default_plugins,
+        )
 
-    _wire_default_plugins_step(
-        out_root,
-        platform=platform,
-        no_default_plugins=no_default_plugins,
-    )
+    from dummyindex.installer.install.project_init import _built_refresh, _upgrade_step
 
+    _upgrade_step(out_root, _built_refresh(out_root))
     return 0

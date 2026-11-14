@@ -293,6 +293,7 @@ def install(
 
     if scope == "user" and "claude" in concrete_platforms:
         _register_claude_user_skill()
+        _install_user_requirements_hooks()
     if scope == "user" and "codex" in concrete_platforms:
         _register_codex_user_skill()
 
@@ -362,6 +363,29 @@ def install(
             f"   to build .context/ and write the host guidance.)"
         )
         print()
+
+
+def _install_user_requirements_hooks() -> None:
+    """Write the requirements hooks into the Claude config dir's settings.json.
+
+    Only these hooks: the user-scope install never touches project hooks here.
+    """
+    from dummyindex.context.claude_settings import MalformedSettingsError
+    from dummyindex.context.domains.memory.miner.resolve import (
+        resolve_claude_config_dir,
+    )
+    from dummyindex.context.hooks_requirements import install_requirements_hooks
+
+    settings_path = resolve_claude_config_dir() / "settings.json"
+    try:
+        wrote = install_requirements_hooks(
+            settings_path, cli_version=PACKAGE_VERSION, global_scope=True
+        )
+    except (OSError, MalformedSettingsError) as exc:
+        print(f"  requirements     ->  skipped ({exc})", file=sys.stderr)
+        return
+    if wrote:
+        print(f"  requirements     ->  installed: {', '.join(wrote)}")
 
 
 def _register_claude_user_skill() -> None:

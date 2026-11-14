@@ -664,3 +664,52 @@ def test_claude_init_refuses_symlinked_guidance_directory_outside_project(
     assert rc == 0
     assert (repo / ".context" / "INDEX.md").exists()
     assert outside_guidance.read_text(encoding="utf-8") == "# Outside rules\n"
+
+
+def _fresh_source_repo(tmp_path: Path) -> Path:
+    repo = tmp_path / "repo"
+    (repo / ".git").mkdir(parents=True)
+    (repo / "app.py").write_text(
+        "def hi() -> str:\n    return 'hi'\n", encoding="utf-8"
+    )
+    return repo
+
+
+def _spy_upgrade_calls(monkeypatch: pytest.MonkeyPatch) -> list[object]:
+    from dummyindex.context.build.context_upgrade import UpgradeReport
+
+    refreshes: list[object] = []
+
+    def _fake_upgrade(root, *, package_version, refresh, runner):
+        refreshes.append(refresh)
+        return UpgradeReport()
+
+    monkeypatch.setattr(
+        "dummyindex.context.build.context_upgrade.upgrade_project", _fake_upgrade
+    )
+    return refreshes
+
+
+@pytest.mark.integration
+def test_context_init_claude_runs_upgrade_exactly_once(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo = _fresh_source_repo(tmp_path)
+    refreshes = _spy_upgrade_calls(monkeypatch)
+
+    assert init.run([str(repo), "--no-default-plugins"]) == 0
+
+    assert len(refreshes) == 1
+    assert refreshes[0].written == ()  # the full build already refreshed
+
+
+@pytest.mark.integration
+def test_context_init_codex_runs_upgrade_exactly_once(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo = _fresh_source_repo(tmp_path)
+    refreshes = _spy_upgrade_calls(monkeypatch)
+
+    assert init.run([str(repo), "--platform", "codex"]) == 0
+
+    assert len(refreshes) == 1

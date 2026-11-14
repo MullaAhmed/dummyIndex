@@ -390,14 +390,22 @@ def _upgrade_equipment(
 
     if not (context_dir / EQUIPMENT_REL).is_file():
         return False  # no equipment yet: nothing to render, adapt, or sidecar
-    fresh = equip_fresh.fresh_renders(root, context_dir)
+    rendered = equip_fresh.fresh_rendered(root, context_dir)
+    fresh = {item.name: content for item, _rel, content in rendered}
+    fresh_items = {item.name: item for item, _rel, _content in rendered}
     for item in read_manifest(context_dir).items:
         if is_lifecycle_managed(item) and _contained(root, item.path) is None:
             skipped.append(item.path)
             fresh.pop(item.name, None)  # no fresh render, so refresh never writes it
+            fresh_items.pop(item.name, None)
 
     # Pristine bodies only: refresh keeps user-modified and evolved items as they are.
-    changed = bool(equip_status.refresh(root, fresh_renders=fresh).refreshed)
+    # fresh_items carries the detected project_binding (stack etc.) onto refreshed items.
+    changed = bool(
+        equip_status.refresh(
+            root, fresh_renders=fresh, fresh_items=fresh_items
+        ).refreshed
+    )
     items = read_manifest(context_dir).items
     sidecars_changed, sidecars_skipped = write_grounding_sidecars(
         root, context_dir, items

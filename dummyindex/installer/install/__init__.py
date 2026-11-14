@@ -21,7 +21,7 @@ from .orchestrate import install
 from .project_init import (
     _auto_init_project,
     _install_project_hooks,
-    _refresh_equipment_step,
+    _upgrade_step,
     _write_default_config,
 )
 
@@ -33,8 +33,8 @@ __all__ = [
     "_install_project_hooks",
     "_install_skill_family",
     "_link_state_report_line",
-    "_refresh_equipment_step",
     "_symlinked_skill_install_directory",
+    "_upgrade_step",
     "_write_default_config",
     "install",
     "run_link_install",
