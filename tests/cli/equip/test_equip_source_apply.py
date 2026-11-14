@@ -60,6 +60,11 @@ def _project(tmp_path: Path) -> Path:
     (context_dir / "conventions" / "naming.md").write_text(
         "# naming\n", encoding="utf-8"
     )
+    # Data-store and search evidence: db / search are evidence-gated, and the
+    # fixtures below expect both to be generated on a bare apply.
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\ndependencies = ["sqlalchemy", "faiss-cpu"]\n', encoding="utf-8"
+    )
     return tmp_path
 
 

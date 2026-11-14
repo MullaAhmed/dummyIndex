@@ -1862,6 +1862,190 @@ def test_default_config_import_oserror_is_not_masked_by_configerror_nameerror(
 
 
 @pytest.mark.integration
+def test_stale_enriched_install_prints_gitignore_warning_once(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A stale index in a repo that gitignores .claude/ warns on the upgrading install
+    only: the stamp moves, so the next install is no longer stale and stays quiet."""
+    from subprocess import CompletedProcess
+
+    from dummyindex.context.build.context_upgrade import GITIGNORE_WARNING
+    from dummyindex.context.build.incremental import EnrichedIndexStatus
+    from dummyindex.context.build.runner import build_all
+    from dummyindex.installer.install import _auto_init_project
+
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    (repo / ".gitignore").write_text(".claude/\n", encoding="utf-8")
+    build_all(repo, out_root=repo, bootstrap=False, dummyindex_version="0.0.1")
+    monkeypatch.setattr(
+        "dummyindex.context.build.enriched_index_status",
+        lambda _ctx: EnrichedIndexStatus(enriched=True, desync=False),
+    )
+
+    def _check_ignore(root, *args):
+        listed = (Path(root) / ".gitignore").read_text(encoding="utf-8")
+        ignored = "check-ignore" in args and ".claude/" in listed
+        return CompletedProcess(args, 0 if ignored else 1, "", "")
+
+    monkeypatch.setattr("dummyindex.context.git.run_git", _check_ignore)
+
+    assert _auto_init_project(repo, platform="codex") is True
+    assert capsys.readouterr().err.count(GITIGNORE_WARNING) == 1
+
+    assert _auto_init_project(repo, platform="codex") is True
+    assert GITIGNORE_WARNING not in capsys.readouterr().err
+
+
+@pytest.mark.unit
+def test_default_config_survives_a_requirements_error_on_toml_seed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from dummyindex.context.domains.requirements import RequirementsError
+    from dummyindex.installer.install import _write_default_config
+
+    (tmp_path / ".context").mkdir()
+
+    def _malformed(*_a, **_k):
+        raise RequirementsError("config.toml is malformed")
+
+    monkeypatch.setattr(
+        "dummyindex.context.build.context_upgrade.seed_config_toml", _malformed
+    )
+
+    _write_default_config(tmp_path)  # must not raise
+
+    assert (
+        "config.toml      ->  skipped (config.toml is malformed)"
+        in capsys.readouterr().err
+    )
+
+
+@pytest.mark.integration
+def test_default_config_seeds_config_toml_on_first_install(tmp_path: Path) -> None:
+    """Upgrade runs before config.json exists, so the default writer seeds the toml."""
+    from dummyindex.installer.install import _write_default_config
+
+    ctx = tmp_path / ".context"
+    ctx.mkdir()
+
+    _write_default_config(tmp_path)
+
+    assert (ctx / "config.json").is_file()
+    assert (ctx / "config.toml").is_file()
+
+
+@pytest.mark.integration
+def test_default_config_keeps_an_existing_config_toml(tmp_path: Path) -> None:
+    from dummyindex.installer.install import _write_default_config
+
+    ctx = tmp_path / ".context"
+    ctx.mkdir()
+    sentinel = "# owned by the user\n"
+    (ctx / "config.toml").write_text(sentinel, encoding="utf-8")
+
+    _write_default_config(tmp_path)
+
+    assert (ctx / "config.toml").read_text(encoding="utf-8") == sentinel
+
+
+@pytest.mark.integration
+def test_auto_init_enriched_path_holds_stamp_when_an_upgrade_step_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The enriched refresh must not advance the stamp: a failed equipment step keeps
+    the old stamp so the next run still sees the index as stale and retries."""
+    from dummyindex.context.build import context_upgrade
+    from dummyindex.context.build.incremental import EnrichedIndexStatus
+    from dummyindex.context.build.meta import read_meta
+    from dummyindex.context.build.runner import build_all
+    from dummyindex.installer.common import PACKAGE_VERSION
+    from dummyindex.installer.install import _auto_init_project
+
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    build_all(repo, out_root=repo, bootstrap=False, dummyindex_version="0.0.1")
+    context_dir = repo / ".context"
+    monkeypatch.setattr(
+        "dummyindex.context.build.enriched_index_status",
+        lambda _ctx: EnrichedIndexStatus(enriched=True, desync=False),
+    )
+
+    def _broken_equipment(*_a, **_k):
+        raise RuntimeError("equipment step broke")
+
+    monkeypatch.setattr(context_upgrade, "_upgrade_equipment", _broken_equipment)
+
+    assert _auto_init_project(repo, platform="codex") is True
+
+    assert read_meta(context_dir / "meta.json").dummyindex_version == "0.0.1"
+    assert context_upgrade.is_stale(context_dir, PACKAGE_VERSION) is True
+
+
+@pytest.mark.integration
+def test_auto_init_enriched_path_advances_stamp_when_all_steps_succeed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from dummyindex.context.build import context_upgrade
+    from dummyindex.context.build.incremental import EnrichedIndexStatus
+    from dummyindex.context.build.meta import read_meta
+    from dummyindex.context.build.runner import build_all
+    from dummyindex.installer.common import PACKAGE_VERSION
+    from dummyindex.installer.install import _auto_init_project
+
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    build_all(repo, out_root=repo, bootstrap=False, dummyindex_version="0.0.1")
+    context_dir = repo / ".context"
+    monkeypatch.setattr(
+        "dummyindex.context.build.enriched_index_status",
+        lambda _ctx: EnrichedIndexStatus(enriched=True, desync=False),
+    )
+
+    assert _auto_init_project(repo, platform="codex") is True
+
+    assert read_meta(context_dir / "meta.json").dummyindex_version == PACKAGE_VERSION
+    assert context_upgrade.is_stale(context_dir, PACKAGE_VERSION) is False
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("force_downgrade", [False, True])
+def test_auto_init_enriched_refresh_advance_stamp_follows_force_downgrade(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, force_downgrade: bool
+) -> None:
+    from dummyindex.context.build.enriched_refresh import RefreshResult
+    from dummyindex.context.build.incremental import EnrichedIndexStatus
+    from dummyindex.installer.install import _auto_init_project
+
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    (repo / ".context").mkdir()
+    calls: list[dict] = []
+
+    def _refresh(*_a, **kwargs):
+        calls.append(kwargs)
+        return RefreshResult(context_dir=repo / ".context", written=())
+
+    _spy_upgrade(monkeypatch)
+    monkeypatch.setattr(
+        "dummyindex.context.build.enriched_index_status",
+        lambda _ctx: EnrichedIndexStatus(enriched=True, desync=False),
+    )
+    monkeypatch.setattr(
+        "dummyindex.context.build.refresh_deterministic_artifacts", _refresh
+    )
+
+    _auto_init_project(repo, platform="codex", force_downgrade=force_downgrade)
+
+    assert len(calls) == 1
+    assert calls[0]["advance_stamp"] is force_downgrade
+
+
+@pytest.mark.integration
 def test_install_auto_init_runs_for_submodule_git_file(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -2122,6 +2306,8 @@ def test_install_folds_equipped_plugin_into_wired(
 
     install(scope="project", project_dir=repo, defaults=True)
     context_dir = repo / ".context"
+    # A v1 repo predates config.toml: drop the toml the first install now seeds.
+    (context_dir / "config.toml").unlink()
 
     # An extra plugin in equipment.json plus a stale v1 config unaware of it.
     write_manifest(
@@ -2892,65 +3078,197 @@ def test_install_skill_entry_reported_needs_user(
     assert "some-skill" not in _enabled_plugins(repo)
 
 
-# --- equip-generated tools are refreshed on (re)install
+# --- upgrade_project runs once per repo pass (enriched and full-build paths)
 
 
-@pytest.mark.unit
-def test_refresh_equipment_step_noop_when_not_equipped(
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """An indexed-but-unequipped repo (no equipment.json) is a silent no-op that
-    never calls `equip refresh`."""
-    from dummyindex.installer.install import _refresh_equipment_step
+def _spy_upgrade(monkeypatch: pytest.MonkeyPatch) -> list[object]:
+    """Record every `upgrade_project` call; return the recorded refresh args."""
+    from dummyindex.context.build.context_upgrade import UpgradeReport
 
-    (tmp_path / ".context").mkdir()  # indexed, but `equip apply` never ran
+    refreshes: list[object] = []
 
-    def _must_not_run(*_a: object, **_k: object) -> None:
-        raise AssertionError("refresh must not run on an unequipped repo")
-
-    monkeypatch.setattr("dummyindex.context.domains.equip.refresh", _must_not_run)
-    _refresh_equipment_step(tmp_path)
-    assert "equipment" not in capsys.readouterr().out
-
-
-@pytest.mark.unit
-def test_refresh_equipment_step_refreshes_when_equipped(
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """With `equipment.json` present, the step builds fresh renders, calls the
-    hash-baselined `refresh` and reports what re-rendered."""
-    from dummyindex.context.domains.equip import RefreshReport
-    from dummyindex.installer.install import _refresh_equipment_step
-
-    context_dir = tmp_path / ".context"
-    context_dir.mkdir()
-    (context_dir / "equipment.json").write_text(
-        '{"schema_version": 4, "items": []}', encoding="utf-8"
-    )
-
-    calls: list[Path] = []
-
-    def _fake_refresh(
-        root: Path, *, fresh_renders: object, fresh_items: object, dry_run: bool
-    ) -> RefreshReport:
-        calls.append(root)
-        assert dry_run is False  # a real (non-dry) refresh
-        return RefreshReport(refreshed=("python-implementer",))
+    def _fake_upgrade(root: Path, *, package_version: str, refresh, runner):
+        refreshes.append(refresh)
+        return UpgradeReport(steps=("refresh",), changed=True)
 
     monkeypatch.setattr(
-        "dummyindex.cli.equip.common.fresh_rendered", lambda root, ctx: ()
+        "dummyindex.context.build.context_upgrade.upgrade_project", _fake_upgrade
     )
-    monkeypatch.setattr("dummyindex.context.domains.equip.refresh", _fake_refresh)
+    return refreshes
 
-    _refresh_equipment_step(tmp_path)
 
-    assert calls == [tmp_path]
-    out = capsys.readouterr().out
-    assert "equipment" in out and "refreshed 1" in out
+@pytest.mark.unit
+def test_upgrade_step_passes_refresh_result_and_prints_outcome(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from dummyindex.context.build.enriched_refresh import RefreshResult
+    from dummyindex.installer.install import _upgrade_step
+
+    refreshes = _spy_upgrade(monkeypatch)
+    refresh = RefreshResult(context_dir=tmp_path / ".context", written=("tree.json",))
+
+    _upgrade_step(tmp_path, refresh)
+
+    assert len(refreshes) == 1 and refreshes[0] is refresh
+    assert "upgraded (refresh)" in capsys.readouterr().out
+
+
+@pytest.mark.unit
+def test_upgrade_step_failure_is_a_warning_not_an_error(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from dummyindex.installer.install import _upgrade_step
+
+    def _boom(*_a: object, **_k: object) -> None:
+        raise RuntimeError("lock busy")
+
+    monkeypatch.setattr(
+        "dummyindex.context.build.context_upgrade.upgrade_project", _boom
+    )
+
+    _upgrade_step(tmp_path, None)  # must not raise
+
+    assert "upgrade warning" in capsys.readouterr().err
+
+
+@pytest.mark.integration
+def test_auto_init_enriched_path_upgrades_once_with_the_refresh_result(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from dummyindex.context.build.enriched_refresh import RefreshResult
+    from dummyindex.context.build.incremental import EnrichedIndexStatus
+    from dummyindex.installer.install import _auto_init_project
+
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    (repo / ".context").mkdir()
+    refresh = RefreshResult(context_dir=repo / ".context", written=("tree.json",))
+    refreshes = _spy_upgrade(monkeypatch)
+    from subprocess import CompletedProcess
+
+    monkeypatch.setattr(
+        "dummyindex.context.git.run_git",
+        lambda *_a, **_k: CompletedProcess([], 1, "", ""),
+    )
+    monkeypatch.setattr(
+        "dummyindex.context.build.enriched_index_status",
+        lambda _ctx: EnrichedIndexStatus(enriched=True, desync=False),
+    )
+    monkeypatch.setattr(
+        "dummyindex.context.build.refresh_deterministic_artifacts",
+        lambda *_a, **_k: refresh,
+    )
+
+    assert _auto_init_project(repo, platform="codex") is True
+
+    assert len(refreshes) == 1 and refreshes[0] is refresh
+
+
+@pytest.mark.integration
+def test_auto_init_full_build_path_upgrades_once_without_a_second_refresh(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from dummyindex.context.build.enriched_refresh import RefreshResult
+    from dummyindex.installer.install import _auto_init_project
+
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    refreshes = _spy_upgrade(monkeypatch)
+    from subprocess import CompletedProcess
+
+    monkeypatch.setattr(
+        "dummyindex.context.git.run_git",
+        lambda *_a, **_k: CompletedProcess([], 1, "", ""),
+    )
+
+    assert _auto_init_project(repo, platform="codex") is True
+
+    assert len(refreshes) == 1
+    assert isinstance(refreshes[0], RefreshResult)
+    assert refreshes[0].written == () and refreshes[0].failed == ()
+
+
+@pytest.mark.integration
+def test_auto_init_leaves_unequipped_repo_without_equipment_json(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The real upgrade on an unequipped repo never creates equipment.json."""
+    import subprocess
+
+    from dummyindex.context.domains.equip import EQUIPMENT_REL
+    from dummyindex.installer.install import _auto_init_project
+
+    repo = tmp_path / "repo"
+    _make_repo_with_source(repo)
+    monkeypatch.setattr(
+        "dummyindex.context.git.run_git",
+        lambda *_a, **_k: subprocess.CompletedProcess([], 1, "", ""),
+    )
+
+    _auto_init_project(repo, platform="codex")
+
+    assert not (repo / ".context" / EQUIPMENT_REL).exists()
+
+
+# --- user-scope Claude install: requirements hooks only, in the config dir
+
+
+@pytest.mark.unit
+def test_user_scope_requirements_hooks_land_in_claude_config_dir_only(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from dummyindex.installer.install.orchestrate import (
+        _install_user_requirements_hooks,
+    )
+
+    config_dir = tmp_path / "claude-config"
+    monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(config_dir))
+    home_claude = Path.home() / ".claude" / "settings.json"
+
+    _install_user_requirements_hooks()
+
+    settings = (config_dir / "settings.json").read_text(encoding="utf-8")
+    assert "UserPromptSubmit" in settings and "SessionStart" in settings
+    assert not home_claude.exists()
+    assert "requirements" in capsys.readouterr().out
+
+
+@pytest.mark.unit
+def test_user_scope_claude_skill_only_writes_requirements_hooks_to_config_dir(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """User-scope Claude install writes only the requirements hooks into the config dir."""
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
+    config_dir = tmp_path / "claude-config"
+    config_dir.mkdir()
+    monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(config_dir))
+    clean_cwd = tmp_path / "cwd"
+    clean_cwd.mkdir()
+    monkeypatch.chdir(clean_cwd)
+
+    install(scope="user", platform="claude", skill_only=True)
+
+    settings = json.loads((config_dir / "settings.json").read_text(encoding="utf-8"))
+    assert set(settings) == {"hooks"}
+    assert set(settings["hooks"]) == {"UserPromptSubmit", "SessionStart"}
+    commands = [
+        hook["command"]
+        for entries in settings["hooks"].values()
+        for entry in entries
+        for hook in entry["hooks"]
+    ]
+    assert commands and all("DUMMYINDEX_REQUIREMENTS" in c for c in commands)
+    assert not (fake_home / ".claude" / "settings.json").exists()
 
 
 @pytest.mark.integration

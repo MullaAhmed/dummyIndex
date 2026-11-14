@@ -515,6 +515,22 @@ Subcommands:
   audit-log --slug S --round N --persona P --status STATE [--note "..."] [--root DIR]
                                     Append to audits/<slug>/_debate-log.json (debate
                                     resumption). Status: started|complete|failed|skipped.
+  requirements check|sync|gate|bypass [--root DIR] [--json] [--yes] [--local-only] [--hours N]
+                                    Required-setup manifest in .context/config.toml.
+                                      check  - print each requirement row. Exit 0 when
+                                               all are met. Exit 3 when one is missing.
+                                      sync   - restore local files, then install trusted
+                                               plugins. --yes approves untrusted plugins.
+                                               --local-only installs no plugins.
+                                      gate   - UserPromptSubmit hook. Blocks a prompt while
+                                               requirements are unmet. Always exit 0.
+                                      bypass - allow prompts for --hours N (1-24).
+  upgrade [--if-stale] [--root DIR]
+                                    Bring .context/ forward to the installed CLI: refresh
+                                    deterministic maps, backfill config, sync equipment
+                                    and adapters, then move the version stamp. --if-stale
+                                    does nothing unless the stamp is older (SessionStart).
+                                    Exit 1 only when a step fails.
   gc status|delete|closeout|stamp|signal [--json] [--root DIR]
                                     Context-hygiene GC (deterministic plumbing;
                                     `/dummyindex-gc` on Claude or `$dummyindex-gc`
@@ -542,6 +558,11 @@ Subcommands:
                                                 target (exit 2) and an untracked target
                                                 without --allow-untracked. Never deletes
                                                 source code.
+                                                --kind equipment --slug S [--yes] [--force]
+                                                — remove one equipment item: its body,
+                                                adapter and manifest entry. A user-modified
+                                                body needs --force. The library entry stays
+                                                for `equip reuse`.
                                       closeout --kind proposal|audit --slug S
                                                 (--manifest F | --draft) — --draft writes
                                                 a closeout manifest draft to

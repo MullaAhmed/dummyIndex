@@ -10,8 +10,10 @@ or ``[tool.uv]``, node commands ``npx``. Nothing detected ⇒ all toolchain ``No
 from __future__ import annotations
 
 import json
+import re
 from collections import Counter
 from pathlib import Path
+from typing import Any
 
 from ..models import StackProfile
 
@@ -80,6 +82,65 @@ _MANIFEST_NAMES: tuple[str, ...] = (
     ".pre-commit-config.yaml",
 )
 
+# Evidence tokens match whole words in the same manifests as the framework scan.
+# README and other prose are never read, so a sentence cannot forge evidence.
+_DATA_STORE_TOKENS: tuple[str, ...] = (
+    "sqlalchemy",
+    "alembic",
+    "psycopg",
+    "psycopg2",
+    "asyncpg",
+    "pymongo",
+    "motor",
+    "prisma",
+    "drizzle-orm",
+    "typeorm",
+    "sequelize",
+    "knex",
+    "mongoose",
+    "django",
+    "supabase",
+    "peewee",
+    "tortoise-orm",
+    "sqlite3",
+    "mysql",
+    "mysqlclient",
+    "pgx",
+    "gorm",
+    "sqlx",
+    "sqlc",
+    "diesel",
+    "activerecord",
+    "dapper",
+    "hibernate",
+    "jdbc",
+)
+_SEARCH_TOKENS: tuple[str, ...] = (
+    "elasticsearch",
+    "opensearch",
+    "meilisearch",
+    "typesense",
+    "algoliasearch",
+    "whoosh",
+    "tantivy",
+    "pgvector",
+    "faiss",
+    "faiss-cpu",
+    "qdrant-client",
+    "chromadb",
+    "weaviate-client",
+    "pinecone",
+    "rank_bm25",
+    "lunr",
+)
+# File evidence runs over ``map/files.json`` paths normalised to ``/``, lowercased.
+_DB_FILE_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
+    ("sql", re.compile(r"\.sql$")),
+    ("alembic", re.compile(r"(^|/)alembic\.ini$")),
+    ("prisma", re.compile(r"(^|/)prisma/schema\.prisma$")),
+    ("migrations", re.compile(r"(^|/)migrations/")),
+)
+
 
 def detect_stack(context_dir: Path) -> StackProfile:
     """Resolve the repo's dominant stack from ``<context_dir>/map/files.json``.
@@ -87,20 +148,39 @@ def detect_stack(context_dir: Path) -> StackProfile:
     Counts the non-null ``language`` of every file entry; the most common
     language is the label. Ties break alphabetically for determinism. Returns
     a ``generic`` profile when the map is absent, unreadable, or has no
-    language-tagged files.
+    language-tagged files. Data-store and search evidence is independent of
+    the label and is filled in either way.
     """
     project_root = context_dir.parent
-    languages = _read_languages(context_dir / _FILES_MAP_REL)
+    entries = _read_map_entries(context_dir / _FILES_MAP_REL)
+    languages = tuple(
+        lang for lang in (_entry_str(e, "language") for e in entries) if lang
+    )
     toolchain = _detect_toolchain(project_root)
+    data_stores, search_backends = _detect_evidence(
+        project_root, tuple(_entry_str(e, "path") or "" for e in entries)
+    )
     if not languages:
-        return StackProfile(label="generic", frameworks=(), **toolchain)
+        return StackProfile(
+            label="generic",
+            frameworks=(),
+            data_stores=data_stores,
+            search_backends=search_backends,
+            **toolchain,
+        )
 
     counts = Counter(languages)
     # most_common is insertion-ordered on ties; sort by (-count, label) for a
     # stable, deterministic winner across Python builds.
     label = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[0][0]
     frameworks = _detect_frameworks(project_root)
-    return StackProfile(label=label, frameworks=frameworks, **toolchain)
+    return StackProfile(
+        label=label,
+        frameworks=frameworks,
+        data_stores=data_stores,
+        search_backends=search_backends,
+        **toolchain,
+    )
 
 
 def _detect_toolchain(project_root: Path) -> dict[str, str | None]:
@@ -158,26 +238,48 @@ def _uses_uv(project_root: Path, blob: str) -> bool:
     return "[tool.uv]" in blob
 
 
-def _read_languages(files_map_path: Path) -> tuple[str, ...]:
+def _read_map_entries(files_map_path: Path) -> list[dict[str, Any]]:
     if not files_map_path.is_file():
-        return ()
+        return []
     try:
         data = json.loads(files_map_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
-        return ()
+        return []
     if not isinstance(data, dict):
-        return ()
+        return []
     entries = data.get("files", [])
     if not isinstance(entries, list):
-        return ()
-    out: list[str] = []
-    for entry in entries:
-        if not isinstance(entry, dict):
-            continue
-        lang = entry.get("language")
-        if isinstance(lang, str) and lang:
-            out.append(lang)
-    return tuple(out)
+        return []
+    return [entry for entry in entries if isinstance(entry, dict)]
+
+
+def _entry_str(entry: dict[str, Any], key: str) -> str | None:
+    value = entry.get(key)
+    return value if isinstance(value, str) and value else None
+
+
+def _detect_evidence(
+    project_root: Path, map_paths: tuple[str, ...]
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Data-store and search-backend evidence as ``(data_stores, search_backends)``.
+
+    Data stores combine manifest tokens with file patterns over the map paths;
+    search backends come from manifest tokens only.
+    """
+    blob = _manifest_blob(project_root)
+    normalised = tuple(p.replace("\\", "/").lower() for p in map_paths)
+    stores = [t for t in _DATA_STORE_TOKENS if _has_token(blob, t)]
+    stores += [
+        label
+        for label, pattern in _DB_FILE_PATTERNS
+        if any(pattern.search(p) for p in normalised)
+    ]
+    search = tuple(t for t in _SEARCH_TOKENS if _has_token(blob, t))
+    return tuple(dict.fromkeys(stores)), search
+
+
+def _has_token(blob: str, token: str) -> bool:
+    return re.search(rf"\b{re.escape(token)}\b", blob) is not None
 
 
 def _detect_frameworks(project_root: Path) -> tuple[str, ...]:

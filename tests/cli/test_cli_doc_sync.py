@@ -17,7 +17,7 @@ import pytest
 from dummyindex.context.domains.equip import SCHEMA_VERSION
 from dummyindex.context.domains.equip.enums import EquipVerb
 from dummyindex.context.domains.memory.enums import MemoryVerb
-from dummyindex.context.enums import ContextSubcommand
+from dummyindex.context.enums import ContextSubcommand, RequirementsVerb
 from tests.paths import REPO_ROOT
 
 _REPO_ROOT = REPO_ROOT
@@ -84,6 +84,43 @@ def test_cli_guide_documents_every_subcommand() -> None:
         if f"dummyindex context {sub.value}" not in text
     ]
     assert not missing, f"docs/guide/07-cli.md does not document: {missing}"
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("verb", list(RequirementsVerb), ids=lambda verb: verb.value)
+def test_requirements_verb_documented_in_help_and_docs(verb: RequirementsVerb) -> None:
+    """Each requirements verb appears in its own help block and both docs."""
+    from dummyindex.cli.help import usage_for
+
+    command = f"dummyindex context requirements {verb.value}"
+    assert command in _CLI_GUIDE.read_text(encoding="utf-8")
+    assert command in _COMMAND_REFERENCE.read_text(encoding="utf-8")
+    usage = usage_for(ContextSubcommand.REQUIREMENTS)
+    assert re.search(rf"\b{re.escape(verb.value)}\b", usage), (
+        f"`context requirements --help` omits {verb.value!r}"
+    )
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "command",
+    [
+        "dummyindex context upgrade --if-stale",
+        "dummyindex context gc delete --kind equipment",
+    ],
+    ids=["upgrade-if-stale", "gc-delete-equipment"],
+)
+def test_upgrade_and_equipment_delete_documented_in_help_and_docs(command: str) -> None:
+    """`upgrade --if-stale` and `gc delete --kind equipment` appear in help and both docs."""
+    from dummyindex.cli.help import usage_for
+
+    assert command in _CLI_GUIDE.read_text(encoding="utf-8")
+    assert command in _COMMAND_REFERENCE.read_text(encoding="utf-8")
+    sub = ContextSubcommand.UPGRADE if "upgrade" in command else ContextSubcommand.GC
+    flags = command.split(f"context {sub.value} ", 1)[1]
+    assert flags.split()[0] in usage_for(sub), (
+        f"`context {sub.value} --help` omits {flags.split()[0]!r}"
+    )
 
 
 @pytest.mark.unit

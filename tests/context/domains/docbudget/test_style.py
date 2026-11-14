@@ -27,6 +27,12 @@ def test_twenty_words_pass() -> None:
 
 
 @pytest.mark.unit
+@pytest.mark.parametrize("box", ["[ ]", "[x]", "[X]"])
+def test_task_list_box_is_not_a_word(box: str) -> None:
+    assert lint_text(f"- {box} {LONG_20}") == ()
+
+
+@pytest.mark.unit
 def test_twenty_one_words_fail() -> None:
     (v,) = lint_text(LONG_21)
     assert v.rule == "long-sentence"

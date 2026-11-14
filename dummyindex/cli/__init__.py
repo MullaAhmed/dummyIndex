@@ -49,10 +49,12 @@ from . import (
     reconcile,
     reconcile_gate,
     refresh,
+    requirements,
     restyle,
     scan,
     status,
     statusline,
+    upgrade,
     wire,
 )
 from .common import _FLAGS_TAKING_VALUE, resolve_context_root
@@ -127,6 +129,7 @@ _HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
     ContextSubcommand.GC: gc.run,
     ContextSubcommand.MAINTAIN: maintain.run,
     ContextSubcommand.RESTYLE: restyle.run,
+    ContextSubcommand.REQUIREMENTS: requirements.run,
     ContextSubcommand.FLEET: fleet.run,
     ContextSubcommand.STATUS: status.run,
     ContextSubcommand.WIRE: wire.run,
@@ -136,6 +139,7 @@ _HANDLERS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
     ContextSubcommand.GUARD_DOC_WRITE: guard_doc_write.run,
     ContextSubcommand.DRIFT_ACK: drift_ack.run,
     ContextSubcommand.EVOLVE: evolve.run,
+    ContextSubcommand.UPGRADE: upgrade.run,
 }
 
 

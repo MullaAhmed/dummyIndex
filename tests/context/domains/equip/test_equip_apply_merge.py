@@ -8,6 +8,7 @@ replace prior same-name hook records.
 
 from __future__ import annotations
 
+import dataclasses
 import json
 from pathlib import Path
 
@@ -15,7 +16,25 @@ import pytest
 
 from dummyindex.cli.equip import project_slug
 from dummyindex.cli.equip import run as run_equip
-from dummyindex.context.domains.equip.generate.specialists import SPECIALIST_TEMPLATES
+from dummyindex.context.domains.equip import (
+    Capability,
+    EquipmentItem,
+    EquipmentKind,
+    EquipmentSource,
+    detect_stack,
+)
+from dummyindex.context.domains.equip.enums import RequestedBy
+from dummyindex.context.domains.equip.generate.adapters import (
+    adapter_description,
+    native_adapter_content,
+    native_adapter_path,
+)
+from dummyindex.context.domains.equip.generate.catalog import (
+    specialists_without_evidence,
+)
+from dummyindex.context.domains.equip.generate.specialists import (
+    ALWAYS_ON_CAPABILITIES,
+)
 
 
 def _project(tmp_path: Path, languages: list[str]) -> Path:
@@ -224,8 +243,10 @@ def test_summary_counts_file_writes_not_records(tmp_path: Path, capsys) -> None:
     assert run_equip(["apply", str(root)]) == 0
     out = capsys.readouterr().out
     # 4 core generated files (implementer/tester/reviewer/verify) plus one file
-    # per always-on specialist; the hook is a record, not a file write.
-    expected = 4 + sum(1 for t in SPECIALIST_TEMPLATES.values() if t.dimension is None)
+    # per baseline specialist. db/search are evidence-gated and this fixture
+    # carries no data-store or search evidence, so they are not written; the
+    # hook is a record, not a file write.
+    expected = 4 + len(ALWAYS_ON_CAPABILITIES)
     assert f"wrote {expected} file(s)" in out
 
 
@@ -328,3 +349,144 @@ def test_drop_generated_stems_filters_sentinel_and_manifest_names(
         tmp_path, prior, ("frontend-reviewer", "lost-generated", "ui-wizard")
     )
     assert kept == ("ui-wizard",)
+
+
+def _proposal(root: Path, slug: str, text: str) -> None:
+    proposal = root / ".context" / "proposals" / slug
+    proposal.mkdir(parents=True, exist_ok=True)
+    (proposal / "plan.md").write_text(text, encoding="utf-8")
+
+
+def _items(root: Path) -> dict[str, dict]:
+    return {i["name"]: i for i in _manifest(root)["items"]}
+
+
+def _with_capability(root: Path, capability: str) -> dict:
+    return next(
+        i for i in _manifest(root)["items"] if capability in i.get("capabilities", [])
+    )
+
+
+@pytest.mark.unit
+def test_for_proposal_database_specialist_is_task_scoped(tmp_path: Path) -> None:
+    # Frontend is not used: a backend stack must never get a frontend specialist.
+    root = _project(tmp_path, ["python"])
+    _proposal(root, "p1", "# p1\n\nDesign the database schema.\n")
+    assert run_equip(["apply", str(root), "--for-proposal", "p1"]) == 0
+    database = _with_capability(root, "database")
+    assert database["scope"] == "task"
+    assert database["task_refs"] == ["proposal:p1"]
+    assert database["requested_by"] == "proposal"
+    implementer = next(
+        i for i in _manifest(root)["items"] if i["name"].endswith("-implementer")
+    )
+    assert "scope" not in implementer
+    assert "task_refs" not in implementer
+
+
+@pytest.mark.unit
+def test_second_proposal_appends_ref_and_reapply_is_stable(tmp_path: Path) -> None:
+    root = _project(tmp_path, ["python"])
+    _proposal(root, "p1", "Design the database schema.\n")
+    _proposal(root, "p2", "Tune the database queries.\n")
+    assert run_equip(["apply", str(root), "--for-proposal", "p1"]) == 0
+    assert run_equip(["apply", str(root), "--for-proposal", "p1"]) == 0
+    assert _with_capability(root, "database")["task_refs"] == ["proposal:p1"]
+    assert run_equip(["apply", str(root), "--for-proposal", "p2"]) == 0
+    database = _with_capability(root, "database")
+    assert database["task_refs"] == ["proposal:p1", "proposal:p2"]
+    assert database["requested_by"] == "proposal"
+
+
+@pytest.mark.unit
+def test_later_baseline_apply_promotes_shared_item_to_project(tmp_path: Path) -> None:
+    root = _project(tmp_path, ["python"])
+    assert run_equip(["apply", str(root)]) == 0
+    manifest = _manifest(root)
+    security = _with_capability(root, "security")
+    security.update(scope="task", task_refs=["proposal:p1"], requested_by="proposal")
+    _write_manifest(root, manifest)
+    assert run_equip(["apply", str(root)]) == 0
+    promoted = _items(root)[security["name"]]
+    assert "scope" not in promoted
+    assert "task_refs" not in promoted
+
+
+@pytest.mark.unit
+def test_applied_manifest_items_round_trip_byte_for_byte(tmp_path: Path) -> None:
+    root = _project(tmp_path, ["python"])
+    assert run_equip(["apply", str(root)]) == 0
+    for raw in _manifest(root)["items"]:
+        assert EquipmentItem.from_dict(raw).to_dict() == raw
+
+
+@pytest.mark.unit
+def test_add_specialist_stamps_requested_by(tmp_path: Path) -> None:
+    root = _project(tmp_path, ["python"])
+    assert run_equip(["apply", str(root)]) == 0
+    assert run_equip(["add-specialist", "database", "--root", str(root)]) == 0
+    db = _with_capability(root, "database")
+    assert db["requested_by"] == "add_specialist"
+    assert "scope" not in db
+
+
+@pytest.mark.unit
+def test_apply_writes_sidecar_per_generated_agent_and_skill(tmp_path: Path) -> None:
+    root = _project(tmp_path, ["python"])
+    assert run_equip(["apply", str(root)]) == 0
+    grounding = root / ".context" / "equipment" / "grounding"
+    specialists = [
+        i
+        for i in _manifest(root)["items"]
+        if i["source"] == "generated" and i["kind"] in ("agent", "skill")
+    ]
+    assert specialists
+    for item in specialists:
+        assert (grounding / f"{item['name']}.md").is_file()
+
+
+@pytest.mark.unit
+def test_dry_run_writes_no_sidecars(tmp_path: Path) -> None:
+    root = _project(tmp_path, ["python"])
+    assert run_equip(["apply", str(root), "--dry-run"]) == 0
+    assert not (root / ".context" / "equipment" / "grounding").exists()
+
+
+@pytest.mark.unit
+def test_claude_adapter_carries_body_description(tmp_path: Path) -> None:
+    root = _project(tmp_path, ["python"])
+    assert run_equip(["apply", str(root), "--platform", "claude"]) == 0
+    checked = 0
+    for raw in _manifest(root)["items"]:
+        item = EquipmentItem.from_dict(raw)
+        if item.source is not EquipmentSource.GENERATED or item.kind not in (
+            EquipmentKind.AGENT,
+            EquipmentKind.SKILL,
+        ):
+            continue
+        description = adapter_description(
+            (root / item.path).read_text(encoding="utf-8")
+        )
+        assert description
+        adapter = native_adapter_path(item)
+        assert adapter is not None
+        expected = native_adapter_content(item, description=description)
+        assert (root / adapter).read_text(encoding="utf-8") == expected
+        checked += 1
+    assert checked
+
+
+@pytest.mark.unit
+def test_evidence_gated_specialist_without_evidence_is_flagged(tmp_path: Path) -> None:
+    root = _project(tmp_path, ["python"])
+    profile = detect_stack(root / ".context")
+    item = EquipmentItem(
+        kind=EquipmentKind.AGENT,
+        name="x-db-specialist",
+        path=".context/equipment/x-db-specialist.md",
+        source=EquipmentSource.GENERATED,
+        capabilities=(Capability.DATABASE,),
+    )
+    assert specialists_without_evidence((item,), profile) == ("x-db-specialist",)
+    asked = dataclasses.replace(item, requested_by=RequestedBy.PROPOSAL)
+    assert specialists_without_evidence((asked,), profile) == ()

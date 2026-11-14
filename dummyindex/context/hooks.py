@@ -51,6 +51,11 @@ from .claude_settings import (
     load_settings,
     write_settings,
 )
+from .domains.config import current_dummyindex_version
+from .hooks_requirements import (
+    install_requirements_hooks,
+    uninstall_requirements_hooks,
+)
 from .output.bootstrap import ALWAYS_ON_TURN_REMINDER
 
 # Identifies our entries among the user's hooks (``SENTINEL in command``). The
@@ -507,6 +512,17 @@ def install(project_root: Path, *, scope: str = "local") -> HookResult:
         except (OSError, MalformedSettingsError) as exc:
             errors.append((f"claude/{event}", str(exc)))
 
+    try:
+        installed.extend(
+            install_requirements_hooks(
+                settings_path,
+                cli_version=current_dummyindex_version(),
+                global_scope=scope == "global",
+            )
+        )
+    except (OSError, MalformedSettingsError) as exc:
+        errors.append(("claude/requirements", str(exc)))
+
     # Freshness badge: `install_statusline` owns the write-if-absent decision.
     nudges: tuple[str, ...] = ()
     wired = install_statusline(project_root, scope=scope)
@@ -515,8 +531,9 @@ def install(project_root: Path, *, scope: str = "local") -> HookResult:
     elif wired is not None:
         installed.append("claude/statusLine")
 
+    # Managed loop and requirements hooks can both name the same event; dedupe in order.
     return HookResult(
-        installed=tuple(installed),
+        installed=tuple(dict.fromkeys(installed)),
         skipped=tuple(skipped),
         removed=tuple(removed),
         errors=tuple(errors),
@@ -630,6 +647,10 @@ def uninstall(project_root: Path, *, scope: str = "local") -> HookResult:
                     write_settings(settings_path, settings)
                 except OSError as exc:
                     errors.append(("claude/settings.json", str(exc)))
+            try:
+                removed.extend(uninstall_requirements_hooks(settings_path))
+            except (OSError, MalformedSettingsError) as exc:
+                errors.append(("claude/requirements", str(exc)))
     else:
         for event in CURRENT_CLAUDE_EVENTS:
             skipped.append(f"claude/{event} (absent)")
@@ -637,7 +658,7 @@ def uninstall(project_root: Path, *, scope: str = "local") -> HookResult:
     return HookResult(
         installed=(),
         skipped=tuple(skipped),
-        removed=tuple(removed),
+        removed=tuple(dict.fromkeys(removed)),
         errors=tuple(errors),
     )
 

@@ -3,6 +3,7 @@
 Templates resolve package-relative (``dummyindex/skills/equip/templates/``) so
 rendering works pre- and post-install. Slots: ``{{stack}}``, ``{{proj}}``,
 ``{{conventions}}``, ``{{context_root}}``, the four ``{{*_command}}`` slots and
+``{{framework_clause}}``, ``{{focus_query}}`` and (sourced overlay only)
 ``{{framework}}``. Rendering stamps :data:`GENERATED_SENTINEL` so a later run
 recognises its own output for the never-clobber check (see :mod:`.safety`).
 """
@@ -16,6 +17,7 @@ from dummyindex import skills as _skills_pkg
 
 from ..errors import TemplateError
 from ..models import GENERATED_SENTINEL
+from .grounding import GENERIC_FOCUS_QUERY
 
 # Anchored on the skills package, not a parents[N] chain, so moving this
 # module can't silently break template resolution.
@@ -31,7 +33,6 @@ _CONVENTIONS_REL = Path("conventions")
 # Fallbacks for unfilled toolchain slots, so a rendered tool never carries a
 # dangling ``{{...}}`` and the prose stays readable on a fresh/untooled repo.
 _NO_COMMAND = "(no command detected — discover the project's own and run it)"
-_NO_FRAMEWORK = "the project's stack"
 
 
 def list_convention_docs(context_dir: Path) -> tuple[str, ...]:
@@ -65,6 +66,7 @@ def render_template(
     typecheck_command: str | None = None,
     format_command: str | None = None,
     framework: str | None = None,
+    focus_query: str | None = None,
 ) -> str:
     """Return the template's text with every slot filled.
 
@@ -85,7 +87,12 @@ def render_template(
         .replace("{{lint_command}}", lint_command or _NO_COMMAND)
         .replace("{{typecheck_command}}", typecheck_command or _NO_COMMAND)
         .replace("{{format_command}}", format_command or _NO_COMMAND)
-        .replace("{{framework}}", framework or _NO_FRAMEWORK)
+        .replace(
+            "{{framework_clause}}", f" (framework: {framework})" if framework else ""
+        )
+        .replace("{{focus_query}}", focus_query or GENERIC_FOCUS_QUERY)
+        # Only sourced-overlay still carries the inline slot.
+        .replace("{{framework}}", framework or "unspecified")
     )
     if GENERATED_SENTINEL not in rendered:
         # Defensive: a template that lost its in-body sentinel. Re-insert it

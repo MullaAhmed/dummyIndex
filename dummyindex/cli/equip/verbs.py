@@ -24,6 +24,9 @@ from dummyindex.context.domains.equip import (
     status,
     uninstall,
 )
+from dummyindex.context.domains.equip.generate.grounding import (  # noqa: E402
+    write_grounding_sidecars,
+)
 
 from .common import (
     fresh_rendered,
@@ -133,6 +136,15 @@ def run_refresh(rest: list[str]) -> int:
     report = refresh(
         project_root, fresh_renders=fresh, fresh_items=fresh_items, dry_run=dry_run
     )
+    if not dry_run:
+        _, sidecar_skipped = write_grounding_sidecars(
+            project_root, context_dir, read_manifest(context_dir).items
+        )
+        for rel in sidecar_skipped:
+            print(
+                f"warning: grounding sidecar outside equipment roots: {rel}",
+                file=sys.stderr,
+            )
     _print_refresh_report(report, dry_run=dry_run)
     return 0
 

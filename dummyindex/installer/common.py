@@ -8,6 +8,7 @@ import sys
 from enum import Enum
 from pathlib import Path
 
+from ..skills import SIBLING_SKILLS
 from ..versioning import compare_versions, parse_version
 
 try:
@@ -77,17 +78,7 @@ AGENTS_SKILL_REL = CODEX_SKILL_REL
 _COMMAND_FILES = ("tokens.md",)
 COMMANDS_REL = Path(".claude") / "commands"
 
-_SIBLING_SKILLS = (
-    ("memory", "dummyindex-remember"),
-    ("plan", "dummyindex-plan"),
-    ("equip", "dummyindex-equip"),
-    ("build", "dummyindex-build"),
-    ("audit", "dummyindex-audit"),
-    ("gc", "dummyindex-gc"),
-    ("fleet", "dummyindex-fleet"),
-    ("update", "dummyindex-update"),
-    ("evolve", "dummyindex-evolve"),
-)
+_SIBLING_SKILLS = SIBLING_SKILLS
 
 
 _SKILL_REGISTRATION = (

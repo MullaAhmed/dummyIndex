@@ -15,6 +15,9 @@ The five verbs:
   [--force-partial] [--root DIR]`` — without ``--yes`` a dry-run that runs the
   full guard ladder and deletes nothing; with ``--yes`` the bounded
   ``gc.delete_workspace``.
+- ``delete --kind equipment --slug S [--yes] [--force] [--root DIR]`` — the same
+  dry-run/``--yes`` split for one generated agent or skill; ``--force`` confirms
+  deleting a body the user edited.
 - ``closeout --kind proposal|audit --slug S (--manifest FILE | --draft)`` —
   ``--draft`` writes a manifest draft under ``.context/cache/gc/``; ``--manifest``
   applies a filled one.
@@ -166,19 +169,25 @@ def _gc_delete(args: list[str]) -> int:
     values, flags, err = _parse_flags(
         args,
         value_keys={"kind", "slug", "path", "root"},
-        bool_keys={"yes", "allow-untracked", "force-partial"},
+        bool_keys={"yes", "allow-untracked", "force-partial", "force"},
     )
     if err is not None:
         return usage_error("gc", f"{err} (for `gc delete`)")
 
     kind_raw = values.get("kind")
     if not kind_raw:
-        return usage_error("gc", "--kind proposal|audit is required (for `gc delete`)")
+        return usage_error(
+            "gc", "--kind proposal|audit|equipment is required (for `gc delete`)"
+        )
     kind = _resolve_kind(kind_raw, CandidateKind)
     if kind is None:
         return usage_error(
-            "gc", f"--kind must be proposal|audit, got {kind_raw!r} (for `gc delete`)"
+            "gc",
+            f"--kind must be proposal|audit|equipment, got {kind_raw!r} "
+            "(for `gc delete`)",
         )
+    if "force" in flags and kind is not CandidateKind.EQUIPMENT:
+        return usage_error("gc", "--force applies to --kind equipment only")
 
     slug = values.get("slug")
     path = values.get("path")
@@ -203,6 +212,7 @@ def _gc_delete(args: list[str]) -> int:
             allow_untracked="allow-untracked" in flags,
             force_partial="force-partial" in flags,
             dry_run="yes" not in flags,
+            force="force" in flags,
         )
     except (ProposalSlugError, AuditSlugError, GcTargetError, GcPathError) as exc:
         print(f"error: {exc}", file=sys.stderr)
@@ -210,9 +220,13 @@ def _gc_delete(args: list[str]) -> int:
 
     if result.would_delete:
         print(f"context gc delete (dry-run): would delete {kind.value} {target_label}")
+        if result.reason:
+            print(f"  {result.reason}")
         print("  pass --yes to delete (nothing removed)")
     elif result.deleted:
         print(f"context gc delete: removed {kind.value} {target_label}")
+        if result.reason:
+            print(f"  {result.reason}")
     elif result.refused:
         print(f"context gc delete: refused — {result.reason}")
     else:
@@ -245,7 +259,8 @@ def _gc_signal(args: list[str]) -> int:
 
     Prints the one-line nudge iff over threshold and not already signalled this
     session; silent otherwise. Always exit 0 (it is a hook probe, never a usage
-    failure surface).
+    failure surface). The equipment-candidate count is computed only when the
+    nudge fires; ``--json`` reports it as ``null`` otherwise.
     """
     from dummyindex.context.domains.gc import should_signal
     from dummyindex.context.domains.memory.transcript import resolve_session_id
@@ -258,27 +273,45 @@ def _gc_signal(args: list[str]) -> int:
     if missing:
         # A missing .context/ is just "nothing to nudge" for a hook probe.
         if "json" in flags:
-            print(json.dumps({"should_signal": False}))
+            print(json.dumps({"should_signal": False, "equipment_candidates": None}))
         return 0
 
     session_id = resolve_session_id() or ""
     fire = should_signal(context_dir, context_dir.parent, session_id)
 
+    equipment = _equipment_count(context_dir) if fire else None
+
     if "json" in flags:
-        print(json.dumps({"should_signal": fire}))
+        print(json.dumps({"should_signal": fire, "equipment_candidates": equipment}))
         return 0
     if fire:
         from dummyindex.context.domains.gc import anchor_orphaned, gc_commits_since
 
         if anchor_orphaned(context_dir, context_dir.parent):
-            print(
+            message = (
                 "GC anchor orphaned (history rewrite) — run /dummyindex-gc, "
                 "then gc stamp --to HEAD"
             )
         else:
             count = gc_commits_since(context_dir, context_dir.parent)
-            print(f"{count} commits since last hygiene sweep — run /dummyindex-gc")
+            message = f"{count} commits since last hygiene sweep — run /dummyindex-gc"
+        if equipment:
+            message += f" ({equipment} equipment candidate(s))"
+        print(message)
     return 0
+
+
+def _equipment_count(context_dir: Path) -> int | None:
+    """How many equipment items the GC would list; ``None`` when it cannot tell.
+
+    The nudge is a hook probe: any failure here drops only the count, never the nudge.
+    """
+    from dummyindex.context.domains.gc.equipment import enumerate_equipment_candidates
+
+    try:
+        return len(enumerate_equipment_candidates(context_dir))
+    except Exception:  # noqa: BLE001 — a candidate-count fault must not hide the nudge
+        return None
 
 
 # --- status rendering
@@ -355,16 +388,20 @@ def _recommendation_counts(candidates: Iterable[Any]) -> dict[str, int]:
 
 
 def _resolve_kind(kind_raw: str, candidate_kind: type) -> object | None:
-    """Map a ``--kind`` value (``proposal``/``audit``) to a ``CandidateKind``.
+    """Map a ``--kind`` value (``proposal``/``audit``/``equipment``) to a ``CandidateKind``.
 
-    Only the two user-facing kinds are accepted; the enum's internal members
+    Only the user-facing kinds are accepted; the enum's internal members
     (``orphan_scaffold`` / ``archived``) are never selectable on the CLI.
     """
     try:
         kind = candidate_kind(kind_raw)
     except ValueError:
         return None
-    if kind not in (candidate_kind.PROPOSAL, candidate_kind.AUDIT):
+    if kind not in (
+        candidate_kind.PROPOSAL,
+        candidate_kind.AUDIT,
+        candidate_kind.EQUIPMENT,
+    ):
         return None
     return kind
 

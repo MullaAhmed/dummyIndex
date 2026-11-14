@@ -10,11 +10,15 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import dummyindex.installer.install as _install_pkg
 from dummyindex.context.domains.config import ConfigError
 
 from ..common import PACKAGE_VERSION, platforms_for
+
+if TYPE_CHECKING:
+    from dummyindex.context.build.enriched_refresh import RefreshResult
 
 
 def _auto_init_project(
@@ -69,6 +73,9 @@ def _auto_init_project(
                 extra_doc_roots=(),
                 dummyindex_version=PACKAGE_VERSION,
                 allow_downgrade=force_downgrade,
+                # Hold the stamp unless --force-downgrade: _upgrade_step must see the
+                # index as stale, so a failed step keeps the stamp and retries.
+                advance_stamp=force_downgrade,
             )
         except Exception as exc:
             print(f"  auto-init skipped: refresh failed ({exc})", file=sys.stderr)
@@ -107,7 +114,7 @@ def _auto_init_project(
                 no_default_plugins=no_default_plugins,
                 platform=platform,
             )
-        _refresh_equipment_step(project_root)
+        _upgrade_step(project_root, refresh)
         return True
 
     try:
@@ -157,51 +164,47 @@ def _auto_init_project(
             no_default_plugins=no_default_plugins,
             platform=platform,
         )
-    _refresh_equipment_step(project_root)
+    # Full build: build_all stamped the index at write time, and a fresh
+    # deterministic index has no retryable step, so no stamp hold here.
+    _upgrade_step(project_root, _built_refresh(project_root))
     return True
 
 
-def _refresh_equipment_step(project_root: Path) -> None:
-    """Refresh equip-generated tools to the just-installed templates.
+def _built_refresh(project_root: Path) -> RefreshResult:
+    """The full build just wrote the deterministic artefacts; mark them refreshed
+    so the upgrade pipeline skips its own step 1."""
+    from dummyindex.context.build.enriched_refresh import RefreshResult
 
-    In an equipped repo (``.context/equipment.json``), re-render and re-baseline
-    pristine generated tools whose fresh render differs, so a reinstall carries
-    the toolkit forward. Never-clobber: a USER_MODIFIED tool is always skipped.
-    Best-effort (a failure never fails the install); a silent no-op when the repo
-    is not equipped.
+    return RefreshResult(context_dir=project_root / ".context", written=())
+
+
+def _upgrade_step(project_root: Path, refresh: RefreshResult | None) -> None:
+    """Bring ``.context/`` (incl. equip-generated tools) to the installed CLI.
+
+    ``refresh`` is the deterministic refresh the caller already ran. Best-effort:
+    an upgrade failure is reported as a warning and never fails the install.
     """
     try:
-        from dummyindex.cli.equip.common import fresh_rendered
-        from dummyindex.context.domains.equip import EQUIPMENT_REL, refresh
-    except Exception as exc:  # pragma: no cover - defensive import guard
-        print(f"  equipment        ->  refresh skipped ({exc})", file=sys.stderr)
-        return
-    context_dir = project_root / ".context"
-    if not (context_dir / EQUIPMENT_REL).is_file():
-        return  # not equipped — nothing to refresh
-    try:
-        rendered = fresh_rendered(project_root, context_dir)
-        report = refresh(
+        from dummyindex.context.build.context_upgrade import upgrade_project
+        from dummyindex.context.git import run_git
+
+        report = upgrade_project(
             project_root,
-            fresh_renders={item.name: content for item, _path, content in rendered},
-            fresh_items={item.name: item for item, _path, _content in rendered},
-            dry_run=False,
+            package_version=PACKAGE_VERSION,
+            refresh=refresh,
+            runner=run_git,
         )
     except Exception as exc:
-        print(f"  equipment        ->  refresh skipped ({exc})", file=sys.stderr)
+        print(f"  upgrade warning  ->  skipped ({exc})", file=sys.stderr)
         return
-    if report.refreshed:
-        print(
-            f"  equipment        ->  refreshed {len(report.refreshed)} generated "
-            f"tool(s) to the new templates "
-            f"({len(report.skipped_user_modified)} user-modified kept)"
-        )
-    else:
-        print(
-            f"  equipment        ->  {len(report.unchanged)} generated tool(s) "
-            f"already current "
-            f"({len(report.skipped_user_modified)} user-modified kept)"
-        )
+    for err in report.errors:
+        print(f"  upgrade warning  ->  {err}", file=sys.stderr)
+    for warning in report.warnings:
+        print(f"  upgrade warning  ->  {warning}", file=sys.stderr)
+    if report.changed and not report.errors:
+        print(f"  upgrade          ->  upgraded ({', '.join(report.steps)})")
+    elif not report.errors:
+        print("  upgrade          ->  nothing to upgrade")
 
 
 def _install_project_hooks(project_root: Path, install_hooks_fn) -> bool:
@@ -252,6 +255,22 @@ def _write_default_config(project_root: Path, *, platform: str = "claude") -> No
         print(f"  config.json      ->  skipped ({exc})", file=sys.stderr)
         return
     print("  config.json      ->  wrote defaults")
+    # The upgrade ran before config.json existed and its stamp is now current, so
+    # nothing would backfill config.toml later: seed it here.
+    _seed_toml_after_config(project_root, config)
+
+
+def _seed_toml_after_config(project_root: Path, config) -> None:
+    from dummyindex.context.build.context_upgrade import seed_config_toml
+
+    try:
+        seed_config_toml(
+            project_root / ".context",
+            cli_version=PACKAGE_VERSION,
+            claude_wired=bool(config.auto_refresh_hook),
+        )
+    except Exception as exc:  # RequirementsError is not an OSError/ValueError
+        print(f"  config.toml      ->  skipped ({exc})", file=sys.stderr)
 
 
 def _migrate_existing_config(project_root: Path) -> bool:

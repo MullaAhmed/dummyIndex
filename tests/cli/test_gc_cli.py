@@ -845,6 +845,95 @@ def test_status_json_orphaned_anchor_should_signal(
     assert payload["should_signal"] is True
 
 
+def _write_equipment_task_item(tmp_path: Path, context_dir: Path) -> None:
+    """One pristine task-scoped specialist whose only ref (p1) is done."""
+    from dummyindex.context.domains.equip.constants import SCHEMA_VERSION
+    from dummyindex.context.domains.equip.enums import (
+        EquipmentKind,
+        EquipmentScope,
+        EquipmentSource,
+        RequestedBy,
+    )
+    from dummyindex.context.domains.equip.lifecycle.hashing import content_hash
+    from dummyindex.context.domains.equip.lifecycle.manifest import write_manifest
+    from dummyindex.context.domains.equip.models import (
+        EquipmentItem,
+        EquipmentManifest,
+    )
+
+    body = "# impl\n"
+    rel = ".claude/agents/impl-p1.md"
+    (tmp_path / rel).parent.mkdir(parents=True, exist_ok=True)
+    (tmp_path / rel).write_text(body, encoding="utf-8")
+    item = EquipmentItem(
+        kind=EquipmentKind.AGENT,
+        name="impl-p1",
+        path=rel,
+        source=EquipmentSource.GENERATED,
+        subagent_type="impl-p1",
+        version="1.0.0",
+        origin_hash=content_hash(body),
+        scope=EquipmentScope.TASK,
+        requested_by=RequestedBy.PROPOSAL,
+        task_refs=("proposal:p1",),
+    )
+    write_manifest(
+        context_dir,
+        EquipmentManifest(schema_version=SCHEMA_VERSION, items=(item,)),
+    )
+
+
+@pytest.mark.integration
+def test_signal_nudge_counts_equipment_candidates(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    context_dir = _orphan_anchor(tmp_path)
+    _write_proposal(context_dir, "p1", status="done")
+    _write_equipment_task_item(tmp_path, context_dir)
+    monkeypatch.setenv(_SESSION_ENV, "s-equip-text")
+
+    code = dispatch(["gc", "signal", "--root", str(tmp_path)])
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert out.strip().endswith("(1 equipment candidate(s))")
+
+
+@pytest.mark.integration
+def test_signal_json_reports_equipment_count_when_firing(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    context_dir = _orphan_anchor(tmp_path)
+    _write_proposal(context_dir, "p1", status="done")
+    _write_equipment_task_item(tmp_path, context_dir)
+    monkeypatch.setenv(_SESSION_ENV, "s-equip-json")
+
+    code = dispatch(["gc", "signal", "--json", "--root", str(tmp_path)])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 0
+    assert payload == {"should_signal": True, "equipment_candidates": 1}
+
+
+@pytest.mark.integration
+def test_signal_json_equipment_count_is_null_when_silent(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    context_dir = _init_repo(tmp_path)
+    _write_proposal(context_dir, "p1", status="done")
+    _write_equipment_task_item(tmp_path, context_dir)
+
+    code = dispatch(["gc", "signal", "--json", "--root", str(tmp_path)])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 0
+    assert payload == {"should_signal": False, "equipment_candidates": None}
+
+
 # ----- verb dispatch / usage ------------------------------------------------
 
 
@@ -875,3 +964,263 @@ def test_status_missing_context_exits_2(
     err = capsys.readouterr().err
     assert code == 2
     assert "not found" in err
+
+
+# ----- gc delete --kind equipment -------------------------------------------
+
+
+def _seed_equipment(tmp_path: Path, *, body: str = "# impl\n") -> Path:
+    """One pristine generated agent at the canonical path, plus its adapter."""
+    from dummyindex.context.domains.equip.constants import SCHEMA_VERSION
+    from dummyindex.context.domains.equip.enums import (
+        EquipmentKind,
+        EquipmentScope,
+        EquipmentSource,
+        RequestedBy,
+    )
+    from dummyindex.context.domains.equip.generate.adapters import (
+        native_adapter_content,
+    )
+    from dummyindex.context.domains.equip.lifecycle.hashing import content_hash
+    from dummyindex.context.domains.equip.lifecycle.manifest import write_manifest
+    from dummyindex.context.domains.equip.models import (
+        EquipmentItem,
+        EquipmentManifest,
+    )
+
+    context_dir = tmp_path / ".context"
+    item = EquipmentItem(
+        kind=EquipmentKind.AGENT,
+        name="impl-p1",
+        path=".context/equipment/impl-p1.md",
+        source=EquipmentSource.GENERATED,
+        subagent_type="impl-p1",
+        version="1.0.0",
+        origin_hash=content_hash("# impl\n"),
+        scope=EquipmentScope.PROJECT,
+        requested_by=RequestedBy.PROPOSAL,
+    )
+    body_path = tmp_path / item.path
+    body_path.parent.mkdir(parents=True, exist_ok=True)
+    body_path.write_text(body, encoding="utf-8")
+    adapter = tmp_path / ".claude" / "agents" / "impl-p1.md"
+    adapter.parent.mkdir(parents=True, exist_ok=True)
+    adapter.write_text(native_adapter_content(item), encoding="utf-8")
+    write_manifest(
+        context_dir, EquipmentManifest(schema_version=SCHEMA_VERSION, items=(item,))
+    )
+    return body_path
+
+
+@pytest.mark.unit
+def test_equipment_delete_yes_removes_body_and_adapter(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    body = _seed_equipment(tmp_path)
+
+    code = dispatch(
+        [
+            "gc",
+            "delete",
+            "--kind",
+            "equipment",
+            "--slug",
+            "impl-p1",
+            "--yes",
+            "--root",
+            str(tmp_path),
+        ]
+    )
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert "removed equipment --slug impl-p1" in out
+    assert not body.exists()
+    assert not (tmp_path / ".claude" / "agents" / "impl-p1.md").exists()
+
+
+@pytest.mark.unit
+def test_equipment_delete_without_yes_is_a_dry_run(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    body = _seed_equipment(tmp_path)
+
+    code = dispatch(
+        [
+            "gc",
+            "delete",
+            "--kind",
+            "equipment",
+            "--slug",
+            "impl-p1",
+            "--root",
+            str(tmp_path),
+        ]
+    )
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert "would delete equipment --slug impl-p1" in out
+    assert ".context/equipment/impl-p1.md" in out
+    assert "pass --yes to delete (nothing removed)" in out
+    assert body.is_file()
+
+
+@pytest.mark.unit
+def test_equipment_user_modified_body_exits_2_and_changes_nothing(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    body = _seed_equipment(tmp_path, body="# hand-edited\n")
+
+    code = dispatch(
+        [
+            "gc",
+            "delete",
+            "--kind",
+            "equipment",
+            "--slug",
+            "impl-p1",
+            "--yes",
+            "--root",
+            str(tmp_path),
+        ]
+    )
+    err = capsys.readouterr().err
+
+    assert code == 2
+    assert "edited since generation" in err
+    assert body.read_text(encoding="utf-8") == "# hand-edited\n"
+    assert (tmp_path / ".claude" / "agents" / "impl-p1.md").is_file()
+
+
+@pytest.mark.unit
+def test_equipment_user_modified_body_removed_with_force(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    body = _seed_equipment(tmp_path, body="# hand-edited\n")
+
+    code = dispatch(
+        [
+            "gc",
+            "delete",
+            "--kind",
+            "equipment",
+            "--slug",
+            "impl-p1",
+            "--yes",
+            "--force",
+            "--root",
+            str(tmp_path),
+        ]
+    )
+
+    assert code == 0
+    assert not body.exists()
+
+
+@pytest.mark.unit
+def test_equipment_slug_leaves_same_named_audit_alone(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _seed_equipment(tmp_path)
+    decoy = tmp_path / ".context" / "audits" / "impl-p1" / "report.md"
+    decoy.parent.mkdir(parents=True)
+    decoy.write_text("# findings\n", encoding="utf-8")
+
+    code = dispatch(
+        [
+            "gc",
+            "delete",
+            "--kind",
+            "equipment",
+            "--slug",
+            "impl-p1",
+            "--yes",
+            "--root",
+            str(tmp_path),
+        ]
+    )
+
+    assert code == 0
+    assert decoy.read_text(encoding="utf-8") == "# findings\n"
+
+
+@pytest.mark.unit
+def test_force_rejected_for_workspace_kinds(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _init_repo(tmp_path)
+
+    code = dispatch(
+        [
+            "gc",
+            "delete",
+            "--kind",
+            "proposal",
+            "--slug",
+            "x",
+            "--force",
+            "--root",
+            str(tmp_path),
+        ]
+    )
+    err = capsys.readouterr().err
+
+    assert code == 2
+    assert "--force applies to --kind equipment only" in err
+
+
+@pytest.mark.integration
+def test_signal_nudge_survives_equipment_count_failure(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from dummyindex.context.domains.gc import equipment as equipment_mod
+
+    context_dir = _orphan_anchor(tmp_path)
+    _write_proposal(context_dir, "p1", status="done")
+
+    def _raise(_context_dir: Path):
+        raise OSError("unreadable equipment file")
+
+    monkeypatch.setattr(equipment_mod, "enumerate_equipment_candidates", _raise)
+    monkeypatch.setenv(_SESSION_ENV, "s-equip-fail")
+
+    code = dispatch(["gc", "signal", "--root", str(tmp_path)])
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert "GC anchor orphaned" in out
+    assert "equipment candidate" not in out
+
+
+def test_equipment_delete_prints_config_warning_on_success(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    context_dir = _init_repo(tmp_path)
+    _write_equipment_task_item(tmp_path, context_dir)
+    (context_dir / "config.toml").write_text(
+        "[dummyindex\nschema_version = = 1\n", encoding="utf-8"
+    )
+    _commit_all(tmp_path)
+
+    code = dispatch(
+        [
+            "gc",
+            "delete",
+            "--kind",
+            "equipment",
+            "--slug",
+            "impl-p1",
+            "--yes",
+            "--root",
+            str(tmp_path),
+        ]
+    )
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert "removed" in out
+    assert "warning:" in out
+    assert "config.toml unreadable" in out

@@ -42,21 +42,36 @@ This module never touches anything outside the resolved kind-root.
 
 from __future__ import annotations
 
-import json
+import dataclasses
+import os
 import shutil
 import subprocess
+from dataclasses import dataclass
 from pathlib import Path
 
 from ..audit.workspace import audits_root
 from ..audit.workspace import validate_slug as validate_audit_slug
-from ..buildloop.checklist import counts, parse_checklist
+from ..equip.enums import EquipmentKind, EquipmentScope
+from ..equip.errors import EquipError
+from ..equip.generate.grounding import contained_path, grounding_path
+from ..equip.lifecycle.manifest import read_manifest
+from ..equip.lifecycle.remove import remove_item
+from ..equip.lifecycle.status import classify_item, is_lifecycle_managed, is_user_owned
+from ..equip.models import EquipmentItem, EquipmentManifest
 from ..proposals.errors import CloseoutError
 from ..proposals.retirement import retirement_block
 from ..proposals.store import proposals_root
 from ..proposals.store import validate_slug as validate_proposal_slug
+from ..requirements.constants import CONFIG_TOML_REL
+from ..requirements.enums import SkillOrigin
+from ..requirements.errors import RequirementsError
+from ..requirements.models import Requirements, SkillRequirement
+from ..requirements.toml_io import read_requirements, write_requirements
 from .constants import ARCHIVE_SENTINEL, PROPOSAL_KINDS
 from .enums import CandidateKind
+from .equipment import _refs_finished
 from .errors import GcPathError, GcTargetError
+from .liveness import _checklist_partial, _liveness_block, _proposal_status  # noqa: F401 — old names stay importable
 from .models import DeleteResult
 
 
@@ -69,15 +84,24 @@ def delete_workspace(
     allow_untracked: bool = False,
     force_partial: bool = False,
     dry_run: bool = False,
+    force: bool = False,
 ) -> DeleteResult:
     """Hold the shared project writer lock across all guards and deletion.
 
     An active closeout, receipt or policy writer refuses deletion with a retry
     instruction. ``dry_run`` runs every guard, takes no lock, and deletes nothing.
+    ``kind=EQUIPMENT`` routes to :func:`delete_equipment_item` (``force`` applies
+    only there); workspace kinds never see ``force``.
     """
     from ..evolve_gate import EvolveError
     from ..evolve_promotion import project_lock
 
+    if kind is CandidateKind.EQUIPMENT:
+        if slug is None or path is not None:
+            raise GcTargetError(path or "", "equipment is deleted by --slug only")
+        return delete_equipment_item(
+            context_dir.parent, slug, force=force, dry_run=dry_run
+        )
     if dry_run:
         return _delete_workspace_locked(
             context_dir,
@@ -202,6 +226,9 @@ def _delete_workspace_locked(
 
 def _kind_root(context_dir: Path, kind: CandidateKind) -> Path:
     """``.context/proposals`` or ``.context/audits`` for the candidate kind."""
+    if kind is CandidateKind.EQUIPMENT:
+        # Equipment never has a workspace dir; an equipment slug must not reach audits/.
+        raise GcTargetError("", "equipment has no workspace root")
     if kind in PROPOSAL_KINDS:
         return proposals_root(context_dir)
     return audits_root(context_dir)
@@ -209,9 +236,200 @@ def _kind_root(context_dir: Path, kind: CandidateKind) -> Path:
 
 def _validate(kind: CandidateKind, slug: str) -> str:
     """Run the kind's own slug validator (raises the typed slug error)."""
+    if kind is CandidateKind.EQUIPMENT:
+        raise GcTargetError(slug, "equipment has no workspace slug validator")
     if kind in PROPOSAL_KINDS:
         return validate_proposal_slug(slug)
     return validate_audit_slug(slug)
+
+
+# --- equipment (contract 19): retire one generated agent/skill
+
+
+_EQUIPMENT_KINDS = frozenset({EquipmentKind.AGENT, EquipmentKind.SKILL})
+
+
+@dataclass(frozen=True)
+class _EquipmentPlan:
+    """Every fact the equipment delete needs, gathered before the first write."""
+
+    name: str
+    manifest: EquipmentManifest
+    item: EquipmentItem
+    body: Path
+    sidecar: Path
+    user_modified: bool
+    # config.toml with the same-named project skill row dropped; None leaves the file alone.
+    requirements: Requirements | None
+    # One line for the operator when config.toml was skipped; None otherwise.
+    warning: str | None = None
+
+
+def delete_equipment_item(
+    root: Path, name: str, *, force: bool = False, dry_run: bool = False
+) -> DeleteResult:
+    """Retire one generated equipment item: body, adapter, sidecar, manifest row.
+
+    The library entry is kept so ``equip reuse`` can restore it. Every refusal
+    raises ``GcTargetError`` before anything is written; a user-edited body needs
+    ``force``. ``dry_run`` runs the same checks and reports what would go.
+    """
+    from ..evolve_gate import EvolveError
+    from ..evolve_promotion import project_lock
+
+    if dry_run:
+        plan = _equipment_plan(root, name, force=force)
+        if plan is None:
+            return DeleteResult(
+                deleted=False, refused=False, reason="nothing to delete"
+            )
+        return DeleteResult(would_delete=True, reason=_describe(plan))
+    try:
+        with project_lock(root):
+            plan = _equipment_plan(root, name, force=force)
+            if plan is None:
+                return DeleteResult(
+                    deleted=False, refused=False, reason="nothing to delete"
+                )
+            apply_warning = _equipment_apply(root, plan)
+    except EvolveError as exc:
+        raise GcTargetError(name, str(exc)) from exc
+    notes = [w for w in (plan.warning, apply_warning) if w]
+    return DeleteResult(deleted=True, refused=False, reason="; ".join(notes) or None)
+
+
+def _equipment_plan(root: Path, name: str, *, force: bool) -> _EquipmentPlan | None:
+    """Run every equipment guard; ``None`` when the manifest has no such item.
+
+    An unreadable or unsupported config.toml never blocks the delete: the project
+    skill row step is skipped with a warning and the file is left untouched.
+    """
+    context_dir = root / ".context"
+    try:
+        manifest = read_manifest(context_dir)
+    except EquipError as exc:
+        raise GcTargetError(name, str(exc)) from exc
+    requirements: Requirements | None = None
+    warning: str | None = None
+    try:
+        requirements = read_requirements(root / CONFIG_TOML_REL)
+    except RequirementsError as exc:
+        warning = (
+            f"warning: {CONFIG_TOML_REL} unreadable ({exc}); "
+            "project skill row not checked, file left unchanged"
+        )
+    item = next((i for i in manifest.items if i.name == name), None)
+    if item is None:
+        return None
+    if item.kind not in _EQUIPMENT_KINDS or not is_lifecycle_managed(item):
+        raise GcTargetError(
+            name,
+            "only generated agents and skills are GC-deletable; "
+            "use `equip remove` for other items",
+        )
+    body = contained_path(root, item.path)
+    sidecar = contained_path(root, grounding_path(name))
+    if body is None or sidecar is None:
+        raise GcPathError(item.path, str(root))
+    if item.scope is EquipmentScope.TASK and not _refs_finished(
+        context_dir, item.task_refs
+    ):
+        raise GcTargetError(name, "task has a live ref (in-flight proposal or audit)")
+    state = classify_item(root, item)
+    user_modified = is_user_owned(state)
+    if user_modified and not force:
+        raise GcTargetError(
+            name,
+            f"{item.path} is {state.value} (edited since generation); "
+            "confirm with the user, then pass --force",
+        )
+    return _EquipmentPlan(
+        name=name,
+        manifest=manifest,
+        item=item,
+        body=body,
+        sidecar=sidecar,
+        user_modified=user_modified,
+        requirements=_without_project_skill(requirements, name),
+        warning=warning,
+    )
+
+
+def _without_project_skill(
+    requirements: Requirements | None, name: str
+) -> Requirements | None:
+    if requirements is None:
+        return None
+    if not any(_is_project_row(s, name) for s in requirements.skills):
+        return None
+    return dataclasses.replace(
+        requirements,
+        skills=tuple(s for s in requirements.skills if not _is_project_row(s, name)),
+    )
+
+
+def _is_project_row(skill: SkillRequirement, name: str) -> bool:
+    return skill.name == name and skill.from_ == SkillOrigin.PROJECT.value
+
+
+def _equipment_apply(root: Path, plan: _EquipmentPlan) -> str | None:
+    """Config row first, then files. Returns a warning when only the sidecar stays.
+
+    ``remove_item`` deletes the body, removes the native adapter only when it is
+    still the generated pointer, and drops the manifest row. The library entry
+    is not touched. If a step before the sidecar raises, config.toml is restored
+    to its exact original bytes and the error is raised as ``GcTargetError``;
+    config.toml is restored on failure, and a retry finishes the delete. A
+    sidecar that cannot be removed after the delete is done is a warning, not a
+    rollback.
+    """
+    config = root / CONFIG_TOML_REL
+    original = config.read_bytes() if plan.requirements is not None else None
+    try:
+        if plan.requirements is not None:
+            write_requirements(config, plan.requirements)
+        remove_item(root, plan.manifest, plan.name, delete_file=True)
+    except Exception as exc:
+        if original is not None:
+            try:
+                _restore_bytes(config, original)
+            except OSError as restore_exc:
+                raise GcTargetError(
+                    plan.name,
+                    f"{exc}; restoring {CONFIG_TOML_REL} also failed: {restore_exc}",
+                ) from exc
+        if isinstance(exc, (EquipError, RequirementsError, OSError)):
+            raise GcTargetError(plan.name, str(exc)) from exc
+        raise
+    try:
+        plan.sidecar.unlink(missing_ok=True)
+    except OSError as exc:
+        return f"warning: sidecar {plan.sidecar} not removed ({exc}); delete it by hand"
+    return None
+
+
+def _restore_bytes(path: Path, data: bytes) -> None:
+    """Write ``data`` back to ``path`` atomically (temp file, then replace)."""
+    tmp = path.with_name(path.name + ".gc-restore")
+    tmp.write_bytes(data)
+    os.replace(tmp, path)
+
+
+def _describe(plan: _EquipmentPlan) -> str:
+    steps = [
+        f"body {plan.item.path}",
+        "native adapter",
+        grounding_path(plan.name),
+        "manifest entry",
+    ]
+    if plan.requirements is not None:
+        steps.append("config.toml project skill row")
+    text = "remove " + ", ".join(steps) + "; library entry kept"
+    if plan.user_modified:
+        text += " (user-edited body, --force given)"
+    if plan.warning is not None:
+        text += f"; {plan.warning}"
+    return text
 
 
 def _reject_sentinel(slug: str) -> None:
@@ -229,52 +447,6 @@ def _reject_sentinel(slug: str) -> None:
         raise GcTargetError(slug, "leading-underscore slugs are sentinel containers")
     if slug in {".", ".."}:
         raise GcTargetError(slug, "'.'/'..' are never delete targets")
-
-
-def _liveness_block(target: Path) -> str | None:
-    """Return a refusal reason if the proposal is in-flight, else ``None``.
-
-    In-flight = ``proposal.json`` status ``in_progress`` or any unchecked
-    checklist box. An unreadable/absent file simply contributes no block.
-    """
-    if _proposal_status(target) == "in_progress":
-        return "in-flight (status in_progress)"
-    if _checklist_partial(target):
-        return "in-flight (checklist partial)"
-    return None
-
-
-def _proposal_status(target: Path) -> str | None:
-    """Read ``proposal.json``'s ``status`` field, tolerantly (``None`` on miss)."""
-    path = target / "proposal.json"
-    if not path.is_file():
-        return None
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return None
-    if not isinstance(payload, dict):
-        return None
-    status = payload.get("status")
-    return status if isinstance(status, str) else None
-
-
-def _checklist_partial(target: Path) -> bool:
-    """Whether ``checklist.md`` has any unchecked box (``done < total``).
-
-    An absent, unparseable or empty checklist is not partial (no block).
-    """
-    path = target / "checklist.md"
-    if not path.is_file():
-        return False
-    try:
-        items = parse_checklist(path)
-    except Exception:  # noqa: BLE001 — a malformed checklist must not block GC
-        return False
-    done, total = counts(items)
-    if total == 0:
-        return False
-    return done < total
 
 
 def _is_tracked(repo_root: Path, target: Path) -> bool:

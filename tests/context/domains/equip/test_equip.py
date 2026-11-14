@@ -86,6 +86,94 @@ def test_detect_stack_surfaces_frameworks_from_manifest(tmp_path: Path) -> None:
     assert "FastAPI" in profile.frameworks
 
 
+def _write_map_paths(context_dir: Path, paths: list[str]) -> None:
+    files = [{"path": p, "language": "python", "size_bytes": 10} for p in paths]
+    (context_dir / "map").mkdir(parents=True, exist_ok=True)
+    (context_dir / "map" / "files.json").write_text(
+        json.dumps({"schema_version": 1, "files": files}) + "\n", encoding="utf-8"
+    )
+
+
+# --- data-store and search evidence
+
+
+@pytest.mark.unit
+def test_detect_stack_no_evidence(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    _write_files_map(context_dir, ["python"])
+    (tmp_path / "pyproject.toml").write_text(
+        'dependencies = ["fastapi", "uvicorn"]\n', encoding="utf-8"
+    )
+    profile = detect_stack(context_dir)
+    assert profile.data_stores == ()
+    assert profile.search_backends == ()
+
+
+@pytest.mark.unit
+def test_detect_stack_sqlalchemy_dependency_is_data_store(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    _write_files_map(context_dir, ["python"])
+    (tmp_path / "pyproject.toml").write_text(
+        'dependencies = ["SQLAlchemy>=2"]\n', encoding="utf-8"
+    )
+    assert detect_stack(context_dir).data_stores == ("sqlalchemy",)
+
+
+@pytest.mark.unit
+def test_detect_stack_sql_file_only_is_data_store(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    _write_map_paths(context_dir, ["db/schema.sql", "src/app.py"])
+    profile = detect_stack(context_dir)
+    assert profile.data_stores == ("sql",)
+    assert profile.search_backends == ()
+
+
+@pytest.mark.unit
+def test_detect_stack_migrations_windows_separator(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    _write_map_paths(context_dir, ["app\\migrations\\0001_init.py"])
+    assert "migrations" in detect_stack(context_dir).data_stores
+
+
+@pytest.mark.unit
+def test_detect_stack_faiss_cpu_is_search_backend(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    _write_files_map(context_dir, ["python"])
+    (tmp_path / "requirements.txt").write_text("faiss-cpu==1.8.0\n", encoding="utf-8")
+    profile = detect_stack(context_dir)
+    # ``\bfaiss\b`` also hits the hyphenated name; both tokens are real evidence.
+    assert "faiss-cpu" in profile.search_backends
+    assert profile.data_stores == ()
+
+
+@pytest.mark.unit
+def test_detect_stack_readme_prose_is_not_evidence(tmp_path: Path) -> None:
+    context_dir = tmp_path / ".context"
+    _write_files_map(context_dir, ["python"])
+    (tmp_path / "README.md").write_text(
+        "We rank results with lunr and store rows in sqlalchemy.\n", encoding="utf-8"
+    )
+    profile = detect_stack(context_dir)
+    assert profile.search_backends == ()
+    assert profile.data_stores == ()
+
+
+@pytest.mark.unit
+def test_detect_stack_repo_mirror_has_no_evidence(tmp_path: Path) -> None:
+    repo_root = Path(__file__).resolve().parents[4]
+    pyproject = repo_root / "pyproject.toml"
+    files_map = repo_root / ".context" / "map" / "files.json"
+    if not (pyproject.is_file() and files_map.is_file()):
+        pytest.skip("repo pyproject or .context/map/files.json not present")
+    context_dir = tmp_path / ".context"
+    (context_dir / "map").mkdir(parents=True)
+    (context_dir / "map" / "files.json").write_bytes(files_map.read_bytes())
+    (tmp_path / "pyproject.toml").write_bytes(pyproject.read_bytes())
+    profile = detect_stack(context_dir)
+    assert profile.data_stores == ()
+    assert profile.search_backends == ()
+
+
 # --- toolchain detection
 
 
@@ -352,7 +440,13 @@ def test_three_way_identity_for_standard_generated_set() -> None:
     implementer/tester carry {stack}-; this is what makes the build loop's
     emitted ``subagent_type`` resolve to a real agent/skill by frontmatter name.
     """
-    profile = StackProfile(label="python")
+    # db / search are evidence-gated: the evidence makes them generate here so
+    # every templated specialist is covered by the identity check.
+    profile = StackProfile(
+        label="python",
+        data_stores=("sqlalchemy",),
+        search_backends=("faiss-cpu",),
+    )
     decision = build_catalog(
         profile=profile,
         conventions=(),
