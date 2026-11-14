@@ -14,7 +14,7 @@
 
 ## Wave 2 — shared layer (BLOCKED until equip-bugs merges)
 
-- [ ] Create `dummyindex/shared/` (`atomic_io.py`, `errors.py`, `guard.py`, `lesson/`, `lesson/rules.py`), rename `_replace_bytes` and `_bump`, and keep digest coverage. Move tests to `tests/shared/` and add boundary test v1 (plan task 2). Verify: `ruff check .` passes. `python -m pytest tests/test_import_boundaries.py tests/shared tests/context tests/cli tests/test_install.py -q` passes. `python -m pytest tests/ -q --tb=short` passes.
+- [x] Create `dummyindex/shared/` (`atomic_io.py`, `errors.py`, `guard.py`, `lesson/`, `lesson/rules.py`), rename `_replace_bytes` and `_bump`, and keep digest coverage. Move tests to `tests/shared/` and add boundary test v1 (plan task 2). Verify: `ruff check .` passes. `python -m pytest tests/test_import_boundaries.py tests/shared tests/context tests/cli tests/test_install.py -q` passes. `python -m pytest tests/ -q --tb=short` passes.
 
 ## Wave 3 — evolve layer, seams, docs (BLOCKED until equip-bugs merges)
 
