@@ -8,8 +8,8 @@ from dataclasses import dataclass, replace
 from datetime import date, datetime, timezone
 from pathlib import Path
 
-from dummyindex.shared.errors import EvolveError
-from dummyindex.shared.guard import safe_file
+from dummyindex.context.shared.errors import EvolveError
+from dummyindex.context.shared.guard import safe_file
 
 from ..evolve_learning import enqueue_learning
 from ..living_rules import sha256

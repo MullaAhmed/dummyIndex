@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.codex_guidance import codex_home
+from dummyindex.context.codex_guidance import codex_home
 from dummyindex.context.domains.memory.miner.resolve import resolve_claude_config_dir
 
 
@@ -31,7 +31,7 @@ def test_default_user_config_is_temporary(
 def test_child_process_inherits_only_temporary_user_config() -> None:
     code = (
         "import json; from pathlib import Path; "
-        "from dummyindex.codex_guidance import codex_home; "
+        "from dummyindex.context.codex_guidance import codex_home; "
         "from dummyindex.context.domains.memory.miner.resolve import resolve_claude_config_dir; "
         "print(json.dumps([str(Path.home()),str(codex_home()),str(resolve_claude_config_dir())]))"
     )

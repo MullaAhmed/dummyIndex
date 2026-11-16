@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli import dispatch
+from dummyindex.context.cli import dispatch
 from dummyindex.context.hooks import (
     HookStatus,
     install,

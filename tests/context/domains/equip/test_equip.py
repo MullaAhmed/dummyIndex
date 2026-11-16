@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli.equip import project_slug
-from dummyindex.cli.equip import run as run_equip
+from dummyindex.context.cli.equip import project_slug
+from dummyindex.context.cli.equip import run as run_equip
 from dummyindex.context.domains.equip import (
     GENERATED_SENTINEL,
     IMPLEMENTER_TEMPLATE,

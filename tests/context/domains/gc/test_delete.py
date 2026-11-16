@@ -113,7 +113,7 @@ def test_active_project_writer_refuses_retirement_until_retried(
 ) -> None:
     from dummyindex.context.domains.proposals import closeout_workspace
     from dummyindex.context.domains.proposals.retirement import workspace_inventory
-    from dummyindex.shared.guard import project_lock
+    from dummyindex.context.shared.guard import project_lock
 
     context_dir = tmp_path / ".context"
     if kind == CandidateKind.PROPOSAL:
@@ -143,8 +143,8 @@ def test_retirement_guards_execute_under_shared_project_lock(
     tmp_path: Path, monkeypatch
 ) -> None:
     import dummyindex.context.domains.gc.delete as module
-    from dummyindex.shared.errors import EvolveError
-    from dummyindex.shared.guard import project_lock
+    from dummyindex.context.shared.errors import EvolveError
+    from dummyindex.context.shared.guard import project_lock
 
     context_dir = tmp_path / ".context"
     workspace = _write_proposal(context_dir, "closed-work")
@@ -209,7 +209,7 @@ def test_dry_run_refuses_receipt_less_material_proposal(tmp_path: Path) -> None:
 
 @pytest.mark.unit
 def test_dry_run_does_not_take_project_lock(tmp_path: Path) -> None:
-    from dummyindex.shared.guard import project_lock
+    from dummyindex.context.shared.guard import project_lock
 
     context_dir = _init_repo(tmp_path)
     workspace = _write_proposal(context_dir, "live-feature")

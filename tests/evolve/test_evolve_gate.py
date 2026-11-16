@@ -8,13 +8,13 @@ from pathlib import Path
 
 import pytest
 
+from dummyindex.context.shared.errors import EvolveError
 from dummyindex.evolve.evolve_gate import (
     _working_inputs,
     check_receipt,
     run_gate,
     staged_files,
 )
-from dummyindex.shared.errors import EvolveError
 
 pytestmark = pytest.mark.integration
 

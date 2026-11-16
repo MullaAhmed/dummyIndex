@@ -7,9 +7,9 @@ import json
 import re
 from pathlib import Path, PurePosixPath
 
-from dummyindex.shared.errors import EvolveError
-from dummyindex.shared.guard import safe_file
-from dummyindex.shared.lesson.rules import rules_in
+from dummyindex.context.shared.errors import EvolveError
+from dummyindex.context.shared.guard import safe_file
+from dummyindex.context.shared.lesson.rules import rules_in
 
 _ID = re.compile(r"[a-z0-9][a-z0-9_.-]{0,63}\Z")
 MAX_RULE_BYTES = 4000

@@ -8,9 +8,9 @@ from pathlib import Path
 
 from dummyindex.context.domains.config import current_dummyindex_version
 from dummyindex.context.domains.memory.miner.signatures import canonical_signature
-from dummyindex.shared.atomic_io import write_text_atomic
-from dummyindex.shared.errors import EvolveError
-from dummyindex.shared.guard import safe_file
+from dummyindex.context.shared.atomic_io import write_text_atomic
+from dummyindex.context.shared.errors import EvolveError
+from dummyindex.context.shared.guard import safe_file
 
 from . import ledger
 from .enums import CorrectionStatus, ExposureVia, Verdict

@@ -12,7 +12,7 @@ import json
 import re
 from pathlib import Path
 
-from dummyindex.shared.atomic_io import write_text_atomic
+from dummyindex.context.shared.atomic_io import write_text_atomic
 
 from ...query import query
 from ..enums import EquipmentKind, EquipmentSource

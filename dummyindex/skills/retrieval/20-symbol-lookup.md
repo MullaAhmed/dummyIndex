@@ -84,7 +84,7 @@ read legacy JSON or a sharded graph transparently. Do not load the full artifact
 into the conversation or interpret a storage manifest as an empty graph.
 
 Programmatic consumers use
-`dummyindex.export.storage.read_graph_payload(path)` to reconstruct the logical
+`dummyindex.context.export.storage.read_graph_payload(path)` to reconstruct the logical
 node-link payload. Original direction is `_src` / `_tgt`. Undirected NetworkX
 `source` / `target` ordering is not call direction.
 

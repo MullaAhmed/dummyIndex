@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 
 from dummyindex.context.build.meta import read_meta
 from dummyindex.context.build.upgrade import _attempt
-from dummyindex.versioning import VersionOrder, compare_versions, parse_version
+from dummyindex.context.versioning import VersionOrder, compare_versions, parse_version
 
 if TYPE_CHECKING:
     import subprocess

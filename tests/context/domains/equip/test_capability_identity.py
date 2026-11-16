@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli.equip import run as run_equip
+from dummyindex.context.cli.equip import run as run_equip
 from dummyindex.context.domains.equip import (
     EquipmentItem,
     EquipmentManifest,
@@ -14,7 +14,7 @@ from dummyindex.context.domains.equip import (
 )
 from dummyindex.context.domains.equip.identity import capability_metadata
 from dummyindex.context.domains.equip.lifecycle.status import refresh, reset
-from dummyindex.shared.atomic_io import write_text_atomic
+from dummyindex.context.shared.atomic_io import write_text_atomic
 
 
 def equip(root: Path):

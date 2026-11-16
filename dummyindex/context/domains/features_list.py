@@ -15,7 +15,7 @@ from typing import Any
 
 from dummyindex.context.domains.features.errors import FeatureRenameError
 from dummyindex.context.domains.features.helpers import _validate_feature_id
-from dummyindex.pipeline.enums import ConfidenceLevel
+from dummyindex.context.pipeline.enums import ConfidenceLevel
 
 SUPPORTED_SCHEMA_VERSION = 1
 CONFIDENCE_VALUES: frozenset[str] = frozenset(level.value for level in ConfidenceLevel)

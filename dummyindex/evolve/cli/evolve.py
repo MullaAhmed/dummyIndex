@@ -14,7 +14,7 @@ import shutil
 import sys
 from pathlib import Path
 
-from dummyindex.cli.common import resolve_context_root, usage_error
+from dummyindex.context.cli.common import resolve_context_root, usage_error
 
 from .evolve_probation import run_attribute, run_probation
 
@@ -58,8 +58,8 @@ def run(args: list[str]) -> int:
 
 def _evolve_evidence(args: list[str]) -> int:
     """Import project-scoped Claude/Codex evidence without copying prompt text."""
+    from dummyindex.context.shared.errors import EvolveError
     from dummyindex.evolve.evidence import scan_hosts
-    from dummyindex.shared.errors import EvolveError
 
     values, _flags, err = _parse_flags(
         args,
@@ -97,12 +97,12 @@ def _evolve_learning(args: list[str]) -> int:
         learning_exit_code,
         learning_line,
     )
+    from dummyindex.context.shared.errors import EvolveError
     from dummyindex.evolve.evolve_learning import (
         finish_learning,
         learning_status,
         pending_learning,
     )
-    from dummyindex.shared.errors import EvolveError
 
     values, flags, err = _parse_flags(
         args,
@@ -149,8 +149,8 @@ def _evolve_learning(args: list[str]) -> int:
 
 
 def _evolve_rules(args: list[str]) -> int:
+    from dummyindex.context.shared.errors import EvolveError
     from dummyindex.evolve.living_rules import rule_status
-    from dummyindex.shared.errors import EvolveError
 
     values, _flags, err = _parse_flags(args, value_keys={"root"}, bool_keys={"json"})
     if err:
@@ -167,8 +167,8 @@ def _evolve_rules(args: list[str]) -> int:
 
 
 def _evolve_utility(args: list[str]) -> int:
+    from dummyindex.context.shared.errors import EvolveError
     from dummyindex.evolve.evolve_experiments import utility_status
-    from dummyindex.shared.errors import EvolveError
 
     values, _flags, err = _parse_flags(args, value_keys={"root"}, bool_keys={"json"})
     if err:
@@ -185,9 +185,9 @@ def _evolve_utility(args: list[str]) -> int:
 
 
 def _evolve_experiment(args: list[str]) -> int:
+    from dummyindex.context.shared.errors import EvolveError
     from dummyindex.evolve.evolve import run_dir_for
     from dummyindex.evolve.evolve_experiments import run_experiment
-    from dummyindex.shared.errors import EvolveError
 
     values, _flags, err = _parse_flags(
         args,
@@ -345,6 +345,7 @@ def _load_candidate_lines(run_dir: Path) -> list[dict]:
 
 def _evolve_harvest(args: list[str]) -> int:
     """`evolve harvest [--since DATE] [--sleep] [--json] [--run NAME]` (exit 0)."""
+    from dummyindex.context.shared.atomic_io import write_text_atomic
     from dummyindex.evolve.evolve import (
         EVOLVE_DIR_REL,
         HARVEST_NAME,
@@ -355,7 +356,6 @@ def _evolve_harvest(args: list[str]) -> int:
     from dummyindex.evolve.evolve import (
         harvest as harvest_domain,
     )
-    from dummyindex.shared.atomic_io import write_text_atomic
 
     values, flags, err = _parse_flags(
         args,
@@ -623,7 +623,7 @@ def _evolve_apply(args: list[str]) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     gate_payload = {"candidate": index, **result.to_dict()}
-    from dummyindex.shared.atomic_io import write_text_atomic
+    from dummyindex.context.shared.atomic_io import write_text_atomic
 
     write_text_atomic(
         run_dir / GATE_NAME_FMT.format(index),
@@ -655,6 +655,7 @@ def _evolve_apply(args: list[str]) -> int:
 
 def _evolve_promote(args: list[str]) -> int:
     """Adopt only the exact qualified content, with a recoverable multi-file write."""
+    from dummyindex.context.shared.guard import project_lock, safe_file
     from dummyindex.evolve.evolve import (
         EvolveError,
         parse_candidate,
@@ -664,7 +665,6 @@ def _evolve_promote(args: list[str]) -> int:
     )
     from dummyindex.evolve.evolve_gate import check_receipt
     from dummyindex.evolve.evolve_promotion import promote_files
-    from dummyindex.shared.guard import project_lock, safe_file
 
     values, _flags, err = _parse_flags(
         args,
@@ -787,8 +787,8 @@ def _evolve_rollback(args: list[str]) -> int:
     except EvolveError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
+    from dummyindex.context.shared.guard import project_lock
     from dummyindex.evolve.evolve_promotion import rollback_files
-    from dummyindex.shared.guard import project_lock
 
     try:
         with project_lock(project_root):

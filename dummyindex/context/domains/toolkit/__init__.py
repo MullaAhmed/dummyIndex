@@ -2,7 +2,7 @@
 
 Public surface: the ``toolkit_*`` entry points in :mod:`.facade`, the closed
 alphabets in :mod:`.constants` (including ``ALLOWED_SOURCE_SCHEMES``), and
-:class:`ToolkitError`. The CLI (``dummyindex/cli/toolkit.py``) only parses
+:class:`ToolkitError`. The CLI (``dummyindex/context/cli/toolkit.py``) only parses
 arguments and prints the result.
 
 Secrets: ``.context/toolkit/`` (project) and ``<claude>/toolkit/`` (user) hold the

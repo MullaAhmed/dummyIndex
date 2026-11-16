@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli.equip import run as run_equip
+from dummyindex.context.cli.equip import run as run_equip
 from dummyindex.context.domains.equip import (
     SCHEMA_VERSION,
     EquipmentItem,

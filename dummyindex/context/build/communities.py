@@ -25,7 +25,7 @@ from dummyindex.context.domains.features.scan.rank import (
     RankEntry,
     SeedRank,
 )
-from dummyindex.shared.atomic_io import write_text_atomic
+from dummyindex.context.shared.atomic_io import write_text_atomic
 
 # PageRank personalization. Entry points are where a reader starts, so
 # they seed hardest; ordinary source keeps full weight; test files keep a

@@ -2,7 +2,8 @@
 
 Stdlib-only AST scanner over ``dummyindex/**/*.py`` covering R1-R7: direction,
 root pairs, private names, moved symbols, old paths, resolution and dynamic
-imports. Also checks fresh-interpreter imports for the split packages.
+imports. R8 checks the top-level layout of ``dummyindex/``. Also checks
+fresh-interpreter imports for the split packages.
 """
 
 from __future__ import annotations
@@ -38,12 +39,25 @@ EVOLVE_OLD_DOMAINS = (
     "observe",
     "probation",
 )
+# Top-level packages and modules that moved into dummyindex/context/.
+OLD_NAMES = (
+    "cli",
+    "shared",
+    "pipeline",
+    "analysis",
+    "export",
+    "usage",
+    "installer",
+    "versioning",
+    "codex_guidance",
+)
 OLD_PREFIXES = (
     "dummyindex.context.domains.atomic_io",
     "dummyindex.context.domains.lesson",
     *(f"dummyindex.context.domains.{name}" for name in EVOLVE_OLD_DOMAINS),
-    "dummyindex.cli.evolve",
-    "dummyindex.cli.evolve_probation",
+    f"{PKG}.context.cli.evolve",
+    f"{PKG}.context.cli.evolve_probation",
+    *(f"{PKG}.{name}" for name in OLD_NAMES),
 )
 _DOMAINS = "dummyindex/context/domains"
 OLD_FILES = (
@@ -83,21 +97,24 @@ OLD_FILES = (
             "sync",
         )
     ),
-    "dummyindex/cli/evolve.py",
-    "dummyindex/cli/evolve_probation.py",
+    "dummyindex/context/cli/evolve.py",
+    "dummyindex/context/cli/evolve_probation.py",
 )
 # Composition root may lazily import exactly these evolve modules (spec C1).
 ROOT_PAIRS = {
-    ("dummyindex/cli/__init__.py", "dummyindex.evolve.cli.evolve"),
-    ("dummyindex/cli/__init__.py", "dummyindex.evolve.evolve_learning"),
-    ("dummyindex/cli/__init__.py", "dummyindex.evolve.probation"),
+    ("dummyindex/context/cli/__init__.py", "dummyindex.evolve.cli.evolve"),
+    ("dummyindex/context/cli/__init__.py", "dummyindex.evolve.evolve_learning"),
+    ("dummyindex/context/cli/__init__.py", "dummyindex.evolve.probation"),
 }
 # Known, reviewed dynamic import sites (R7 allowlist).
 DYNAMIC_ALLOW = {
     ("dummyindex/__init__.py", 30),
-    ("dummyindex/pipeline/extract/generic.py", 25),
+    ("dummyindex/context/pipeline/extract/generic.py", 25),
 }
 DYNAMIC_NAMES = ("import_module", "__import__")
+# R8: the only entries allowed at the top of dummyindex/.
+TOP_DIRS = {"context", "evolve", "skills"}
+TOP_FILES = {"__init__.py", "__main__.py"}
 
 
 @dataclass(frozen=True)
@@ -128,10 +145,10 @@ class Scan:
 
 
 def _layer(parts: tuple[str, ...]) -> str:
-    if len(parts) > 1 and parts[1] == "shared":
-        return "shared"
     if len(parts) > 1 and parts[1] == "evolve":
         return "evolve"
+    if len(parts) > 2 and parts[1] == "context" and parts[2] == "shared":
+        return "shared"
     return "context"
 
 
@@ -295,9 +312,7 @@ def _edge_violations(edge: Edge, modules: set[str]) -> list[str]:
 
     if edge.layer == "shared":  # R1: shared imports only shared and stdlib
         if top == PKG:
-            if edge.module != "dummyindex.shared" and not edge.module.startswith(
-                "dummyindex.shared."
-            ):
+            if target != "shared":
                 add("R1")
         elif top not in sys.stdlib_module_names:
             add("R1")
@@ -338,15 +353,36 @@ def violations(root: Path) -> list[str]:
         if (site.path, site.line) not in DYNAMIC_ALLOW:
             found.append(f"R7 {site.path}:{site.line} -> {site.func} (dynamic)")
     if (
-        "dummyindex/cli/__init__.py" in result.files
+        "dummyindex/context/cli/__init__.py" in result.files
     ):  # R2: every root pair must still be imported
         seen = {(edge.path, edge.module) for edge in result.edges}
         for path, module in sorted(ROOT_PAIRS):
             if (path, module) not in seen:
                 found.append(f"R2 {path}:0 -> {module} (stale)")
-    for old in OLD_FILES:  # R5: a moved-away file must not come back
-        if old in result.files:
-            found.append(f"R5 {old}:0 -> {old} (exists)")
+    for file in result.files:  # R5: a moved-away file must not come back
+        if file in OLD_FILES or file.split("/")[1].removesuffix(".py") in OLD_NAMES:
+            found.append(f"R5 {file}:0 -> {file} (exists)")
+    return sorted(found)
+
+
+def _only_pycache(path: Path) -> bool:
+    children = [child.name for child in path.iterdir()]
+    return bool(children) and all(name == "__pycache__" for name in children)
+
+
+def layout_violations(root: Path) -> list[str]:  # R8
+    entries = [path for path in (root / PKG).iterdir() if path.name != "__pycache__"]
+    # A dir that holds only `__pycache__` is untracked residue of an old layout.
+    dirs = {path.name for path in entries if path.is_dir() and not _only_pycache(path)}
+    files = {path.name for path in entries if path.suffix == ".py" and path.is_file()}
+    found: list[str] = []
+    for kind, have, want in (("dir", dirs, TOP_DIRS), ("file", files, TOP_FILES)):
+        found.extend(
+            f"R8 {PKG}:0 -> {PKG}/{name} (extra {kind})" for name in have - want
+        )
+        found.extend(
+            f"R8 {PKG}:0 -> {PKG}/{name} (missing {kind})" for name in want - have
+        )
     return sorted(found)
 
 
@@ -369,44 +405,44 @@ def _tree(root: Path, files: dict[str, str]) -> Path:
 CASES = [
     pytest.param(
         {
-            "dummyindex/shared/a.py": "from dummyindex.context import helper\n",
+            "dummyindex/context/shared/a.py": "from dummyindex.context import helper\n",
             "dummyindex/context/__init__.py": "",
         },
-        ["R1 dummyindex/shared/a.py:1 -> dummyindex.context (helper)"],
+        ["R1 dummyindex/context/shared/a.py:1 -> dummyindex.context (helper)"],
         id="shared-to-context",
     ),
     pytest.param(
         {
-            "dummyindex/shared/a.py": "from dummyindex.evolve import helper\n",
+            "dummyindex/context/shared/a.py": "from dummyindex.evolve import helper\n",
             "dummyindex/evolve/__init__.py": "",
         },
-        ["R1 dummyindex/shared/a.py:1 -> dummyindex.evolve (helper)"],
+        ["R1 dummyindex/context/shared/a.py:1 -> dummyindex.evolve (helper)"],
         id="shared-to-evolve",
     ),
     pytest.param(
         {
-            "dummyindex/shared/a.py": (
+            "dummyindex/context/shared/a.py": (
                 "from typing import TYPE_CHECKING\nif TYPE_CHECKING:\n    from dummyindex.context import helper\n"
             ),
             "dummyindex/context/__init__.py": "",
         },
-        ["R1 dummyindex/shared/a.py:3 -> dummyindex.context (helper)"],
+        ["R1 dummyindex/context/shared/a.py:3 -> dummyindex.context (helper)"],
         id="type-checking-shared-to-context",
     ),
     pytest.param(
         {
-            "dummyindex/shared/a.py": 'import importlib\nimportlib.import_module("dummyindex.context.x")\n',
+            "dummyindex/context/shared/a.py": 'import importlib\nimportlib.import_module("dummyindex.context.x")\n',
             "dummyindex/context/x.py": "",
         },
-        ["R1 dummyindex/shared/a.py:2 -> dummyindex.context.x (import_module)"],
+        ["R1 dummyindex/context/shared/a.py:2 -> dummyindex.context.x (import_module)"],
         id="literal-import-module-shared-to-context",
     ),
     pytest.param(
         {
-            "dummyindex/shared/__init__.py": "from ..context import helper\n",
+            "dummyindex/context/shared/__init__.py": "from .. import helper\n",
             "dummyindex/context/__init__.py": "",
         },
-        ["R1 dummyindex/shared/__init__.py:1 -> dummyindex.context (helper)"],
+        ["R1 dummyindex/context/shared/__init__.py:1 -> dummyindex.context (helper)"],
         id="relative-init-shared-to-context",
     ),
     pytest.param(
@@ -477,23 +513,25 @@ CASES = [
     ),
     pytest.param(
         {
-            "dummyindex/shared/a.py": "from dummyindex.evolve import probation\n",
+            "dummyindex/context/shared/a.py": "from dummyindex.evolve import probation\n",
             "dummyindex/evolve/probation/__init__.py": "",
         },
-        ["R1 dummyindex/shared/a.py:1 -> dummyindex.evolve.probation (probation)"],
+        [
+            "R1 dummyindex/context/shared/a.py:1 -> dummyindex.evolve.probation (probation)"
+        ],
         id="shared-to-evolve-module-resolved",
     ),
     pytest.param(
-        {"dummyindex/shared/a.py": "import requests\n"},
-        ["R1 dummyindex/shared/a.py:1 -> requests (import)"],
+        {"dummyindex/context/shared/a.py": "import requests\n"},
+        ["R1 dummyindex/context/shared/a.py:1 -> requests (import)"],
         id="shared-to-third-party",
     ),
     pytest.param(
         {
-            "dummyindex/shared/a.py": '__import__("dummyindex.context.x")\n',
+            "dummyindex/context/shared/a.py": '__import__("dummyindex.context.x")\n',
             "dummyindex/context/x.py": "",
         },
-        ["R1 dummyindex/shared/a.py:1 -> dummyindex.context.x (__import__)"],
+        ["R1 dummyindex/context/shared/a.py:1 -> dummyindex.context.x (__import__)"],
         id="shared-dunder-import-to-context",
     ),
     pytest.param(
@@ -545,13 +583,13 @@ CASES = [
     ),
     pytest.param(
         {
-            "dummyindex/cli/__init__.py": "from dummyindex.evolve.probation import session_block\n",
+            "dummyindex/context/cli/__init__.py": "from dummyindex.evolve.probation import session_block\n",
             "dummyindex/evolve/probation/__init__.py": "",
         },
         [
-            "R2 dummyindex/cli/__init__.py:1 -> dummyindex.evolve.probation (session_block)",
-            "R2 dummyindex/cli/__init__.py:0 -> dummyindex.evolve.cli.evolve (stale)",
-            "R2 dummyindex/cli/__init__.py:0 -> dummyindex.evolve.evolve_learning (stale)",
+            "R2 dummyindex/context/cli/__init__.py:1 -> dummyindex.evolve.probation (session_block)",
+            "R2 dummyindex/context/cli/__init__.py:0 -> dummyindex.evolve.cli.evolve (stale)",
+            "R2 dummyindex/context/cli/__init__.py:0 -> dummyindex.evolve.evolve_learning (stale)",
         ],
         id="root-pair-not-lazy-and-stale",
     ),
@@ -607,6 +645,37 @@ CASES = [
         ],
         id="old-evolve-file-exists",
     ),
+    # --- v3: the 9 top-level names moved into dummyindex/context/ ---
+    *(
+        pytest.param(
+            {"dummyindex/context/user.py": f"from {PKG}.{name}.x import y\n"},
+            [
+                f"R5 dummyindex/context/user.py:1 -> {PKG}.{name}.x (y)",
+                f"R6 dummyindex/context/user.py:1 -> {PKG}.{name}.x (y)",
+            ],
+            id=f"old-top-level-import-{name}",
+        )
+        for name in OLD_NAMES
+    ),
+    *(
+        pytest.param(
+            {f"dummyindex/{name}/__init__.py": ""},
+            [
+                f"R5 dummyindex/{name}/__init__.py:0 -> "
+                f"dummyindex/{name}/__init__.py (exists)"
+            ],
+            id=f"old-top-level-dir-{name}",
+        )
+        for name in OLD_NAMES
+    ),
+    *(
+        pytest.param(
+            {f"dummyindex/{name}.py": ""},
+            [f"R5 dummyindex/{name}.py:0 -> dummyindex/{name}.py (exists)"],
+            id=f"old-top-level-module-{name}",
+        )
+        for name in ("versioning", "codex_guidance")
+    ),
 ]
 
 
@@ -622,19 +691,19 @@ def test_forbidden_form_reports_exact_message(
 def test_allowed_tree_reports_nothing(tmp_path: Path) -> None:
     files = {
         "dummyindex/context/user.py": (
-            "from dummyindex.shared.atomic_io import write_text_atomic\n\n\ndef helper():\n    pass\n"
+            "from dummyindex.context.shared.atomic_io import write_text_atomic\n\n\ndef helper():\n    pass\n"
         ),
-        "dummyindex/shared/atomic_io.py": "import os\nfrom pathlib import Path\n\n\ndef write_text_atomic():\n    pass\n",
-        "dummyindex/shared/errors.py": "class EvolveError(Exception):\n    pass\n",
-        "dummyindex/shared/lesson/rules.py": "from dummyindex.shared.errors import EvolveError\n",
+        "dummyindex/context/shared/atomic_io.py": "import os\nfrom pathlib import Path\n\n\ndef write_text_atomic():\n    pass\n",
+        "dummyindex/context/shared/errors.py": "class EvolveError(Exception):\n    pass\n",
+        "dummyindex/context/shared/lesson/rules.py": "from dummyindex.context.shared.errors import EvolveError\n",
         "dummyindex/evolve/__init__.py": "",
         "dummyindex/evolve/user.py": (
-            "from dummyindex.shared.errors import EvolveError\nfrom dummyindex.context.user import helper\n"
+            "from dummyindex.context.shared.errors import EvolveError\nfrom dummyindex.context.user import helper\n"
         ),
         "dummyindex/evolve/probation/__init__.py": "def session_block():\n    pass\n",
         "dummyindex/evolve/cli/evolve.py": "def run():\n    pass\n",
         "dummyindex/evolve/evolve_learning.py": "def learn_after_closeout():\n    pass\n",
-        "dummyindex/cli/__init__.py": (
+        "dummyindex/context/cli/__init__.py": (
             "def _probation_block():\n"
             "    from dummyindex.evolve.probation import session_block\n"
             "    return session_block\n\n\n"
@@ -655,6 +724,67 @@ def test_real_tree_has_no_violations() -> None:
 
 
 @pytest.mark.unit
+def test_real_tree_top_level_layout() -> None:
+    assert layout_violations(REPO_ROOT) == []
+
+
+def _layout(root: Path, dirs: set[str], files: set[str]) -> Path:
+    (root / PKG).mkdir()
+    for name in dirs:
+        (root / PKG / name).mkdir()
+        if name.startswith("stale_"):
+            (root / PKG / name / "__pycache__").mkdir()
+    for name in files:
+        (root / PKG / name).write_text("", encoding="utf-8")
+    return root
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("dirs", "files", "expected"),
+    [
+        pytest.param(
+            TOP_DIRS | {"__pycache__"}, TOP_FILES, [], id="compliant-ignores-pycache"
+        ),
+        pytest.param(
+            TOP_DIRS | {"stale_old"},
+            TOP_FILES,
+            [],
+            id="pycache-only-dir-is-residue",
+        ),
+        pytest.param(
+            TOP_DIRS | {"extra"},
+            TOP_FILES,
+            ["R8 dummyindex:0 -> dummyindex/extra (extra dir)"],
+            id="extra-dir",
+        ),
+        pytest.param(
+            TOP_DIRS,
+            TOP_FILES | {"stray.py"},
+            ["R8 dummyindex:0 -> dummyindex/stray.py (extra file)"],
+            id="extra-py-file",
+        ),
+        pytest.param(
+            TOP_DIRS - {"evolve"},
+            TOP_FILES,
+            ["R8 dummyindex:0 -> dummyindex/evolve (missing dir)"],
+            id="missing-dir",
+        ),
+        pytest.param(
+            TOP_DIRS,
+            TOP_FILES - {"__main__.py"},
+            ["R8 dummyindex:0 -> dummyindex/__main__.py (missing file)"],
+            id="missing-file",
+        ),
+    ],
+)
+def test_layout_reports_exact_message(
+    tmp_path: Path, dirs: set[str], files: set[str], expected: list[str]
+) -> None:
+    assert layout_violations(_layout(tmp_path, dirs, files)) == expected
+
+
+@pytest.mark.unit
 def test_real_tree_scans_every_module() -> None:
     assert len(scan(REPO_ROOT).files) == len(list((REPO_ROOT / PKG).rglob("*.py")))
 
@@ -663,19 +793,19 @@ def test_real_tree_scans_every_module() -> None:
 def test_real_tree_has_every_allowed_direction() -> None:
     edges = scan(REPO_ROOT).edges
     assert any(
-        edge.layer == "context" and edge.module.startswith("dummyindex.shared")
+        edge.layer == "context" and _module_layer(edge.module) == "shared"
         for edge in edges
     )
     assert any(
-        edge.layer == "evolve" and edge.module.startswith("dummyindex.shared")
+        edge.layer == "evolve" and _module_layer(edge.module) == "shared"
         for edge in edges
     )
     assert any(
-        edge.layer == "evolve" and edge.module.startswith("dummyindex.context")
+        edge.layer == "evolve" and _module_layer(edge.module) == "context"
         for edge in edges
     )
     assert any(
-        edge.path == "dummyindex/cli/__init__.py"
+        edge.path == "dummyindex/context/cli/__init__.py"
         and edge.lazy
         and edge.module.startswith("dummyindex.evolve")
         for edge in edges
@@ -686,13 +816,14 @@ def test_real_tree_has_every_allowed_direction() -> None:
 @pytest.mark.parametrize(
     "module",
     [
-        "dummyindex.shared",
-        "dummyindex.shared.guard",
-        "dummyindex.shared.atomic_io",
-        "dummyindex.shared.lesson",
+        "dummyindex.context.shared.guard",
+        "dummyindex.context.shared.atomic_io",
+        "dummyindex.context.shared.lesson",
         "dummyindex.evolve",
         "dummyindex.evolve.cli.evolve",
         "dummyindex.evolve.cli.evolve_probation",
+        # each moved name alone; includes dummyindex.context.shared
+        *(f"{PKG}.context.{name}" for name in OLD_NAMES),
     ],
 )
 def test_fresh_interpreter_imports_module(module: str) -> None:

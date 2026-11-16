@@ -8,8 +8,8 @@ from collections.abc import Callable, Mapping
 from contextlib import contextmanager
 from pathlib import Path
 
-from dummyindex.shared.atomic_io import replace_bytes
-from dummyindex.shared.lesson.enums import LearningStatus
+from dummyindex.context.shared.atomic_io import replace_bytes
+from dummyindex.context.shared.lesson.enums import LearningStatus
 
 from ...build.git_delta import head_commit
 from ..buildloop import parse_checklist
@@ -151,8 +151,8 @@ def _close(context_dir: Path, workspace: Path, kind: str, manifest: dict) -> dic
     pending, resolved = _verification(context_dir, manifest, old, previous)
     reflection = manifest.get("learning_reflection")
     if reflection is not None:
-        from dummyindex.shared.errors import EvolveError
-        from dummyindex.shared.lesson import validate_lesson
+        from dummyindex.context.shared.errors import EvolveError
+        from dummyindex.context.shared.lesson import validate_lesson
 
         try:
             validate_lesson(reflection)
@@ -496,8 +496,8 @@ def _evidence(context_dir: Path, rows: list) -> list[dict]:
 
 @contextmanager
 def _locked(context_dir: Path):
-    from dummyindex.shared.errors import EvolveError
-    from dummyindex.shared.guard import project_lock
+    from dummyindex.context.shared.errors import EvolveError
+    from dummyindex.context.shared.guard import project_lock
 
     try:
         with project_lock(context_dir.parent):

@@ -10,6 +10,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from dummyindex.context.shared.errors import EvolveError
 from dummyindex.evolve import evidence
 from dummyindex.evolve.evidence import scan_hosts
 from dummyindex.evolve.evolve_learning import (
@@ -29,7 +30,6 @@ from dummyindex.evolve.probation import render, rules, store
 from dummyindex.evolve.probation.enums import Followed, Route, State
 from dummyindex.evolve.probation.models import Item
 from dummyindex.evolve.probation.sync import eligible_ids, sync
-from dummyindex.shared.errors import EvolveError
 
 pytestmark = pytest.mark.unit
 

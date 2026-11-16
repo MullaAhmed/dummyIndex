@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from dummyindex.shared.errors import EvolveError
-from dummyindex.shared.guard import safe_file
+from dummyindex.context.shared.errors import EvolveError
+from dummyindex.context.shared.guard import safe_file
 
 from .evolve_gate import (
     _atomic_bytes,

@@ -2,7 +2,7 @@
 
 import json
 
-from dummyindex.shared.errors import EvolveError
+from dummyindex.context.shared.errors import EvolveError
 
 from .evolve import validate_candidate
 from .evolve_experiments import _finite, _measurement

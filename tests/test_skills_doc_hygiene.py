@@ -15,13 +15,13 @@ from pathlib import Path
 import pytest
 
 from dummyindex.context.domains import docbudget
+from dummyindex.context.installer.common import _SIBLING_SKILLS
 from dummyindex.context.output.bootstrap import generate_managed_block
 from dummyindex.context.output.instructions import (
     PLAYBOOK_IDS,
     generate_how_to_use_md,
     generate_playbook_md,
 )
-from dummyindex.installer.common import _SIBLING_SKILLS
 from tests.paths import REPO_ROOT
 
 _SKILLS_DIR = REPO_ROOT / "dummyindex" / "skills"

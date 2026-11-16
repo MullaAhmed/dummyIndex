@@ -18,7 +18,7 @@ from dummyindex.context.domains.features import (
 )
 from dummyindex.context.domains.features.constants import SCAN_SCHEMA_VERSION
 from dummyindex.context.domains.features.scan import validate_scan
-from dummyindex.pipeline.enums import ConfidenceLevel
+from dummyindex.context.pipeline.enums import ConfidenceLevel
 
 _GRAPH = {
     "nodes": [

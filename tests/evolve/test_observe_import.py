@@ -8,10 +8,10 @@ from datetime import datetime, timezone
 import pytest
 
 from dummyindex.context.domains.config import current_dummyindex_version
+from dummyindex.context.shared.errors import EvolveError
+from dummyindex.context.shared.guard import project_lock
 from dummyindex.evolve.observe import importer as I
 from dummyindex.evolve.observe import ledger as L
-from dummyindex.shared.errors import EvolveError
-from dummyindex.shared.guard import project_lock
 
 pytestmark = pytest.mark.unit
 

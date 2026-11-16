@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli import dispatch
+from dummyindex.context.cli import dispatch
 from dummyindex.context.output.docs import refresh_index_md
 from tests.paths import SAMPLE_REPO
 

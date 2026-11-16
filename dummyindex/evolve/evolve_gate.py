@@ -20,9 +20,9 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
-from dummyindex.shared import guard
-from dummyindex.shared.errors import EvolveError
-from dummyindex.shared.guard import safe_file
+from dummyindex.context.shared import guard
+from dummyindex.context.shared.errors import EvolveError
+from dummyindex.context.shared.guard import safe_file
 
 CommandRunner = Callable[[list[str], Path], tuple[int, str]]
 _IGNORED_DIRS = frozenset(

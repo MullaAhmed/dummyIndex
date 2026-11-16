@@ -11,12 +11,12 @@ from pathlib import Path
 
 import pytest
 
+from dummyindex.context.shared.errors import EvolveError
 from dummyindex.evolve.evolve_experiments import (
     _execute,
     run_experiment,
     utility_status,
 )
-from dummyindex.shared.errors import EvolveError
 
 _RUNNER = """import argparse,json,pathlib,hashlib
 p=argparse.ArgumentParser();p.add_argument('--request');a=p.parse_args()

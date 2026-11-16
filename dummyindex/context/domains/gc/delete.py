@@ -93,8 +93,8 @@ def delete_workspace(
     ``kind=EQUIPMENT`` routes to :func:`delete_equipment_item` (``force`` applies
     only there); workspace kinds never see ``force``.
     """
-    from dummyindex.shared.errors import EvolveError
-    from dummyindex.shared.guard import project_lock
+    from dummyindex.context.shared.errors import EvolveError
+    from dummyindex.context.shared.guard import project_lock
 
     if kind is CandidateKind.EQUIPMENT:
         if slug is None or path is not None:
@@ -274,8 +274,8 @@ def delete_equipment_item(
     raises ``GcTargetError`` before anything is written; a user-edited body needs
     ``force``. ``dry_run`` runs the same checks and reports what would go.
     """
-    from dummyindex.shared.errors import EvolveError
-    from dummyindex.shared.guard import project_lock
+    from dummyindex.context.shared.errors import EvolveError
+    from dummyindex.context.shared.guard import project_lock
 
     if dry_run:
         plan = _equipment_plan(root, name, force=force)

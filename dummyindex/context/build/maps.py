@@ -11,10 +11,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from dummyindex.pipeline.build import build_structure
-from dummyindex.pipeline.extract import extract
-from dummyindex.pipeline.io.cache import file_hash
-from dummyindex.pipeline.io.detect import detect
+from dummyindex.context.pipeline.build import build_structure
+from dummyindex.context.pipeline.extract import extract
+from dummyindex.context.pipeline.io.cache import file_hash
+from dummyindex.context.pipeline.io.detect import detect
 
 SCHEMA_VERSION = 1
 

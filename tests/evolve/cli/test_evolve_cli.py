@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli import dispatch
+from dummyindex.context.cli import dispatch
 
 pytestmark = pytest.mark.integration
 
@@ -592,7 +592,7 @@ def test_interrupted_rollback_can_resume_without_overwriting_human_edits(
 
 
 def test_busy_project_writer_refuses_promote_and_rollback(repo: Path) -> None:
-    from dummyindex.shared.guard import project_lock
+    from dummyindex.context.shared.guard import project_lock
 
     run = _prepared(repo)
     assert _apply(repo) == 0

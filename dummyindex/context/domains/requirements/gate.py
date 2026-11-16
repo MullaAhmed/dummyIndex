@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from dummyindex.shared.atomic_io import write_text_atomic
+from dummyindex.context.shared.atomic_io import write_text_atomic
 
 from .check import CLI_FIX, SYNC_FIX, check_requirements
 from .constants import BYPASS_ENV, BYPASS_REL, CONFIG_TOML_REL, OK_MARKER_REL

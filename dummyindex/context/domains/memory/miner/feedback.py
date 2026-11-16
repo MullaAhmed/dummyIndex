@@ -7,7 +7,7 @@ import stat
 from collections.abc import Iterable
 from pathlib import Path
 
-from dummyindex.shared.atomic_io import write_text_atomic
+from dummyindex.context.shared.atomic_io import write_text_atomic
 
 from .enums import SkillDirectiveKind
 from .models import RecurringSkillCorrection, SkillDirective

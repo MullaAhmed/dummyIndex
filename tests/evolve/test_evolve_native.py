@@ -5,8 +5,8 @@ import os
 
 import pytest
 
+from dummyindex.context.shared.errors import EvolveError
 from dummyindex.evolve.evolve_experiments import run_experiment, utility_status
-from dummyindex.shared.errors import EvolveError
 
 
 @pytest.fixture
@@ -294,9 +294,12 @@ def test_native_snapshot_keeps_python_source_in_cache(tmp_path):
 def test_native_snapshot_keeps_active_graph_without_copying_old_generations(
     tmp_path, generation
 ):
+    from dummyindex.context.export.storage import (
+        read_graph_payload,
+        write_graph_payload,
+    )
     from dummyindex.evolve.evolve_gate import _working_inputs
     from dummyindex.evolve.evolve_native_snapshot import _inputs, _materialize
-    from dummyindex.export.storage import read_graph_payload, write_graph_payload
 
     graph = tmp_path / ".context/features/symbol-graph.json"
     old = {

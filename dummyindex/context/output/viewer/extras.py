@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from dummyindex.export.storage import read_graph_payload
+from dummyindex.context.export.storage import read_graph_payload
 
 # Neighbors revealed per expanded node, and the hard cap on the serialized
 # expansion index (measured exactly as `to_dict()["expansion"]` embeds:

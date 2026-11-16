@@ -33,7 +33,7 @@ from dummyindex.context.domains.equip.lifecycle.status import (
     status,
     uninstall,
 )
-from dummyindex.shared.atomic_io import write_text_atomic
+from dummyindex.context.shared.atomic_io import write_text_atomic
 
 # --- fixtures
 
@@ -240,7 +240,7 @@ def test_refresh_empty_invariants_alarm_is_empty(tmp_path: Path) -> None:
 def test_refresh_renderer_surfaces_invariant_broken_alarm(capsys) -> None:
     """`equip refresh` must RENDER the alarm, not just compute it — else the
     canary's whole point (a visible alarm) is lost in the user-modified list."""
-    from dummyindex.cli.equip.verbs import _print_refresh_report
+    from dummyindex.context.cli.equip.verbs import _print_refresh_report
     from dummyindex.context.domains.equip.lifecycle.status import RefreshReport
 
     report = RefreshReport(
@@ -257,7 +257,7 @@ def test_refresh_renderer_surfaces_invariant_broken_alarm(capsys) -> None:
 @pytest.mark.unit
 def test_refresh_renderer_silent_alarm_when_clean(capsys) -> None:
     """No alarm section when nothing is INVARIANT_BROKEN (back-compat output)."""
-    from dummyindex.cli.equip.verbs import _print_refresh_report
+    from dummyindex.context.cli.equip.verbs import _print_refresh_report
     from dummyindex.context.domains.equip.lifecycle.status import RefreshReport
 
     _print_refresh_report(RefreshReport(refreshed=("x",)), dry_run=False)
@@ -334,7 +334,7 @@ def _origin_hash(root: Path, name: str) -> str | None:
 
 @pytest.mark.integration
 def test_apply_does_not_clobber_or_rebaseline_customized(tmp_path: Path) -> None:
-    from dummyindex.cli.equip import run as run_equip
+    from dummyindex.context.cli.equip import run as run_equip
 
     root = _project(tmp_path)
     assert run_equip(["apply", str(root)]) == 0
@@ -358,7 +358,7 @@ def test_apply_does_not_clobber_or_rebaseline_customized(tmp_path: Path) -> None
 
 @pytest.mark.integration
 def test_apply_does_not_launder_invariant_broken_to_pristine(tmp_path: Path) -> None:
-    from dummyindex.cli.equip import run as run_equip
+    from dummyindex.context.cli.equip import run as run_equip
     from dummyindex.context.domains.equip import read_manifest as _read
 
     root = _project(tmp_path)

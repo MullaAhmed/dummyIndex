@@ -13,7 +13,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from dummyindex.cli import dispatch
+from dummyindex.context.cli import dispatch
 from dummyindex.evolve import evidence
 from dummyindex.evolve.evidence import scan_hosts
 from dummyindex.evolve.observe import corrections, record_exposure, session_key

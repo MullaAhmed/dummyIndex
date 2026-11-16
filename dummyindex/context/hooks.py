@@ -43,7 +43,7 @@ import shlex
 from dataclasses import dataclass
 from pathlib import Path
 
-from dummyindex.pipeline.io import resolve_git_dir
+from dummyindex.context.pipeline.io import resolve_git_dir
 
 from .claude_settings import (
     MalformedSettingsError,

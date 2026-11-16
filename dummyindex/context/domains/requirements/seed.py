@@ -5,8 +5,9 @@ from __future__ import annotations
 import re
 from collections.abc import Sequence
 
+from dummyindex.context.versioning import parse_version
+
 from ....skills import SIBLING_SKILLS
-from ....versioning import parse_version
 from ...default_plugins import DEFAULT_PLUGINS, WiredEntry, WiredKind
 from .constants import SCHEMA_VERSION
 from .models import PluginRequirement, Requirements, SkillRequirement

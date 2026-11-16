@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli.equip import project_slug
-from dummyindex.cli.equip import run as run_equip
+from dummyindex.context.cli.equip import project_slug
+from dummyindex.context.cli.equip import run as run_equip
 from dummyindex.context.domains.equip import (
     Capability,
     EquipmentItem,
@@ -315,7 +315,7 @@ def test_user_authored_project_agent_still_adopted(tmp_path: Path) -> None:
 def test_drop_generated_stems_filters_sentinel_and_manifest_names(
     tmp_path: Path,
 ) -> None:
-    from dummyindex.cli.equip.common import drop_generated_stems
+    from dummyindex.context.cli.equip.common import drop_generated_stems
     from dummyindex.context.domains.equip import (
         GENERATED_SENTINEL,
         EquipmentItem,

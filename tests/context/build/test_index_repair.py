@@ -129,7 +129,7 @@ def test_advancing_refresh_renders_new_stamp_and_schema(tmp_path):
 
 
 def test_refresh_migrates_retired_layout_and_reports_it(tmp_path):
-    from dummyindex.export.storage import SHARD_GRACE_SECONDS
+    from dummyindex.context.export.storage import SHARD_GRACE_SECONDS
 
     root = _repo(tmp_path)
     context = root / ".context"
@@ -528,7 +528,7 @@ def test_detection_does_not_follow_external_source_directory(tmp_path):
     import os
     import subprocess
 
-    from dummyindex.pipeline.io.detect import detect
+    from dummyindex.context.pipeline.io.detect import detect
 
     root, outside = tmp_path / "repo", tmp_path / "outside"
     root.mkdir()

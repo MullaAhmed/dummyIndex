@@ -11,7 +11,7 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
-from dummyindex.shared.atomic_io import write_text_atomic
+from dummyindex.context.shared.atomic_io import write_text_atomic
 
 from .detect import remember_plugin_present
 from .enums import AUTO_BREADCRUMB_TAG, TIER_HEADINGS, MemoryTier

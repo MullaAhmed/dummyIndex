@@ -17,7 +17,7 @@ from pathlib import Path
 from dummyindex.context.hooks import CURRENT_CLAUDE_EVENTS, SENTINEL
 from dummyindex.context.hooks_requirements import REQUIREMENTS_SENTINEL
 from dummyindex.context.output.bootstrap import BEGIN_MARKER
-from dummyindex.pipeline.io import is_git_repo
+from dummyindex.context.pipeline.io import is_git_repo
 
 from .models import PreflightReport, SettingsState
 from .ownership import ContextOwnership, context_ownership

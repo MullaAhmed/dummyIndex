@@ -19,7 +19,7 @@ from dummyindex.context.claude_settings import (
     load_settings,
     remove_hook_entries,
 )
-from dummyindex.shared.atomic_io import write_text_atomic
+from dummyindex.context.shared.atomic_io import write_text_atomic
 
 from ..constants import EQUIP_SENTINEL
 from ..enums import EquipmentSource, ItemState

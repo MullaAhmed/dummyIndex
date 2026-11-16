@@ -36,7 +36,7 @@ from dummyindex.context.domains.equip.lifecycle.status import (
     status,
     uninstall,
 )
-from dummyindex.shared.atomic_io import write_text_atomic
+from dummyindex.context.shared.atomic_io import write_text_atomic
 
 # --- fixture helpers
 
@@ -480,7 +480,7 @@ def test_deleting_adopted_record_changes_status_output(tmp_path: Path) -> None:
 def test_status_cli_json_includes_adopted_rows(tmp_path: Path, capsys) -> None:
     import json as _json
 
-    from dummyindex.cli.equip import run as run_equip
+    from dummyindex.context.cli.equip import run as run_equip
     from dummyindex.context.domains.equip import SCHEMA_VERSION, write_manifest
 
     write_manifest(
@@ -503,7 +503,7 @@ def test_status_cli_empty_manifest_message_covers_all_kinds(
 ) -> None:
     # The manifest tracks adopted/marketplace/vendored records too, so the empty
     # message must not say 'no generated items'.
-    from dummyindex.cli.equip import run as run_equip
+    from dummyindex.context.cli.equip import run as run_equip
     from dummyindex.context.domains.equip import SCHEMA_VERSION, write_manifest
 
     write_manifest(

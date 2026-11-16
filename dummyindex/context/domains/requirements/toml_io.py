@@ -11,9 +11,9 @@ import re
 from pathlib import Path
 from typing import Any
 
-from dummyindex.shared.atomic_io import write_text_atomic
+from dummyindex.context.shared.atomic_io import write_text_atomic
+from dummyindex.context.versioning import parse_version
 
-from ....versioning import parse_version
 from .constants import SCHEMA_VERSION
 from .enums import SkillOrigin
 from .errors import RequirementsError

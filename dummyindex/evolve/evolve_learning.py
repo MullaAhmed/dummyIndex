@@ -11,11 +11,11 @@ from dummyindex.context.domains.proposals.closeout import failed_record_path
 from dummyindex.context.domains.proposals.errors import CloseoutError
 from dummyindex.context.domains.proposals.retirement import digest as receipt_digest
 from dummyindex.context.domains.proposals.retirement import receipt_path
-from dummyindex.shared.atomic_io import replace_bytes, write_text_atomic
-from dummyindex.shared.errors import EvolveError
-from dummyindex.shared.guard import project_lock, safe_file
-from dummyindex.shared.lesson import lesson_to_delta, validate_lesson
-from dummyindex.shared.lesson.enums import LearningStatus
+from dummyindex.context.shared.atomic_io import replace_bytes, write_text_atomic
+from dummyindex.context.shared.errors import EvolveError
+from dummyindex.context.shared.guard import project_lock, safe_file
+from dummyindex.context.shared.lesson import lesson_to_delta, validate_lesson
+from dummyindex.context.shared.lesson.enums import LearningStatus
 
 from .evidence import digest
 from .evolve import CANDIDATES_NAME, HARVEST_NAME, record_event, validate_candidate

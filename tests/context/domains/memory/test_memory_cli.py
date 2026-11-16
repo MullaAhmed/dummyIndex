@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from dummyindex.cli import dispatch
+from dummyindex.context.cli import dispatch
 from dummyindex.context.domains.memory.miner import (
     RecurringSkillCorrection,
     skill_feedback_cache_path,
@@ -243,7 +243,7 @@ def test_prompt_context_is_fail_open_with_no_partial_json(
 def test_session_start_without_probation_hook_prints_no_probation(
     monkeypatch: pytest.MonkeyPatch, tmp_path, capsys
 ) -> None:
-    from dummyindex.cli import memory
+    from dummyindex.context.cli import memory
 
     dispatch(["memory", "init", "--root", str(tmp_path)])
     capsys.readouterr()

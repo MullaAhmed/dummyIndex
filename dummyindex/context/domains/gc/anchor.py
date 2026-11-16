@@ -14,7 +14,7 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
-from dummyindex.shared.atomic_io import write_text_atomic
+from dummyindex.context.shared.atomic_io import write_text_atomic
 
 from ...build.git_delta import commits_since, head_commit
 from .constants import DEFAULT_COMMIT_THRESHOLD, GC_MEMO_REL, GC_STATE_REL

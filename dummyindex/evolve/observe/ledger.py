@@ -8,9 +8,9 @@ from contextlib import ExitStack, contextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from dummyindex.shared.atomic_io import write_text_atomic
-from dummyindex.shared.errors import EvolveError
-from dummyindex.shared.guard import project_lock, safe_file
+from dummyindex.context.shared.atomic_io import write_text_atomic
+from dummyindex.context.shared.errors import EvolveError
+from dummyindex.context.shared.guard import project_lock, safe_file
 
 from .keys import retention_days
 

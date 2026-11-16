@@ -3,6 +3,8 @@ from pathlib import Path
 
 import pytest
 
+from dummyindex.context.shared.errors import EvolveError
+from dummyindex.context.shared.lesson.rules import rules_in
 from dummyindex.evolve.evolve_gate import run_gate
 from dummyindex.evolve.evolve_learning import (
     enqueue_learning,
@@ -19,8 +21,6 @@ from dummyindex.evolve.probation import store
 from dummyindex.evolve.probation.enums import State
 from dummyindex.evolve.probation.models import Item
 from dummyindex.evolve.probation.rules import CAP_REASON, HIGH_IMPACT
-from dummyindex.shared.errors import EvolveError
-from dummyindex.shared.lesson.rules import rules_in
 
 CHAT_CUE = "A human correction was attributed to .context/conventions/testing.md."
 RULE_TEST = 'from pathlib import Path\ndef test_rule():\n    assert "dummyindex:rule" in Path(".context/conventions/testing.md").read_text()\n'

@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from dummyindex.context.shared.errors import EvolveError
+from dummyindex.context.shared.guard import project_lock
 from dummyindex.evolve import evidence
 from dummyindex.evolve.evidence import (
     digest,
@@ -16,8 +18,6 @@ from dummyindex.evolve.evidence import (
     scan_hosts,
 )
 from dummyindex.evolve.observe import ledger as L
-from dummyindex.shared.errors import EvolveError
-from dummyindex.shared.guard import project_lock
 
 CORRECTION = "Wrong, use the accepted contract instead."
 SLUG = "proj"

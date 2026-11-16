@@ -12,12 +12,12 @@ import warnings
 from dataclasses import dataclass
 from pathlib import Path
 
-from dummyindex.analysis.cluster import cluster
+from dummyindex.context.analysis.cluster import cluster
 from dummyindex.context.build.communities import write_graph_artifacts
 from dummyindex.context.build.portable_graph import normalize_extraction_paths
-from dummyindex.export import to_json as _export_to_json
-from dummyindex.pipeline.build import build_from_json
-from dummyindex.shared.atomic_io import normalize_eof_newline
+from dummyindex.context.export import to_json as _export_to_json
+from dummyindex.context.pipeline.build import build_from_json
+from dummyindex.context.shared.atomic_io import normalize_eof_newline
 
 
 @dataclass(frozen=True)

@@ -18,8 +18,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TypeVar
 
-from dummyindex.pipeline.io.cache import scope_cache_to_version
-from dummyindex.shared.atomic_io import is_link, replace_bytes
+from dummyindex.context.pipeline.io.cache import scope_cache_to_version
+from dummyindex.context.shared.atomic_io import is_link, replace_bytes
 
 _T = TypeVar("_T")
 

@@ -17,9 +17,9 @@ from pathlib import Path
 
 from dummyindex.context.build.reconcile import compute_reconcile_report
 from dummyindex.context.domains.gc.constants import AUDITS_REL, GC_STATE_REL
-from dummyindex.shared.errors import EvolveError
-from dummyindex.shared.guard import safe_file
-from dummyindex.usage.transcripts import (
+from dummyindex.context.shared.errors import EvolveError
+from dummyindex.context.shared.guard import safe_file
+from dummyindex.context.usage.transcripts import (
     default_projects_root,
     encode_project_slug,
 )
@@ -411,7 +411,7 @@ def _transcript_citation(path: Path, projects_root: Path, offset: int) -> str:
 def _scan_transcript(path: Path, projects_root: Path) -> list[EvidenceItem]:
     """Net-new content scan: user turns that manually invoke the context engine.
 
-    File discovery mirrors :func:`dummyindex.usage.transcripts.iter_all_turns`
+    File discovery mirrors :func:`dummyindex.context.usage.transcripts.iter_all_turns`
     (one glob over ``<projects>/*/<session>.jsonl``); the usage helpers
     themselves expose token counts, never message content, so this scan reads
     the JSONL itself and stores only sentinel hits + line citations.

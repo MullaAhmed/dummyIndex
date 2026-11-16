@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from dummyindex.context.shared.lesson.rules import rules_in
 from dummyindex.evolve.living_rules import plan_rule, sha256
 from dummyindex.evolve.observe import record_exposure
 from dummyindex.evolve.probation import (
@@ -18,7 +19,6 @@ from dummyindex.evolve.probation import (
 )
 from dummyindex.evolve.probation.models import Item
 from dummyindex.evolve.probation.rules import CAP_REASON, HIGH_IMPACT
-from dummyindex.shared.lesson.rules import rules_in
 
 pytestmark = pytest.mark.unit
 

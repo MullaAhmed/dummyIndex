@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from dummyindex.context.usage.transcripts import encode_project_slug
 from dummyindex.evolve.evolve import (
     CANDIDATES_NAME,
     EVOLUTION_REL,
@@ -29,7 +30,6 @@ from dummyindex.evolve.evolve import (
     record_event,
     validate_candidate,
 )
-from dummyindex.usage.transcripts import encode_project_slug
 from tests.paths import FIXTURES_DIR
 
 pytestmark = pytest.mark.unit

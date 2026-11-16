@@ -6,7 +6,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from typing import Any
 
-from dummyindex.shared.errors import EvolveError
+from dummyindex.context.shared.errors import EvolveError
 
 from .enums import State
 

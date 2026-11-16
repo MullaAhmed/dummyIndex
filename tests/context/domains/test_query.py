@@ -148,7 +148,7 @@ def test_estimate_tokens_floor() -> None:
 
 def test_cli_query_subcommand_invokes(indexed_repo: Path, capsys) -> None:
     """End-to-end: dispatch("query", "app") prints something useful."""
-    from dummyindex.cli import dispatch
+    from dummyindex.context.cli import dispatch
 
     rc = dispatch(["query", "app", "--root", str(indexed_repo)])
     captured = capsys.readouterr()
@@ -158,7 +158,7 @@ def test_cli_query_subcommand_invokes(indexed_repo: Path, capsys) -> None:
 
 
 def test_cli_query_missing_query_arg_errors(tmp_path: Path, capsys) -> None:
-    from dummyindex.cli import dispatch
+    from dummyindex.context.cli import dispatch
 
     rc = dispatch(["query", "--root", str(tmp_path)])
     captured = capsys.readouterr()
@@ -171,7 +171,7 @@ def test_cli_query_trailing_top_k_without_value_errors(
 ) -> None:
     """A trailing `--top-k` with no value must error (exit 2), not get joined
     into the query string and silently searched."""
-    from dummyindex.cli import dispatch
+    from dummyindex.context.cli import dispatch
 
     rc = dispatch(["query", "app", "--root", str(indexed_repo), "--top-k"])
     captured = capsys.readouterr()
@@ -184,7 +184,7 @@ def test_cli_query_trailing_top_k_without_value_errors(
 def test_cli_query_trailing_budget_without_value_errors(
     indexed_repo: Path, capsys
 ) -> None:
-    from dummyindex.cli import dispatch
+    from dummyindex.context.cli import dispatch
 
     rc = dispatch(["query", "app", "--root", str(indexed_repo), "--budget"])
     captured = capsys.readouterr()
@@ -196,7 +196,7 @@ def test_cli_query_trailing_budget_without_value_errors(
 def test_cli_query_unknown_flag_errors_not_folded(indexed_repo: Path, capsys) -> None:
     """An unknown `--flag` is rejected through `usage_error` (exit 2 + a
     `--help` hint) rather than silently folded into the search string."""
-    from dummyindex.cli import dispatch
+    from dummyindex.context.cli import dispatch
 
     rc = dispatch(["query", "x", "--bogus", "5", "--root", str(indexed_repo)])
     captured = capsys.readouterr()
@@ -211,7 +211,7 @@ def test_cli_query_top_k_non_integer_routes_through_usage_error(
     indexed_repo: Path, capsys
 ) -> None:
     """A non-integer --top-k exits 2 with the shared `--help` hint."""
-    from dummyindex.cli import dispatch
+    from dummyindex.context.cli import dispatch
 
     rc = dispatch(["query", "app", "--root", str(indexed_repo), "--top-k", "notanint"])
     captured = capsys.readouterr()
@@ -224,7 +224,7 @@ def test_cli_query_top_k_non_integer_routes_through_usage_error(
 def test_cli_query_trailing_top_k_emits_help_hint(indexed_repo: Path, capsys) -> None:
     """A trailing `--top-k` with no value exits 2 via `usage_error`, carrying
     the `--help` hint."""
-    from dummyindex.cli import dispatch
+    from dummyindex.context.cli import dispatch
 
     rc = dispatch(["query", "app", "--root", str(indexed_repo), "--top-k"])
     captured = capsys.readouterr()
@@ -236,7 +236,7 @@ def test_cli_query_trailing_top_k_emits_help_hint(indexed_repo: Path, capsys) ->
 
 def test_cli_query_missing_arg_emits_help_hint(tmp_path: Path, capsys) -> None:
     """The empty-query usage error routes through `usage_error`."""
-    from dummyindex.cli import dispatch
+    from dummyindex.context.cli import dispatch
 
     rc = dispatch(["query", "--root", str(tmp_path)])
     captured = capsys.readouterr()
@@ -246,7 +246,7 @@ def test_cli_query_missing_arg_emits_help_hint(tmp_path: Path, capsys) -> None:
 
 def test_query_usage_documents_no_match_exit_1() -> None:
     """The no-match exit-1 contract is documented in `query`'s USAGE slice."""
-    from dummyindex.cli.help import usage_for
+    from dummyindex.context.cli.help import usage_for
     from dummyindex.context.enums import ContextSubcommand
 
     text = usage_for(ContextSubcommand.QUERY).lower()

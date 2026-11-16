@@ -26,8 +26,7 @@ from dummyindex.context.domains.config import (
     read_config,
     write_config,
 )
-from dummyindex.context.output.bootstrap import ALWAYS_ON_OUTPUT_POLICY
-from dummyindex.installer import (
+from dummyindex.context.installer import (
     CODEX_SKILL_REL,
     SKILL_REL,
     LinkMode,
@@ -36,6 +35,7 @@ from dummyindex.installer import (
     parse_uninstall_args,
     uninstall,
 )
+from dummyindex.context.output.bootstrap import ALWAYS_ON_OUTPUT_POLICY
 from tests.paths import FIXTURES_DIR
 
 
@@ -55,7 +55,7 @@ class _RecordingRunner:
 
 
 _DEFAULT_TARGETS = tuple(plugin.target for plugin in DEFAULT_PLUGINS)
-installer_module = import_module("dummyindex.installer.install")
+installer_module = import_module("dummyindex.context.installer.install")
 
 
 @pytest.mark.unit
@@ -327,7 +327,7 @@ def test_install_codex_project_scope_writes_discoverable_skill_family(
 
 @pytest.mark.unit
 def test_render_skill_agents_platform_has_portable_host_preamble() -> None:
-    from dummyindex.installer.common import render_skill
+    from dummyindex.context.installer.common import render_skill
 
     src = "---\nname: dummyindex\ndescription: test\n---\nbody text\n"
 
@@ -346,11 +346,11 @@ def test_render_skill_agents_platform_has_portable_host_preamble() -> None:
 def test_render_skill_strips_test_anchor_markers() -> None:
     """`render_skill()` strips the shipped `skill.md`'s `test-anchor:*` markers.
 
-    `tests/cli/test_cli_doc_sync_policy_canary.py` uses the
+    `tests/context/cli/test_cli_doc_sync_policy_canary.py` uses the
     `test-anchor:policy-{restatement,selfapply}` markers as test-only scaffolding,
     so an installed `SKILL.md` carries none of them, but keeps the prose they delimit.
     """
-    from dummyindex.installer.common import _skill_src, render_skill
+    from dummyindex.context.installer.common import _skill_src, render_skill
 
     src = _skill_src("skill.md").read_text(encoding="utf-8")
     assert "test-anchor:" in src, (
@@ -372,7 +372,7 @@ def test_render_skill_strips_test_anchor_markers() -> None:
 
 @pytest.mark.unit
 def test_normalize_platform_arg_maps_agents_alias_to_codex_token() -> None:
-    from dummyindex.installer.common import normalize_platform_arg
+    from dummyindex.context.installer.common import normalize_platform_arg
 
     assert normalize_platform_arg("agents") == "codex"
     assert normalize_platform_arg("claude") == "claude"
@@ -383,7 +383,7 @@ def test_normalize_platform_arg_maps_agents_alias_to_codex_token() -> None:
 def test_normalize_platform_arg_codex_alias_warns_once_on_stderr(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    import dummyindex.installer.common as common_module
+    import dummyindex.context.installer.common as common_module
 
     monkeypatch.setattr(common_module, "_CODEX_PLATFORM_ALIAS_WARNED", False)
 
@@ -397,7 +397,7 @@ def test_normalize_platform_arg_codex_alias_warns_once_on_stderr(
 
 @pytest.mark.unit
 def test_normalize_platform_arg_rejects_unknown_value() -> None:
-    from dummyindex.installer.common import normalize_platform_arg
+    from dummyindex.context.installer.common import normalize_platform_arg
 
     with pytest.raises(ValueError):
         normalize_platform_arg("cursor")
@@ -405,7 +405,7 @@ def test_normalize_platform_arg_rejects_unknown_value() -> None:
 
 @pytest.mark.unit
 def test_agents_skill_rel_is_codex_skill_rel_alias() -> None:
-    from dummyindex.installer.common import AGENTS_SKILL_REL
+    from dummyindex.context.installer.common import AGENTS_SKILL_REL
 
     assert AGENTS_SKILL_REL is CODEX_SKILL_REL
 
@@ -658,7 +658,7 @@ def test_uninstall_codex_on_linked_layout_sweeps_claude_links_too(
     assert not (tmp_path / CODEX_SKILL_REL).exists()
     assert not (tmp_path / ".agents" / "skills" / "dummyindex-plan").exists()
 
-    from dummyindex.installer.common import _SIBLING_SKILLS
+    from dummyindex.context.installer.common import _SIBLING_SKILLS
 
     # A linked Claude side owns no bytes, so every family is gone, not merely dangling.
     for family in ("dummyindex", *(sib for _sub, sib in _SIBLING_SKILLS)):
@@ -716,7 +716,7 @@ def test_uninstall_does_not_follow_nested_sibling_directory_symlink(
     _require_real_symlinks(tmp_path)
     sibling = tmp_path / ".agents" / "skills" / "dummyindex-plan"
     sibling.mkdir(parents=True)
-    from dummyindex.installer.ownership import sync_family
+    from dummyindex.context.installer.ownership import sync_family
 
     sync_family(
         sibling, {"SKILL.md": "installed\n"}, family="dummyindex-plan", version="1.0.0"
@@ -750,14 +750,14 @@ def _require_real_symlinks(tmp_path: Path) -> None:
 def _build_linked_layout(tmp_path: Path) -> tuple[str, ...]:
     """Build a stamped `.agents/skills/<family>` tree per family and link the Claude
     side with `create_family_links`. Returns the 8 family names, main first."""
-    from dummyindex.installer.common import _SIBLING_SKILLS, PACKAGE_VERSION
-    from dummyindex.installer.link import create_family_links
+    from dummyindex.context.installer.common import _SIBLING_SKILLS, PACKAGE_VERSION
+    from dummyindex.context.installer.link import create_family_links
 
     families = ("dummyindex", *(label for _name, label in _SIBLING_SKILLS))
     agents_root = tmp_path / ".agents" / "skills"
     for family in families:
         family_dir = agents_root / family
-        from dummyindex.installer.ownership import sync_family
+        from dummyindex.context.installer.ownership import sync_family
 
         sync_family(
             family_dir,
@@ -933,7 +933,7 @@ def test_install_copies_companion_markdowns(tmp_path: Path) -> None:
 @pytest.mark.integration
 def test_install_copies_tokens_command(tmp_path: Path) -> None:
     """The bundled /tokens slash command lands in <scope>/.claude/commands/."""
-    from dummyindex.installer import COMMANDS_REL
+    from dummyindex.context.installer import COMMANDS_REL
 
     install(scope="project", project_dir=tmp_path)
     command = tmp_path / COMMANDS_REL / "tokens.md"
@@ -946,7 +946,7 @@ def test_install_and_uninstall_skip_symlinked_commands_directory(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     _require_real_symlinks(tmp_path)
-    from dummyindex.installer import COMMANDS_REL
+    from dummyindex.context.installer import COMMANDS_REL
 
     external = tmp_path / "external-commands"
     external.mkdir()
@@ -970,7 +970,7 @@ def test_install_preserves_foreign_command_symlink_without_touching_target(
     tmp_path: Path,
 ) -> None:
     _require_real_symlinks(tmp_path)
-    from dummyindex.installer import COMMANDS_REL
+    from dummyindex.context.installer import COMMANDS_REL
 
     commands_dir = tmp_path / COMMANDS_REL
     commands_dir.mkdir(parents=True)
@@ -988,8 +988,8 @@ def test_install_preserves_foreign_command_symlink_without_touching_target(
 
 @pytest.mark.integration
 def test_uninstall_removes_tokens_command(tmp_path: Path) -> None:
-    from dummyindex.installer import COMMANDS_REL
-    from dummyindex.installer import uninstall as uninstall_fn
+    from dummyindex.context.installer import COMMANDS_REL
+    from dummyindex.context.installer import uninstall as uninstall_fn
 
     install(scope="project", project_dir=tmp_path)
     command = tmp_path / COMMANDS_REL / "tokens.md"
@@ -1016,7 +1016,7 @@ def test_uninstall_removes_companion_markdowns(tmp_path: Path) -> None:
     skill_dir = (tmp_path / CODEX_SKILL_REL).parent
     assert (skill_dir / "agents").is_dir()  # precondition
 
-    from dummyindex.installer import uninstall as uninstall_fn
+    from dummyindex.context.installer import uninstall as uninstall_fn
 
     uninstall_fn(scope="project", project_dir=tmp_path)
     assert not (tmp_path / SKILL_REL).exists()
@@ -1044,11 +1044,11 @@ def test_flagless_install_then_flagless_uninstall_leaves_no_trace(
     """A flagless `uninstall()` removes what a flagless `install()` wrote; the other
     uninstall tests all pass `platform=`. Families come from `_SIBLING_SKILLS`, never
     a `dummyindex*` glob, which would also catch equip's `dummyindex-verify`."""
+    from dummyindex.context.installer.common import _SIBLING_SKILLS
     from dummyindex.context.output.agents_md import (
         AGENTS_BEGIN_MARKER,
         bootstrap_project_agents_md,
     )
-    from dummyindex.installer.common import _SIBLING_SKILLS
 
     agents_md = tmp_path / "AGENTS.md"
     agents_md.write_text("# Team rules\n\nKeep this.\n", encoding="utf-8")
@@ -1158,7 +1158,7 @@ def test_parse_install_platform_codex_alias_warns_once_on_stderr(
 ) -> None:
     """`--platform codex` still works (byte-identical alias) but prints the
     deprecation notice at this parse boundary."""
-    import dummyindex.installer.common as common_module
+    import dummyindex.context.installer.common as common_module
 
     monkeypatch.setattr(common_module, "_CODEX_PLATFORM_ALIAS_WARNED", False)
 
@@ -1323,7 +1323,7 @@ def test_parse_uninstall_platform_agents_alias_maps_to_codex_token() -> None:
 def test_parse_uninstall_platform_codex_alias_warns_once_on_stderr(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    import dummyindex.installer.common as common_module
+    import dummyindex.context.installer.common as common_module
 
     monkeypatch.setattr(common_module, "_CODEX_PLATFORM_ALIAS_WARNED", False)
 
@@ -1845,7 +1845,7 @@ def test_default_config_import_oserror_is_not_masked_by_configerror_nameerror(
     """
     import builtins
 
-    from dummyindex.installer.install import _write_default_config
+    from dummyindex.context.installer.install import _write_default_config
 
     real_import = builtins.__import__
 
@@ -1874,7 +1874,7 @@ def test_stale_enriched_install_prints_gitignore_warning_once(
     from dummyindex.context.build.context_upgrade import GITIGNORE_WARNING
     from dummyindex.context.build.incremental import EnrichedIndexStatus
     from dummyindex.context.build.runner import build_all
-    from dummyindex.installer.install import _auto_init_project
+    from dummyindex.context.installer.install import _auto_init_project
 
     repo = tmp_path / "repo"
     _make_repo_with_source(repo)
@@ -1906,7 +1906,7 @@ def test_default_config_survives_a_requirements_error_on_toml_seed(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     from dummyindex.context.domains.requirements import RequirementsError
-    from dummyindex.installer.install import _write_default_config
+    from dummyindex.context.installer.install import _write_default_config
 
     (tmp_path / ".context").mkdir()
 
@@ -1928,7 +1928,7 @@ def test_default_config_survives_a_requirements_error_on_toml_seed(
 @pytest.mark.integration
 def test_default_config_seeds_config_toml_on_first_install(tmp_path: Path) -> None:
     """Upgrade runs before config.json exists, so the default writer seeds the toml."""
-    from dummyindex.installer.install import _write_default_config
+    from dummyindex.context.installer.install import _write_default_config
 
     ctx = tmp_path / ".context"
     ctx.mkdir()
@@ -1941,7 +1941,7 @@ def test_default_config_seeds_config_toml_on_first_install(tmp_path: Path) -> No
 
 @pytest.mark.integration
 def test_default_config_keeps_an_existing_config_toml(tmp_path: Path) -> None:
-    from dummyindex.installer.install import _write_default_config
+    from dummyindex.context.installer.install import _write_default_config
 
     ctx = tmp_path / ".context"
     ctx.mkdir()
@@ -1963,8 +1963,8 @@ def test_auto_init_enriched_path_holds_stamp_when_an_upgrade_step_fails(
     from dummyindex.context.build.incremental import EnrichedIndexStatus
     from dummyindex.context.build.meta import read_meta
     from dummyindex.context.build.runner import build_all
-    from dummyindex.installer.common import PACKAGE_VERSION
-    from dummyindex.installer.install import _auto_init_project
+    from dummyindex.context.installer.common import PACKAGE_VERSION
+    from dummyindex.context.installer.install import _auto_init_project
 
     repo = tmp_path / "repo"
     _make_repo_with_source(repo)
@@ -1994,8 +1994,8 @@ def test_auto_init_enriched_path_advances_stamp_when_all_steps_succeed(
     from dummyindex.context.build.incremental import EnrichedIndexStatus
     from dummyindex.context.build.meta import read_meta
     from dummyindex.context.build.runner import build_all
-    from dummyindex.installer.common import PACKAGE_VERSION
-    from dummyindex.installer.install import _auto_init_project
+    from dummyindex.context.installer.common import PACKAGE_VERSION
+    from dummyindex.context.installer.install import _auto_init_project
 
     repo = tmp_path / "repo"
     _make_repo_with_source(repo)
@@ -2019,7 +2019,7 @@ def test_auto_init_enriched_refresh_advance_stamp_follows_force_downgrade(
 ) -> None:
     from dummyindex.context.build.enriched_refresh import RefreshResult
     from dummyindex.context.build.incremental import EnrichedIndexStatus
-    from dummyindex.installer.install import _auto_init_project
+    from dummyindex.context.installer.install import _auto_init_project
 
     repo = tmp_path / "repo"
     _make_repo_with_source(repo)
@@ -2414,7 +2414,7 @@ def test_install_preserves_unproven_template_files(tmp_path: Path) -> None:
 @pytest.mark.integration
 def test_install_update_skill_stamps_version(tmp_path: Path) -> None:
     """/dummyindex-update's banner carries the concrete installed version."""
-    from dummyindex.installer.common import PACKAGE_VERSION
+    from dummyindex.context.installer.common import PACKAGE_VERSION
 
     install(scope="project", project_dir=tmp_path, skill_only=True)
     skill = tmp_path / ".agents" / "skills" / "dummyindex-update" / "SKILL.md"
@@ -2507,7 +2507,7 @@ def test_install_auto_init_advances_version_on_curated_index(
     healthy curated repo stops showing a stale stamp) without re-clustering."""
     import json
 
-    from dummyindex.installer.common import PACKAGE_VERSION
+    from dummyindex.context.installer.common import PACKAGE_VERSION
 
     repo = tmp_path / "repo"
     _make_repo_with_source(repo)
@@ -3001,7 +3001,7 @@ def test_install_user_scope_skips_when_sentinel_present(
 ) -> None:
     """When the sentinel is already present, install makes no change and does
     not duplicate the registration block (sentinel appears exactly once)."""
-    from dummyindex.installer.common import _SKILL_REGISTRATION
+    from dummyindex.context.installer.common import _SKILL_REGISTRATION
 
     fake_home = _user_scope_clean_cwd(tmp_path, monkeypatch)
     claude_md = fake_home / ".claude" / "CLAUDE.md"
@@ -3104,7 +3104,7 @@ def test_upgrade_step_passes_refresh_result_and_prints_outcome(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from dummyindex.context.build.enriched_refresh import RefreshResult
-    from dummyindex.installer.install import _upgrade_step
+    from dummyindex.context.installer.install import _upgrade_step
 
     refreshes = _spy_upgrade(monkeypatch)
     refresh = RefreshResult(context_dir=tmp_path / ".context", written=("tree.json",))
@@ -3121,7 +3121,7 @@ def test_upgrade_step_failure_is_a_warning_not_an_error(
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from dummyindex.installer.install import _upgrade_step
+    from dummyindex.context.installer.install import _upgrade_step
 
     def _boom(*_a: object, **_k: object) -> None:
         raise RuntimeError("lock busy")
@@ -3141,7 +3141,7 @@ def test_auto_init_enriched_path_upgrades_once_with_the_refresh_result(
 ) -> None:
     from dummyindex.context.build.enriched_refresh import RefreshResult
     from dummyindex.context.build.incremental import EnrichedIndexStatus
-    from dummyindex.installer.install import _auto_init_project
+    from dummyindex.context.installer.install import _auto_init_project
 
     repo = tmp_path / "repo"
     _make_repo_with_source(repo)
@@ -3173,7 +3173,7 @@ def test_auto_init_full_build_path_upgrades_once_without_a_second_refresh(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     from dummyindex.context.build.enriched_refresh import RefreshResult
-    from dummyindex.installer.install import _auto_init_project
+    from dummyindex.context.installer.install import _auto_init_project
 
     repo = tmp_path / "repo"
     _make_repo_with_source(repo)
@@ -3200,7 +3200,7 @@ def test_auto_init_leaves_unequipped_repo_without_equipment_json(
     import subprocess
 
     from dummyindex.context.domains.equip import EQUIPMENT_REL
-    from dummyindex.installer.install import _auto_init_project
+    from dummyindex.context.installer.install import _auto_init_project
 
     repo = tmp_path / "repo"
     _make_repo_with_source(repo)
@@ -3223,7 +3223,7 @@ def test_user_scope_requirements_hooks_land_in_claude_config_dir_only(
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from dummyindex.installer.install.orchestrate import (
+    from dummyindex.context.installer.install.orchestrate import (
         _install_user_requirements_hooks,
     )
 
@@ -3275,13 +3275,13 @@ def test_user_scope_claude_skill_only_writes_requirements_hooks_to_config_dir(
 def test_agents_install_refreshes_shared_capabilities_without_native_setup(tmp_path):
     import dataclasses
 
-    from dummyindex.cli.equip import run as equip
+    from dummyindex.context.cli.equip import run as equip
     from dummyindex.context.domains.equip import (
         content_hash,
         read_manifest,
         write_manifest,
     )
-    from dummyindex.shared.atomic_io import write_text_atomic
+    from dummyindex.context.shared.atomic_io import write_text_atomic
 
     repo = tmp_path / "repo"
     _make_repo_with_source(repo)

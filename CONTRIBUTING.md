@@ -9,14 +9,14 @@ Codex. Contributions are welcome — read this file before opening a PR.
 
 | Path | What lives here |
 |------|-----------------|
-| `dummyindex/cli/` | `dummyindex context <subcommand>` dispatch — arg parsing + call domain + print + exit |
+| `dummyindex/context/cli/` | `dummyindex context <subcommand>` dispatch — arg parsing + call domain + print + exit |
 | `dummyindex/context/` | `.context/` domain logic: builder, domains, output renderers, hooks |
-| `dummyindex/pipeline/` | Deterministic backbone: tree-sitter extraction, graph build, export |
-| `dummyindex/analysis/` | Graph analytics (Louvain community detection) |
-| `dummyindex/export/` | Render graph → on-disk JSON |
-| `dummyindex/usage/` | `dummyindex usage` — Claude Code transcript token reporting |
+| `dummyindex/context/pipeline/` | Deterministic backbone: tree-sitter extraction, graph build, export |
+| `dummyindex/context/analysis/` | Graph analytics (Louvain community detection) |
+| `dummyindex/context/export/` | Render graph → on-disk JSON |
+| `dummyindex/context/usage/` | `dummyindex usage` — Claude Code transcript token reporting |
 | `dummyindex/skills/` | Shared workflow markdown installed as Claude `/dummyindex*` and Codex `$dummyindex*` skills |
-| `dummyindex/installer/` | `dummyindex install` / `uninstall` — register the skill + wire the repo |
+| `dummyindex/context/installer/` | `dummyindex install` / `uninstall` — register the skill + wire the repo |
 | `tests/` | Mirrors `dummyindex/` layout; pytest markers: `unit`, `integration` |
 | `docs/guide/` | Public conceptual docs (01–12, read in order) |
 | `docs/reference/` | Canonical conventions reference |

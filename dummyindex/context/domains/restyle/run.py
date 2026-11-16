@@ -39,7 +39,7 @@ from dummyindex.context.domains.restyle.errors import (
 )
 from dummyindex.context.domains.restyle.snapshot import diff_tokens
 from dummyindex.context.output.bootstrap import STE_DOC_STANDARD
-from dummyindex.shared.atomic_io import write_text_atomic
+from dummyindex.context.shared.atomic_io import write_text_atomic
 
 __all__ = [
     "PlanUnit",

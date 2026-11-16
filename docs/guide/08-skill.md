@@ -212,7 +212,7 @@ Per dispatch:
 
 | Concern | Where |
 |---|---|
-| "What command runs the AST?" | Python (`dummyindex/pipeline/extract.py`) |
+| "What command runs the AST?" | Python (`dummyindex/context/pipeline/extract.py`) |
 | "What does the dev agent look at?" | Markdown (`skills/agents/dev.md`) |
 | "How do the pipeline stages coordinate?" | Markdown procedure (`skills/council/*.md`) |
 | "How does the agent walk the tree?" | Markdown (`skills/retrieval/*.md` → `.context/HOW_TO_USE.md`) |

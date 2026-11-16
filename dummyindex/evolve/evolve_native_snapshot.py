@@ -8,10 +8,10 @@ import stat
 import sys
 from pathlib import Path
 
-from dummyindex.export import storage as graph_storage
-from dummyindex.shared import atomic_io, guard
-from dummyindex.shared.errors import EvolveError
-from dummyindex.shared.guard import safe_file
+from dummyindex.context.export import storage as graph_storage
+from dummyindex.context.shared import atomic_io, guard
+from dummyindex.context.shared.errors import EvolveError
+from dummyindex.context.shared.guard import safe_file
 
 from .evidence import digest
 from .evolve_gate import _environment, _working_inputs

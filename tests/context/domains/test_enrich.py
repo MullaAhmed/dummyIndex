@@ -9,13 +9,13 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli import dispatch
+from dummyindex.context.cli import dispatch
 from dummyindex.context.domains.enrich import (
     apply_updates,
     build_plan,
     write_plan,
 )
-from dummyindex.pipeline.enums import ConfidenceLevel
+from dummyindex.context.pipeline.enums import ConfidenceLevel
 from tests.paths import SAMPLE_REPO
 
 _FIXTURE = SAMPLE_REPO

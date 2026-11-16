@@ -50,10 +50,10 @@ from dummyindex.context.domains.source_docs import (
     harvest_json_keys,
     write_catalog,
 )
-from dummyindex.pipeline.build import build_structure
-from dummyindex.pipeline.extract import extract
-from dummyindex.pipeline.io.detect import detect
-from dummyindex.versioning import VersionOrder, compare_versions, parse_version
+from dummyindex.context.pipeline.build import build_structure
+from dummyindex.context.pipeline.extract import extract
+from dummyindex.context.pipeline.io.detect import detect
+from dummyindex.context.versioning import VersionOrder, compare_versions, parse_version
 
 # Artefacts whose failure holds the version stamp back. The derived graph
 # roll-ups (seed-rank, communities) stay best-effort.
@@ -223,7 +223,7 @@ def refresh_deterministic_artifacts(
         and meta.indexed_commit
         and commit_exists(root, meta.indexed_commit) is False
     ):
-        from dummyindex.shared.atomic_io import write_text_atomic
+        from dummyindex.context.shared.atomic_io import write_text_atomic
 
         for feature in (context_dir / "features").glob("*/feature.json"):
             marker = feature.parent / ".pending-enrichment"

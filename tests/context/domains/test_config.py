@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli.config import run as run_config
-from dummyindex.cli.onboard import run as run_onboard
+from dummyindex.context.cli.config import run as run_config
+from dummyindex.context.cli.onboard import run as run_onboard
 from dummyindex.context.default_plugins import (
     WiredEntry,
     WiredKind,
@@ -829,7 +829,7 @@ def test_onboard_platform_codex_alias_warns_once_on_stderr(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    import dummyindex.installer.common as common_module
+    import dummyindex.context.installer.common as common_module
 
     monkeypatch.setattr(common_module, "_CODEX_PLATFORM_ALIAS_WARNED", False)
     ctx = _context_dir(tmp_path)

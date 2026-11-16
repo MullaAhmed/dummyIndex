@@ -14,9 +14,9 @@ import json
 from collections.abc import Callable, Mapping
 from pathlib import Path
 
-from dummyindex.shared.atomic_io import write_text_atomic
-from dummyindex.shared.errors import EvolveError
-from dummyindex.shared.lesson import validate_lesson as _validate_lesson
+from dummyindex.context.shared.atomic_io import write_text_atomic
+from dummyindex.context.shared.errors import EvolveError
+from dummyindex.context.shared.lesson import validate_lesson as _validate_lesson
 
 from ..enums import EquipmentKind
 from ..errors import EquipError

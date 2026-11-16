@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli import dispatch
+from dummyindex.context.cli import dispatch
 from dummyindex.context.domains.buildloop import parse_checklist
 from dummyindex.context.domains.gc import CandidateKind, GcTargetError, delete_workspace
 from dummyindex.context.domains.proposals import (
@@ -292,7 +292,7 @@ def test_audit_reflection_uses_managed_learning_gate_and_is_idempotent(
         assert first["learning"]["state"] == "applied"
         revised = convention.read_bytes()
         assert revised.startswith(owner_bytes)
-        from dummyindex.shared.lesson.rules import rules_in
+        from dummyindex.context.shared.lesson.rules import rules_in
 
         managed = rules_in(revised.decode("utf-8"))
         assert len(managed) == 1

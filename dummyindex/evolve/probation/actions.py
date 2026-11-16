@@ -9,10 +9,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from dummyindex.shared.atomic_io import write_text_atomic
-from dummyindex.shared.errors import EvolveError
-from dummyindex.shared.guard import project_lock, safe_file
-from dummyindex.shared.lesson.rules import rules_in
+from dummyindex.context.shared.atomic_io import write_text_atomic
+from dummyindex.context.shared.errors import EvolveError
+from dummyindex.context.shared.guard import project_lock, safe_file
+from dummyindex.context.shared.lesson.rules import rules_in
 
 from ..evolve import CANDIDATES_NAME, record_event, validate_candidate
 from ..evolve_gate import CommandRunner, check_receipt, run_gate

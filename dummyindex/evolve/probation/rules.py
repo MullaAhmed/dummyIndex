@@ -6,7 +6,7 @@ import re
 from collections.abc import Iterable, Sequence
 from typing import Any
 
-from dummyindex.shared.errors import EvolveError
+from dummyindex.context.shared.errors import EvolveError
 
 from ..observe import scan_text
 from .constants import (

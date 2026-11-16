@@ -1,4 +1,4 @@
-"""Tests for wiring `installer/link.py`'s primitives into `install()`.
+"""Tests for wiring `context/installer/link.py`'s primitives into `install()`.
 
 Covers the preflight admission (OURS_HEALTHY/OURS_DANGLING/MATERIALIZED family dirs
 pass, FOREIGN and companion-dir symlinks keep the refusal), the never-write-through
@@ -15,25 +15,25 @@ from pathlib import Path, PurePath
 
 import pytest
 
-from dummyindex.installer import LinkMode, install, uninstall
-from dummyindex.installer.common import _SIBLING_SKILLS, PACKAGE_VERSION
-from dummyindex.installer.install import (
+from dummyindex.context.installer import LinkMode, install, uninstall
+from dummyindex.context.installer.common import _SIBLING_SKILLS, PACKAGE_VERSION
+from dummyindex.context.installer.install import (
     _agents_family_stamp_state,
     _backfill_sibling_stamps,
     _claude_narrowing_link_gate,
     _install_skill_family,
     _link_state_report_line,
 )
-from dummyindex.installer.link import (
+from dummyindex.context.installer.link import (
     FamilyLinkClassification,
     FamilyLinkState,
     classify_family_link,
     create_family_links,
     relative_link_value,
 )
-from dummyindex.installer.link.orchestrate import _probe_symlink_capability
-from dummyindex.installer.repair import dedupe
-from dummyindex.versioning import parse_version
+from dummyindex.context.installer.link.orchestrate import _probe_symlink_capability
+from dummyindex.context.installer.repair import dedupe
+from dummyindex.context.versioning import parse_version
 
 # The families, derived from the constant (never a `dummyindex*` glob —
 # that would also catch equip's `dummyindex-verify`).
@@ -63,7 +63,7 @@ def _require_real_symlinks(tmp_path: Path) -> None:
 def _write_family_dir(
     base: Path, *, name: str, version: str | None = PACKAGE_VERSION
 ) -> Path:
-    from dummyindex.installer.ownership import sync_family
+    from dummyindex.context.installer.ownership import sync_family
 
     body = f"---\nname: {name}\ndescription: test\n---\nbody\n"
     sync_family(
@@ -668,9 +668,9 @@ def test_strict_link_platform_claude_prepares_shared_family_before_link_dispatch
 ) -> None:
     import importlib
 
-    from dummyindex.installer.link import LinkInstallResult
+    from dummyindex.context.installer.link import LinkInstallResult
 
-    module = importlib.import_module("dummyindex.installer.install")
+    module = importlib.import_module("dummyindex.context.installer.install")
     calls = []
 
     def capture(base, **kwargs):
@@ -766,7 +766,7 @@ def test_copy_mode_never_calls_create_family_links(
     assert not seed_result.errors, seed_result.errors
     assert _claude_family_dir(tmp_path).is_symlink()
 
-    import dummyindex.installer.link as link_module
+    import dummyindex.context.installer.link as link_module
 
     calls: list[object] = []
     real_create_family_links = link_module.create_family_links
@@ -912,9 +912,11 @@ def test_auto_capability_fallback_writes_real_claude_dirs_never_neither(
     since the package's `install` attribute is the function."""
     import importlib
 
-    from dummyindex.installer.link import run_link_install as real_run_link_install
+    from dummyindex.context.installer.link import (
+        run_link_install as real_run_link_install,
+    )
 
-    install_module = importlib.import_module("dummyindex.installer.install")
+    install_module = importlib.import_module("dummyindex.context.installer.install")
 
     def _raising_symlink_fn(*_a: object, **_k: object) -> None:
         raise OSError(errno.EPERM, "Operation not permitted")
@@ -1136,7 +1138,7 @@ def test_sibling_healthy_link_classifies_ours_healthy_with_helper_deleted(
 ) -> None:
     """With `_is_unstamped_own_family_link` gone, a sibling's healthy link classifies
     OURS_HEALTHY via plain `classify_family_link`: the backfill stamps its target."""
-    import dummyindex.installer.install as install_module
+    import dummyindex.context.installer.install as install_module
 
     assert not hasattr(install_module, "_is_unstamped_own_family_link")
 
@@ -1194,7 +1196,7 @@ def test_unexpected_run_link_install_exception_still_lands_real_claude_dirs(
     has NEITHER links nor real dirs; it exits 1 with a clean stderr line."""
     import importlib
 
-    install_module = importlib.import_module("dummyindex.installer.install")
+    install_module = importlib.import_module("dummyindex.context.installer.install")
 
     def _raising_run_link_install(*_a: object, **_k: object) -> object:
         raise RuntimeError("boom: simulated link.py bug")
@@ -1494,9 +1496,11 @@ def test_e2e_eperm_preprobe_falls_back_to_copy_with_exactly_one_warning(
     repo = tmp_path / "repo"
     _init_fake_git_repo(repo)
 
-    from dummyindex.installer.link import run_link_install as real_run_link_install
+    from dummyindex.context.installer.link import (
+        run_link_install as real_run_link_install,
+    )
 
-    install_module = importlib.import_module("dummyindex.installer.install")
+    install_module = importlib.import_module("dummyindex.context.installer.install")
 
     def _raising_symlink_fn(*_a: object, **_k: object) -> None:
         raise OSError(errno.EPERM, "Operation not permitted")
@@ -1541,9 +1545,11 @@ def test_e2e_nth_call_symlink_failure_preserves_survivors_names_uncovered(
     _init_fake_git_repo(repo)
     _require_real_symlinks(repo)
 
-    from dummyindex.installer.link import run_link_install as real_run_link_install
+    from dummyindex.context.installer.link import (
+        run_link_install as real_run_link_install,
+    )
 
-    install_module = importlib.import_module("dummyindex.installer.install")
+    install_module = importlib.import_module("dummyindex.context.installer.install")
 
     fail_at = 4
     calls = {"n": 0}

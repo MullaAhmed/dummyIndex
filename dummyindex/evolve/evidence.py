@@ -16,10 +16,10 @@ from pathlib import Path
 
 from dummyindex.context.domains.config import current_dummyindex_version
 from dummyindex.context.domains.memory.miner.scope import project_dir_name
-from dummyindex.shared.atomic_io import write_text_atomic
-from dummyindex.shared.errors import EvolveError
-from dummyindex.shared.guard import project_lock, safe_file
-from dummyindex.usage.transcripts import encode_project_slug
+from dummyindex.context.shared.atomic_io import write_text_atomic
+from dummyindex.context.shared.errors import EvolveError
+from dummyindex.context.shared.guard import project_lock, safe_file
+from dummyindex.context.usage.transcripts import encode_project_slug
 
 from .observe import ledger as observe_ledger
 from .observe.enums import CorrectionStatus

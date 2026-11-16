@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from dummyindex.shared.atomic_io import write_text_atomic
+from dummyindex.context.shared.atomic_io import write_text_atomic
 
 from ...build.upgrade import ensure_context_gitignore
 from .constants import PROJECT_STASH_DIR, STASH_FILE, USER_STASH_DIR

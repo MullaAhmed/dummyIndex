@@ -19,7 +19,7 @@ from dummyindex.context.domains.equip.enums import EquipmentScope
 from dummyindex.context.domains.equip.errors import EquipError
 from dummyindex.context.domains.equip.generate.adapters import native_adapter_path
 from dummyindex.context.domains.equip.lifecycle.manifest import read_manifest
-from dummyindex.versioning import VersionOrder, compare_versions
+from dummyindex.context.versioning import VersionOrder, compare_versions
 
 from .enums import RequirementKind, RequirementStatus, SkillOrigin
 from .models import PluginRequirement, RequirementRow, Requirements, SkillRequirement

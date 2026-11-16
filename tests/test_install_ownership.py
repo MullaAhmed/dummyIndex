@@ -7,11 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli import check
-from dummyindex.installer import install, uninstall
-from dummyindex.installer.common import LinkMode
-from dummyindex.installer.link.models import LinkInstallResult
-from dummyindex.installer.ownership import (
+from dummyindex.context.cli import check
+from dummyindex.context.installer import install, uninstall
+from dummyindex.context.installer.common import LinkMode
+from dummyindex.context.installer.link.models import LinkInstallResult
+from dummyindex.context.installer.ownership import (
     MANIFEST_NAME,
     content_hash,
     family_is_pristine,
@@ -25,7 +25,7 @@ pytestmark = pytest.mark.unit
 
 @pytest.fixture
 def no_links(monkeypatch: pytest.MonkeyPatch) -> None:
-    package = importlib.import_module("dummyindex.installer.install")
+    package = importlib.import_module("dummyindex.context.installer.install")
     monkeypatch.setattr(
         package,
         "run_link_install",
@@ -245,7 +245,7 @@ def test_corrupt_ownership_manifest_never_authorizes_writes(tmp_path: Path) -> N
 def test_version_check_detects_same_version_source_mismatch(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
 ) -> None:
-    from dummyindex.installer import ownership
+    from dummyindex.context.installer import ownership
 
     install(scope="project", project_dir=tmp_path, skill_only=True, platform="codex")
     assert check._skill_source_warnings(tmp_path) == ()
@@ -298,7 +298,7 @@ def test_install_preserves_custom_commands_and_project_config(
 def test_agents_uninstall_removes_only_unchanged_dependent_claude_references(
     tmp_path, no_links
 ):
-    from dummyindex.installer import uninstall
+    from dummyindex.context.installer import uninstall
 
     install(scope="project", project_dir=tmp_path, skill_only=True)
     edited = tmp_path / ".claude/skills/dummyindex-plan/SKILL.md"
@@ -315,9 +315,9 @@ def test_agents_uninstall_removes_only_unchanged_dependent_claude_references(
 def test_native_link_targets_use_host_separators(tmp_path):
     import errno
 
-    from dummyindex.installer.link import create_family_links
-    from dummyindex.installer.link.classify import relative_link_value
-    from dummyindex.installer.link.orchestrate import _probe_symlink_capability
+    from dummyindex.context.installer.link import create_family_links
+    from dummyindex.context.installer.link.classify import relative_link_value
+    from dummyindex.context.installer.link.orchestrate import _probe_symlink_capability
 
     canonical = tmp_path / ".agents/skills/dummyindex"
     sync_family(canonical, {"SKILL.md": "stock"}, family="dummyindex", version="1.0.0")

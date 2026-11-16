@@ -71,7 +71,7 @@ from dummyindex.context.output.instructions import (
 # Re-exported from the pipeline so the CLI boundary (__main__) can detect
 # git repos without importing `pipeline` directly — the layering table
 # grants __main__ the `context` public surface, not `pipeline`.
-from dummyindex.pipeline.io import is_git_repo
+from dummyindex.context.pipeline.io import is_git_repo
 
 __all__ = [
     "BEGIN_MARKER",

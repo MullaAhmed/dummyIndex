@@ -6,7 +6,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from dummyindex.shared.atomic_io import write_text_atomic
+from dummyindex.context.shared.atomic_io import write_text_atomic
 
 from ...build.git_delta import head_commit
 from .checklist import (

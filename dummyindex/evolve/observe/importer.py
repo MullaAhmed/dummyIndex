@@ -11,8 +11,8 @@ from pathlib import Path, PurePosixPath
 
 from dummyindex.context.domains.config import current_dummyindex_version
 from dummyindex.context.domains.memory.miner.scan import human_prompt_text
-from dummyindex.shared.errors import EvolveError
-from dummyindex.shared.lesson.rules import rules_in
+from dummyindex.context.shared.errors import EvolveError
+from dummyindex.context.shared.lesson.rules import rules_in
 
 from .enums import CorrectionStatus
 from .keys import keyed_id, session_key

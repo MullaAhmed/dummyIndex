@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli import dispatch
+from dummyindex.context.cli import dispatch
 
 
 def _start(tmp_path: Path, *extra: str) -> None:

@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli.propose import run as run_propose
 from dummyindex.context.build.runner import build_all
+from dummyindex.context.cli.propose import run as run_propose
 from dummyindex.context.domains.proposals import (
     SCHEMA_VERSION,
     Proposal,

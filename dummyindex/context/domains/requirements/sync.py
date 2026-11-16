@@ -37,7 +37,7 @@ from dummyindex.context.domains.equip.generate.adapters import (
 )
 from dummyindex.context.domains.equip.lifecycle.manifest import read_manifest
 from dummyindex.context.domains.equip.plugins.marketplace import SEED_MARKETPLACES
-from dummyindex.versioning import VersionOrder, compare_versions
+from dummyindex.context.versioning import VersionOrder, compare_versions
 
 from .check import _family_skill_row, _split_constraint
 from .enums import RequirementStatus
