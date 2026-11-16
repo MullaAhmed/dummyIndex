@@ -29,12 +29,12 @@
     "test_statusline_test_unreadable_cache_prints_nothing"
   ],
   "files": [
-    "dummyindex/cli/statusline.py",
+    "dummyindex/context/cli/statusline.py",
     "dummyindex/skills/statusline/statusline.ps1",
     "dummyindex/skills/statusline/statusline.sh",
-    "tests/cli/test_debt_statusline_dispatch.py",
-    "tests/cli/test_plan_update_badge.py",
-    "tests/cli/test_statusline.py"
+    "tests/context/cli/test_debt_statusline_dispatch.py",
+    "tests/context/cli/test_plan_update_badge.py",
+    "tests/context/cli/test_statusline.py"
   ],
   "entry_points": [],
   "flow_ids": [],

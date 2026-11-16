@@ -13,7 +13,7 @@ section records only the merge provenance.
 **Files involved:**
 
 - `dummyindex/context/default_plugins.py`
-- `dummyindex/installer/install.py`
+- `dummyindex/context/installer/install.py`
 - `tests/context/test_default_plugins.py`
 
 **Entry points carried over (all still listed in `feature.json`):**

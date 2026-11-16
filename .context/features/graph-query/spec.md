@@ -19,8 +19,8 @@ Every answer is bounded, deterministically ordered, and cited `path:line` (`dumm
 Docstrings ride along from co-located `rationale_for` nodes, so an answer explains itself without a follow-up read (`load.py:98-113`, `verbs.py:57-77`).
 
 The CLI is wire-only per the CLI contract.
-It parses flags, delegates to the domain package, prints, and returns an exit code (`dummyindex/cli/graph.py:1-11`).
-The `graph --help` slice, owned by cli-dispatch (`dummyindex/cli/help.py:245-258`), is pinned to list every verb (`tests/cli/test_graph_command.py:32-49`).
+It parses flags, delegates to the domain package, prints, and returns an exit code (`dummyindex/context/cli/graph.py:1-11`).
+The `graph --help` slice, owned by cli-dispatch (`dummyindex/context/cli/help.py:245-258`), is pinned to list every verb (`tests/context/cli/test_graph_command.py:32-49`).
 
 ## User-visible behavior
 
@@ -66,10 +66,10 @@ Public surface re-exported from `dummyindex/context/domains/graph_query/__init__
 - `SymbolGraph` is the loaded-artifact carrier, not a wire model (`models.py:74-88`).
 - Errors rooted at `GraphQueryError` (`errors.py:8-9`); enums `GraphRelation`, `GraphVerb`, `EdgeDirection`, and `DEPENDENCY_RELATIONS` (`enums.py`).
 - `SCHEMA_VERSION = 1` carried on every result (`constants.py:5`, `verbs.py:96`).
-- CLI entry `run(args: list[str]) -> int` (`cli/graph.py:23`), registered under `ContextSubcommand.GRAPH` (`tests/cli/test_graph_command.py:27-28`).
+- CLI entry `run(args: list[str]) -> int` (`cli/graph.py:23`), registered under `ContextSubcommand.GRAPH` (`tests/context/cli/test_graph_command.py:27-28`).
 
 Pinned by `tests/context/domains/test_graph_query.py`, a synthetic fixture that scrambles `source`/`target` so only a `_src`/`_tgt` reader passes.
-Also pinned by `tests/cli/test_graph_command.py`: wire contract plus a read-only smoke over this repo's real artifact, asserting only stable shapes.
+Also pinned by `tests/context/cli/test_graph_command.py`: wire contract plus a read-only smoke over this repo's real artifact, asserting only stable shapes.
 
 ## Examples
 

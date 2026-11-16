@@ -4,14 +4,14 @@ confidence: INFERRED
 
 ## Where it lives
 
-`dummyindex/usage/` (stdlib-only package) plus two CLI seams:
+`dummyindex/context/usage/` (stdlib-only package) plus two CLI seams:
 `dummyindex/__main__.py:50-98` (`_run_usage`, the `usage` top-level command)
-and `dummyindex/cli/memory.py:41-51` (`_resolve_transcript`, which reuses the
+and `dummyindex/context/cli/memory.py:41-51` (`_resolve_transcript`, which reuses the
 transcript-location logic via `dummyindex.context.domains.memory`). The package
 is split by responsibility: `transcripts.py` (I/O + parse + dedup),
 `aggregate.py` (pure roll-ups), `models.py` (frozen carriers), `render.py`
 (str formatting), `report.py` (orchestration), `enums.py`, `errors.py`. Tests
-live under `tests/usage/` with a single synthetic corpus fixture in
+live under `tests/context/usage/` with a single synthetic corpus fixture in
 `conftest.py`.
 
 ## Architecture in three sentences
@@ -73,7 +73,7 @@ within 5h of `now` (`aggregate.py:158-202`).
   with no flushed transcript renders empty rather than borrowing the newest
   *other* session's numbers — a correctness guard against mislabelling one
   chat's usage as another's (`transcripts.py:54-80`, `report.py:57-78`,
-  regression test `tests/usage/test_report.py:37-44`).
+  regression test `tests/context/usage/test_report.py:37-44`).
 - **Infer the context limit, don't read it.** The transcript never records the
   model's window, so `infer_context_limit` picks the smallest `CONTEXT_TIERS`
   value (200K / 1M) that holds the session's peak window

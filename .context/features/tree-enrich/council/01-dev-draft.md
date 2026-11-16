@@ -5,7 +5,7 @@
 ## Bounded context
 
 `dummyindex/context/domains/enrich.py` owns the enrichment worklist and tree
-writeback; `dummyindex/cli/enrich.py` validates CLI arguments/payloads and maps
+writeback; `dummyindex/context/cli/enrich.py` validates CLI arguments/payloads and maps
 outcomes to exit codes. Both layers perform filesystem I/O. The authoring step
 belongs to the host workflow, not a Python model client. Co-clustered CLI tests
 and `tests/context/domains/test_query.py` do not make other CLI/retrieval domains
@@ -31,14 +31,14 @@ The frozen records are `EnrichNode`, `EnrichBatch`, `EnrichPlan` and `ApplyResul
    `migrate_context_layout(context_dir, package_version=None)`, then atomically
    writes `.context/cache/_enrich_plan.json`. The host authors a
    string-to-string update mapping outside the process
-   (`dummyindex/cli/enrich.py:28-42`,
+   (`dummyindex/context/cli/enrich.py:28-42`,
    `dummyindex/context/domains/enrich.py:185-190`). This is a plan/apply workflow,
    not an atomic transaction spanning authoring.
 3. `run_apply` validates the mapping's shape, then `apply_updates` checks IDs
    against the current tree, applies known entries and replaces `tree.json`.
    `_apply` sets the supplied abstract and confidence to `INFERRED`, clearing
    `source-stale` on changed entries. Identical abstract/confidence is a no-op
-   for that node (`dummyindex/cli/enrich.py:57-126`,
+   for that node (`dummyindex/context/cli/enrich.py:57-126`,
    `dummyindex/context/domains/enrich.py:207-227`,
    `dummyindex/context/domains/enrich.py:268-285`).
 
@@ -59,7 +59,7 @@ run-mode flag.
   (`dummyindex/context/domains/enrich.py:133-163`). A host choosing skeleton-only
   work must filter node kinds, not assume every file is in `structure`.
 - `enrich-plan` reuses the full layout migration because reconcile-only repos
-  never run a full build (`dummyindex/cli/enrich.py:33-40`). It therefore
+  never run a full build (`dummyindex/context/cli/enrich.py:33-40`). It therefore
   mutates `.context/` beyond the plan file — retired paths are removed
   (`dummyindex/context/build/upgrade.py:334-341`,
   `dummyindex/context/build/upgrade.py:496-518`). The returned `LayoutMigration`
@@ -68,7 +68,7 @@ run-mode flag.
   Unknown IDs are reported after known updates are written; the CLI exits `1`
   for that partial result. It is not an all-or-nothing rejection
   (`dummyindex/context/domains/enrich.py:218-227`,
-  `dummyindex/cli/enrich.py:113-126`).
+  `dummyindex/context/cli/enrich.py:113-126`).
 - Temp-file replacement protects each completed write from a partial-file
   publish. It does not provide a project lock or detect an intervening tree
   generation (`dummyindex/context/domains/enrich.py:185-190`,

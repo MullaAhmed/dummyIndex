@@ -4,12 +4,12 @@ confidence: INFERRED
 
 ## Bounded context
 
-One domain (`dummyindex/context/domains/debt/`) plus one wire-only CLI boundary (`dummyindex/cli/debt.py`). The domain owns a **pure, read-only harvest** of Python debt markers into a frozen `DebtLedger`. The CLI owns all I/O: argv parsing, rendering, and the only write path (`--write`). Nothing here mutates source, calls an LLM, or persists outside the explicit `--write` gate.
+One domain (`dummyindex/context/domains/debt/`) plus one wire-only CLI boundary (`dummyindex/context/cli/debt.py`). The domain owns a **pure, read-only harvest** of Python debt markers into a frozen `DebtLedger`. The CLI owns all I/O: argv parsing, rendering, and the only write path (`--write`). Nothing here mutates source, calls an LLM, or persists outside the explicit `--write` gate.
 
 - **Domain** — `domains/debt/harvest.py` (the harvester), `domains/debt/models.py` (frozen `DebtRow`/`DebtLedger`), `domains/debt/__init__.py` (re-exports `harvest_debt`).
 - **CLI boundary** — `cli/debt.py`: `run` (`cli/debt.py:34`), `render_markdown`/`render_json`/`_render_row`, `_persist` (`cli/debt.py:127`).
 - **Wiring** — `ContextSubcommand.DEBT = "debt"` (`context/enums.py:85`), import + dispatch (`cli/__init__.py:29`, `cli/__init__.py:122`), help text (`cli/help.py:207`).
-- **Tests** — `tests/context/domains/debt/test_harvest.py`, `tests/cli/test_debt_cli.py`.
+- **Tests** — `tests/context/domains/debt/test_harvest.py`, `tests/context/cli/test_debt_cli.py`.
 
 ## Patterns named (at `path:range`)
 

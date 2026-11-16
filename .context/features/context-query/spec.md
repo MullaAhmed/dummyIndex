@@ -10,7 +10,7 @@ Turn a question into a ranked, cited shortlist of features in an existing `.cont
 
 `dummyindex context query "search text" [--top-k N] [--budget N] [--max-bytes N] [--json]`
 
-Accepts quoted text or joins remaining positional words. Flags accept separate and `=` values. Unknown flags, missing query text and invalid values are usage errors (`dummyindex/cli/query.py:10-102`). Defaults are three features, 2,000 estimated tokens and 16,000 UTF-8 bytes. `top_k` must be 1..100. The token budget must be positive. `max_bytes` must be 512..65,536. Query text is limited to 2,048 UTF-8 bytes (`dummyindex/context/domains/query.py:274-312`).
+Accepts quoted text or joins remaining positional words. Flags accept separate and `=` values. Unknown flags, missing query text and invalid values are usage errors (`dummyindex/context/cli/query.py:10-102`). Defaults are three features, 2,000 estimated tokens and 16,000 UTF-8 bytes. `top_k` must be 1..100. The token budget must be positive. `max_bytes` must be 512..65,536. Query text is limited to 2,048 UTF-8 bytes (`dummyindex/context/domains/query.py:274-312`).
 
 Tokenization removes stopwords and one-character tokens. It keeps distinct whole/CamelCase/snake_case forms. It expands a small synonym map once. So `config` also matches `settings`. Result tokens expose that expansion (`dummyindex/context/domains/query.py:108-200`). Scores are floating-point, IDF-weighted overlap signals. They come from feature names, summaries, IDs, file basenames, directory segments and the five strongest size-normalized symbol hits. When the feature index omits files, retrieval reads the owning `feature.json` file list. Equal scores sort by feature ID (`dummyindex/context/domains/query.py:355-377`, `dummyindex/context/domains/query.py:428-633`).
 
@@ -20,7 +20,7 @@ The token estimate is `len(text) // 4`, with a floor of one. Token budgeting shr
 
 The byte limit is strict for both JSON and Markdown. Whole trailing matches are removed, and `truncated` becomes true until both renderings fit. Metadata that cannot fit raises a usage error. It never returns broken JSON (`dummyindex/context/domains/query.py:289-291`, `dummyindex/context/domains/query.py:379-425`, `dummyindex/context/domains/query.py:665-683`).
 
-The CLI exits `0` for a match. `1` covers no matches or stopword-only input. `2` covers usage errors or a missing index. The missing-index message recommends `dummyindex ingest`. Other argument errors use the usage hint (`dummyindex/cli/query.py:104-126`). JSON stays at schema version 1. It includes expanded tokens, float scores, citations, estimated costs and truncation state (`dummyindex/context/domains/query.py:230-271`).
+The CLI exits `0` for a match. `1` covers no matches or stopword-only input. `2` covers usage errors or a missing index. The missing-index message recommends `dummyindex ingest`. Other argument errors use the usage hint (`dummyindex/context/cli/query.py:104-126`). JSON stays at schema version 1. It includes expanded tokens, float scores, citations, estimated costs and truncation state (`dummyindex/context/domains/query.py:230-271`).
 
 ## Contracts
 
@@ -38,7 +38,7 @@ The CLI exits `0` for a match. `1` covers no matches or stopword-only input. `2`
   (`dummyindex/context/domains/query.py:203-271`,
   `dummyindex/context/domains/query.py:786-837`).
 - CLI `run(args: list[str]) -> int` parses, prints and maps outcomes to exits
-  (`dummyindex/cli/query.py:10-126`).
+  (`dummyindex/context/cli/query.py:10-126`).
 
 ## Example
 

@@ -32,7 +32,7 @@ _82 doc(s) — 21 high · 23 medium · 38 low._
 | [`docs/guide/02-mental-model.md`](../../docs/guide/02-mental-model.md) — 02 — Mental model | markdown | **medium** | 1 / 1 | recent |
 | [`docs/guide/03-architecture.md`](../../docs/guide/03-architecture.md) — 03 — Architecture | markdown | **medium** | 10 / 26 | recent |
 | [`docs/guide/04-data-model.md`](../../docs/guide/04-data-model.md) — 04 — `.context/` data model | markdown | **medium** | 9 / 51 | recent |
-| [`docs/reference/01-conventions.md`](../../docs/reference/01-conventions.md) — 01 — Conventions | markdown | **medium** | 41 / 105 | recent |
+| [`docs/reference/01-conventions.md`](../../docs/reference/01-conventions.md) — 01 — Conventions | markdown | **medium** | 41 / 109 | recent |
 | [`dummyindex/skills/agents/architect.md`](../../dummyindex/skills/agents/architect.md) — Software Architect — dummyindex council persona | markdown | **medium** | 2 / 14 | recent |
 | [`dummyindex/skills/agents/critic-database.md`](../../dummyindex/skills/agents/critic-database.md) — Database critic — dummyindex concerns-only persona | markdown | **medium** | 1 / 7 | recent |
 | [`dummyindex/skills/agents/critic-product.md`](../../dummyindex/skills/agents/critic-product.md) — No PM-specific subagent is assumed on either host. The persona instructions | markdown | **medium** | 1 / 6 | recent |

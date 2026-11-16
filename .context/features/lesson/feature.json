@@ -8,7 +8,7 @@
     "enums_confidence",
     "enums_deltaop",
     "enums_learningstatus",
-    "enums_verdict__a2ef12d5dd77653d",
+    "enums_verdict__726780bf7ee0c25d",
     "models_edit",
     "models_edit_to_dict",
     "models_lesson",
@@ -34,11 +34,11 @@
     "test_lesson_test_valid_lesson_round_trips"
   ],
   "files": [
-    "dummyindex/shared/lesson/__init__.py",
-    "dummyindex/shared/lesson/enums.py",
-    "dummyindex/shared/lesson/models.py",
-    "dummyindex/shared/lesson/rules.py",
-    "tests/shared/test_lesson.py"
+    "dummyindex/context/shared/lesson/__init__.py",
+    "dummyindex/context/shared/lesson/enums.py",
+    "dummyindex/context/shared/lesson/models.py",
+    "dummyindex/context/shared/lesson/rules.py",
+    "tests/context/shared/test_lesson.py"
   ],
   "entry_points": [],
   "flow_ids": [],

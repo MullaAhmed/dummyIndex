@@ -5,11 +5,11 @@ confidence: INFERRED
 ## Where it lives
 
 - `dummyindex/context/drift.py:91-109` — `compute_badge`, the pure badge renderer (owned by `community-8`/drift; consumed here).
-- `dummyindex/cli/plan_update.py:31-74` — `BADGE_CACHE_NAME`, `badge_cache_path`, `_write_badge`, and the best-effort write at the SessionStart `plan-update` boundary.
-- `dummyindex/cli/statusline.py:34-66` — `SCRIPT_DIR` and `run`, the cold-path CLI reader (`ContextSubcommand.STATUSLINE`).
+- `dummyindex/context/cli/plan_update.py:31-74` — `BADGE_CACHE_NAME`, `badge_cache_path`, `_write_badge`, and the best-effort write at the SessionStart `plan-update` boundary.
+- `dummyindex/context/cli/statusline.py:36-68` — `SCRIPT_DIR` and `run`, the cold-path CLI reader (`ContextSubcommand.STATUSLINE`).
 - `dummyindex/skills/statusline/statusline.sh` / `statusline.ps1` — the hot-path shell wrappers shipped via `pyproject` package-data.
 - `dummyindex/context/hooks.py:195-241,396-411` — `_STATUSLINE_NUDGE`, `_status_line_configured`, `statusline_nudge`, and its surfacing on `HookResult.nudges`.
-- Tests: `tests/cli/test_statusline.py`, `tests/cli/test_plan_update_badge.py`, `tests/cli/test_debt_statusline_dispatch.py`, `tests/context/test_hooks.py`.
+- Tests: `tests/context/cli/test_statusline.py`, `tests/context/cli/test_plan_update_badge.py`, `tests/context/cli/test_debt_statusline_dispatch.py`, `tests/context/test_hooks.py`.
 
 ## Architecture in three sentences
 

@@ -5,14 +5,14 @@
 
 **Files involved:**
 
-- `dummyindex/cli/build_loop/__init__.py`
-- `dummyindex/cli/build_loop/dispatch.py`
-- `dummyindex/cli/equip/__init__.py`
-- `dummyindex/cli/equip/common.py`
-- `dummyindex/cli/equip/discover.py`
-- `dummyindex/cli/equip/dispatch.py`
-- `dummyindex/cli/equip/plugin_state.py`
-- `dummyindex/cli/equip/verbs.py`
+- `dummyindex/context/cli/build_loop/__init__.py`
+- `dummyindex/context/cli/build_loop/dispatch.py`
+- `dummyindex/context/cli/equip/__init__.py`
+- `dummyindex/context/cli/equip/common.py`
+- `dummyindex/context/cli/equip/discover.py`
+- `dummyindex/context/cli/equip/dispatch.py`
+- `dummyindex/context/cli/equip/plugin_state.py`
+- `dummyindex/context/cli/equip/verbs.py`
 - `dummyindex/context/domains/equip/generate/adopt.py`
 - `dummyindex/context/domains/equip/generate/catalog.py`
 - `dummyindex/context/domains/equip/generate/proposal.py`
@@ -93,7 +93,7 @@ The substrings live only in the manifest entry, not the rendered bytes — so wr
 
 **Files involved:**
 
-- `dummyindex/cli/equip/plugin_state.py`
+- `dummyindex/context/cli/equip/plugin_state.py`
 - `dummyindex/context/claude_plugins.py`
 - `dummyindex/context/claude_settings.py`
 - `dummyindex/context/domains/equip/lifecycle/status.py`
@@ -116,7 +116,7 @@ A user equips a repo with a generated toolkit (implementer / tester / reviewer a
 
 ## User-visible behavior
 
-Four `equip` surfaces expose the verdicts, all routed in `dummyindex/cli/equip/dispatch.py:96-134`:
+Four `equip` surfaces expose the verdicts, all routed in `dummyindex/context/cli/equip/dispatch.py:96-134`:
 
 - **`equip status`** (`cli/equip/verbs.py:70-103`) — classifies every tracked item and prints one line per item, `<state> <name> (v<version>)`. The state value is the `ItemState` enum value (`pristine` / `user-modified` / `missing` / `adopted` / `customized` / `invariant-broken`). `--json` emits `{items:[{name,state,version}], missing_playbook:[...]}`. Marketplace plugins with no usage playbook get an extra `incomplete … (no usage playbook)` line.
 - **`equip refresh`** (`cli/equip/verbs.py:109-124`) — re-renders only PRISTINE-and-stale generated items, re-baselines + minor-bumps them; reports counts of refreshed / unchanged / skipped(user-modified) / skipped(evolved) / skipped(missing). User-owned files (USER_MODIFIED, CUSTOMIZED, INVARIANT_BROKEN) are all reported under skipped(user-modified) and never touched. Items classified INVARIANT_BROKEN additionally surface as a distinct `⚠ … dropped a load-bearing invariant (review — INVARIANT_BROKEN)` alarm section, rendered by `_print_refresh_report` (`cli/equip/verbs.py:35-64`). A cosmetic CUSTOMIZED edit is *not* in the alarm. With no invariants in play, the alarm section never prints (back-compat).

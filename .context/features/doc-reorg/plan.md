@@ -17,7 +17,7 @@ Domain `dummyindex/context/domains/doc_reorg/` holds these files:
 - `errors.py`: typed exception tree.
 - `__init__.py`: public re-exports.
 
-The CLI seam is `dummyindex/cli/doc_reorg.py`, dispatched as `context doc-reorg`. Tests: `tests/context/domains/test_doc_reorg.py`.
+The CLI seam is `dummyindex/context/cli/doc_reorg.py`, dispatched as `context doc-reorg`. Tests: `tests/context/domains/test_doc_reorg.py`.
 
 ## Architecture in three sentences
 

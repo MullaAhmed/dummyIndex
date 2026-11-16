@@ -8,7 +8,7 @@
   parsing, wave selection, selector errors and locked atomic mutations.
 - `dummyindex/context/domains/buildloop/models.py:49-56` defines the frozen
   `ChecklistItem` record: position, text, state, group, gate, via and `item_id`.
-- `dummyindex/cli/build_loop/waves.py:484-572` maps the frontier to bounded
+- `dummyindex/context/cli/build_loop/waves.py:484-572` maps the frontier to bounded
   dispatch entries; `dummyindex/context/domains/buildloop/envelopes.py:13-46`
   defines bounded task/result handoffs and evidence requirements.
 - `dummyindex/context/domains/buildloop/receipts.py:21-96` validates exact

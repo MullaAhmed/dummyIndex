@@ -324,6 +324,8 @@
     "test_evolve_valid_candidate"
   ],
   "files": [
+    "dummyindex/context/shared/errors.py",
+    "dummyindex/context/shared/guard.py",
     "dummyindex/evolve/__init__.py",
     "dummyindex/evolve/cli/__init__.py",
     "dummyindex/evolve/cli/evolve.py",
@@ -337,8 +339,6 @@
     "dummyindex/evolve/evolve_native_snapshot.py",
     "dummyindex/evolve/evolve_promotion.py",
     "dummyindex/evolve/living_rules.py",
-    "dummyindex/shared/errors.py",
-    "dummyindex/shared/guard.py",
     "dummyindex/skills/evolve/native-protocol.md",
     "tests/evolve/cli/test_evolve_cli.py",
     "tests/evolve/test_evidence.py",

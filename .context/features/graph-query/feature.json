@@ -111,7 +111,7 @@
     "verbs_row"
   ],
   "files": [
-    "dummyindex/cli/graph.py",
+    "dummyindex/context/cli/graph.py",
     "dummyindex/context/domains/graph_query/__init__.py",
     "dummyindex/context/domains/graph_query/constants.py",
     "dummyindex/context/domains/graph_query/enums.py",
@@ -121,7 +121,7 @@
     "dummyindex/context/domains/graph_query/render.py",
     "dummyindex/context/domains/graph_query/resolve.py",
     "dummyindex/context/domains/graph_query/verbs.py",
-    "tests/cli/test_graph_command.py",
+    "tests/context/cli/test_graph_command.py",
     "tests/context/domains/test_graph_query.py"
   ],
   "entry_points": [],

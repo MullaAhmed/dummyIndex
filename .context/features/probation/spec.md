@@ -34,7 +34,7 @@ Local lifecycle for rules derived from human chat corrections. A rule enters pro
 - Session block: lists probation items within 1600 characters and records exposure (`render.py:48-104`, `render.py:107-117`).
 - Session block: one `Next:` line per session, by priority (`render.py:131-154`).
 - Report: counts, rates and resident bytes. Rates are `None` when undefined (`render.py:157-223`).
-- Hook: `_print_probation` prints the block on SessionStart (`dummyindex/cli/memory.py:59-70`, `memory.py:169`).
+- Hook: `_print_probation` prints the block on SessionStart (`dummyindex/context/cli/memory.py:59-70`, `memory.py:169`).
 - CLI: `attribute` and `probation report|promote|demote` (`dummyindex/evolve/cli/evolve_probation.py:16-153`). Dispatch at `dummyindex/evolve/cli/evolve.py:68`.
 - `probation` verbs run `sync(probes=True)` first (`dummyindex/evolve/cli/evolve_probation.py:136`). `attribute` syncs after recording (`:73`).
 - `attribute --retracts` needs `--verdict attributed` and `--item` (`:60`).

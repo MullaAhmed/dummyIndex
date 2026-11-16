@@ -10,9 +10,9 @@
    first and the receipt last. Failures restore preimages:
    `dummyindex/context/domains/proposals/closeout.py:583`, `dummyindex/context/domains/proposals/closeout.py:594`.
 4. Release the lock, then run learning. Failures persist to the event or
-   `.context/gc/learning/{kind}-{slug}.failed.json`, apart from the closeout. Only `failed` exits 1 (`dummyindex/cli/gc.py:124`):
+   `.context/gc/learning/{kind}-{slug}.failed.json`, apart from the closeout. Only `failed` exits 1 (`dummyindex/context/cli/gc.py:124`):
    `dummyindex/context/domains/proposals/closeout.py:54`, `dummyindex/context/domains/proposals/closeout.py:260`.
 
 Tests: `tests/context/domains/test_closeout.py`,
-`tests/context/domains/test_closeout_draft.py`, `tests/cli/test_closeout_exit_codes.py`.
+`tests/context/domains/test_closeout_draft.py`, `tests/context/cli/test_closeout_exit_codes.py`.
 Usage/schema: `docs/guide/closeout.md`.

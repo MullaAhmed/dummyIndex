@@ -6,18 +6,17 @@ How source under `dummyindex/` is grouped, and where a new file goes.
 
 This repo groups code **by domain**. A feature owns its logic, data, and on-disk output in one directory. Code is also arranged in a **strict import layering**. Both rules are stated in `docs/reference/01-conventions.md` §1–§3. That doc is graded **low confidence** in `source-docs/INDEX.json`. Its prose cites many code paths, which trips broken-ref detection. Its *structure* claims still cross-check clean against the live tree. So they are reused here with `path:range` evidence.
 
-Top-level layers (`.context/tree.json`, real dirs):
+Top-level layers (`.context/tree.json`, real dirs): `dummyindex/` holds only `__init__.py`, `__main__.py`, `skills/`, `context/`, `evolve/`.
 
 | Dir | Role |
 |---|---|
-| `pipeline/` | deterministic backbone: tree-sitter extract → structure/graph |
-| `analysis/` | graph analytics on pipeline output (`analysis/cluster.py` — Leiden) |
-| `export/` | render graph → on-disk JSON (`export/graph.py:to_json`) |
-| `context/` | the `.context/` engine: `build/` (lifecycle), `output/` (renderers), `domains/` (behaviour) |
-| `cli/` | one wire-only dispatcher module per subcommand |
-| `installer/`, `usage/`, `skills/` | install surface, transcript token reporting, bundled markdown |
+| `context/pipeline/` | deterministic backbone: tree-sitter extract → structure/graph |
+| `context/analysis/`, `export/` | graph analytics (`analysis/cluster.py` — Leiden); graph → JSON (`export/graph.py:to_json`) |
+| `context/build/`, `output/`, `domains/` | lifecycle, renderers, behaviour |
+| `context/cli/`, `installer/`, `usage/`, `shared/` | wire-only dispatchers, install surface, token reporting, shared helpers |
+| `skills/`, `evolve/` | bundled markdown; evolve loop |
 
-Import direction (verified): `context → analysis, pipeline`. `analysis →
+Import direction (verified): `context/domains → analysis, pipeline`. `analysis →
 pipeline`. `pipeline →` stdlib/third-party only. `usage/` is stdlib-only. Its files import nothing under `dummyindex.*`. `context/domains/*` never imports `cli`. Grep is clean except a docstring in `equip/__init__.py:6`.
 
 ## The CLI / domain split (the load-bearing pattern)

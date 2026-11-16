@@ -4,27 +4,27 @@
 
 ## Where it lives
 
-- `dummyindex/pipeline/extract/`: the tree-sitter front end.
+- `dummyindex/context/pipeline/extract/`: the tree-sitter front end.
   - `__init__.py` holds `extract`, `collect_files` and `_DISPATCH`. `generic.py` holds `_extract_generic`, `config.py` holds `LanguageConfig`, and `common.py` holds the id, text and body helpers.
   - `imports.py` and `helpers.py` hold the per-language import handlers and extra walks. `language_configs.py` defines one config per language.
   - `languages/` holds the extractors. Most are thin `_extract_generic` wrappers in `languages/wrappers.py`. Go, Rust, Julia, Elixir, Verilog, Zig, Dart, PowerShell and Blade use custom walks.
   - `python_rationale.py` is the docstring/rationale post-pass. `resolve.py` holds the Python and Java cross-file resolvers. `python_dispatch.py` is the dispatch-idiom post-pass.
-- `dummyindex/pipeline/io/`:
+- `dummyindex/context/pipeline/io/`:
   - `cache.py` holds the read seam, the content-hash cache and the version scoping.
   - `paths.py` holds the confinement primitives. `git.py` handles repo detection.
   - `detect.py` lives here but is not owned by this feature.
-- `dummyindex/analysis/cluster.py`: community detection.
-- `dummyindex/export/`:
+- `dummyindex/context/analysis/cluster.py`: community detection.
+- `dummyindex/context/export/`:
   - `graph.py` holds `to_json` and `common.py` holds the score defaults and helpers.
   - `storage.py` is the bounded, sharded symbol-graph writer and the one shared reader.
 - `dummyindex/context/build/communities.py`: seed-rank and graph-communities.
 - Wiring hosts outside every feature: `context/build/graph.py` (`build_graph`), `runner.py`, `enriched_refresh.py`, and `upgrade.py` (`migrate_context_layout` runs `scope_cache_to_version`).
 - Tests:
-  - `tests/pipeline/extract/`: `test_extract_hardening.py`, `test_python_dispatch.py`, `test_python_rationale.py`.
-  - `tests/pipeline/io/`: `test_cache.py`, `test_git.py`, `test_paths.py`.
-  - `tests/pipeline/build/`: `test_references.py`, `test_p2_read_counter.py`.
-  - `tests/analysis/test_cluster_determinism.py`.
-  - `tests/export/`: `test_graph_determinism.py`, `test_graph_storage.py` (retention, pruning, repair, fail-closed).
+  - `tests/context/pipeline/extract/`: `test_extract_hardening.py`, `test_python_dispatch.py`, `test_python_rationale.py`.
+  - `tests/context/pipeline/io/`: `test_cache.py`, `test_git.py`, `test_paths.py`.
+  - `tests/context/pipeline/build/`: `test_references.py`, `test_p2_read_counter.py`.
+  - `tests/context/analysis/test_cluster_determinism.py`.
+  - `tests/context/export/`: `test_graph_determinism.py`, `test_graph_storage.py` (retention, pruning, repair, fail-closed).
   - `tests/context/domains/test_graph_storage_consumers.py` and `tests/context/build/test_communities.py`.
 
 ## Architecture in three sentences

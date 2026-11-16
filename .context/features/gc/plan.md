@@ -5,7 +5,7 @@
    `dummyindex/context/domains/gc/recommend.py:18`.
 2. Review accepted lessons, evidence, fixtures; repair durable dependencies.
    Run closeout for material workspaces before proposing retirement. `gc closeout --draft`
-   seeds manifest: `dummyindex/cli/gc.py:66`, `dummyindex/context/domains/proposals/draft.py:49`.
+   seeds manifest: `dummyindex/context/cli/gc.py:66`, `dummyindex/context/domains/proposals/draft.py:49`.
 3. After explicit confirmation, delete exactly the validated target through
    the guard ladder; receipts stay outside it:
    `dummyindex/context/domains/gc/delete.py:101`, `dummyindex/context/domains/proposals/retirement.py:169`.

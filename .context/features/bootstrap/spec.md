@@ -72,23 +72,23 @@ The `ALWAYS_ON_SKILL_POLICY` workflow list predates `dummyindex-fleet` and
 claude|agents|both]` resolves the project root through shared CLI helpers. Claude
 writes `<root>/.claude/CLAUDE.md`. Codex writes its active project instruction
 file. Unknown arguments, duplicate `--platform`, and unsupported host values
-return exit 2 (`dummyindex/cli/bootstrap.py:10-36`).
+return exit 2 (`dummyindex/context/cli/bootstrap.py:10-36`).
 
 `--platform both` is one logical operation. Both targets are preflighted before
 either is written. The preflight catches marker, path-boundary, Codex ownership,
 and instruction-budget failures. A preflight or write failure returns exit 3 with
 an actionable error. Filesystem state can still race after preflight. The command
 does not knowingly perform a deterministic partial cross-host write
-(`dummyindex/cli/bootstrap.py:50-74`).
+(`dummyindex/context/cli/bootstrap.py:50-74`).
 
 After all host writes succeed, platform `claude|both` folds a dangling legacy
 root `CLAUDE.md` into the canonical file. It calls `migrate_claude_md_location`,
-gated by `has_foldable_legacy_claude_md` (`dummyindex/cli/migrate.py`). The gate
+gated by `has_foldable_legacy_claude_md` (`dummyindex/context/cli/migrate.py`). The gate
 never creates Codex-only guidance or deletes an active Codex instruction
 candidate. Platform `agents` never folds. A fold failure warns on stderr and
 exits 0, because the primary write already succeeded
-(`dummyindex/cli/bootstrap.py:76-86`,
-`tests/cli/test_bootstrap_migration.py`).
+(`dummyindex/context/cli/bootstrap.py:76-86`,
+`tests/context/cli/test_bootstrap_migration.py`).
 
 ### Managed-block rendering
 
@@ -174,7 +174,7 @@ the folded residue and does not duplicate it
   (`dummyindex/context/output/bootstrap.py:208-253`).
 - `run(args: list[str]) -> int` is the host-aware bootstrap CLI boundary. Exit 0
   is success, 2 is argument misuse, and 3 is preflight or write failure
-  (`dummyindex/cli/bootstrap.py:10-86`).
+  (`dummyindex/context/cli/bootstrap.py:10-86`).
 - `reconcile_claude_md(out_root: Path) -> ClaudeMdReconcileResult` consolidates
   legacy and canonical Claude guidance and returns a frozen result rather than
   printing (`dummyindex/context/output/claude_md.py:57-72`,

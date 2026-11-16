@@ -4,11 +4,11 @@
 
 A lesson is one validated `cue`, `lesson`, `evidence` and `confidence` record.
 Each closeout or learning event carries at most one. `validate_lesson` is the
-only shape check. Source: `dummyindex/shared/lesson/models.py:92`.
+only shape check. Source: `dummyindex/context/shared/lesson/models.py:92`.
 
 Required fields are non-empty strings. `confidence` is `low|medium|high`.
 A list is rejected; a closeout takes exactly one object.
-`models.py:92-109`, `enums.py:8`, `tests/shared/test_lesson.py:85`.
+`models.py:92-109`, `enums.py:8`, `tests/context/shared/test_lesson.py:85`.
 
 Optional `edits` rows are `{component, change, verdict}`. Verdict is
 `helped|hurt|no_observed_effect|confounded`. Prefer `confounded` to invented attribution.

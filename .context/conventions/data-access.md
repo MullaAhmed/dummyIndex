@@ -1,12 +1,12 @@
 # Data access
 
-**No relational DB or ORM. Persistence is JSON and markdown artifacts on the filesystem.** dummyindex's "data layer" reads source via tree-sitter in `dummyindex/pipeline/`. It writes *derived* artifacts under `.context/`: deterministic maps and trees as JSON, curated docs as markdown, per-file extraction cache. No tables, no migrations, no query language. Patterns below are the filesystem-store equivalents.
+**No relational DB or ORM. Persistence is JSON and markdown artifacts on the filesystem.** dummyindex's "data layer" reads source via tree-sitter in `dummyindex/context/pipeline/`. It writes *derived* artifacts under `.context/`: deterministic maps and trees as JSON, curated docs as markdown, per-file extraction cache. No tables, no migrations, no query language. Patterns below are the filesystem-store equivalents.
 
 ## Atomic writes (the one mandatory rule)
 
 Every persisted artifact is written **tmp-file + `replace`**. Never open and truncate in place.
 
-Canonical helper: `write_text_atomic`, backed by `replace_bytes` (`dummyindex/shared/atomic_io.py:10-32`). It runs `mkdir(parents=True)`. It writes to a **unique** `NamedTemporaryFile` sibling (`.{name}.*.tmp`). Unique because hooks from two Claude profiles can update the same repo-local cache concurrently. Then `tmp_path.replace(path)`, atomic on POSIX. The tmp file is unlinked on failure.
+Canonical helper: `write_text_atomic`, backed by `replace_bytes` (`dummyindex/context/shared/atomic_io.py:10-32`). It runs `mkdir(parents=True)`. It writes to a **unique** `NamedTemporaryFile` sibling (`.{name}.*.tmp`). Unique because hooks from two Claude profiles can update the same repo-local cache concurrently. Then `tmp_path.replace(path)`, atomic on POSIX. The tmp file is unlinked on failure.
 
 Every other writer copies the same shape. Examples: `write_meta` (`build/meta.py:91-97`), `write_manifest` (`build/manifest.py:121-123`), `write_tree`, the maps writer, the convention-section placer (`build/conventions.py:228-230`).
 

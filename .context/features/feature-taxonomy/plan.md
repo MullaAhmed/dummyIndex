@@ -14,13 +14,13 @@ confidence: INFERRED
 - `communities.py`: the community mid-tier. Frozen `GraphCommunities`, `GraphCommunity`, and `CommunityMember` models. The pure `rollup_communities` roll-up with stable slugs (`communities.py:94,159`).
 - `constants.py`, `errors.py`, `helpers.py` (atomic writers, slug and path coercion), `__init__.py` (public re-export surface).
 
-CLI bindings: `dummyindex/cli/features.py` and `dummyindex/cli/scan.py`.
+CLI bindings: `dummyindex/context/cli/features.py` and `dummyindex/context/cli/scan.py`.
 
 Codebase scan: `dummyindex/context/domains/features/scan/{models,seed,validate,mutate,rank,refs}.py`. `rank.py` loads the `seed-rank.json` shortlist. `refs.py` builds the `symbolRef` resolution index (`REF_ARTIFACTS` registry).
 
 Viewer: `dummyindex/context/output/viewer/{__init__,styles,script,tiers,extras}.py`. `tiers.py` is the tier-2/3 JS, appended into `script.py`'s scope. `extras.py` precomputes the second data island.
 
-Tests: `tests/context/domains/features/{test_features.py,test_placement.py,test_scan.py,test_scan_artifact.py,test_scan_rank.py,test_scan_refs.py,test_communities.py}`, `tests/context/output/test_viewer_extras.py`, `tests/cli/test_scan_check.py`.
+Tests: `tests/context/domains/features/{test_features.py,test_placement.py,test_scan.py,test_scan_artifact.py,test_scan_rank.py,test_scan_refs.py,test_communities.py}`, `tests/context/output/test_viewer_extras.py`, `tests/context/cli/test_scan_check.py`.
 
 ## Bounded context
 

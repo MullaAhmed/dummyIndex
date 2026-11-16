@@ -8,7 +8,7 @@ source touched.
 - **Where it lives** — grounded in `feature.json:files` plus a live grep for
   consumers `feature.json` omits: the SessionStart wiring at
   `dummyindex/context/hooks.py:170-184`, the subcommand registration at
-  `dummyindex/context/enums.py:154` + `dummyindex/cli/__init__.py:36,130`, and
+  `dummyindex/context/enums.py:154` + `dummyindex/context/cli/__init__.py:36,130`, and
   the generated agent-facing docs at
   `dummyindex/context/output/instructions.py:46,100,109-120`. Also corrected the
   spec's `build/git_delta.py` reference to the real path
@@ -30,7 +30,7 @@ source touched.
 
 ## Patterns named
 
-- **Wire-only CLI / domain split** at `dummyindex/cli/gc.py:38-54` (dispatch) with
+- **Wire-only CLI / domain split** at `dummyindex/context/cli/gc.py:38-54` (dispatch) with
   lazy domain imports inside each handler (`cli/gc.py:59,87-94,156,181-182`) — the
   layering rule from `conventions/folder-organization.md` is enforced by import
   *placement*, not by a linter.
@@ -62,8 +62,8 @@ source touched.
   `context/build/git_delta.py` (`commits_since`, `head_commit`),
   `context/domains/atomic_io.py` (`write_text_atomic`), and — from the CLI layer
   only — `memory/transcript.py:resolve_session_id` (`cli/gc.py:182`).
-- **Downstream (imports gc):** `dummyindex/cli/gc.py` (all four verbs);
-  `dummyindex/cli/__init__.py:36,130` via `ContextSubcommand.GC`
+- **Downstream (imports gc):** `dummyindex/context/cli/gc.py` (all four verbs);
+  `dummyindex/context/cli/__init__.py:36,130` via `ContextSubcommand.GC`
   (`context/enums.py:154`); `dummyindex/context/hooks.py:176-183`, which shells
   `dummyindex context gc signal` as a SessionStart hook rather than importing;
   `dummyindex/skills/gc/SKILL.md`, which consumes the CLI as its contract.
@@ -119,7 +119,7 @@ source touched.
   `proposals/<slug>` while `enumerate.py:98` places it at
   `proposals/_archive/<slug>`, so archived candidates probe a non-existent path
   and emit no `orphan-empty` / `checklist-*` tag. Untested —
-  `tests/cli/test_gc_cli.py:104-119` uses an archived dir with no `plan.md` /
+  `tests/context/cli/test_gc_cli.py:104-119` uses an archived dir with no `plan.md` /
   `checklist.md`, masking it. Filed as open question 1; not fixed (documentation
   pass, no source edits).
 - `spec.md:93` lists `CandidateKind` as a live alphabet, but `ORPHAN_SCAFFOLD`

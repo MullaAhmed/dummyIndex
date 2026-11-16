@@ -17,8 +17,8 @@
 9. Demote: `actions.py:278-299` (`demote`), `actions.py:302-371` (`_demote_promoted`, gate and rollback record).
 10. Session block: `render.py:48-104` (`session_block`, `_block`), `render.py:107-128` (`_fit`, `_item_line`), `render.py:131-154` (`_next_line` priority).
 11. Report: `render.py:157-223` (`report`), `render.py:226-241` (`format_report`).
-12. CLI: `dummyindex/evolve/cli/evolve_probation.py:16-78` (`run_attribute`), `evolve_probation.py:81-153` (`run_probation`). Wiring at `dummyindex/evolve/cli/evolve.py:41`, `evolve.py:67`. Help at `dummyindex/cli/help.py:639`.
-13. Callers: `dummyindex/evolve/evolve_learning.py:245-252` (`compile_probe`, `content_reasons`), `evolve_learning.py:358-370` (`enter`). Hook: `dummyindex/cli/memory.py:59-70`, `memory.py:169`.
+12. CLI: `dummyindex/evolve/cli/evolve_probation.py:16-78` (`run_attribute`), `evolve_probation.py:81-153` (`run_probation`). Wiring at `dummyindex/evolve/cli/evolve.py:41`, `evolve.py:67`. Help at `dummyindex/context/cli/help.py:639`.
+13. Callers: `dummyindex/evolve/evolve_learning.py:245-252` (`compile_probe`, `content_reasons`), `evolve_learning.py:358-370` (`enter`). Hook: `dummyindex/context/cli/memory.py:59-70`, `memory.py:169`.
 14. Agent protocol: `dummyindex/skills/evolve/probation-protocol.md:1-45`.
 
 ## Flow

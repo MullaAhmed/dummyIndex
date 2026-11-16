@@ -4,11 +4,11 @@ confidence: INFERRED
 
 ## Bounded context
 
-Codex Guidance owns the policy and lifecycle for dummyindex-managed Codex instruction files. It decides which Codex configuration layers are observable and which project-relative candidates are safe. It also decides the active target and whether the complete managed block fits Codex's byte budget. It also decides how project-block ownership survives refresh and how managed blocks are removed. It does not own Codex configuration authoring, generic managed-block mutation, project installation orchestration, indexing, reconcile policy, or source-document discovery. Those systems consume this feature's policy or provide its lower-level write primitive (`dummyindex/codex_guidance.py:1-7`, `dummyindex/context/output/agents_md.py:1-22`).
+Codex Guidance owns the policy and lifecycle for dummyindex-managed Codex instruction files. It decides which Codex configuration layers are observable and which project-relative candidates are safe. It also decides the active target and whether the complete managed block fits Codex's byte budget. It also decides how project-block ownership survives refresh and how managed blocks are removed. It does not own Codex configuration authoring, generic managed-block mutation, project installation orchestration, indexing, reconcile policy, or source-document discovery. Those systems consume this feature's policy or provide its lower-level write primitive (`dummyindex/context/codex_guidance.py:1-7`, `dummyindex/context/output/agents_md.py:1-22`).
 
 ## Where it lives
 
-- `dummyindex/codex_guidance.py` is the policy kernel. It is stdlib-only and centralizes Codex-home resolution, configuration overlays, trust checks, fallback normalization, byte budgets, and path classification (`dummyindex/codex_guidance.py:9-18`, `dummyindex/codex_guidance.py:21-253`).
+- `dummyindex/context/codex_guidance.py` is the policy kernel. It is stdlib-only and centralizes Codex-home resolution, configuration overlays, trust checks, fallback normalization, byte budgets, and path classification (`dummyindex/context/codex_guidance.py:9-18`, `dummyindex/context/codex_guidance.py:21-253`).
 - `dummyindex/context/output/agents_md.py` is the lifecycle adapter. It renders host-neutral managed bodies and ownership metadata. It resolves project/global targets, validates scope and budget, and delegates managed-block mutation. It discovers stale managed fallbacks and aggregates cleanup results (`dummyindex/context/output/agents_md.py:10-31`, `dummyindex/context/output/agents_md.py:96-206`, `dummyindex/context/output/agents_md.py:209-448`).
   The bodies contain no Codex-only identity or invocation syntax.
   `_PROJECT_BLOCK` lists `dummyindex`, `dummyindex-plan`, `dummyindex-build`, and the family.
@@ -24,15 +24,15 @@ Codex Guidance owns the policy and lifecycle for dummyindex-managed Codex instru
 
 ## Architecture in three sentences
 
-The policy kernel overlays observable system, user, and explicitly trusted project configuration, then emits normalized candidates and limits (`dummyindex/codex_guidance.py:37-181`). Lifecycle adapter's plan/apply split: `_project_guidance_plan` decides target, ownership, scope, and budget; preflight returns only the path without writing (`dummyindex/context/output/agents_md.py:112-163`). Cleanup scans beyond current configuration, then removes each owned block independently and returns successes and failures (`dummyindex/context/output/agents_md.py:275-348`, `dummyindex/context/output/agents_md.py:409-443`).
+The policy kernel overlays observable system, user, and explicitly trusted project configuration, then emits normalized candidates and limits (`dummyindex/context/codex_guidance.py:37-181`). Lifecycle adapter's plan/apply split: `_project_guidance_plan` decides target, ownership, scope, and budget; preflight returns only the path without writing (`dummyindex/context/output/agents_md.py:112-163`). Cleanup scans beyond current configuration, then removes each owned block independently and returns successes and failures (`dummyindex/context/output/agents_md.py:275-348`, `dummyindex/context/output/agents_md.py:409-443`).
 
 ## Patterns named
 
-- **Policy kernel:** one stdlib-only module defines instruction discovery semantics. Consumers include file detection, doc collection, reconciliation, source-doc discovery, onboarding, and guidance output (`dummyindex/codex_guidance.py:1-18`, `dummyindex/pipeline/io/detect.py:10-13`, `dummyindex/context/build/common.py:15-20`, `dummyindex/context/build/reconcile.py:39-42`, `dummyindex/context/domains/source_docs/discovery.py:7-10`).
-- **Trust-gated configuration overlay:** system config is lowest precedence, and user config overlays it. Repository config participates only when the resolved root has an exact trusted entry in user-owned config (`dummyindex/codex_guidance.py:146-181`, `dummyindex/codex_guidance.py:208-230`).
+- **Policy kernel:** one stdlib-only module defines instruction discovery semantics. Consumers include file detection, doc collection, reconciliation, source-doc discovery, onboarding, and guidance output (`dummyindex/context/codex_guidance.py:1-18`, `dummyindex/context/pipeline/io/detect.py:10-13`, `dummyindex/context/build/common.py:15-20`, `dummyindex/context/build/reconcile.py:39-42`, `dummyindex/context/domains/source_docs/discovery.py:7-10`).
+- **Trust-gated configuration overlay:** system config is lowest precedence, and user config overlays it. Repository config participates only when the resolved root has an exact trusted entry in user-owned config (`dummyindex/context/codex_guidance.py:146-181`, `dummyindex/context/codex_guidance.py:208-230`).
 - **Plan/apply split:** `_project_guidance_plan` is the single deterministic decision seam for preflight and writes. It prevents bootstrap from re-deciding target or ownership (`dummyindex/context/output/agents_md.py:112-163`).
 - **Marker-bounded ownership:** dummyindex owns only content between exact managed markers. Project metadata distinguishes explicit install, user auto-init, and legacy unowned blocks (`dummyindex/context/output/agents_md.py:24-31`, `dummyindex/context/output/agents_md.py:351-382`).
-- **Fail-closed filesystem boundary.** Normalized relative fallbacks and resolved containment checks prevent configured paths or symlinks from escaping project or Codex-home scope. Code: `dummyindex/codex_guidance.py:233-253`, `dummyindex/context/output/agents_md.py:257-272`, `dummyindex/context/output/agents_md.py:385-406`. Byte-budget validation runs before mutation.
+- **Fail-closed filesystem boundary.** Normalized relative fallbacks and resolved containment checks prevent configured paths or symlinks from escaping project or Codex-home scope. Code: `dummyindex/context/codex_guidance.py:233-253`, `dummyindex/context/output/agents_md.py:257-272`, `dummyindex/context/output/agents_md.py:385-406`. Byte-budget validation runs before mutation.
 - **Bounded stale-resource discovery:** uninstall scans for old managed fallbacks with explicit depth, file-count, byte, directory, and symlink limits (`dummyindex/context/output/agents_md.py:70-93`, `dummyindex/context/output/agents_md.py:275-348`).
 - **Best-effort batch cleanup:** malformed or unsafe files become `AgentsMdCleanupIssue` records while safe targets continue through removal (`dummyindex/context/output/agents_md.py:96-109`, `dummyindex/context/output/agents_md.py:409-443`).
 
@@ -40,28 +40,28 @@ The policy kernel overlays observable system, user, and explicitly trusted proje
 
 ### Upstream
 
-- Python path, environment, and TOML facilities supply all policy-kernel dependencies. Python 3.10 uses the `tomli` compatibility import (`dummyindex/codex_guidance.py:9-18`).
+- Python path, environment, and TOML facilities supply all policy-kernel dependencies. Python 3.10 uses the `tomli` compatibility import (`dummyindex/context/codex_guidance.py:9-18`).
 - Shared bootstrap infrastructure supplies `ALWAYS_ON_OUTPUT_POLICY`, marker-span validation, idempotent place-first insertion, byte-preserving removal, and atomic file writes (`dummyindex/context/output/agents_md.py:17-22`, `dummyindex/context/output/bootstrap.py:26-52`, `dummyindex/context/output/bootstrap.py:102-200`).
 
 ### Downstream
 
-- Installer and init/bootstrap commands create global or project guidance (`dummyindex/installer/install.py:200-201`, `dummyindex/installer/install.py:394-403`, `dummyindex/installer/install.py:479-487`, `dummyindex/installer/install.py:516-524`).
-- The dual-host bootstrap preflights both Claude and Codex targets before either write (`dummyindex/cli/init.py:201-212`, `dummyindex/cli/bootstrap.py:36-72`).
-- Repair-on-reinstall imports the policy kernel's Codex-home resolver (`dummyindex/installer/repair.py:51`).
-- `plan_repairs` stamps the active Codex home onto the frozen `RepairPlan` (`dummyindex/installer/repair.py:113-126`).
-- `describe_plan` prints it as the first line of the repair report (`dummyindex/installer/repair.py:314-320`, `dummyindex/installer/repair.py:446-458`).
-- Uninstall consumes ownership-filtered cleanup results. It reports per-file failures without failing unrelated removal (`dummyindex/installer/uninstall.py:187-236`).
-- Onboarding uses active instruction candidates to infer Codex host coverage from exact managed markers (`dummyindex/cli/onboard.py:221-258`).
-- File detection, document collection, reconcile filtering, and source-doc discovery use the same instruction-path policy. Managed guidance is not treated as project content (`dummyindex/pipeline/io/detect.py:10-13`, `dummyindex/context/build/common.py:56-77`, `dummyindex/context/build/reconcile.py:39-42`, `dummyindex/context/domains/source_docs/discovery.py:58-78`).
+- Installer and init/bootstrap commands create global or project guidance (`dummyindex/context/installer/install.py:200-201`, `dummyindex/context/installer/install.py:394-403`, `dummyindex/context/installer/install.py:479-487`, `dummyindex/context/installer/install.py:516-524`).
+- The dual-host bootstrap preflights both Claude and Codex targets before either write (`dummyindex/context/cli/init.py:201-212`, `dummyindex/context/cli/bootstrap.py:36-72`).
+- Repair-on-reinstall imports the policy kernel's Codex-home resolver (`dummyindex/context/installer/repair.py:51`).
+- `plan_repairs` stamps the active Codex home onto the frozen `RepairPlan` (`dummyindex/context/installer/repair.py:113-126`).
+- `describe_plan` prints it as the first line of the repair report (`dummyindex/context/installer/repair.py:314-320`, `dummyindex/context/installer/repair.py:446-458`).
+- Uninstall consumes ownership-filtered cleanup results. It reports per-file failures without failing unrelated removal (`dummyindex/context/installer/uninstall.py:187-236`).
+- Onboarding uses active instruction candidates to infer Codex host coverage from exact managed markers (`dummyindex/context/cli/onboard.py:221-258`).
+- File detection, document collection, reconcile filtering, and source-doc discovery use the same instruction-path policy. Managed guidance is not treated as project content (`dummyindex/context/pipeline/io/detect.py:10-13`, `dummyindex/context/build/common.py:56-77`, `dummyindex/context/build/reconcile.py:39-42`, `dummyindex/context/domains/source_docs/discovery.py:58-78`).
 
 ### Cycle check
 
-Dependency direction is acyclic in the inspected source. `codex_guidance.py` imports only stdlib/TOML compatibility modules, without CLI, installer, pipeline, build, or output imports. `agents_md.py` imports the policy kernel and sibling bootstrap infrastructure. CLI, installer, pipeline, build, and source-doc modules import downward into those APIs. No reverse import comes from the kernel or adapter (`dummyindex/codex_guidance.py:9-18`, `dummyindex/context/output/agents_md.py:10-22`).
+Dependency direction is acyclic in the inspected source. `codex_guidance.py` imports only stdlib/TOML compatibility modules, without CLI, installer, pipeline, build, or output imports. `agents_md.py` imports the policy kernel and sibling bootstrap infrastructure. CLI, installer, pipeline, build, and source-doc modules import downward into those APIs. No reverse import comes from the kernel or adapter (`dummyindex/context/codex_guidance.py:9-18`, `dummyindex/context/output/agents_md.py:10-22`).
 
 ## Data model
 
-- `CODEX_INSTRUCTION_PRECEDENCE` is the ordered standard candidate pair `AGENTS.override.md`, `AGENTS.md`; validated project fallbacks append after it without duplicates (`dummyindex/codex_guidance.py:21-25`, `dummyindex/codex_guidance.py:37-67`, `dummyindex/codex_guidance.py:90-101`).
-- Effective Codex configuration remains transient ordered dictionaries. Invalid or unreadable layers are absent, and a valid empty higher-precedence fallback list deliberately clears a lower layer (`dummyindex/codex_guidance.py:37-67`, `dummyindex/codex_guidance.py:146-205`).
+- `CODEX_INSTRUCTION_PRECEDENCE` is the ordered standard candidate pair `AGENTS.override.md`, `AGENTS.md`; validated project fallbacks append after it without duplicates (`dummyindex/context/codex_guidance.py:21-25`, `dummyindex/context/codex_guidance.py:37-67`, `dummyindex/context/codex_guidance.py:90-101`).
+- Effective Codex configuration remains transient ordered dictionaries. Invalid or unreadable layers are absent, and a valid empty higher-precedence fallback list deliberately clears a lower layer (`dummyindex/context/codex_guidance.py:37-67`, `dummyindex/context/codex_guidance.py:146-205`).
 - Project ownership is a closed string set: `project` and `user-auto-init`. A managed block with no single valid owner is legacy-unowned (`dummyindex/context/output/agents_md.py:29-31`, `dummyindex/context/output/agents_md.py:357-382`).
 - `AgentsMdCleanupIssue(path, message)` and `AgentsMdCleanupResult(removed, errors)` are frozen result records for independent cleanup outcomes (`dummyindex/context/output/agents_md.py:96-109`).
 
@@ -69,14 +69,14 @@ Dependency direction is acyclic in the inspected source. `codex_guidance.py` imp
 
 - Keep project and global selection semantics distinct. Project selection follows Codex discovery: first existing regular candidate, including an empty override. Global registration uses the first nonwhitespace standard candidate and otherwise creates `AGENTS.md` (`dummyindex/context/output/agents_md.py:166-182`, `dummyindex/context/output/agents_md.py:209-254`).
 - Place the Codex managed block first. This keeps dummyindex guidance inside Codex's configured instruction-byte window. The shared writer preserves BOM and all user bytes outside the block (`dummyindex/context/output/bootstrap.py:90-132`, `dummyindex/context/output/agents_md.py:112-131`, `dummyindex/context/output/agents_md.py:385-406`).
-- Require explicit user trust before repository configuration can redirect guidance or change its budget. Trust keys do not resolve configured aliases, preventing stale trusted symlinks from transferring trust (`dummyindex/codex_guidance.py:146-181`, `dummyindex/codex_guidance.py:208-230`).
+- Require explicit user trust before repository configuration can redirect guidance or change its budget. Trust keys do not resolve configured aliases, preventing stale trusted symlinks from transferring trust (`dummyindex/context/codex_guidance.py:146-181`, `dummyindex/context/codex_guidance.py:208-230`).
 - Preserve ownership on refresh. User auto-init may refresh an explicit or legacy block but does not claim it. Owner-filtered uninstall removes only an exact owner match (`dummyindex/context/output/agents_md.py:144-163`, `dummyindex/context/output/agents_md.py:357-382`, `dummyindex/context/output/agents_md.py:425-442`).
 - Treat malformed current state conservatively. Unreadable active candidates stay selected, so bootstrap surfaces the real error. Out-of-scope targets are rejected. Malformed cleanup targets stay unchanged while other targets proceed (`dummyindex/context/output/agents_md.py:245-272`, `dummyindex/context/output/agents_md.py:409-443`).
 
 ## Open questions
 
-- Runtime `-c` overrides, selected profiles, and launch-directory nested project layers remain outside the standalone CLI's observation boundary (`dummyindex/codex_guidance.py:146-155`). Any future parity work must obtain those values from Codex rather than infer them from persistent files.
-- Outside-project absolute paths collapse to a basename for conservative instruction classification. This protects explicitly supplied external standard guidance but can classify more files than a live Codex launch-directory search (`dummyindex/codex_guidance.py:111-143`, `dummyindex/codex_guidance.py:246-253`).
+- Runtime `-c` overrides, selected profiles, and launch-directory nested project layers remain outside the standalone CLI's observation boundary (`dummyindex/context/codex_guidance.py:146-155`). Any future parity work must obtain those values from Codex rather than infer them from persistent files.
+- Outside-project absolute paths collapse to a basename for conservative instruction classification. This protects explicitly supplied external standard guidance but can classify more files than a live Codex launch-directory search (`dummyindex/context/codex_guidance.py:111-143`, `dummyindex/context/codex_guidance.py:246-253`).
 - Global selection is content-based while project selection is existence-based. The difference is source-evidenced and tested. Callers must not factor the selectors into one helper without preserving both contracts (`dummyindex/context/output/agents_md.py:209-254`).
 
 ## Audit trail

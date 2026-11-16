@@ -32,7 +32,7 @@
 
 - `conftest.py` + `paths.py` are imported by **every other test module** — repo-wide,
   not owned by any feature.
-- `usage_corpus` → usage-reporting tests only (scoped to `tests/usage/`).
+- `usage_corpus` → usage-reporting tests only (scoped to `tests/context/usage/`).
 - `sample_repo/web/app.ts` → extraction/ingest pipeline tests (copied, never imported
   by this feature).
 - `statusline.ps1` → reads the SessionStart-hook-written cache at

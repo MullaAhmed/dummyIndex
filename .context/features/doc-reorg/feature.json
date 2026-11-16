@@ -40,7 +40,7 @@
     "test_doc_reorg_test_restore_reports_skipped_when_backup_copy_missing"
   ],
   "files": [
-    "dummyindex/cli/doc_reorg.py",
+    "dummyindex/context/cli/doc_reorg.py",
     "dummyindex/context/domains/doc_reorg/__init__.py",
     "dummyindex/context/domains/doc_reorg/discovery.py",
     "dummyindex/context/domains/doc_reorg/errors.py",

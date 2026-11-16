@@ -4,7 +4,7 @@ confidence: INFERRED
 
 ## Where it lives
 
-`dummyindex/context/domains/source_docs/` — the catalog package: `discovery.py` (find docs), `refs.py` (extract + cross-check references), `keys.py` (harvest JSON keys), `catalog.py` (`build_doc_catalog` — the orchestrator), `models.py` (`DocEntry` / `DocCatalog`), `writers.py` / `readers.py` (`INDEX.{json,md}` I/O), `constants.py` (thresholds + banner), `__init__.py` (public surface). Cross-area `DocConfidence` lives in `dummyindex/context/enums.py:12-37`. Doc-text extraction for PDF/office defers to `dummyindex/pipeline/io/detect.py`. The consumer-side renderer is `dummyindex/context/output/docs.py` (`PROJECT.md` description + "Existing documentation" section). Tests: `tests/context/domains/test_source_docs.py`, `tests/context/output/test_docs.py`.
+`dummyindex/context/domains/source_docs/` — the catalog package: `discovery.py` (find docs), `refs.py` (extract + cross-check references), `keys.py` (harvest JSON keys), `catalog.py` (`build_doc_catalog` — the orchestrator), `models.py` (`DocEntry` / `DocCatalog`), `writers.py` / `readers.py` (`INDEX.{json,md}` I/O), `constants.py` (thresholds + banner), `__init__.py` (public surface). Cross-area `DocConfidence` lives in `dummyindex/context/enums.py:12-37`. Doc-text extraction for PDF/office defers to `dummyindex/context/pipeline/io/detect.py`. The consumer-side renderer is `dummyindex/context/output/docs.py` (`PROJECT.md` description + "Existing documentation" section). Tests: `tests/context/domains/test_source_docs.py`, `tests/context/output/test_docs.py`.
 
 ## Architecture in three sentences
 

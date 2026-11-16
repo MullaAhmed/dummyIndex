@@ -8,7 +8,7 @@ confidence: INFERRED
   `enums.py` (`ProposalStatus`), `constants.py` (`SCHEMA_VERSION`), `errors.py`
   (typed exception tree), `models.py` (`Proposal`, `ConsistencyHits`), `scan.py`
   (`scan_consistency`), `store.py` (read/write + templates + consistency injection).
-- CLI: `dummyindex/cli/propose.py` — wire-only argument parsing + orchestration.
+- CLI: `dummyindex/context/cli/propose.py` — wire-only argument parsing + orchestration.
 - Tests: `tests/context/domains/test_propose.py`.
 - On-disk artifacts: `.context/proposals/<slug>/` (`PROPOSALS_REL = "proposals"`,
   `store.py:23`).

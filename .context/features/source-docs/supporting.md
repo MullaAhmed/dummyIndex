@@ -9,8 +9,8 @@
 - `dummyindex/context/domains/debt/harvest.py`
 - `dummyindex/context/domains/debt/models.py`
 - `dummyindex/context/domains/source_docs/refs.py`
-- `dummyindex/pipeline/extract/__init__.py`
-- `dummyindex/pipeline/io/detect.py`
+- `dummyindex/context/pipeline/extract/__init__.py`
+- `dummyindex/context/pipeline/io/detect.py`
 - `tests/context/domains/debt/test_harvest.py`
 
 **Original notes:**
@@ -32,8 +32,8 @@ _Deterministic stub (`confidence: ConfidenceLevel.EXTRACTED`). The `/dummyindex`
 - `dummyindex/context/domains/debt/harvest.py`
 - `dummyindex/context/domains/debt/models.py`
 - `dummyindex/context/domains/source_docs/refs.py`
-- `dummyindex/pipeline/extract/__init__.py`
-- `dummyindex/pipeline/io/detect.py`
+- `dummyindex/context/pipeline/extract/__init__.py`
+- `dummyindex/context/pipeline/io/detect.py`
 - `tests/context/domains/debt/test_harvest.py`
 
 ## Flows

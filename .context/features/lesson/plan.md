@@ -12,5 +12,5 @@
 6. Learning status: `evolve_learning.py:35-46` derives `LearningStatus`;
    `dummyindex/context/domains/proposals/closeout.py:246-252` treats settled statuses as final.
 
-Tests: `tests/shared/test_lesson.py`. They cover round trip, field
+Tests: `tests/context/shared/test_lesson.py`. They cover round trip, field
 rejection, delta purity, add/revise/supersede, double apply and owner edits.

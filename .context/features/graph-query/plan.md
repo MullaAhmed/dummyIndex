@@ -16,7 +16,7 @@ Delivered as proposal `graph-consumption-upgrade`, item A1.
 The boundary is one wire-only CLI module plus a domain package.
 The split follows the repo's CLI/domain rule (`.context/conventions/folder-organization.md`, "The CLI / domain split"):
 
-- `dummyindex/cli/graph.py` (184 lines) — flag parsing, verb dispatch, exit-code mapping; imports the domain lazily inside `run()` (`cli/graph.py:25-46`).
+- `dummyindex/context/cli/graph.py` (184 lines) — flag parsing, verb dispatch, exit-code mapping; imports the domain lazily inside `run()` (`cli/graph.py:25-46`).
 - `dummyindex/context/domains/graph_query/` — the engine, as a package.
 
 **Why a package, not one module:** once a domain outgrows one file, the domain-split convention applies.
@@ -38,7 +38,7 @@ File map:
 - `verbs.py` — the seven verbs and row/result helpers. `_result` clips to `max(1, limit)`, so a domain caller can never request zero rows (`verbs.py:94`).
 - `render.py` — `render_markdown` / `render_json` off one model. Neither re-derives state.
 
-Tests pin both halves: `tests/context/domains/test_graph_query.py` (synthetic fixture) and `tests/cli/test_graph_command.py` (dispatch contract plus read-only smoke on this repo's real artifact, `test_graph_command.py:185-209`).
+Tests pin both halves: `tests/context/domains/test_graph_query.py` (synthetic fixture) and `tests/context/cli/test_graph_command.py` (dispatch contract plus read-only smoke on this repo's real artifact, `test_graph_command.py:185-209`).
 
 ## Load path (the wire subtlety)
 

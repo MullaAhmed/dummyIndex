@@ -16,7 +16,7 @@
   the empty Markdown result does not distinguish clipping from a genuine miss
   (`dummyindex/context/domains/query.py:406-425`,
   `dummyindex/context/domains/query.py:786-800`,
-  `dummyindex/cli/query.py:124-126`).
+  `dummyindex/context/cli/query.py:124-126`).
 - **Raising only `--budget` to recover clipped results** — estimated-token and
   byte allowances are independent, and whole matches are removed at the byte
   cap — a larger token budget alone cannot restore them; nonempty Markdown's

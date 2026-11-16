@@ -46,8 +46,8 @@ The drift report scrolls past at session start. This feature keeps staleness *pe
 
 ## Tests
 
-- `tests/cli/test_statusline.py`: read and degrade-to-silent paths.
-- `tests/cli/test_plan_update_badge.py`: atomic write, mkdir, best-effort isolation.
-- `tests/cli/test_debt_statusline_dispatch.py`: CLI registration.
+- `tests/context/cli/test_statusline.py`: read and degrade-to-silent paths.
+- `tests/context/cli/test_plan_update_badge.py`: atomic write, mkdir, best-effort isolation.
+- `tests/context/cli/test_debt_statusline_dispatch.py`: CLI registration.
 - Statusline block in `tests/context/test_hooks.py`: both-scope check, write-if-absent, idempotent re-install, other keys preserved, malformed-file refusal.
-- `tests/cli/test_hooks_cli.py`: install CLI reports the wire, value lands on disk.
+- `tests/context/cli/test_hooks_cli.py`: install CLI reports the wire, value lands on disk.
