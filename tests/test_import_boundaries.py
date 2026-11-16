@@ -109,6 +109,7 @@ ROOT_PAIRS = {
 # Known, reviewed dynamic import sites (R7 allowlist).
 DYNAMIC_ALLOW = {
     ("dummyindex/__init__.py", 30),
+    ("dummyindex/context/__init__.py", 91),  # lazy re-export; targets from _EXPORTS
     ("dummyindex/context/pipeline/extract/generic.py", 25),
 }
 DYNAMIC_NAMES = ("import_module", "__import__")
@@ -847,3 +848,45 @@ def test_fresh_interpreter_cli_help_exits_zero() -> None:
         check=False,
     )
     assert result.returncode == 0, result.stderr
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "module",
+    [
+        "dummyindex.context.shared.atomic_io",
+        "dummyindex.context.usage",
+    ],
+)
+def test_fresh_interpreter_light_import_skips_engine(module: str) -> None:
+    # `dummyindex.context.__init__` must stay lazy: a sibling import may not
+    # load the build runner or networkx.
+    code = "\n".join(
+        [
+            "import sys",
+            f"import {module}",
+            "heavy = [m for m in ('networkx', 'dummyindex.context.build.runner')"
+            " if m in sys.modules]",
+            "assert not heavy, heavy",
+        ]
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", code],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+
+
+@pytest.mark.unit
+def test_context_lazy_exports_cover_all_and_resolve() -> None:
+    import dummyindex.context as context
+
+    assert set(context._LAZY) == set(context.__all__)
+    for name in context.__all__:
+        assert getattr(context, name) is not None
+    assert set(context.__all__) <= set(dir(context))
+    with pytest.raises(AttributeError):
+        context.not_a_public_name  # noqa: B018
