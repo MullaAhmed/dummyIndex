@@ -7,9 +7,10 @@ symlink resolving outside its base. The check runs before anything is written.
 
 from __future__ import annotations
 
-import os
 import re
 from pathlib import Path
+
+from dummyindex.context.shared.atomic_io import is_link as shared_is_link
 
 from .constants import ALLOWED_SOURCE_SCHEMES
 from .errors import ToolkitError
@@ -70,11 +71,8 @@ def _within(child: Path, base: Path) -> bool:
 
 
 def is_link(path: Path) -> bool:
-    """A symlink, or a Windows directory junction (not a symlink to Python)."""
-    if path.is_symlink():
-        return True
-    isjunction = getattr(os.path, "isjunction", None)
-    return bool(isjunction and isjunction(path))
+    """A symlink or Windows junction; shared impl also covers py<3.12."""
+    return shared_is_link(path)
 
 
 def refuse_links(folder: Path) -> None:
