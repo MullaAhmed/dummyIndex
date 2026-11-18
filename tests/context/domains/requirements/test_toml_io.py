@@ -140,7 +140,10 @@ def test_invalid_files_raise(tmp_path, bad):
 
 @pytest.mark.unit
 def test_tomli_fallback_is_used_when_tomllib_is_blocked(tmp_path, monkeypatch):
-    import tomllib
+    try:
+        import tomllib
+    except ModuleNotFoundError:  # Python 3.10: tomli is the real parser
+        import tomli as tomllib
 
     path = tmp_path / "config.toml"
     _write(path, SAMPLE)
