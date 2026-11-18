@@ -1,0 +1,1026 @@
+{
+  "task-00c2ac96016f63c6": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/equip/lifecycle/remove.py",
+        "sha256": "05bd0b6408322b6d492d9d75afbd9a24cb4744ff01be7ab2d0a66637bea7e522"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/lifecycle/status.py",
+        "sha256": "357ab1a5e7e5f79a2485fb0e4a6746c4d2e006e89416daf4bda02f8fc4b21e84"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/equip/test_equip_remove.py",
+        "sha256": "646c73b946c47c1b6ac10b4fe7722a819595423557d5bbfb2e2d7c52bc7c822c"
+      },
+      {
+        "path": "tests/context/domains/equip/test_equip_lifecycle.py",
+        "sha256": "456982e12cadcb0f3594f7165b792a7c32803c2334a74d373eeedd64cf24df66"
+      }
+    ],
+    "source_commit": "0d41000dbac91e3e42a5ed8084ab3fb22f9e74b8",
+    "state": "verified",
+    "task_id": "task-00c2ac96016f63c6",
+    "task_sha256": "00c2ac96016f63c65d979982bf3273e38ec7c55c1a4ac48b3e580195b32836dc"
+  },
+  "task-0329c26c863b658d": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/build/enriched_refresh.py",
+        "sha256": "9e037d00a1530d200f5691121aebf4d61e2bd252fbe8d720ec52a68699137b28"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/build/test_enriched_refresh_stamp.py",
+        "sha256": "3c6806b7ff6cc00008958a2552a759e82ffab9dd95bb87defdd03346f4afe186"
+      }
+    ],
+    "source_commit": "5e2b668ad05c110ece11affbb085d41bc077422a",
+    "state": "verified",
+    "task_id": "task-0329c26c863b658d",
+    "task_sha256": "0329c26c863b658da15cd62e7571a4239e9ee4987c13945959d40d149a390298"
+  },
+  "task-0570130417a521ff": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/equip/generate/grounding.py",
+        "sha256": "4bc353dbef707b2275f5df777bf41688e379e6c3664294d2944ad072da957124"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/generate/render.py",
+        "sha256": "f65c255aefb7b338f1a348297529704c42819e568b62c1b9b06a09b359601a21"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/generate/plan.py",
+        "sha256": "169eeb6e727a094e131172108df33b4ba0d9409fab41fb93da1d9a50b511384e"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/equip/test_equip_grounding.py",
+        "sha256": "b54f0fb536f560e32f52788d3e65b862a9b19eddb6137702791b1563860caf69"
+      }
+    ],
+    "source_commit": "6a16057b6f352760895282b871e12a874d9852e8",
+    "state": "verified",
+    "task_id": "task-0570130417a521ff",
+    "task_sha256": "0570130417a521ffe5b81b4484447ba2c92f5447094d17610ef4729325129428"
+  },
+  "task-10b8feb65d36f3f5": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/gc/delete.py",
+        "sha256": "43dac946e33cbdea1e6882e001408c1d25fcca7f8c7a63f1cc2335801ccfc983"
+      },
+      {
+        "path": "dummyindex/cli/gc.py",
+        "sha256": "c53cfff77b5d227fe87fdb8c000f147f629e46e73f0075a6664013e0211ccc1c"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/gc/test_equipment_delete.py",
+        "sha256": "e75e0cb7787c61cb45fbdb2cbd2dfa967807dc75cbf39e521c16c65dab1201f9"
+      },
+      {
+        "path": "tests/cli/test_gc_cli.py",
+        "sha256": "7842ea9ddde8fc1910eb59d3649656907c7777fc40f2bbd6e0e8a78d95debe43"
+      }
+    ],
+    "source_commit": "107a3e73327b075e15f6b24f24fab6799fe77f1f",
+    "state": "verified",
+    "task_id": "task-10b8feb65d36f3f5",
+    "task_sha256": "10b8feb65d36f3f58ec7385c9414fc39978ec57039813e25b334e829265f992a"
+  },
+  "task-160a561c2af62892": {
+    "artifacts": [
+      {
+        "path": "tests/context/domains/requirements/test_toml_io.py",
+        "sha256": "02b7cafcf421f923e5541ea0b59bdaebb36a0bbfcc9d4cfcca4e3dfff6813c2d"
+      },
+      {
+        "path": "tests/context/domains/requirements/test_seed.py",
+        "sha256": "2dbb84d82519789fad03c89cb11f3f57266d7f5758ba6b6eab881ce2a7eccaed"
+      },
+      {
+        "path": "tests/context/domains/test_config.py",
+        "sha256": "e86d0904330ee50089b864baf30e4e8e10cb7ff187b7915d9bc151cb8a597783"
+      },
+      {
+        "path": "tests/cli/equip/test_equip_install_writeback.py",
+        "sha256": "b94edaa5d38e0acc55c9b6301efd70baa688c8e0e4f3764c3fa21b55a8a23568"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "dummyindex/context/domains/requirements/toml_io.py",
+        "sha256": "aee122b5e0b6a03101cb589228a18f4856da1e4f474a814e3c76cfb244ab7e8d"
+      },
+      {
+        "path": "dummyindex/context/domains/requirements/seed.py",
+        "sha256": "12df65372a14b30c42ba4e6e52fba8849118ca36acd512d3426da9c3485f63b6"
+      },
+      {
+        "path": "dummyindex/context/domains/config.py",
+        "sha256": "59cbe32c065df85e6e7cf166e7cc0c5f42f2f59824468f35d3683b1b3faff0a3"
+      }
+    ],
+    "source_commit": "519f51f03573810456f69abd3aa905dc5f678328",
+    "state": "verified",
+    "task_id": "task-160a561c2af62892",
+    "task_sha256": "160a561c2af628923cc00eb90030bf0851649a8d20c5620f2f86c1da246d19bf"
+  },
+  "task-221c4f179be40977": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/build/context_upgrade.py",
+        "sha256": "8cc448812e164686e367c4a9445d38ba009f584b412e90e6ebcda827d5a9ea1d"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/build/test_context_upgrade.py",
+        "sha256": "bd0901a8630d9c7d8466910d14c4780ad003ca503270756163920a97f8a26727"
+      }
+    ],
+    "source_commit": "8941b1eaf43f5165b2925d3cf9346c133513755b",
+    "state": "verified",
+    "task_id": "task-221c4f179be40977",
+    "task_sha256": "221c4f179be40977b900c744d9b407394f46e1a1de06a3b4c05f1981ee30e992"
+  },
+  "task-2fb40dec7a2d3325": {
+    "artifacts": [
+      {
+        "path": "tests/context/domains/equip/test_equip_grounding.py",
+        "sha256": "b54f0fb536f560e32f52788d3e65b862a9b19eddb6137702791b1563860caf69"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "dummyindex/context/domains/equip/generate/grounding.py",
+        "sha256": "ab7411053d47144ef646c6e56396ed9c3e3e30894946ac5b1ad52a7d8abc89d9"
+      }
+    ],
+    "source_commit": "519f51f03573810456f69abd3aa905dc5f678328",
+    "state": "verified",
+    "task_id": "task-2fb40dec7a2d3325",
+    "task_sha256": "2fb40dec7a2d3325eb1b3aeae04bff53b8d61db0c46db68008c807dbea8dc75c"
+  },
+  "task-323c4c9a9a04624e": {
+    "artifacts": [
+      {
+        "path": "dummyindex/cli/upgrade.py",
+        "sha256": "c0afe976c7bf6b07d760ae57b8045679395a8e672d1cb2373ec302413e614bc5"
+      },
+      {
+        "path": "dummyindex/context/enums.py",
+        "sha256": "56feb1c267ee04ac45f437c233e8a5bb1484fe77b1324f20e082537387b2c225"
+      },
+      {
+        "path": "dummyindex/cli/__init__.py",
+        "sha256": "7c846e959e6d755245625cf563a265f4d02b74feba231198f416bbc7baa3ed57"
+      },
+      {
+        "path": "dummyindex/cli/help.py",
+        "sha256": "de7648a6375f87bfcbaffd3a0a70078cbac607ee0b45c94725f0ec29f6b496de"
+      },
+      {
+        "path": "docs/COMMANDS.md",
+        "sha256": "8c477f8840baf759fcae0e1ef645f8b72d86a64d92e35ea4469e727d8203a878"
+      },
+      {
+        "path": "docs/guide/07-cli.md",
+        "sha256": "6a444411ae9ac03b805d2cd54524d189244c7ac313b149b51d989ec05d2753b7"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/cli/test_upgrade_cli.py",
+        "sha256": "b307d4106c4dc43ab615320c3de53694f5b648e01e852ef6f0f67c1f1d6f94e4"
+      },
+      {
+        "path": "tests/cli/test_cli_doc_sync.py",
+        "sha256": "dfe5afcf8e78ada3749654483dc7b8c0aca4a974d749a9a38dcd932912143e73"
+      }
+    ],
+    "source_commit": "107a3e73327b075e15f6b24f24fab6799fe77f1f",
+    "state": "verified",
+    "task_id": "task-323c4c9a9a04624e",
+    "task_sha256": "323c4c9a9a04624e05ab5769a80f086545a42e0756f8001d8bdbaf457b00a1df"
+  },
+  "task-3b5f2b7093b76d0f": {
+    "artifacts": [
+      {
+        "path": "tests/context/build/test_context_upgrade.py",
+        "sha256": "bd53ba79706119f3c223e18ecaade34e35f02cda68cb71436130b29b107ea547"
+      },
+      {
+        "path": "tests/cli/test_upgrade_cli.py",
+        "sha256": "a449e4f9c3a911cc70960152913b7cb727b9d3b017667f7914f573fabe369563"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "dummyindex/context/build/context_upgrade.py",
+        "sha256": "5439746637bf29e9a1b99ca6d6217648f053ec1a29eaeaba7d50bed01d8657a2"
+      },
+      {
+        "path": "dummyindex/cli/upgrade.py",
+        "sha256": "9d6acdf9c53101a8c99f37040f21118565ededb46f81076046b52decbce00e27"
+      }
+    ],
+    "source_commit": "d78bfd27f6a86858a1a6bcd69e90f7f1fd2dfa5f",
+    "state": "verified",
+    "task_id": "task-3b5f2b7093b76d0f",
+    "task_sha256": "3b5f2b7093b76d0f8a7ba74463cd54c8afee98168662b5c58ba343b03f223556"
+  },
+  "task-413e1e2743340d08": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/config.py",
+        "sha256": "59cbe32c065df85e6e7cf166e7cc0c5f42f2f59824468f35d3683b1b3faff0a3"
+      },
+      {
+        "path": "dummyindex/cli/equip/install.py",
+        "sha256": "6fce3dafa8cc6a4e68d4f69cbe9bb25e9c9383005f3be7696e75ece033f70624"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/test_config.py",
+        "sha256": "005a9e4e9a13a46a5cbdb9810000ded15bebbe6d1eb4c7fc1fe7e3f4605f2f4a"
+      },
+      {
+        "path": "tests/cli/equip/test_equip_install_writeback.py",
+        "sha256": "b94edaa5d38e0acc55c9b6301efd70baa688c8e0e4f3764c3fa21b55a8a23568"
+      }
+    ],
+    "source_commit": "0d41000dbac91e3e42a5ed8084ab3fb22f9e74b8",
+    "state": "verified",
+    "task_id": "task-413e1e2743340d08",
+    "task_sha256": "413e1e2743340d08396c2995858471440d1ccab0317182b3c018b637dd3dd3af"
+  },
+  "task-46ecd53b11c24d40": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/hooks_requirements.py",
+        "sha256": "cebb0a34ddadf9172278d7ea6d89ec6ccc6637f282922189a947453ee96b3f46"
+      },
+      {
+        "path": "dummyindex/context/hooks.py",
+        "sha256": "2b79483bf455c6f7293a5bfb86b296677266876c7a65d4a7fc7586136b897d04"
+      },
+      {
+        "path": "dummyindex/context/domains/preflight/inventory.py",
+        "sha256": "e3c92f4a0096355551f96cb093b8d6d4f949f0a8d1e87baad52025a7f8906db7"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/test_hooks.py",
+        "sha256": "02b7a3db35a9841eb17e4bd2020c26d5b1c2c7a7384cc072388114466c6d020d"
+      },
+      {
+        "path": "tests/context/test_hooks_requirements.py",
+        "sha256": "514d83b65a99b79cf30c7dc347cf5526262b2fadf39b17beacbb8f59d00a0f0c"
+      },
+      {
+        "path": "tests/context/domains/test_preflight.py",
+        "sha256": "454e19a3a66ffae4cc42ac9d1968c853ba2ce26e4f580473463dc9a2a4e1e5a0"
+      }
+    ],
+    "source_commit": "6a16057b6f352760895282b871e12a874d9852e8",
+    "state": "verified",
+    "task_id": "task-46ecd53b11c24d40",
+    "task_sha256": "46ecd53b11c24d40afa372606bb30e0c0a7b72ad54f034938dcd3e26c1e266b8"
+  },
+  "task-4df3b3dfd9fe6048": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/equip/enums.py",
+        "sha256": "11bbd937654583ecec25819aca004427a8d15d471e5fa56ffc344611ce5e59a1"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/models.py",
+        "sha256": "5a508d91cc27be6ee44fa5b858e492be385ffadbfc61350ee4edac5d5dfc9795"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/equip/test_equip_manifest_v3.py",
+        "sha256": "b7511fd1804ac5043868595c115d96e33595c2e696e9c7e6485dfba06ff7df6f"
+      }
+    ],
+    "source_commit": "5e2b668ad05c110ece11affbb085d41bc077422a",
+    "state": "verified",
+    "task_id": "task-4df3b3dfd9fe6048",
+    "task_sha256": "4df3b3dfd9fe60480c3a0e427efa37181a3cb9c69584dcc787e969122730fde5"
+  },
+  "task-53b2284d68ece120": {
+    "artifacts": [
+      {
+        "path": "dummyindex/skills/update/SKILL.md",
+        "sha256": "3b0de250b68e40f1331ea17b6100eac189837e711daf17238d9bb2851339583e"
+      },
+      {
+        "path": "dummyindex/skills/equip/SKILL.md",
+        "sha256": "e82d7f261afd084bf01f9ebc711604ee18fe75d67f89f9c413b2c78b4a57fed4"
+      },
+      {
+        "path": "dummyindex/skills/gc/SKILL.md",
+        "sha256": "2d8d18453f70558c0c92251fae4a9854bc5f730944801935ddd88c806678e484"
+      },
+      {
+        "path": "dummyindex/context/output/instructions.py",
+        "sha256": "7189970808572f9b4ffb28f06d16127a415fe72de619e34d40fd4203f9577477"
+      },
+      {
+        "path": "tests/data/skill-budget.txt",
+        "sha256": "290f1867b838dc98a6fc79c70196b312b312e7832a14cc83860e23ce29cb9a55"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/test_skills_doc_hygiene.py",
+        "sha256": "f67e55ce8b6217e9656a8dc53e07adcd49b1440a0ff0bfd578df923cdb5a10eb"
+      },
+      {
+        "path": "tests/context/output/test_instructions.py",
+        "sha256": "1154c7a03f6f86b75e3ec2d102e689aacd05be702f8b463a6fd1112df085b203"
+      }
+    ],
+    "source_commit": "f34b578faebe9f46761933396e4d3486d2b1ab13",
+    "state": "verified",
+    "task_id": "task-53b2284d68ece120",
+    "task_sha256": "53b2284d68ece1201024ebdf0cdedac194916010bfe4c1e686c6143f5c1642a2"
+  },
+  "task-6b5489d555a4baeb": {
+    "artifacts": [
+      {
+        "path": "dummyindex/installer/install/project_init.py",
+        "sha256": "cb57d8c0cca886c7fa1d317c681a59a224dffa507e1fbb0c2bed2b5b41532eb0"
+      },
+      {
+        "path": "dummyindex/installer/install/__init__.py",
+        "sha256": "891d59dc98f770ab694698b409112ee5f5ac0e9e465aa3a15b92cc3aa5d27c96"
+      },
+      {
+        "path": "dummyindex/installer/install/orchestrate.py",
+        "sha256": "0143d4e5702a9166ce54c2170e6011fce0a39b2957e96e7efdc9f0f8d4c9a30c"
+      },
+      {
+        "path": "dummyindex/cli/init.py",
+        "sha256": "c009215426d74a876c217234700dab9e16e58738bf90da6e6db7de2e0dcfca8c"
+      },
+      {
+        "path": "dummyindex/cli/onboard.py",
+        "sha256": "744581f59d94298848a20b81180dfd6d180a9c266649c7c08600d2067bb01348"
+      },
+      {
+        "path": "dummyindex/context/build/context_upgrade.py",
+        "sha256": "18f0f179a8c94244a7948910b0a987f7b53da919bb3a04cc20d3f62eb8709b24"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/test_install.py",
+        "sha256": "aac75e6e4c559822d27197b8bf8a8c8bd9dddc32fd533def4667279b6f577acc"
+      },
+      {
+        "path": "tests/cli/test_init_cli.py",
+        "sha256": "41e9b374a46b4acada1f4e1684678eb899694d437bd513d1d8899f0864a3074b"
+      },
+      {
+        "path": "tests/context/build/test_context_upgrade.py",
+        "sha256": "f7053f359676f219071ede9bd72273b4c9784ff5e2733a2f3191eef4371b5952"
+      }
+    ],
+    "source_commit": "a26e17a616bf7a26711c630c4137b4ff68ee2920",
+    "state": "verified",
+    "task_id": "task-6b5489d555a4baeb",
+    "task_sha256": "6b5489d555a4baeba3cf62a8f162535c90721de3e2ea0296b76f407888ae5cad"
+  },
+  "task-6fb0aeeac7bffc36": {
+    "artifacts": [
+      {
+        "path": "dummyindex/cli/requirements.py",
+        "sha256": "61a506f21cf2655b02b05318773aea4ef1ad11f70e77f702c9b43d4be81c4f94"
+      },
+      {
+        "path": "dummyindex/context/enums.py",
+        "sha256": "f574c1fc2573ad4c83b0dae62a9a557470dc96f6d798ad9ff796ea34cf244a81"
+      },
+      {
+        "path": "dummyindex/cli/__init__.py",
+        "sha256": "ce9af017897088d834c8b7068270be72feaed4f420e725351db540270200bdc7"
+      },
+      {
+        "path": "dummyindex/cli/wire.py",
+        "sha256": "cf879d3b0d7d3d39315cbcd32ae55a733774fb8821b491d586e81c6e95987c9a"
+      },
+      {
+        "path": "dummyindex/cli/status.py",
+        "sha256": "3c4eba8b5cadb4332ef31db7879399fb5ecc9201dcdd1fb9ea6c011d20933648"
+      },
+      {
+        "path": "dummyindex/cli/help.py",
+        "sha256": "872762469d7d038029bb4ed365c5aa76ab987d7627f792ad0841f9499b34ae0f"
+      },
+      {
+        "path": "docs/COMMANDS.md",
+        "sha256": "0b5a1caede51c8dfae2ccca820181aa56ca7472fabf021a2f55fd2e6e8c44037"
+      },
+      {
+        "path": "docs/guide/07-cli.md",
+        "sha256": "0df41c79d4364aa4917e486aa4ca7c5a8721b13d84d73e94aee9e284a49dec5d"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/cli/test_requirements_cli.py",
+        "sha256": "eba642f727cf6df5e5d08b8b924b47554f523e4bb37289809e9bdbf7cecf9f46"
+      },
+      {
+        "path": "tests/cli/test_cli_doc_sync.py",
+        "sha256": "b618caad085c15b1189e4374ed72d2717470943a9e29065d6202ec0acba111cf"
+      }
+    ],
+    "source_commit": "b4a34601190a8f9d498d7a4e6dc08b78026e06cd",
+    "state": "verified",
+    "task_id": "task-6fb0aeeac7bffc36",
+    "task_sha256": "6fb0aeeac7bffc3646d5a2d299638e45db9c16260b077edbbb71804189f56eb4"
+  },
+  "task-81217a1ee3dfb70d": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/equip/generate/catalog.py",
+        "sha256": "06990732d876108d9e1e7750ec9ff9598856840284e009d2625175cb2ed93935"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/generate/specialists.py",
+        "sha256": "24d94dc54a2db8b00cfbe8f4b9b84cf4469839462509c29bef8f2a8062842d31"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/generate/fresh.py",
+        "sha256": "85a2e550c183960303e7fa5d721392588a2f5b592d24bff29cd1222f4540df71"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/equip/test_equip_catalog.py",
+        "sha256": "a87994e6e219cf5b96d1bda67604c4eab2aa5593c2405b2091c132b8e87dc128"
+      },
+      {
+        "path": "tests/context/domains/equip/test_equip_specialists.py",
+        "sha256": "fb757a140a80b5349f47b483b2729eae9c206273aedaace004a217cdc2f96f90"
+      },
+      {
+        "path": "tests/context/domains/equip/test_equip.py",
+        "sha256": "2d15e4a7d11021ca8322068dc2c9ef725bd085eaff9406bd100b8608e4a6a0c9"
+      },
+      {
+        "path": "tests/context/domains/equip/test_equip_apply_merge.py",
+        "sha256": "4bff4fd8e0e4de6530b0cc8c844056b9403116eede7a6f86ef6edf2caf7c05c4"
+      },
+      {
+        "path": "tests/cli/equip/test_equip_source_apply.py",
+        "sha256": "f0988fa2ac608ec6d92ac77e59d826146173dd1bf9e440e635305156cb0acad3"
+      }
+    ],
+    "source_commit": "da4ba708d204768d78c98f8b98e0cb5e39381e0a",
+    "state": "verified",
+    "task_id": "task-81217a1ee3dfb70d",
+    "task_sha256": "81217a1ee3dfb70dc7881c49d83f169f56a4ba054865a7d7fa6291f89629bfc8"
+  },
+  "task-81c7151b5a75c594": {
+    "artifacts": [
+      {
+        "path": "tests/context/domains/equip/test_equip.py",
+        "sha256": "2d15e4a7d11021ca8322068dc2c9ef725bd085eaff9406bd100b8608e4a6a0c9"
+      },
+      {
+        "path": "tests/context/domains/equip/test_equip_catalog.py",
+        "sha256": "a87994e6e219cf5b96d1bda67604c4eab2aa5593c2405b2091c132b8e87dc128"
+      },
+      {
+        "path": "tests/context/domains/equip/test_equip_specialists.py",
+        "sha256": "8ff0a0a2dcc5b79c7615d1d44d9ae09315d57334dba4165b236c230fe2b5d66b"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "dummyindex/context/domains/equip/generate/detect.py",
+        "sha256": "f6d325b7f6b990be05ed72d02f79671626a8e3a3ba75a97d1436431739b44139"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/generate/catalog.py",
+        "sha256": "94ba61d52c9ed15bb0b45cf8a39316ce2ae265fbeb9aa5e884499e2052a6b4d4"
+      }
+    ],
+    "source_commit": "519f51f03573810456f69abd3aa905dc5f678328",
+    "state": "verified",
+    "task_id": "task-81c7151b5a75c594",
+    "task_sha256": "81c7151b5a75c5944586118b5e7b805e3a819ecdf93abe93c0c4690197e732cd"
+  },
+  "task-955e2eccb8bedcc5": {
+    "artifacts": [
+      {
+        "path": "tests/context/domains/requirements/test_check.py",
+        "sha256": "ca9ffe28fdf10cd530d5cad81cc22c6e389c224580f11e3a6d976e15846e353a"
+      },
+      {
+        "path": "tests/context/domains/requirements/test_sync.py",
+        "sha256": "c1e69e1cee794499ad2cf925516883ec99bdda466e3b920e585b1322bcc68fda"
+      },
+      {
+        "path": "tests/context/domains/requirements/test_gate.py",
+        "sha256": "b9aaef2134c3e1839d6198cc47c38546337147f62aaf70db68a20c562d7f235e"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "dummyindex/context/domains/requirements/check.py",
+        "sha256": "df4cae965b7721d4d9a7e2854b99da8366d63688b47ff60bf1ec53e77064cb29"
+      },
+      {
+        "path": "dummyindex/context/domains/requirements/sync.py",
+        "sha256": "3f7119e16d0de65b236ae9f3d696572d1d08a91b67c7aad5e2ee4016cbfc874f"
+      },
+      {
+        "path": "dummyindex/context/domains/requirements/gate.py",
+        "sha256": "3c23eab638cc07dcf7b469fdb725af9129ec97a6342a9eed62042d8ce83ba382"
+      }
+    ],
+    "source_commit": "d78bfd27f6a86858a1a6bcd69e90f7f1fd2dfa5f",
+    "state": "verified",
+    "task_id": "task-955e2eccb8bedcc5",
+    "task_sha256": "955e2eccb8bedcc53cd803989675b707e90a76cae07ffdec95971a59a34b1d51"
+  },
+  "task-96ae5061fd0f4366": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/requirements/sync.py",
+        "sha256": "3f7119e16d0de65b236ae9f3d696572d1d08a91b67c7aad5e2ee4016cbfc874f"
+      },
+      {
+        "path": "dummyindex/context/domains/requirements/__init__.py",
+        "sha256": "ab089daa5f05249cf9039292c4fd07b94382dc12163085b93ec1e3036674cd19"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/requirements/test_sync.py",
+        "sha256": "11396219a523a367441f779fcc33dc0d26efc60863e5e8a240a3373f9df019f1"
+      }
+    ],
+    "source_commit": "3c6204cf66bea77aa7c7f8279a5fa779f440b05b",
+    "state": "verified",
+    "task_id": "task-96ae5061fd0f4366",
+    "task_sha256": "96ae5061fd0f4366369bbeb5849531faeb5287369b69f3ae4f5ff0dee4010e22"
+  },
+  "task-9d2f4f018f58c64b": {
+    "artifacts": [
+      {
+        "path": "tests/test_install.py",
+        "sha256": "05b4087338dffde361f402ac2e43dc89c2b20a52c9bae78b33f76b9a5d1a9671"
+      },
+      {
+        "path": "tests/cli/test_init_cli.py",
+        "sha256": "41e9b374a46b4acada1f4e1684678eb899694d437bd513d1d8899f0864a3074b"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "dummyindex/installer/install/project_init.py",
+        "sha256": "cb57d8c0cca886c7fa1d317c681a59a224dffa507e1fbb0c2bed2b5b41532eb0"
+      },
+      {
+        "path": "dummyindex/installer/install/orchestrate.py",
+        "sha256": "0143d4e5702a9166ce54c2170e6011fce0a39b2957e96e7efdc9f0f8d4c9a30c"
+      }
+    ],
+    "source_commit": "d78bfd27f6a86858a1a6bcd69e90f7f1fd2dfa5f",
+    "state": "verified",
+    "task_id": "task-9d2f4f018f58c64b",
+    "task_sha256": "9d2f4f018f58c64b930047f712bcd6f02fa7e41e5c16b3c4d2e5e88424e06f48"
+  },
+  "task-a4e4eb40d04fe470": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/equip/generate/fresh.py",
+        "sha256": "605981f67da039852d9e2ee8f3ce49005e66c55bc7abf817d241185959801e05"
+      },
+      {
+        "path": "dummyindex/cli/equip/common.py",
+        "sha256": "4cc378ad83be275bdfb0ffbe42d6d68521f1a4af6e80e384fd25c677e3841623"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/test_install.py",
+        "sha256": "861ae8edcb6a908c0b55306f381f1ceea067b75bd319f7cf74665190110f8d2a"
+      }
+    ],
+    "source_commit": "5e2b668ad05c110ece11affbb085d41bc077422a",
+    "state": "verified",
+    "task_id": "task-a4e4eb40d04fe470",
+    "task_sha256": "a4e4eb40d04fe470350f8667853e4c6232f0df24cffe4407799c8f13e247af5e"
+  },
+  "task-a5948056fea2458b": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/requirements/__init__.py",
+        "sha256": "f4ca9f26c89c16a781e85e114f8397ebbf95522a076a41fb2f418d36d5fc796e"
+      },
+      {
+        "path": "dummyindex/context/domains/requirements/errors.py",
+        "sha256": "d88f69fe3a625fcae0fdaa731eeceebf56d7bf142074e1b91d213ac44f4518e0"
+      },
+      {
+        "path": "dummyindex/context/domains/requirements/enums.py",
+        "sha256": "04fd77eb5bf081d3cf45f68476d3b9255bc747436722016f6340ce19f0905cc6"
+      },
+      {
+        "path": "dummyindex/context/domains/requirements/constants.py",
+        "sha256": "38ce567de711e20460253938c8a7956bca7cd3ff9553c67ec00bb99c80211d77"
+      },
+      {
+        "path": "dummyindex/context/domains/requirements/models.py",
+        "sha256": "366666535f9fb679a3fc140ebae04c4a2801c35a4ecfc230f142884892ce9a2a"
+      },
+      {
+        "path": "dummyindex/context/domains/requirements/toml_io.py",
+        "sha256": "aee122b5e0b6a03101cb589228a18f4856da1e4f474a814e3c76cfb244ab7e8d"
+      },
+      {
+        "path": "dummyindex/context/domains/requirements/seed.py",
+        "sha256": "12df65372a14b30c42ba4e6e52fba8849118ca36acd512d3426da9c3485f63b6"
+      },
+      {
+        "path": "dummyindex/skills/__init__.py",
+        "sha256": "d2424fa5a8e8ede926b03b64abf68e0e700ef30f2c93438a3c546ccc2c1ee67e"
+      },
+      {
+        "path": "dummyindex/installer/common.py",
+        "sha256": "026e9078a0dc19d79fbad2fdac5460c3e372c841699b5184612782e2ea688a33"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/requirements/test_toml_io.py",
+        "sha256": "02b7cafcf421f923e5541ea0b59bdaebb36a0bbfcc9d4cfcca4e3dfff6813c2d"
+      },
+      {
+        "path": "tests/context/domains/requirements/test_seed.py",
+        "sha256": "2dbb84d82519789fad03c89cb11f3f57266d7f5758ba6b6eab881ce2a7eccaed"
+      }
+    ],
+    "source_commit": "5e2b668ad05c110ece11affbb085d41bc077422a",
+    "state": "verified",
+    "task_id": "task-a5948056fea2458b",
+    "task_sha256": "a5948056fea2458b67cbc25e95f262d61496c156414869cf14c3ab200e14f265"
+  },
+  "task-a7c24620b41861f6": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/requirements/check.py",
+        "sha256": "df4cae965b7721d4d9a7e2854b99da8366d63688b47ff60bf1ec53e77064cb29"
+      },
+      {
+        "path": "dummyindex/context/domains/requirements/gate.py",
+        "sha256": "3c23eab638cc07dcf7b469fdb725af9129ec97a6342a9eed62042d8ce83ba382"
+      },
+      {
+        "path": "dummyindex/context/domains/requirements/__init__.py",
+        "sha256": "0067cc9bd5af6adb085a21994109194489de471b78c86509a0c62c38db2c24a7"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/requirements/test_check.py",
+        "sha256": "8d2f4a3c98c96b02a9c3bf859ce616ec00fea06611b7c6e463008dfdac0db32e"
+      },
+      {
+        "path": "tests/context/domains/requirements/test_gate.py",
+        "sha256": "b9aaef2134c3e1839d6198cc47c38546337147f62aaf70db68a20c562d7f235e"
+      }
+    ],
+    "source_commit": "6a16057b6f352760895282b871e12a874d9852e8",
+    "state": "verified",
+    "task_id": "task-a7c24620b41861f6",
+    "task_sha256": "a7c24620b41861f610ec29a2471a23d3e05c481925083cde9c3d1e6dfcb45713"
+  },
+  "task-add49101c259e698": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/equip/generate/adapters.py",
+        "sha256": "5c15f4d5254dbbe6341fa0d57d0f447d9239faa203898c7d1ec6e7068108a4b0"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/equip/test_equip_adapters.py",
+        "sha256": "2b52fe8f3cccaf6fee903b1dc17292c75e400d114a7237367ff1a7e88a116226"
+      }
+    ],
+    "source_commit": "6a16057b6f352760895282b871e12a874d9852e8",
+    "state": "verified",
+    "task_id": "task-add49101c259e698",
+    "task_sha256": "add49101c259e698c20bd6029b944838c94fe55334029c4f31e12401a0f0e509"
+  },
+  "task-b6019f001520dfed": {
+    "artifacts": [
+      {
+        "path": "pyproject.toml",
+        "sha256": "b476dc5de3225523cf0544632b7bf0d6367d9221ad9f1e037121c692b73eda67"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/conftest.py",
+        "sha256": "c9862887a06aa4f9d59892a52ea576ae6b7628e8eb880ca68e08af1c68cbf4c1"
+      }
+    ],
+    "source_commit": "efcc4a66f22b4bbe423dea87a1adf351c3c966d4",
+    "state": "verified",
+    "task_id": "task-b6019f001520dfed",
+    "task_sha256": "b6019f001520dfed87bd9093d2ee7ec7f7a8f6cb1b0a912cabf03ea75768e93f"
+  },
+  "task-c35f600ef5673dca": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/hooks_requirements.py",
+        "sha256": "04f3931ce04b50f5eae9732786471442bb4f419fc5a63ceb1b8c253267421351"
+      },
+      {
+        "path": "dummyindex/context/domains/gc/delete.py",
+        "sha256": "9e4dfa281c6453a9aee1efcadcacd034b8864e50c439f0e817b0428e17219fb1"
+      },
+      {
+        "path": "dummyindex/context/domains/requirements/sync.py",
+        "sha256": "2ebbc91568f8afc95239ed8ceb4e59f027b52d5552b75d7af38f52eadee07aff"
+      },
+      {
+        "path": "dummyindex/cli/gc.py",
+        "sha256": "adfe94cb94286b74b65062f0006f7342f2041bbec02f0df29338834537d29772"
+      },
+      {
+        "path": "dummyindex/context/domains/gc/liveness.py",
+        "sha256": "d0cf8c01f30ada1f167bddb6194d33708ae7e8133dec1ec097cb5b0dbdb4b59f"
+      },
+      {
+        "path": "dummyindex/context/build/context_upgrade.py",
+        "sha256": "5439746637bf29e9a1b99ca6d6217648f053ec1a29eaeaba7d50bed01d8657a2"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/test_hooks_requirements.py",
+        "sha256": "a95f43df6031d29db0ac2f835d003d3cfc1e49735b92b611cfa0311a4d75a388"
+      },
+      {
+        "path": "tests/context/domains/gc/test_equipment_delete.py",
+        "sha256": "80ecde3c51ef9144fd59f93b44dd56c84663b019fd8762bdbad3bd423b69a96c"
+      },
+      {
+        "path": "tests/context/domains/requirements/test_sync.py",
+        "sha256": "9292b7467c1556e374666ff689ee7c121d1608566df0599fe8423a7c2aae67db"
+      }
+    ],
+    "source_commit": "efcc4a66f22b4bbe423dea87a1adf351c3c966d4",
+    "state": "verified",
+    "task_id": "task-c35f600ef5673dca",
+    "task_sha256": "c35f600ef5673dca619c4c5c1055fe5d451c996056c5f2fa688eaf37754ddceb"
+  },
+  "task-c903551d373bf24f": {
+    "artifacts": [
+      {
+        "path": "tests/context/domains/equip/test_equip_adapters.py",
+        "sha256": "2b52fe8f3cccaf6fee903b1dc17292c75e400d114a7237367ff1a7e88a116226"
+      },
+      {
+        "path": "tests/context/domains/equip/test_equip_remove.py",
+        "sha256": "646c73b946c47c1b6ac10b4fe7722a819595423557d5bbfb2e2d7c52bc7c822c"
+      },
+      {
+        "path": "tests/context/domains/equip/test_equip_lifecycle.py",
+        "sha256": "456982e12cadcb0f3594f7165b792a7c32803c2334a74d373eeedd64cf24df66"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "dummyindex/context/domains/equip/generate/adapters.py",
+        "sha256": "5c15f4d5254dbbe6341fa0d57d0f447d9239faa203898c7d1ec6e7068108a4b0"
+      }
+    ],
+    "source_commit": "519f51f03573810456f69abd3aa905dc5f678328",
+    "state": "verified",
+    "task_id": "task-c903551d373bf24f",
+    "task_sha256": "c903551d373bf24f953db956b37aec15b11e2e4a614c4fa29612ea7d9275952f"
+  },
+  "task-cb4ce32ba8d849a4": {
+    "artifacts": [
+      {
+        "path": "dummyindex/cli/equip/dispatch.py",
+        "sha256": "fad8e650d0d54aa1a8eee9261f5673563a66623e81baab1083fadbe653fca4c8"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/generate/grounding.py",
+        "sha256": "ab7411053d47144ef646c6e56396ed9c3e3e30894946ac5b1ad52a7d8abc89d9"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/generate/catalog.py",
+        "sha256": "94ba61d52c9ed15bb0b45cf8a39316ce2ae265fbeb9aa5e884499e2052a6b4d4"
+      },
+      {
+        "path": "dummyindex/context/build/context_upgrade.py",
+        "sha256": "43650b7215b0e51f5fcb3be8b687fecb68b8521d927de8f25b2939ffe2633bff"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/equip/test_equip_apply_merge.py",
+        "sha256": "6225795c80a505b3ad0a186736d48374007a6fa9bd097e5beea2ad5d0bee988c"
+      }
+    ],
+    "source_commit": "5325aa9f69ab03ee52d611163b325ccec97ecb9b",
+    "state": "verified",
+    "task_id": "task-cb4ce32ba8d849a4",
+    "task_sha256": "cb4ce32ba8d849a49cca77aa3eff23587bf3949c914eef580efd606c7fd4ae8b"
+  },
+  "task-dc6c52b2b99ddd2c": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/gc/enums.py",
+        "sha256": "5633efd78b6b2b78d0691389c456dad680bcae0fd8f7bd86ee3aaf7a9bfe3881"
+      },
+      {
+        "path": "dummyindex/context/domains/gc/liveness.py",
+        "sha256": "abaf69a4dce6167957acc0935874d48e02dd7017ecf01106d4c6230dc36dbb5d"
+      },
+      {
+        "path": "dummyindex/context/domains/gc/equipment.py",
+        "sha256": "6e90f0ca0194600cbe09fafe42115330620a0ba50b2b7e865f4f98f222969b29"
+      },
+      {
+        "path": "dummyindex/context/domains/gc/enumerate.py",
+        "sha256": "3c755a5e654000f62b10fe13a7217c7917008c3d272c17d9384ba4228cec6bd7"
+      },
+      {
+        "path": "dummyindex/context/domains/gc/recommend.py",
+        "sha256": "802de278fb7038358b5ce704388d20369dc04892556e3eb0bf3d75f7e4cc7401"
+      },
+      {
+        "path": "dummyindex/context/domains/gc/scan.py",
+        "sha256": "02bd4cdc6ad283903ac31da8b2c82442d7996f0ec88f99e3098b7d64f6ebf3d3"
+      },
+      {
+        "path": "dummyindex/context/domains/gc/signals.py",
+        "sha256": "f249079a6d64acb355e341c8c3b28c0d3f29281f40e1ed8b3d052c07697024bd"
+      },
+      {
+        "path": "dummyindex/cli/gc.py",
+        "sha256": "7f9454bcdb6740ae70181a567853cb2aa94e401756ab8a65bf358892a49015ac"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/gc/test_equipment_candidates.py",
+        "sha256": "dcfc10a18916a13aac1c413431919aff5c99dd904e121f5ea435e659452258fa"
+      },
+      {
+        "path": "tests/cli/test_gc_cli.py",
+        "sha256": "1a5e30b5d9bc41930e4d2808a202800b2c927cdaf03150d1e498132af8d9ff31"
+      }
+    ],
+    "source_commit": "f8a0258a1241ed58d139c0e3bd668fc2b4f31e6e",
+    "state": "verified",
+    "task_id": "task-dc6c52b2b99ddd2c",
+    "task_sha256": "dc6c52b2b99ddd2cefc3f6d98b5116fd8b02a3d50fd07400f0cc0046fc98d6d3"
+  },
+  "task-e93bc694c55fd2d1": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/domains/equip/generate/detect.py",
+        "sha256": "f6d325b7f6b990be05ed72d02f79671626a8e3a3ba75a97d1436431739b44139"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/domains/equip/test_equip.py",
+        "sha256": "b037e66f646fc1accdcc5dfbb60272630a66c973f2d93ff0224c51f4b6cfb45a"
+      }
+    ],
+    "source_commit": "0d41000dbac91e3e42a5ed8084ab3fb22f9e74b8",
+    "state": "verified",
+    "task_id": "task-e93bc694c55fd2d1",
+    "task_sha256": "e93bc694c55fd2d17773dca1175348fa0d1da247b4d69c6fdca30bf49368937b"
+  },
+  "task-eaf29ba0b5aff0d9": {
+    "artifacts": [
+      {
+        "path": "tests/context/build/test_context_upgrade.py",
+        "sha256": "bd53ba79706119f3c223e18ecaade34e35f02cda68cb71436130b29b107ea547"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "dummyindex/context/build/context_upgrade.py",
+        "sha256": "5439746637bf29e9a1b99ca6d6217648f053ec1a29eaeaba7d50bed01d8657a2"
+      }
+    ],
+    "source_commit": "519f51f03573810456f69abd3aa905dc5f678328",
+    "state": "verified",
+    "task_id": "task-eaf29ba0b5aff0d9",
+    "task_sha256": "eaf29ba0b5aff0d9a016cbe4f2e99a85368e773125d20c0335af539a8928939c"
+  },
+  "task-ed32b0a4f8de30eb": {
+    "artifacts": [
+      {
+        "path": "tests/context/domains/equip/test_equip_apply_merge.py",
+        "sha256": "6225795c80a505b3ad0a186736d48374007a6fa9bd097e5beea2ad5d0bee988c"
+      },
+      {
+        "path": "tests/context/domains/equip/test_equip_manifest_v3.py",
+        "sha256": "b7511fd1804ac5043868595c115d96e33595c2e696e9c7e6485dfba06ff7df6f"
+      },
+      {
+        "path": "tests/context/domains/gc/test_equipment_candidates.py",
+        "sha256": "dcfc10a18916a13aac1c413431919aff5c99dd904e121f5ea435e659452258fa"
+      },
+      {
+        "path": "tests/context/domains/gc/test_equipment_delete.py",
+        "sha256": "80ecde3c51ef9144fd59f93b44dd56c84663b019fd8762bdbad3bd423b69a96c"
+      },
+      {
+        "path": "tests/cli/test_gc_cli.py",
+        "sha256": "35eaccb2a992e20928fe1723638e476ab4698d8ac6343c44fe9133a407dc5249"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "dummyindex/cli/equip/dispatch.py",
+        "sha256": "fad8e650d0d54aa1a8eee9261f5673563a66623e81baab1083fadbe653fca4c8"
+      },
+      {
+        "path": "dummyindex/context/domains/gc/equipment.py",
+        "sha256": "66de70194aa5ce61dd6c3353d63cbe894f12939a68cd7df2ca3a6c9912463861"
+      },
+      {
+        "path": "dummyindex/context/domains/gc/delete.py",
+        "sha256": "9e4dfa281c6453a9aee1efcadcacd034b8864e50c439f0e817b0428e17219fb1"
+      }
+    ],
+    "source_commit": "519f51f03573810456f69abd3aa905dc5f678328",
+    "state": "verified",
+    "task_id": "task-ed32b0a4f8de30eb",
+    "task_sha256": "ed32b0a4f8de30eb58971a5a457af820346e608a4bb09f72a69dcdf61768afbd"
+  },
+  "task-f45ef35c554e4156": {
+    "artifacts": [
+      {
+        "path": "dummyindex/context/claude_plugins.py",
+        "sha256": "dd053cea1cd418cd2cde3589def6226d7f0bbf083454405dfccfb79706a614f3"
+      },
+      {
+        "path": "dummyindex/cli/equip/plugin_state.py",
+        "sha256": "b604daad8cde4d14d38bdb789a5188ec3a5519892d1a34ac6e7401d8ee4a4403"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/context/test_claude_plugins.py",
+        "sha256": "921f2624bc207bd370aa4ba850e4cae87580f6c05de59c71b16c9df10f0b13c7"
+      },
+      {
+        "path": "tests/context/domains/equip/test_equip_discover_cli.py",
+        "sha256": "2f2008d39f692c4c6e16d0f12801909d0c2d52dbc011542575155693d1dae584"
+      }
+    ],
+    "source_commit": "5e2b668ad05c110ece11affbb085d41bc077422a",
+    "state": "verified",
+    "task_id": "task-f45ef35c554e4156",
+    "task_sha256": "f45ef35c554e415613c07c83a086148f11e16e081901e924bddde5a5abe7cb8c"
+  },
+  "task-fe59538bec77d12c": {
+    "artifacts": [
+      {
+        "path": "tests/context/test_hooks_requirements.py",
+        "sha256": "a95f43df6031d29db0ac2f835d003d3cfc1e49735b92b611cfa0311a4d75a388"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "dummyindex/context/hooks_requirements.py",
+        "sha256": "04f3931ce04b50f5eae9732786471442bb4f419fc5a63ceb1b8c253267421351"
+      }
+    ],
+    "source_commit": "519f51f03573810456f69abd3aa905dc5f678328",
+    "state": "verified",
+    "task_id": "task-fe59538bec77d12c",
+    "task_sha256": "fe59538bec77d12c1dc4be0b56bf52ccdd53c18c73a77b11ee508bc91e14ff90"
+  }
+}

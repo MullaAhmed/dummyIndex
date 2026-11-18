@@ -36,7 +36,7 @@ from dummyindex.context.enums import (
     ScanNodeKind,
     ScanViolationSeverity,
 )
-from dummyindex.pipeline.enums import ConfidenceLevel
+from dummyindex.context.pipeline.enums import ConfidenceLevel
 
 # --- fixtures
 

@@ -29,7 +29,8 @@ _MAX_WORDS = 20
 _MAX_SENTENCES = 6
 _EXCERPT_CHARS = 60
 _FENCE_PREFIXES = ("```", "~~~")
-_LIST_RE = re.compile(r"(?:[-*+]|\d+[.)])\s+")
+# A task-list box is markup: ticking `[ ]` to `[x]` must not add a word.
+_LIST_RE = re.compile(r"(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\]\s+)?")
 _QUOTE_RE = re.compile(r"^[ \t]*(?:>[ \t]?)+")
 _CODE_RE = re.compile(r"(`+).*?\1")
 _CODE_PLACEHOLDER = "CODE"
@@ -148,7 +149,9 @@ def _lint_unit(line: int, raw: str) -> list[StyleViolation]:
             for _ in _CONTRACTION_RE.finditer(sentence)
         )
         bare = _URL_RE.sub("", _ENTITY_RE.sub("", sentence))
-        out.extend(_v(line, "semicolon", sentence) for _ in _SEMICOLON_RE.finditer(bare))
+        out.extend(
+            _v(line, "semicolon", sentence) for _ in _SEMICOLON_RE.finditer(bare)
+        )
         out.extend(
             _v(line, "ing-form", sentence)
             for m in _ING_RE.finditer(sentence)

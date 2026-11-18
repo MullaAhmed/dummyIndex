@@ -2,7 +2,7 @@
 
 Markers follow the I/O boundary (``--strict-markers``, no implicit default):
 - ``is_git_repo`` is a pure-filesystem probe (re-exported from
-  ``pipeline/io/git.py``): on-disk shapes under ``tmp_path``, ``unit``.
+  ``context/pipeline/io/git.py``): on-disk shapes under ``tmp_path``, ``unit``.
 - ``is_tracked`` / ``run_git`` shell out to a throwaway ``git init`` (never the
   host repo): ``integration``, except the no-subprocess outside-root path.
 """

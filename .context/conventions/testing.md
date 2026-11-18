@@ -18,19 +18,19 @@ Note the `norecursedirs` override (`pyproject.toml:55-59`). Pytest's default ski
 
 Every test carries an explicit `@pytest.mark.{unit,integration}` decorator. Counts: ≈590 `unit`, ≈422 `integration`, across ~100 test modules. There is **no implicit default**. The split follows the I/O boundary, not the directory:
 
-- **unit**: pure, in-process. Call a function, assert its return value. Canonical example: the git-dir parsers in `tests/pipeline/io/test_git.py`. They build on-disk shapes under `tmp_path`. They assert `resolve_git_dir`/`is_git_repo` return values, with **no subprocess and no real `git`** (`tests/pipeline/io/test_git.py:1-9`). CLI-dispatch tests are `unit` too. They call `dispatch([...])` and assert return code plus `capsys` output (`tests/cli/test_cli.py:9-41`).
-- **integration**: in-process, but crosses into the real filesystem build pipeline. Copy `SAMPLE_REPO` into `tmp_path`. Call `dispatch(["init", ...])` or `build_all(...)`. Assert emitted `.context/` artifacts exist (`tests/cli/test_cli.py:43-60`, `tests/eval/test_retrieval_eval.py:60-67`).
-- **e2e**: subset of `integration`. Shells out to the installed entrypoint via `subprocess.run([sys.executable, "-m", "dummyindex", ...])`. Only two modules do this: `tests/cli/test_ingest_command.py:24-31` and `tests/cli/test_reconcile_gate_e2e.py:61-66`. They exercise the real process boundary: stdin JSON in, stdout decision out, for the hook gate. No Selenium or browser layer. This is a CLI, so "e2e" means the subprocess. CI adds a smoke test of the binary (`tests.yml:32-46`): `--help`, `--version`, `install`, `ingest`, artifact existence.
+- **unit**: pure, in-process. Call a function, assert its return value. Canonical example: the git-dir parsers in `tests/context/pipeline/io/test_git.py`. They build on-disk shapes under `tmp_path`. They assert `resolve_git_dir`/`is_git_repo` return values, with **no subprocess and no real `git`** (`tests/context/pipeline/io/test_git.py:1-9`). CLI-dispatch tests are `unit` too. They call `dispatch([...])` and assert return code plus `capsys` output (`tests/context/cli/test_cli.py:9-42`).
+- **integration**: in-process, but crosses into the real filesystem build pipeline. Copy `SAMPLE_REPO` into `tmp_path`. Call `dispatch(["init", ...])` or `build_all(...)`. Assert emitted `.context/` artifacts exist (`tests/context/cli/test_cli.py:44-60`, `tests/eval/test_retrieval_eval.py:60-67`).
+- **e2e**: subset of `integration`. Shells out to the installed entrypoint via `subprocess.run([sys.executable, "-m", "dummyindex", ...])`. Only two modules do this: `tests/context/cli/test_ingest_command.py:24-31` and `tests/context/cli/test_reconcile_gate_e2e.py:61-66`. They exercise the real process boundary: stdin JSON in, stdout decision out, for the hook gate. No Selenium or browser layer. This is a CLI, so "e2e" means the subprocess. CI adds a smoke test of the binary (`tests.yml:32-46`): `--help`, `--version`, `install`, `ingest`, artifact existence.
 
 ## Fixtures
 
-Shared fixtures live in `tests/conftest.py`. `tests/usage/` has its own sub-`conftest.py` for the usage corpus. Patterns in use:
+Shared fixtures live in `tests/conftest.py`. `tests/context/usage/` has its own sub-`conftest.py` for the usage corpus. Patterns in use:
 
 - **`tmp_path` / `tmp_path_factory`** everywhere, for filesystem isolation. `tmp_repo` is a thin alias (`tests/conftest.py:9-11`).
 - **`tests/paths.py`** exports stable anchors: `REPO_ROOT`, `FIXTURES_DIR`, `SAMPLE_REPO`. So deep modules never chain `Path(__file__).parent.parent`.
-- **`SAMPLE_REPO`** (`tests/fixtures/sample_repo/`) is the frozen input repo. Tests `shutil.copytree` it into `tmp_path` before mutating. The fixture stays pristine (`tests/cli/test_cli.py:44-53`).
+- **`SAMPLE_REPO`** (`tests/fixtures/sample_repo/`) is the frozen input repo. Tests `shutil.copytree` it into `tmp_path` before mutating. The fixture stays pristine (`tests/context/cli/test_cli.py:45-53`).
 - **Module-scoped build** for expensive setup. `test_retrieval_eval.py:60-67` runs `build_all` once per module (`scope="module"`). Tree-sitter parse + graph + cluster is the costly part.
-- **Constructed corpora**, not recorded ones. `tests/usage/conftest.py` hand-builds a JSONL corpus. It uses fixed timestamps and token counts, so tests assert **exact** numbers.
+- **Constructed corpora**, not recorded ones. `tests/context/usage/conftest.py` hand-builds a JSONL corpus. It uses fixed timestamps and token counts, so tests assert **exact** numbers.
 
 ## Mocking philosophy
 

@@ -3,7 +3,7 @@ dummyindex/skills/build/SKILL.md	3157
 dummyindex/skills/equip/SKILL.md	3661
 dummyindex/skills/evolve/SKILL.md	1276
 dummyindex/skills/fleet/SKILL.md	1091
-dummyindex/skills/gc/SKILL.md	2191
+dummyindex/skills/gc/SKILL.md	2288
 dummyindex/skills/memory/SKILL.md	323
 dummyindex/skills/plan/SKILL.md	2194
 dummyindex/skills/update/SKILL.md	2022

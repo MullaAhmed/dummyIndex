@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli import dispatch
+from dummyindex.context.cli import dispatch
 from dummyindex.context.domains.doc_reorg import (
     BackupError,
     DirtyTreeError,

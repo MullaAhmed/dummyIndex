@@ -1,6 +1,6 @@
 ## Security
 
-- `dummyindex/context/build/meta.py:104-112` (`write_meta`), `dummyindex/context/build/maps.py:289-293` (`_atomic_write_json`), `dummyindex/context/build/manifest.py:108-112` (`write_manifest`), `dummyindex/context/build/conventions.py:193-195,222-224,240-244`, `dummyindex/context/build/tree.py:324-332` (`write_tree`, build route), `dummyindex/pipeline/io/cache.py:343-348` (`save_cached`), `dummyindex/context/build/upgrade.py:75-99` (`_ensure_managed_lines`), `dummyindex/context/build/enriched_refresh.py:220-226`, `dummyindex/pipeline/io/detect.py:271-280` (`convert_office_file`) — **Missing:** a link check on file entries inside `.context/`.
+- `dummyindex/context/build/meta.py:104-112` (`write_meta`), `dummyindex/context/build/maps.py:289-293` (`_atomic_write_json`), `dummyindex/context/build/manifest.py:108-112` (`write_manifest`), `dummyindex/context/build/conventions.py:193-195,222-224,240-244`, `dummyindex/context/build/tree.py:324-332` (`write_tree`, build route), `dummyindex/context/pipeline/io/cache.py:343-348` (`save_cached`), `dummyindex/context/build/upgrade.py:75-99` (`_ensure_managed_lines`), `dummyindex/context/build/enriched_refresh.py:220-226`, `dummyindex/context/pipeline/io/detect.py:271-280` (`convert_office_file`) — **Missing:** a link check on file entries inside `.context/`.
   - Each writer opens either a fixed sibling (`<name>.tmp`) or the target itself with `write_text`, and `write_text` follows a symlink.
   - `*.tmp` is not in the managed `.gitignore`, so a repo can commit `.context/meta.json.tmp` as a link to any file the user can write.
   - On clone + `dummyindex install`, that file outside the repo is truncated and overwritten with build output carrying repo-controlled names. Auto-init runs on any git repo (`installer/install/orchestrate.py:320-332`); `rebuild --changed` does the same.
@@ -20,7 +20,7 @@
   - Before each read-modify-write (`.gitignore`, `.gitattributes`, `meta.json`), refuse when `is_link(path)`. An atomic replace alone would copy the link target's bytes into a committed in-repo file.
   - Skip linked feature directories.
   - This is the same class as the equip review's fixed-temp bullet.
-- `dummyindex/pipeline/extract/__init__.py:178-213` (`extract`), `dummyindex/pipeline/extract/generic.py:50-56,102-425` (`_extract_generic`, `walk`), `dummyindex/context/domains/source_docs/keys.py:26-45` (`harvest_json_keys`), `dummyindex/pipeline/io/cache.py:68-84,116-136` (`read_source_bytes`, `file_hash`), `dummyindex/context/build/incremental.py:293-307` (`_hash_files`) — **Missing:** a per-file byte cap and a recursion guard on untrusted source.
+- `dummyindex/context/pipeline/extract/__init__.py:178-213` (`extract`), `dummyindex/context/pipeline/extract/generic.py:50-56,102-425` (`_extract_generic`, `walk`), `dummyindex/context/domains/source_docs/keys.py:26-45` (`harvest_json_keys`), `dummyindex/context/pipeline/io/cache.py:68-84,116-136` (`read_source_bytes`, `file_hash`), `dummyindex/context/build/incremental.py:293-307` (`_hash_files`) — **Missing:** a per-file byte cap and a recursion guard on untrusted source.
   - Every file is read whole and passed to `parser.parse` with no size check. The build read cache holds every file's bytes for the whole build.
   - `walk(root)` recurses once per AST level, outside both `try` blocks, and `extract` has no per-file `try`.
   - A single committed file nested about 1,000 levels deep raises `RecursionError` and aborts extraction for the whole repo. This happens on every `install`, `rebuild` and refresh, after the migration has already rescoped the cache.
@@ -49,7 +49,7 @@
   - Use `is not True` at `reconcile.py:124`.
   - Resolve `--to` with `rev-parse --verify --end-of-options <x>^{commit}` and store the SHA.
   - Put `--end-of-options` before every revision argument (`git_delta.py:81,114,145,177`).
-- `dummyindex/cli/enrich.py:20-39` (`run_plan`), `dummyindex/context/build/upgrade.py:321-348` (`_Retirer.__init__`, `_inside`) — **Missing:** a destination check before the `enrich-plan` migration.
+- `dummyindex/context/cli/enrich.py:20-39` (`run_plan`), `dummyindex/context/build/upgrade.py:321-348` (`_Retirer.__init__`, `_inside`) — **Missing:** a destination check before the `enrich-plan` migration.
   - `run_plan` calls `migrate_context_layout` without first calling `scan_root` or `validate_context_destination`.
   - `_Retirer` sets `_context_real = context_dir.resolve()`, so with a symlinked or junctioned `.context/`, the link target becomes the containment root.
   - As a result, `retire_paths` deletes or backs up `equipment-evals/` and `graph/` in the target, the managed `.gitignore` and `.gitattributes` are written there, and `write_plan` writes `cache/_enrich_plan.json` there.
@@ -58,7 +58,7 @@
   — **Mitigation:** none on this caller. The build and refresh routes validate first (`context/build/runner.py:113`, `context/build/enriched_refresh.py:101`). The only incidental barrier is that `build_plan` needs a `tree.json` in the target.
 
   — **Fix:** call `validate_context_destination(out_root)` in `run_plan`. Also make `migrate_context_layout` refuse when `is_link(context_dir)`, which covers every future caller.
-- `dummyindex/context/build/enriched_refresh.py:95-200,270-339` (`refresh_deterministic_artifacts`, `_refresh_meta`, `_advance_version_stamp`), `dummyindex/context/build/runner.py:152-159` (`build_all`), `dummyindex/context/build/incremental.py:148-155`, `dummyindex/cli/rebuild.py:62-67`, `dummyindex/installer/install/orchestrate.py:195,222,331` — **Missing:** a version gate before the first write.
+- `dummyindex/context/build/enriched_refresh.py:95-200,270-339` (`refresh_deterministic_artifacts`, `_refresh_meta`, `_advance_version_stamp`), `dummyindex/context/build/runner.py:152-159` (`build_all`), `dummyindex/context/build/incremental.py:148-155`, `dummyindex/context/cli/rebuild.py:62-67`, `dummyindex/context/installer/install/orchestrate.py:195,222,331` — **Missing:** a version gate before the first write.
   - The refresh rewrites tree, maps, coverage, naming, catalog and graph before anything calls `read_meta`. `_refresh_meta` and `_advance_version_stamp` then swallow the "upgrade dummyindex" `ValueError` (`context/build/meta.py:72-76`).
   - As a result, an older dummyindex rewrites a schema-3 or newer-version index in its own format, while the stamp still names the newer writer.
   - `build_all` never reads the prior meta, and `new_meta` overwrites both version and schema. So `rebuild --full`, `install`, or `rebuild --changed` on a deterministic-only index lowers the stamp without `--force-downgrade`.
@@ -74,7 +74,7 @@
   - Probe `read_meta` at the top of `refresh_deterministic_artifacts` and `build_all`. Abort before any write if the stored schema is above `SCHEMA_VERSION`, or the stored version is `NEWER` and `allow_downgrade` is not set.
   - Pass `None` instead of `"unknown"` (`cli/rebuild.py:67`).
   - Give the stamp downgrade its own flag.
-- `dummyindex/export/storage.py:489-503` (`read_graph_payload`), `dummyindex/export/storage.py:409-484` (`_read_manifest`), `dummyindex/context/build/upgrade.py:50-59` — **Missing:** a byte ceiling on the read side.
+- `dummyindex/context/export/storage.py:489-503` (`read_graph_payload`), `dummyindex/context/export/storage.py:409-484` (`_read_manifest`), `dummyindex/context/build/upgrade.py:50-59` — **Missing:** a byte ceiling on the read side.
   - `read_graph_payload` reads `features/symbol-graph.json` with no `max_bytes`, and accepts legacy JSON of any size.
   - `_read_manifest` takes `cap` from the manifest itself and reads each shard up to that size.
   - Descriptors may repeat the same shard.

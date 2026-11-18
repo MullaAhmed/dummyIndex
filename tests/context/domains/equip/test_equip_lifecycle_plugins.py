@@ -110,7 +110,7 @@ def test_status_marketplace_missing_when_not_enabled(tmp_path):
 
 
 def test_status_cli_reports_incomplete_playbook(monkeypatch, tmp_path, capsys):
-    from dummyindex.cli.equip import run as run_equip
+    from dummyindex.context.cli.equip import run as run_equip
     from tests.context.domains.equip.test_equip_discover_cli import _install_fake_runner
 
     _install_fake_runner(monkeypatch)

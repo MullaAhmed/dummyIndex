@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "slug": "equip-agents-and-required-setup",
+  "title": "Fix weak task-specific agents and add a hard-gated, shareable required-setup manifest (.context/config.toml)",
+  "status": "planned",
+  "related_features": [
+    "equip",
+    "equip",
+    "session-memory"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": []
+}

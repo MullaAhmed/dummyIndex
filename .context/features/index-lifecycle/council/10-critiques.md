@@ -21,7 +21,7 @@ Line numbers below are from the current tree. The plan.md cites were written bef
 
    `rebuild_changed(dummyindex_version=None)` does the same via `"0.0.0"` (`incremental.py:153`). That contradicts the spec's "`None` neither stamps nor rescopes", which holds only on the refresh branch. **Fix:** write meta last, reuse `_advance_version_stamp`'s rule, and pass `None` through instead of a sentinel.
 
-3. `dummyindex/context/build/meta.py:4-6,17`: schema 2's fields are identical to v1, and 0.37.0 already wrote sharded graphs at schema 1 (`4f3cf0d:dummyindex/export/storage.py` defines `symbol-graph.parts`). So the docstring's "marks the sharded format" is false, and the bump only locks 0.37.0 out of the committed `meta.json`. A 0.37.0 CLI on a schema-2 repo:
+3. `dummyindex/context/build/meta.py:4-6,17`: schema 2's fields are identical to v1, and 0.37.0 already wrote sharded graphs at schema 1 (`4f3cf0d:dummyindex/context/export/storage.py` defines `symbol-graph.parts`). So the docstring's "marks the sharded format" is false, and the bump only locks 0.37.0 out of the committed `meta.json`. A 0.37.0 CLI on a schema-2 repo:
    - refresh swallows the `ValueError` and rewrites every other artifact;
    - `build_all` writes schema 1 back, so the value flip-flops in git;
    - `reconcile-stamp` prints "no readable meta.json to stamp. Run `dummyindex ingest` first.", which is advice that re-clusters and discards curation.
@@ -36,7 +36,7 @@ Line numbers below are from the current tree. The plan.md cites were written bef
 
 5. `dummyindex/context/build/navigation_refresh.py:26-33,81-84`: `refresh_tree` raises on an unparseable `map/files.json`. That file is committed, rewritten by every refresh, and has no merge driver (`upgrade.py:50-59` sets only `linguist-generated`). So an ordinary two-branch merge conflict blocks every curated refresh and `install` (`project_init.py:92-94`). There is no non-destructive way back, because `build_all` is refused on curated indexes. **Fix:** when files.json is unreadable, treat every path as changed (or use the manifest). Keep the hard refusal for `tree.json`, which holds curation (prior concern, still true).
 
-6. `dummyindex/cli/enrich.py:37`: `enrich-plan` runs `migrate_context_layout` without `validate_context_destination` and throws away the returned `LayoutMigration`.
+6. `dummyindex/context/cli/enrich.py:37`: `enrich-plan` runs `migrate_context_layout` without `validate_context_destination` and throws away the returned `LayoutMigration`.
    - On a linked `.context/`, the retirer deletes and backs up files inside the link target (`_Retirer._inside` checks against the resolved target, `upgrade.py:326-348`). This violates the spec's "linked managed destinations fail before any write".
    - Removed suites disappear from `git status` with no explanation.
    - `stamp_reconciled` has the same gap: it writes `indexed_commit` (`reconcile.py:293`) before its first validation via `scan_root` (`:301`).
@@ -50,7 +50,7 @@ Line numbers below are from the current tree. The plan.md cites were written bef
 
    **Fix:** route meta and the manifest through `write_text_atomic`, and fsync the backup before `os.unlink`, as `storage._atomic_write` does (`storage.py:219-220`).
 
-8. `dummyindex/export/storage.py:276-329`, `runner.py:211-213`: graph reads are still unbounded in total (prior concern, still true). Each shard is capped at 1,000,000 bytes but the number of shards is not, and `read_graph_payload` loads the whole generation into RAM (12 shards / 12 MB here); `build_all` repeats that read right after publishing. The 600 s grace protects writers, not readers: a reader holding a superseded manifest fails closed once a publish prunes its old shards. **Fix:** have readers re-read the manifest once on `graph shard missing` before failing.
+8. `dummyindex/context/export/storage.py:276-329`, `runner.py:211-213`: graph reads are still unbounded in total (prior concern, still true). Each shard is capped at 1,000,000 bytes but the number of shards is not, and `read_graph_payload` loads the whole generation into RAM (12 shards / 12 MB here); `build_all` repeats that read right after publishing. The 600 s grace protects writers, not readers: a reader holding a superseded manifest fails closed once a publish prunes its old shards. **Fix:** have readers re-read the manifest once on `graph shard missing` before failing.
 
 ### Resolved since last review
 
@@ -61,7 +61,7 @@ Line numbers below are from the current tree. The plan.md cites were written bef
 
 ## Security
 
-- `dummyindex/context/build/meta.py:104-112` (`write_meta`), `dummyindex/context/build/maps.py:289-293` (`_atomic_write_json`), `dummyindex/context/build/manifest.py:108-112` (`write_manifest`), `dummyindex/context/build/conventions.py:193-195,222-224,240-244`, `dummyindex/context/build/tree.py:324-332` (`write_tree`, build route), `dummyindex/pipeline/io/cache.py:343-348` (`save_cached`), `dummyindex/context/build/upgrade.py:75-99` (`_ensure_managed_lines`), `dummyindex/context/build/enriched_refresh.py:220-226`, `dummyindex/pipeline/io/detect.py:271-280` (`convert_office_file`) — **Missing:** a link check on file entries inside `.context/`.
+- `dummyindex/context/build/meta.py:104-112` (`write_meta`), `dummyindex/context/build/maps.py:289-293` (`_atomic_write_json`), `dummyindex/context/build/manifest.py:108-112` (`write_manifest`), `dummyindex/context/build/conventions.py:193-195,222-224,240-244`, `dummyindex/context/build/tree.py:324-332` (`write_tree`, build route), `dummyindex/context/pipeline/io/cache.py:343-348` (`save_cached`), `dummyindex/context/build/upgrade.py:75-99` (`_ensure_managed_lines`), `dummyindex/context/build/enriched_refresh.py:220-226`, `dummyindex/context/pipeline/io/detect.py:271-280` (`convert_office_file`) — **Missing:** a link check on file entries inside `.context/`.
   - Each writer opens either a fixed sibling (`<name>.tmp`) or the target itself with `write_text`, and `write_text` follows a symlink.
   - `*.tmp` is not in the managed `.gitignore`, so a repo can commit `.context/meta.json.tmp` as a link to any file the user can write.
   - On clone + `dummyindex install`, that file outside the repo is truncated and overwritten with build output carrying repo-controlled names. Auto-init runs on any git repo (`installer/install/orchestrate.py:320-332`); `rebuild --changed` does the same.
@@ -81,7 +81,7 @@ Line numbers below are from the current tree. The plan.md cites were written bef
   - Before each read-modify-write (`.gitignore`, `.gitattributes`, `meta.json`), refuse when `is_link(path)`. An atomic replace alone would copy the link target's bytes into a committed in-repo file.
   - Skip linked feature directories.
   - This is the same class as the equip review's fixed-temp bullet.
-- `dummyindex/pipeline/extract/__init__.py:178-213` (`extract`), `dummyindex/pipeline/extract/generic.py:50-56,102-425` (`_extract_generic`, `walk`), `dummyindex/context/domains/source_docs/keys.py:26-45` (`harvest_json_keys`), `dummyindex/pipeline/io/cache.py:68-84,116-136` (`read_source_bytes`, `file_hash`), `dummyindex/context/build/incremental.py:293-307` (`_hash_files`) — **Missing:** a per-file byte cap and a recursion guard on untrusted source.
+- `dummyindex/context/pipeline/extract/__init__.py:178-213` (`extract`), `dummyindex/context/pipeline/extract/generic.py:50-56,102-425` (`_extract_generic`, `walk`), `dummyindex/context/domains/source_docs/keys.py:26-45` (`harvest_json_keys`), `dummyindex/context/pipeline/io/cache.py:68-84,116-136` (`read_source_bytes`, `file_hash`), `dummyindex/context/build/incremental.py:293-307` (`_hash_files`) — **Missing:** a per-file byte cap and a recursion guard on untrusted source.
   - Every file is read whole and passed to `parser.parse` with no size check. The build read cache holds every file's bytes for the whole build.
   - `walk(root)` recurses once per AST level, outside both `try` blocks, and `extract` has no per-file `try`.
   - A single committed file nested about 1,000 levels deep raises `RecursionError` and aborts extraction for the whole repo. This happens on every `install`, `rebuild` and refresh, after the migration has already rescoped the cache.
@@ -110,7 +110,7 @@ Line numbers below are from the current tree. The plan.md cites were written bef
   - Use `is not True` at `reconcile.py:124`.
   - Resolve `--to` with `rev-parse --verify --end-of-options <x>^{commit}` and store the SHA.
   - Put `--end-of-options` before every revision argument (`git_delta.py:81,114,145,177`).
-- `dummyindex/cli/enrich.py:20-39` (`run_plan`), `dummyindex/context/build/upgrade.py:321-348` (`_Retirer.__init__`, `_inside`) — **Missing:** a destination check before the `enrich-plan` migration.
+- `dummyindex/context/cli/enrich.py:20-39` (`run_plan`), `dummyindex/context/build/upgrade.py:321-348` (`_Retirer.__init__`, `_inside`) — **Missing:** a destination check before the `enrich-plan` migration.
   - `run_plan` calls `migrate_context_layout` without first calling `scan_root` or `validate_context_destination`.
   - `_Retirer` sets `_context_real = context_dir.resolve()`, so with a symlinked or junctioned `.context/`, the link target becomes the containment root.
   - As a result, `retire_paths` deletes or backs up `equipment-evals/` and `graph/` in the target, the managed `.gitignore` and `.gitattributes` are written there, and `write_plan` writes `cache/_enrich_plan.json` there.
@@ -119,7 +119,7 @@ Line numbers below are from the current tree. The plan.md cites were written bef
   — **Mitigation:** none on this caller. The build and refresh routes validate first (`context/build/runner.py:113`, `context/build/enriched_refresh.py:101`). The only incidental barrier is that `build_plan` needs a `tree.json` in the target.
 
   — **Fix:** call `validate_context_destination(out_root)` in `run_plan`. Also make `migrate_context_layout` refuse when `is_link(context_dir)`, which covers every future caller.
-- `dummyindex/context/build/enriched_refresh.py:95-200,270-339` (`refresh_deterministic_artifacts`, `_refresh_meta`, `_advance_version_stamp`), `dummyindex/context/build/runner.py:152-159` (`build_all`), `dummyindex/context/build/incremental.py:148-155`, `dummyindex/cli/rebuild.py:62-67`, `dummyindex/installer/install/orchestrate.py:195,222,331` — **Missing:** a version gate before the first write.
+- `dummyindex/context/build/enriched_refresh.py:95-200,270-339` (`refresh_deterministic_artifacts`, `_refresh_meta`, `_advance_version_stamp`), `dummyindex/context/build/runner.py:152-159` (`build_all`), `dummyindex/context/build/incremental.py:148-155`, `dummyindex/context/cli/rebuild.py:62-67`, `dummyindex/context/installer/install/orchestrate.py:195,222,331` — **Missing:** a version gate before the first write.
   - The refresh rewrites tree, maps, coverage, naming, catalog and graph before anything calls `read_meta`. `_refresh_meta` and `_advance_version_stamp` then swallow the "upgrade dummyindex" `ValueError` (`context/build/meta.py:72-76`).
   - As a result, an older dummyindex rewrites a schema-3 or newer-version index in its own format, while the stamp still names the newer writer.
   - `build_all` never reads the prior meta, and `new_meta` overwrites both version and schema. So `rebuild --full`, `install`, or `rebuild --changed` on a deterministic-only index lowers the stamp without `--force-downgrade`.
@@ -135,7 +135,7 @@ Line numbers below are from the current tree. The plan.md cites were written bef
   - Probe `read_meta` at the top of `refresh_deterministic_artifacts` and `build_all`. Abort before any write if the stored schema is above `SCHEMA_VERSION`, or the stored version is `NEWER` and `allow_downgrade` is not set.
   - Pass `None` instead of `"unknown"` (`cli/rebuild.py:67`).
   - Give the stamp downgrade its own flag.
-- `dummyindex/export/storage.py:489-503` (`read_graph_payload`), `dummyindex/export/storage.py:409-484` (`_read_manifest`), `dummyindex/context/build/upgrade.py:50-59` — **Missing:** a byte ceiling on the read side.
+- `dummyindex/context/export/storage.py:489-503` (`read_graph_payload`), `dummyindex/context/export/storage.py:409-484` (`_read_manifest`), `dummyindex/context/build/upgrade.py:50-59` — **Missing:** a byte ceiling on the read side.
   - `read_graph_payload` reads `features/symbol-graph.json` with no `max_bytes`, and accepts legacy JSON of any size.
   - `_read_manifest` takes `cap` from the manifest itself and reads each shard up to that size.
   - Descriptors may repeat the same shard.
@@ -285,9 +285,9 @@ Paths drop the leading `dummyindex/` except `tests/`. Reconciled at HEAD `0634bf
 5. **DI3** — schema 2 locks out 0.37.0.
    - `4f3cf0d:dummyindex/context/build/meta.py` has `SCHEMA_VERSION = 1` and refuses `version > 1`.
    - A diff of the `Meta` dataclass between `4f3cf0d` and now is empty.
-   - 0.37.0 already had `symbol-graph.parts` (`4f3cf0d:dummyindex/export/storage.py:23`).
+   - 0.37.0 already had `symbol-graph.parts` (`4f3cf0d:dummyindex/context/export/storage.py:23`).
    - `.context/meta.json` in the working tree is `0.37.0` / schema 2, while HEAD has `0.36.0` / schema 1. The bump happened at an equal version (`enriched_refresh.py:333-338`).
-   - 0.37.0's `reconcile-stamp` prints "Run `dummyindex ingest` first" (`4f3cf0d:dummyindex/cli/reconcile.py:158-163`).
+   - 0.37.0's `reconcile-stamp` prints "Run `dummyindex ingest` first" (`4f3cf0d:dummyindex/context/cli/reconcile.py:158-163`).
 6. **S2** — fixed-name `.tmp` writers follow a committed symlink.
    - The writers are `meta.py:108-112`, `manifest.py:108-112`, `maps.py:289-293`, `tree.py:330-332`, `conventions.py:193-195,222-224,242-244` and `pipeline/io/cache.py:296-299`.
    - All of them use `write_text` on a fixed sibling.

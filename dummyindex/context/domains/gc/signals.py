@@ -29,8 +29,9 @@ def classify(candidate: Candidate, context_dir: Path, root: Path) -> tuple[str, 
 
     ``status:<value>``; ``orphan-empty`` and ``checklist-complete`` /
     ``checklist-partial`` (proposals/archived only); ``report-written`` (audits
-    only); ``untracked``; ``age-<n>d``. ``root`` is unused, accepted for
-    signature symmetry with the rest of the domain.
+    only); ``orphan:<name>`` per equipment item this workspace orphans (one tag
+    each, so the count is the tag count); ``untracked``; ``age-<n>d``. ``root``
+    is unused, accepted for signature symmetry with the rest of the domain.
     """
     signals: list[str] = []
 
@@ -50,6 +51,8 @@ def classify(candidate: Candidate, context_dir: Path, root: Path) -> tuple[str, 
     elif candidate.kind is CandidateKind.AUDIT:
         if report_written(context_dir, candidate.slug):
             signals.append("report-written")
+
+    signals.extend(f"orphan:{name}" for name in candidate.orphans)
 
     if not candidate.tracked:
         signals.append("untracked")

@@ -60,13 +60,13 @@ Code dependencies that cross a module/layer boundary:
 
 - **`verify.py:15` → `dummyindex.context.domains.dev_pick.read_feature_files`** — the one
   *cross-domain* edge. reality-check leans on dev-pick to enumerate a feature's files.
-- **`confidence.py:13` → `dummyindex.pipeline.enums.ConfidenceLevel`** — a *cross-layer*
+- **`confidence.py:13` → `dummyindex.context.pipeline.enums.ConfidenceLevel`** — a *cross-layer*
   edge into `pipeline`. Verdicts and stash comparisons use the enum, not string literals
   (`confidence.py:47-48` compares `prior == ConfidenceLevel.AMBIGUOUS`).
 - **`confidence.py:16` → `.render._atomic_write`** — intra-package reuse; `render` is the
   shared write primitive, so the layering is models → render ← {verify, confidence}.
 
-Downstream consumer: the CLI dispatcher `dummyindex/cli/reality_check.py:8-75` (unchanged). It imports the public surface **lazily inside `run`** (`cli/reality_check.py:16-22`). That keeps import cost off the CLI cold path. No cycles: `models` is a clean leaf. `__init__` re-exports, but nothing imports `__init__` internally.
+Downstream consumer: the CLI dispatcher `dummyindex/context/cli/reality_check.py:8-75` (unchanged). It imports the public surface **lazily inside `run`** (`cli/reality_check.py:16-22`). That keeps import cost off the CLI cold path. No cycles: `models` is a clean leaf. `__init__` re-exports, but nothing imports `__init__` internally.
 
 Public surface is `__init__.__all__` (`__init__.py:91-101`); the contract docstring
 (`__init__.py:1-54`) is the human-facing spec of the whole pipeline.

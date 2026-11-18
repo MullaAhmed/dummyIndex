@@ -10,10 +10,11 @@ only its own output, never clobbering a user-authored file at the same path.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Any
 
 from .constants import SCHEMA_VERSION
-from .enums import EquipmentKind, EquipmentSource
+from .enums import EquipmentKind, EquipmentScope, EquipmentSource, RequestedBy
 
 # Marker embedded in every generated `.md`. A markdown comment, so it is
 # invisible in the rendered file yet greppable for the never-clobber check.
@@ -53,6 +54,9 @@ class StackProfile:
     lint_command: str | None = None
     type_checker: str | None = None  # "mypy" | "pyright" | "tsc"
     typecheck_command: str | None = None
+    # Evidence for gated specialists. Never part of project_binding or manifest bytes.
+    data_stores: tuple[str, ...] = ()
+    search_backends: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -108,6 +112,10 @@ class EquipmentItem:
     project_binding: dict[str, Any] = field(default_factory=dict)
     # Specialist dimension ("procedure" | "domain"); None for legacy entries.
     dimension: str | None = None
+    # v4 provenance. Defaults are not serialised, so older manifests stay byte-identical.
+    requested_by: RequestedBy | None = None
+    scope: EquipmentScope = EquipmentScope.PROJECT
+    task_refs: tuple[str, ...] = ()  # "proposal:<slug>" or "audit:<slug>"
 
     def to_dict(self) -> dict[str, Any]:
         data: dict[str, Any] = {
@@ -143,6 +151,12 @@ class EquipmentItem:
             data["project_binding"] = self.project_binding
         if self.dimension is not None:
             data["dimension"] = self.dimension
+        if self.requested_by is not None:
+            data["requested_by"] = self.requested_by
+        if self.scope != EquipmentScope.PROJECT:
+            data["scope"] = self.scope
+        if self.task_refs:
+            data["task_refs"] = list(self.task_refs)
         return data
 
     @classmethod
@@ -188,7 +202,24 @@ class EquipmentItem:
             dimension=str(data["dimension"])
             if data.get("dimension") is not None
             else None,
+            requested_by=_parse_enum(RequestedBy, data.get("requested_by")),
+            scope=_parse_enum(EquipmentScope, data.get("scope"))
+            or EquipmentScope.PROJECT,
+            task_refs=tuple(str(ref) for ref in data.get("task_refs", [])),
         )
+
+
+def _parse_enum(enum_cls: type[Enum], raw: Any) -> Any:
+    """Return the enum member for ``raw``, or ``None`` for a missing or unknown value.
+
+    Unknown values load as the default instead of failing the whole manifest.
+    """
+    if raw is None:
+        return None
+    try:
+        return enum_cls(raw)
+    except ValueError:
+        return None
 
 
 @dataclass(frozen=True)

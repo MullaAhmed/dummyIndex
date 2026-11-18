@@ -18,8 +18,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TypeVar
 
-from dummyindex.context.domains.atomic_io import _replace_bytes, is_link
-from dummyindex.pipeline.io.cache import scope_cache_to_version
+from dummyindex.context.pipeline.io.cache import scope_cache_to_version
+from dummyindex.context.shared.atomic_io import is_link, replace_bytes
 
 _T = TypeVar("_T")
 
@@ -437,7 +437,7 @@ class _Retirer:
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 if not self._inside(dest.parent):
                     raise OSError(f"{self._rel(dest)} resolves outside .context/")
-                _replace_bytes(dest, data)
+                replace_bytes(dest, data)
                 return self._rel(dest)
             if is_link(dest):
                 raise OSError(f"{self._rel(dest)} is a link; refusing to follow it")

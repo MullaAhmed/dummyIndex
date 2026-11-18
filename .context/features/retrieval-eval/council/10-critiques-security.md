@@ -2,7 +2,7 @@
 
 - `tests/eval/test_retrieval_eval.py:60-67`, `tests/conftest.py:10-20`, `tests/conftest.py:28-35`. The module-scoped `indexed_repo` is set up before the function-scoped autouse `_isolate_user_config` and `_no_real_plugin_install`. `pytest --setup-plan` prints `SETUP M indexed_repo` ahead of `SETUP F _isolate_user_config`. So `build_all` runs with the developer's real `HOME`/`USERPROFILE`/`CODEX_HOME`/`CLAUDE_CONFIG_DIR` and without `SKIP_INSTALL_ENV`, while every other test in the suite is sandboxed. Today the only real-profile read is git's global config, through the subprocess in the next bullet. If a later change to `build_all` reads or writes user config, this gate will touch the real profile without any test failing. Existing mitigation is incidental:
   - `:66` passes only `cache_root`, so the gate depends on the `bootstrap=False` default (`dummyindex/context/build/runner.py:97`), which skips `reconcile_claude_md` (`runner.py:325-332`). A default protects less than an explicit argument would.
-  - `install_default_plugins` has no caller under `context/build/`; its only callers are `dummyindex/cli/init.py:74`, `dummyindex/cli/wire.py:243` and `dummyindex/installer/install/project_init.py:372`.
+  - `install_default_plugins` has no caller under `context/build/`; its only callers are `dummyindex/context/cli/init.py:74`, `dummyindex/context/cli/wire.py:243` and `dummyindex/context/installer/install/project_init.py:372`.
   - A grep of `dummyindex/context/build/` and `domains/features/` finds no `Path.home()` call and no import of `hooks`, `claude_plugins`, `default_plugins`, `usage` or `installer`.
 
   None of this isolates the fixture, because the conftest sandbox does not cover module scope.

@@ -13,10 +13,10 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli import dispatch
 from dummyindex.context.build.runner import build_all
+from dummyindex.context.cli import dispatch
+from dummyindex.context.installer.install import _auto_init_project
 from dummyindex.context.output.bootstrap import BEGIN_MARKER, END_MARKER
-from dummyindex.installer.install import _auto_init_project
 
 SAMPLE_REPO = Path(__file__).resolve().parent.parent.parent / "fixtures" / "sample_repo"
 

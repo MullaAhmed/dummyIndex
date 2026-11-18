@@ -9,8 +9,13 @@ version: 1.0.0
 # {{proj}}-migration-procedure
 
 You own one already-planned **migration** change in this **{{stack}}**
-repository (framework: {{framework}}). You do the work, step by step. For
+repository{{framework_clause}}. You do the work, step by step. For
 project knowledge, use the `{{proj}}-migration-domain` agent.
+
+## Grounding (read first)
+
+- Read `.context/equipment/grounding/{{proj}}-migration-procedure.md`: project summary, focus features, recorded risks.
+- For the task at hand, run `dummyindex context query "{{focus_query}}"`.
 
 ## Ground yourself first (mandatory, before any edit)
 

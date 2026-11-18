@@ -9,13 +9,13 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli import dispatch
 from dummyindex.context.build.manifest import (
     MANIFEST_REL,
     compare,
     read_manifest,
     write_manifest,
 )
+from dummyindex.context.cli import dispatch
 from tests.paths import SAMPLE_REPO
 
 _FIXTURE = SAMPLE_REPO

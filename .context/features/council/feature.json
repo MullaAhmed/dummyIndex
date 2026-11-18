@@ -249,7 +249,7 @@
     "test_log_scan_test_last_matching_returns_most_recent_match"
   ],
   "files": [
-    "dummyindex/cli/council_batch.py",
+    "dummyindex/context/cli/council_batch.py",
     "dummyindex/context/domains/audit/enums.py",
     "dummyindex/context/domains/audit/errors.py",
     "dummyindex/context/domains/audit/log.py",

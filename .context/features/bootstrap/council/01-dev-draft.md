@@ -7,7 +7,7 @@ confidence: INFERRED
 `dummyindex/context/output/bootstrap.py` owns the shared managed-block primitive:
 Claude's deterministic body, the caveman/i-have-adhd policy, marker parsing,
 append/replace/remove behavior, path containment, exact text I/O, and atomic
-replacement. `dummyindex/cli/bootstrap.py` owns host selection, root resolution,
+replacement. `dummyindex/context/cli/bootstrap.py` owns host selection, root resolution,
 cross-host preflight, output, and exit codes. `dummyindex/context/output/claude_md.py`
 owns the higher-level root-to-canonical Claude layout migration, while
 `tests/context/output/test_bootstrap.py`, `test_claude_md.py`, and
@@ -71,7 +71,7 @@ canonical file through write-then-delete ordering.
   (`dummyindex/context/output/bootstrap.py:82-132`).
 - Preflight both hosts as one operation. Marker, path, ownership, and budget
   failures that are knowable before writing must not leave a deterministic
-  half-applied both-host bootstrap (`dummyindex/cli/bootstrap.py:41-52`).
+  half-applied both-host bootstrap (`dummyindex/context/cli/bootstrap.py:41-52`).
 - Make writes collision-resistant and filesystem-aware. Unique exclusive temp
   creation avoids clobbering a user-owned fixed `.tmp`; symlink targets and file
   modes survive replacement, and a new file follows process umask

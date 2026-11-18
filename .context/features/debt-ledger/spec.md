@@ -6,27 +6,27 @@ Harvests deliberate **debt markers** from the repo's Python source into a determ
 
 ## Intent
 
-dummyindex already extracts rationale-comment prefixes during ingest (`dummyindex/pipeline/extract/python_rationale.py:15`). This feature adds the missing *ledger* view. Collect every `# TODO:` / `# FIXME:` / `# HACK:` / `# DEBT:` marker. Surface those that name no upgrade trigger as rot-risk class. Deferred work never quietly becomes permanent. The harvest is pure, read-only, and deterministic. No LLM is in the loop (`dummyindex/cli/debt.py:6`).
+dummyindex already extracts rationale-comment prefixes during ingest (`dummyindex/context/pipeline/extract/python_rationale.py:15`). This feature adds the missing *ledger* view. Collect every `# TODO:` / `# FIXME:` / `# HACK:` / `# DEBT:` marker. Surface those that name no upgrade trigger as rot-risk class. Deferred work never quietly becomes permanent. The harvest is pure, read-only, and deterministic. No LLM is in the loop (`dummyindex/context/cli/debt.py:6`).
 
 ## User-visible behavior
 
-The `dummyindex context debt` CLI (`dummyindex/cli/debt.py:34`) renders a per-file, path-sorted ledger:
+The `dummyindex context debt` CLI (`dummyindex/context/cli/debt.py:34`) renders a per-file, path-sorted ledger:
 
-- **Default** — prints the markdown ledger to **stdout**; nothing is persisted (`dummyindex/cli/debt.py:67`).
-- **`--write`** — ALSO persists the markdown ledger to `.context/debt.md`, creating the context dir if absent (`dummyindex/cli/debt.py:64`, `dummyindex/cli/debt.py:127`). The on-disk ledger is always the human-readable markdown view, even when stdout is JSON.
-- **`--json`** — emits `DebtLedger.to_dict()` as indented JSON to stdout instead of markdown (`dummyindex/cli/debt.py:67`, `dummyindex/cli/debt.py:120`).
-- An unknown flag prints `error: unknown argument(s) for \`debt\`` to stderr and returns exit code `2` (`dummyindex/cli/debt.py:51`).
-- An empty ledger prints the no-debt message (`dummyindex/cli/debt.py:82`).
+- **Default** — prints the markdown ledger to **stdout**; nothing is persisted (`dummyindex/context/cli/debt.py:67`).
+- **`--write`** — ALSO persists the markdown ledger to `.context/debt.md`, creating the context dir if absent (`dummyindex/context/cli/debt.py:64`, `dummyindex/context/cli/debt.py:127`). The on-disk ledger is always the human-readable markdown view, even when stdout is JSON.
+- **`--json`** — emits `DebtLedger.to_dict()` as indented JSON to stdout instead of markdown (`dummyindex/context/cli/debt.py:67`, `dummyindex/context/cli/debt.py:120`).
+- An unknown flag prints `error: unknown argument(s) for \`debt\`` to stderr and returns exit code `2` (`dummyindex/context/cli/debt.py:51`).
+- An empty ledger prints the no-debt message (`dummyindex/context/cli/debt.py:82`).
 
 Re-running on an unchanged tree is byte-identical and leaks no absolute path. Every rendered row is repo-relative POSIX.
 
 ## Contracts
 
 - **`harvest_debt(project_root) -> DebtLedger`** (`dummyindex/context/domains/debt/harvest.py:34`) — pure, read-only, deterministic (no LLM). Enumerates **only `.py` files** via `detect()` under `files["code"]` (`dummyindex/context/domains/debt/harvest.py:37`). Relativizes each path to repo-relative POSIX, reusing `drift._rel_or_none` (`dummyindex/context/drift.py:372`). Matches a marker only on a **true comment line**: `stripped.startswith(prefix)` (`dummyindex/context/domains/debt/harvest.py:80`). Parses the structured `# DEBT: <ceiling>; upgrade: <trigger>` form by splitting on the first `; upgrade:` (`dummyindex/context/domains/debt/harvest.py:97`). Rows sort by `(rel_path, line)` (`dummyindex/context/domains/debt/harvest.py:56`). Unreadable or non-UTF-8 files are skipped without raising (`dummyindex/context/domains/debt/harvest.py:50`).
-- **`DEBT_PREFIXES`** is imported from `dummyindex/pipeline/extract/python_rationale.py:15` (`("# TODO:", "# FIXME:", "# HACK:", "# DEBT:")`). Single source of truth, shared with rationale extraction (`dummyindex/context/domains/debt/harvest.py:24`).
+- **`DEBT_PREFIXES`** is imported from `dummyindex/context/pipeline/extract/python_rationale.py:15` (`("# TODO:", "# FIXME:", "# HACK:", "# DEBT:")`). Single source of truth, shared with rationale extraction (`dummyindex/context/domains/debt/harvest.py:24`).
 - **`DebtRow` / `DebtLedger`** (`dummyindex/context/domains/debt/models.py:18`, `dummyindex/context/domains/debt/models.py:48`) — frozen dataclasses. `DebtLedger.total` and `DebtLedger.no_trigger_count` are computed properties (`dummyindex/context/domains/debt/models.py:54`, `dummyindex/context/domains/debt/models.py:59`). `to_dict` gives stable JSON (`dummyindex/context/domains/debt/models.py:37`, `dummyindex/context/domains/debt/models.py:62`).
-- **`no-trigger` rule** (`dummyindex/context/domains/debt/harvest.py:86`): a plain marker (TODO/FIXME/HACK) sets `no_trigger=True`. So does a `# DEBT:` with a ceiling but no/empty `upgrade:` clause, or a malformed marker. It never raises. `no_trigger` is `True` exactly when `trigger is None`. The `M` in the rendered `N markers, M with no trigger.` tally equals `no_trigger_count` (`dummyindex/cli/debt.py:101`).
-- **CLI `dummyindex context debt`** (`dummyindex/cli/debt.py:34`) — flat `run(args) -> int` mirroring `cli/query.py`, registered as `ContextSubcommand.DEBT` (`dummyindex/context/enums.py:85`) and dispatched at `dummyindex/cli/__init__.py:122`.
+- **`no-trigger` rule** (`dummyindex/context/domains/debt/harvest.py:86`): a plain marker (TODO/FIXME/HACK) sets `no_trigger=True`. So does a `# DEBT:` with a ceiling but no/empty `upgrade:` clause, or a malformed marker. It never raises. `no_trigger` is `True` exactly when `trigger is None`. The `M` in the rendered `N markers, M with no trigger.` tally equals `no_trigger_count` (`dummyindex/context/cli/debt.py:101`).
+- **CLI `dummyindex context debt`** (`dummyindex/context/cli/debt.py:34`) — flat `run(args) -> int` mirroring `cli/query.py`, registered as `ContextSubcommand.DEBT` (`dummyindex/context/enums.py:85`) and dispatched at `dummyindex/context/cli/__init__.py:122`.
 
 ## Examples
 
@@ -67,14 +67,14 @@ renders tagged `no-trigger`:
 }
 ```
 
-A clean repo prints `_No debt markers found in the repo's Python source._` (`dummyindex/cli/debt.py:85`).
+A clean repo prints `_No debt markers found in the repo's Python source._` (`dummyindex/context/cli/debt.py:85`).
 
 ## Key symbols
 
 - `harvest_debt`, `_rows_for_file`, `_matching_prefix`, `_parse_marker`, `_no_trigger_row` — `dummyindex/context/domains/debt/harvest.py`
 - `DebtRow`, `DebtLedger` — `dummyindex/context/domains/debt/models.py`
-- `run`, `render_markdown`, `render_json`, `_render_row`, `_persist` — `dummyindex/cli/debt.py`
+- `run`, `render_markdown`, `render_json`, `_render_row`, `_persist` — `dummyindex/context/cli/debt.py`
 
 ## Tests
 
-`tests/context/domains/debt/test_harvest.py` covers parsing, the no-trigger rule, Python-only scope, repo-relative paths, determinism, and unreadable-file skip. `tests/cli/test_debt_cli.py` covers stdout, `--write`, and `--json`, the clean-repo message, and no absolute paths.
+`tests/context/domains/debt/test_harvest.py` covers parsing, the no-trigger rule, Python-only scope, repo-relative paths, determinism, and unreadable-file skip. `tests/context/cli/test_debt_cli.py` covers stdout, `--write`, and `--json`, the clean-repo message, and no absolute paths.

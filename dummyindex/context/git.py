@@ -12,7 +12,7 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
-from ..pipeline.io import is_git_repo as _fs_is_git_repo
+from dummyindex.context.pipeline.io import is_git_repo as _fs_is_git_repo
 
 __all__ = ["is_git_repo", "is_tracked", "run_git"]
 
@@ -20,7 +20,7 @@ __all__ = ["is_git_repo", "is_tracked", "run_git"]
 def is_git_repo(root: Path) -> bool:
     """True when ``root`` is a git working tree — pure filesystem, no subprocess.
 
-    Re-export of ``pipeline/io/git.py:is_git_repo``: accepts a ``.git`` directory
+    Re-export of ``context/pipeline/io/git.py:is_git_repo``: accepts a ``.git`` directory
     or a ``.git`` file with a ``gitdir:`` pointer (submodule / worktree).
     """
     return _fs_is_git_repo(root)

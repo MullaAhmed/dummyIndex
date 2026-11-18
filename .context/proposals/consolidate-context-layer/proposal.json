@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "slug": "consolidate-context-layer",
+  "title": "Move all context code into dummyindex/context/",
+  "status": "planned",
+  "related_features": [
+    "equip",
+    "equip",
+    "session-memory"
+  ],
+  "conventions": [
+    "conventions/coding-practices.md",
+    "conventions/data-access.md",
+    "conventions/folder-organization.md",
+    "conventions/naming.md",
+    "conventions/testing.md"
+  ],
+  "reused_symbols": []
+}

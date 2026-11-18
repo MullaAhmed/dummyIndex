@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli.equip import run as run_equip
+from dummyindex.context.cli.equip import run as run_equip
 from dummyindex.context.domains.equip import (
     SCHEMA_VERSION,
     EquipmentItem,
@@ -23,6 +23,7 @@ from dummyindex.context.domains.equip import (
     content_hash,
     write_manifest,
 )
+from dummyindex.context.domains.equip.generate.adapters import native_adapter_content
 
 
 def _adopted() -> EquipmentItem:
@@ -197,6 +198,69 @@ def test_remove_generated_with_delete_file(tmp_path: Path) -> None:
     assert "python-implementer" not in _names(tmp_path)
     assert not (tmp_path / ".claude" / "agents" / "python-implementer.md").exists()
     assert "Frontend Developer" in _names(tmp_path)  # untouched
+
+
+def _canonical(root: Path) -> EquipmentItem:
+    """A file-backed item whose native adapter the lifecycle is allowed to manage."""
+    rel = ".context/equipment/python-implementer.md"
+    body = "---\nname: python-implementer\n---\nbody\n"
+    f = root / rel
+    f.parent.mkdir(parents=True, exist_ok=True)
+    f.write_text(body, encoding="utf-8")
+    return EquipmentItem(
+        kind=EquipmentKind.AGENT,
+        name="python-implementer",
+        path=rel,
+        source=EquipmentSource.GENERATED,
+        capabilities=("implement",),
+        version="1.0.0",
+        origin_hash=content_hash(body),
+    )
+
+
+def _adapter(root: Path, item: EquipmentItem, text: str) -> Path:
+    target = root / ".claude" / "agents" / "python-implementer.md"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(text, encoding="utf-8")
+    return target
+
+
+@pytest.mark.integration
+def test_remove_delete_file_drops_new_format_adapter(tmp_path: Path) -> None:
+    item = _canonical(tmp_path)
+    adapter = _adapter(tmp_path, item, native_adapter_content(item, description="X"))
+    _write(tmp_path, item)
+    rc = run_equip(
+        ["remove", "python-implementer", "--delete-file", "--root", str(tmp_path)]
+    )
+    assert rc == 0
+    assert not adapter.exists()
+    assert not (tmp_path / item.path).exists()
+
+
+@pytest.mark.integration
+def test_remove_delete_file_drops_pre_fix_generic_adapter(tmp_path: Path) -> None:
+    item = _canonical(tmp_path)
+    adapter = _adapter(tmp_path, item, native_adapter_content(item))
+    _write(tmp_path, item)
+    rc = run_equip(
+        ["remove", "python-implementer", "--delete-file", "--root", str(tmp_path)]
+    )
+    assert rc == 0
+    assert not adapter.exists()
+
+
+@pytest.mark.integration
+def test_remove_delete_file_keeps_hand_edited_adapter(tmp_path: Path) -> None:
+    item = _canonical(tmp_path)
+    edited = native_adapter_content(item, description="X") + "my note\n"
+    adapter = _adapter(tmp_path, item, edited)
+    _write(tmp_path, item)
+    rc = run_equip(
+        ["remove", "python-implementer", "--delete-file", "--root", str(tmp_path)]
+    )
+    assert rc == 0
+    assert adapter.read_text(encoding="utf-8") == edited
 
 
 @pytest.mark.integration

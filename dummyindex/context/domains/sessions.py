@@ -34,7 +34,7 @@ from typing import Any
 
 # Shared with the usage reader: the same timestamp rule and the same
 # `<session>/subagents/agent-*.jsonl` discovery, so the two cannot drift.
-from dummyindex.usage.transcripts import _parse_timestamp, _subagent_files
+from dummyindex.context.usage.transcripts import _parse_timestamp, _subagent_files
 
 
 class SessionState(str, Enum):

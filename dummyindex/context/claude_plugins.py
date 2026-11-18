@@ -10,6 +10,7 @@ round-trip. The ``list_*`` readers expose marketplaces Claude Code already knows
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -162,3 +163,58 @@ def disable_plugin(settings_path: Path, *, plugin: str, marketplace: str) -> boo
         settings.pop(_ENABLED, None)
     write_settings(settings_path, settings)
     return True
+
+
+class PluginRegistryError(Exception):
+    """``installed_plugins.json`` exists but cannot be read or has a bad shape.
+
+    Distinct from "not installed" (``None``) so callers can report ``unknown``.
+    """
+
+
+def installed_plugin_record(
+    target: str, *, config_dir: Path, project_root: Path | None
+) -> dict | None:
+    """The first registry record for ``target`` that applies to this project.
+
+    Reads ``<config_dir>/plugins/installed_plugins.json``. Shape:
+    ``{"version": 2, "plugins": {"<plugin>@<mkt>": [{scope, projectPath?,
+    installPath, version, ...}]}}``. User-scope records always apply. A
+    project- or local-scope record applies only when its ``projectPath`` is
+    ``project_root``, so another repo's install does not count here.
+
+    Returns ``None`` when the file is absent or no record applies. Raises
+    :class:`PluginRegistryError` when the file is unreadable or malformed.
+    """
+    path = config_dir / "plugins" / "installed_plugins.json"
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise PluginRegistryError(f"cannot read {path}: {exc}") from exc
+    plugins = data.get("plugins") if isinstance(data, dict) else None
+    if not isinstance(plugins, dict):
+        raise PluginRegistryError(f"{path}: missing 'plugins' object")
+    records = plugins.get(target)
+    if records is None:
+        return None
+    if not isinstance(records, list) or not all(isinstance(r, dict) for r in records):
+        raise PluginRegistryError(f"{path}: malformed records for {target}")
+    wanted = _normalized(project_root) if project_root is not None else None
+    for record in records:
+        if record.get("scope") not in ("project", "local"):
+            return record
+        project_path = record.get("projectPath")
+        if (
+            wanted is not None
+            and isinstance(project_path, str)
+            and _normalized(Path(project_path)) == wanted
+        ):
+            return record
+    return None
+
+
+def _normalized(path: Path) -> str:
+    """Comparable form of a path: resolved, with Windows case/slashes folded."""
+    return os.path.normcase(str(path.resolve()))

@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli.build_loop import run as run_build
+from dummyindex.context.cli.build_loop import run as run_build
 from dummyindex.context.domains.buildloop import (
     BuildLoopError,
     ChecklistItem,

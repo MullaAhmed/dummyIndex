@@ -1,7 +1,7 @@
 import json
 
-from dummyindex.cli import dispatch
-from dummyindex.cli.help import USAGE
+from dummyindex.context.cli import dispatch
+from dummyindex.context.cli.help import USAGE
 from dummyindex.context.domains.council import append_log
 
 

@@ -14,13 +14,13 @@ confidence: INFERRED
 - `communities.py`: the community mid-tier. Frozen `GraphCommunities`, `GraphCommunity`, and `CommunityMember` models. The pure `rollup_communities` roll-up with stable slugs (`communities.py:94,159`).
 - `constants.py`, `errors.py`, `helpers.py` (atomic writers, slug and path coercion), `__init__.py` (public re-export surface).
 
-CLI bindings: `dummyindex/cli/features.py` and `dummyindex/cli/scan.py`.
+CLI bindings: `dummyindex/context/cli/features.py` and `dummyindex/context/cli/scan.py`.
 
 Codebase scan: `dummyindex/context/domains/features/scan/{models,seed,validate,mutate,rank,refs}.py`. `rank.py` loads the `seed-rank.json` shortlist. `refs.py` builds the `symbolRef` resolution index (`REF_ARTIFACTS` registry).
 
 Viewer: `dummyindex/context/output/viewer/{__init__,styles,script,tiers,extras}.py`. `tiers.py` is the tier-2/3 JS, appended into `script.py`'s scope. `extras.py` precomputes the second data island.
 
-Tests: `tests/context/domains/features/{test_features.py,test_placement.py,test_scan.py,test_scan_artifact.py,test_scan_rank.py,test_scan_refs.py,test_communities.py}`, `tests/context/output/test_viewer_extras.py`, `tests/cli/test_scan_check.py`.
+Tests: `tests/context/domains/features/{test_features.py,test_placement.py,test_scan.py,test_scan_artifact.py,test_scan_rank.py,test_scan_refs.py,test_communities.py}`, `tests/context/output/test_viewer_extras.py`, `tests/context/cli/test_scan_check.py`.
 
 ## Bounded context
 
@@ -82,7 +82,7 @@ Both families share `helpers.py` (atomic writers, slug validation). They raise t
 
 ## Key decisions
 
-- **Validate-before-write and atomic persistence.** Every op validates fully, then writes each artifact via tmp-file+`replace` (`helpers.py:131-140`). This is the *local* reimplementation of the project-wide `write_text_atomic` shape. Convention `data-access.md` names the canonical helper at `atomic_io.py:11-24`. Paths are repo-relative POSIX only. JSON is sorted and stable, for byte-identical re-runs.
+- **Validate-before-write and atomic persistence.** Every op validates fully, then writes each artifact via tmp-file+`replace` (`helpers.py:131-140`). This is the *local* reimplementation of the project-wide `write_text_atomic` shape. Convention `data-access.md` names the canonical helper at `atomic_io.py:10-23`. Paths are repo-relative POSIX only. JSON is sorted and stable, for byte-identical re-runs.
 - **Members derived, never re-clustered.** Placement recomputes members from `symbols.json` over the file union or remainder. Clustering happens exactly once, at build time, in `scaffold_features`.
 - **`community-*` ids reserved** (`_RESERVED_ID_PREFIX`, checked in `_validate_placement_id`, `placement.py:395`). Hand-scaffolded features cannot collide with a future Leiden re-cluster. `scaffold-feature` rejects them.
 - **Enrichment preserved on mutation.** Assign, unassign, and rename touch only `feature.json` and indexes, never curated section markdown. Merge appends prose under sentinels, so re-merge never clobbers.

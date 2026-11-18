@@ -5,7 +5,7 @@
 ## Bounded context and dependencies
 
 This read-only retrieval domain ranks feature records and returns cited excerpts.
-`dummyindex/cli/query.py:10-126` owns arguments, rendering choice and exit codes;
+`dummyindex/context/cli/query.py:10-126` owns arguments, rendering choice and exit codes;
 `dummyindex/context/domains/query.py:294-425` owns validation and retrieval.
 Upstream deterministic/curated files are `features/INDEX.json`, each feature's
 `feature.json` and `map/symbols.json`. The graph-storage reader is not on this

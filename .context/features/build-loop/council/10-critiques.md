@@ -25,7 +25,7 @@
   reduced further to fit 65,536 bytes, with `group_total`/`truncated` — callers
   must finish the returned batch and request the frontier again; receiving a
   wave is not evidence that every group item was launched
-  (`dummyindex/cli/build_loop/waves.py:484-549`).
+  (`dummyindex/context/cli/build_loop/waves.py:484-549`).
 - **Reading a checked box or capability hash as verified execution** — plain
   checks remain available, and receipt validation proves matching task/artifact
   bytes rather than real tool execution — the host still judges outcomes and

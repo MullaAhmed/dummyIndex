@@ -96,7 +96,7 @@
     "verify_with_status"
   ],
   "files": [
-    "dummyindex/cli/reality_check.py",
+    "dummyindex/context/cli/reality_check.py",
     "dummyindex/context/domains/reality_check/__init__.py",
     "dummyindex/context/domains/reality_check/confidence.py",
     "dummyindex/context/domains/reality_check/extract.py",

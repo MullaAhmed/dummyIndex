@@ -19,7 +19,7 @@ from dummyindex.context.claude_settings import (
     load_settings,
     remove_hook_entries,
 )
-from dummyindex.context.domains.atomic_io import write_text_atomic
+from dummyindex.context.shared.atomic_io import write_text_atomic
 
 from ..constants import EQUIP_SENTINEL
 from ..enums import EquipmentSource, ItemState
@@ -280,7 +280,7 @@ def refresh(
         if dry_run:
             new_items.append(item)
             continue
-        bumped = _bump(item.version, "minor")
+        bumped = bump(item.version, "minor")
         out = set_frontmatter_version(fresh, bumped)
         write_text_atomic(root / item.path, out)
         new_items.append(
@@ -323,7 +323,7 @@ def reset(
     if target_item is None or not is_lifecycle_managed(target_item):
         raise ResetError(f"no resettable generated item named {name!r}")
 
-    bumped = _bump(target_item.version, "minor")
+    bumped = bump(target_item.version, "minor")
     out = set_frontmatter_version(fresh_render, bumped)
     write_text_atomic(root / target_item.path, out)
     from ..identity import capability_metadata
@@ -423,7 +423,7 @@ def uninstall(
     )
 
 
-def _bump(version: str | None, level: str) -> str:
+def bump(version: str | None, level: str) -> str:
     """Bump a ``MAJOR.MINOR.PATCH`` string at ``level`` ("minor" | "patch").
 
     A missing/malformed version starts from ``1.0.0``. Minor resets patch to 0;

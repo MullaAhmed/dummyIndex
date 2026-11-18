@@ -16,7 +16,7 @@
 
 - **Tuning the allowlist** — matching is `fnmatch(rel_path, glob)` (`guard_doc_write.py:75`), where `*` crosses `/`. `docs/*` — the natural spelling for "top-level docs files" — exempts the entire `docs/` tree recursively; the documented example `docs/specs/**` (`docs/guide/07-cli.md`) works only because `**` degenerates to `.*.*`. **Gap:** a knob whose blast radius is invisible, with no `--explain`/dry-run to show which paths a glob would exempt and no validation of the glob at config-load time.
 
-- **Setting either knob** — `doc_guard_enabled` / `doc_guard_allow` appear in no CLI verb; a grep over `dummyindex/cli/` finds them only in help prose (`help.py:549`). `ContextSubcommand.CONFIG` does not write them. **Gap:** the escape hatch requires hand-editing `.context/config.json` and knowing the key names from help text, in a file the tool otherwise owns and rewrites via `migrate_config_in_place`.
+- **Setting either knob** — `doc_guard_enabled` / `doc_guard_allow` appear in no CLI verb; a grep over `dummyindex/context/cli/` finds them only in help prose (`help.py:549`). `ContextSubcommand.CONFIG` does not write them. **Gap:** the escape hatch requires hand-editing `.context/config.json` and knowing the key names from help text, in a file the tool otherwise owns and rewrites via `migrate_config_in_place`.
 
 - **A deny happens mid-task** — the guard prints the payload and nothing else: no `--json`, no counter, no `.context/` record (`guard_doc_write.py:79-82`). **Gap:** concurs with `plan.md` open question 5, with the product consequence stated: a false-positive regime is undetectable from inside a session and unfalsifiable afterwards, so `PLANNING_SEGMENTS` can never be tuned from field evidence.
 

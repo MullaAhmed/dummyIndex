@@ -18,7 +18,7 @@ This feature owns one thing: grading prose docs against the current AST and pers
 
 **Cross-area touch-points** (kept out of the package on purpose):
 - `dummyindex/context/enums.py:12-37` — `DocConfidence` (shared enum, not source-docs-local).
-- `dummyindex/pipeline/io/detect.py` — PDF/office → markdown conversion (upstream of the reader).
+- `dummyindex/context/pipeline/io/detect.py` — PDF/office → markdown conversion (upstream of the reader).
 - `dummyindex/context/output/docs.py` — `PROJECT.md` description + "Existing documentation" renderer (downstream consumer).
 
 Tests: `tests/context/domains/test_source_docs.py`, `tests/context/output/test_docs.py`.

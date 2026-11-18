@@ -18,10 +18,6 @@ from enum import Enum
 from fnmatch import fnmatch
 from pathlib import Path
 
-from dummyindex.codex_guidance import (
-    is_project_instruction_path,
-    project_instruction_paths,
-)
 from dummyindex.context.build.common import collect_doc_paths
 from dummyindex.context.build.git_delta import (
     changed_paths,
@@ -33,10 +29,14 @@ from dummyindex.context.build.git_delta import (
 from dummyindex.context.build.manifest import write_manifest
 from dummyindex.context.build.meta import read_meta, write_meta
 from dummyindex.context.build.scope import scan_root
-from dummyindex.context.domains.atomic_io import write_text_atomic
+from dummyindex.context.codex_guidance import (
+    is_project_instruction_path,
+    project_instruction_paths,
+)
 from dummyindex.context.domains.config import ConfigError, read_config
 from dummyindex.context.domains.features import PENDING_ENRICHMENT_MARKER
-from dummyindex.pipeline.io.detect import detect
+from dummyindex.context.pipeline.io.detect import detect
+from dummyindex.context.shared.atomic_io import write_text_atomic
 
 
 class AnchorStatus(str, Enum):

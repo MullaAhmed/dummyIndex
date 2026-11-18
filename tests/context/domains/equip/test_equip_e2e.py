@@ -12,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli.equip import project_slug
-from dummyindex.cli.equip import run as run_equip
 from dummyindex.context.build.runner import build_all
+from dummyindex.context.cli.equip import project_slug
+from dummyindex.context.cli.equip import run as run_equip
 
 pytestmark = pytest.mark.integration
 

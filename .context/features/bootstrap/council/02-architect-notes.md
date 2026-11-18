@@ -45,7 +45,7 @@
 ## Dependencies surfaced
 
 - `cli/bootstrap.py` owns project resolution, platform selection, preflight,
-  exit codes, and printing (`dummyindex/cli/bootstrap.py:10-71`).
+  exit codes, and printing (`dummyindex/context/cli/bootstrap.py:10-71`).
 - `agents_md.py` owns Codex markers, target precedence, ownership, byte budget,
   and host wrapper prose; it consumes the shared engine and project policy
   (`dummyindex/context/output/agents_md.py:17-65`,
@@ -57,8 +57,8 @@
 - Build, install, and legacy migration call `reconcile_claude_md`, not the direct
   block editor, when whole-layout convergence is required
   (`dummyindex/context/build/runner.py:280-288`,
-  `dummyindex/installer/install.py:404-409`,
-  `dummyindex/cli/migrate.py:74-89`).
+  `dummyindex/context/installer/install.py:404-409`,
+  `dummyindex/context/cli/migrate.py:74-89`).
 - `context/__init__.py` publicly re-exports Claude markers and direct renderer;
   marker identity is therefore compatibility surface
   (`dummyindex/context/__init__.py:48-54`,

@@ -9,7 +9,7 @@ from collections.abc import Callable
 from functools import cache
 from pathlib import Path, PurePosixPath, PureWindowsPath
 
-from dummyindex.pipeline.extract.common import _make_id
+from dummyindex.context.pipeline.extract.common import _make_id
 
 _EDGE_REFS = ("source", "target", "from", "to", "_src", "_tgt")
 _SOURCE_REFS = frozenset({"source", "from", "_src"})

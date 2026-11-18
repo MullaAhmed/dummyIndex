@@ -7,7 +7,7 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
-from dummyindex.cli import dispatch
+from dummyindex.context.cli import dispatch
 from dummyindex.context.domains.memory import breadcrumb as bc
 from dummyindex.context.domains.memory.enums import AUTO_BREADCRUMB_TAG
 

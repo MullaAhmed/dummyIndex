@@ -9,7 +9,7 @@ owns marker grammar, placement, exact text preservation, safe removal, and atomi
 replacement. It also owns Claude's default body and the shared project response
 policy. It does not own root resolution, Codex target selection or budget, or
 legacy root consolidation (`dummyindex/context/output/bootstrap.py:14-253`,
-`dummyindex/cli/bootstrap.py:10-86`, `dummyindex/context/output/claude_md.py:96-269`).
+`dummyindex/context/cli/bootstrap.py:10-86`, `dummyindex/context/output/claude_md.py:96-269`).
 
 Only standalone marker lines are control syntax. Every write relies on that rule
 (`dummyindex/context/output/bootstrap.py:333-379`,
@@ -20,9 +20,9 @@ Only standalone marker lines are control syntax. Every write relies on that rule
 - `dummyindex/context/output/bootstrap.py` is the reusable managed-region engine
   and Claude body provider. It holds the shared policy, markers, validation,
   string assembly, exact reads, and atomic writes.
-- `dummyindex/cli/bootstrap.py` is the application boundary. It handles path and
+- `dummyindex/context/cli/bootstrap.py` is the application boundary. It handles path and
   root parsing, host selection, both-host preflight, error mapping, and output
-  (`dummyindex/cli/bootstrap.py:10-86`).
+  (`dummyindex/context/cli/bootstrap.py:10-86`).
 - `dummyindex/context/output/agents_md.py` is a consumer. It supplies Codex
   markers, body, and ownership, and calls the renderer with `place_first=True`
   (`dummyindex/context/output/agents_md.py:17-56`,
@@ -50,7 +50,7 @@ accepts legacy duplicates, folding root and canonical into one recoverable file.
    (`dummyindex/context/output/bootstrap.py:106-118`).
 2. The CLI parses root and platform. A both-host run preflights Claude marker and
    path state. It also preflights Codex ownership, path, and budget, before any
-   write (`dummyindex/cli/bootstrap.py:20-57`).
+   write (`dummyindex/context/cli/bootstrap.py:20-57`).
 3. `bootstrap_claude_md` normalizes the managed body boundary and wraps it in
    markers. It reads existing text without newline translation
    (`dummyindex/context/output/bootstrap.py:155-171`,
@@ -112,7 +112,7 @@ accepts legacy duplicates, folding root and canonical into one recoverable file.
 
 - `cli/bootstrap.run` is the direct user entry. It maps argument errors to exit 2
   and preflight, read, or write errors to exit 3
-  (`dummyindex/cli/bootstrap.py:10-86`).
+  (`dummyindex/context/cli/bootstrap.py:10-86`).
 - `agents_md.py` depends on the generic renderer and shared policies. It owns Codex
   filename precedence, project ownership, instruction budget, and its separate
   global body (`dummyindex/context/output/agents_md.py:17-73`,
@@ -127,9 +127,9 @@ accepts legacy duplicates, folding root and canonical into one recoverable file.
   turns warnings into build warnings, not direct-render exceptions
   (`dummyindex/context/build/runner.py:297-303`). Install's enriched refresh
   calls the same reconciler and reports its message
-  (`dummyindex/installer/install/project_init.py:96-101`).
+  (`dummyindex/context/installer/install/project_init.py:96-101`).
 - Legacy layout migration is a wire-only wrapper over the reconciler
-  (`dummyindex/cli/migrate.py:95-110`).
+  (`dummyindex/context/cli/migrate.py:95-110`).
 - Preflight inventory uses `BEGIN_MARKER` as a coarse read-only presence sentinel,
   not proof of a valid block. Mutation must still use the standalone parser
   (`dummyindex/context/domains/preflight/inventory.py:162-166`).
@@ -182,7 +182,7 @@ accepts legacy duplicates, folding root and canonical into one recoverable file.
   (`dummyindex/context/output/bootstrap.py:333-443`).
 - **Both-host preflight prevents knowable partial writes.** It cannot make two writes
   transactional, but it rejects every deterministic conflict before the first write
-  (`dummyindex/cli/bootstrap.py:50-57`).
+  (`dummyindex/context/cli/bootstrap.py:50-57`).
 - **Filesystem structure is user state.** Symlink identity, target mode, umask,
   BOM, newline style, and unrelated bytes are preserved (`dummyindex/context/output/bootstrap.py:229-240`,
   `dummyindex/context/output/bootstrap.py:469-488`).

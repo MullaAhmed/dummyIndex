@@ -27,6 +27,7 @@ class CandidateKind(str, Enum):
     AUDIT = "audit"
     ORPHAN_SCAFFOLD = "orphan_scaffold"
     ARCHIVED = "archived"
+    EQUIPMENT = "equipment"
 
 
 class Recommendation(str, Enum):

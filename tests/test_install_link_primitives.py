@@ -1,4 +1,4 @@
-"""Tests for the `dummyindex/installer/link` primitives, in isolation.
+"""Tests for the `dummyindex/context/installer/link` primitives, in isolation.
 
 Covers `classify_family_link`'s 6-state alphabet (with the security-sensitive
 parent-chain rule and fail-closed OSError/RuntimeError handling), the safe-replacement
@@ -16,8 +16,12 @@ from pathlib import Path, PurePath
 
 import pytest
 
-from dummyindex.installer.common import _SIBLING_SKILLS, PACKAGE_VERSION, LinkMode
-from dummyindex.installer.link import (
+from dummyindex.context.installer.common import (
+    _SIBLING_SKILLS,
+    PACKAGE_VERSION,
+    LinkMode,
+)
+from dummyindex.context.installer.link import (
     FamilyLinkClassification,
     FamilyLinkState,
     LinkCapabilityError,
@@ -73,7 +77,7 @@ def _agents_skills_root(scope_root: Path) -> Path:
 
 
 def _write_owned_dir(base: Path, version: str = PACKAGE_VERSION) -> Path:
-    from dummyindex.installer.ownership import sync_family
+    from dummyindex.context.installer.ownership import sync_family
 
     sync_family(
         base,
@@ -989,7 +993,7 @@ def test_create_family_links_permission_error_during_removal_does_not_abort_othe
     locked = claude_dir / "locked"
     locked.mkdir()
     (locked / "file.txt").write_text("x", encoding="utf-8")
-    from dummyindex.installer.ownership import sync_family
+    from dummyindex.context.installer.ownership import sync_family
 
     sync_family(
         claude_dir,
@@ -1186,7 +1190,7 @@ def test_create_family_links_partial_delete_leaves_stranded_tmp_old_named_on_eve
     claude_dir = _write_owned_claude_family(scope_root, family)
     sub = claude_dir / "sub"
     sub.mkdir()
-    from dummyindex.installer.ownership import sync_family
+    from dummyindex.context.installer.ownership import sync_family
 
     sync_family(
         claude_dir,
@@ -1376,7 +1380,7 @@ def test_remove_dangling_family_links_rechecks_immediately_before_unlink(
     again immediately before each unlink, catching a state change between
     the scan and the act."""
     _require_real_symlinks(tmp_path)
-    import dummyindex.installer.link as link_module
+    import dummyindex.context.installer.link as link_module
 
     scope_root = tmp_path / "project"
     family = "dummyindex"

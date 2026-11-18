@@ -10,9 +10,9 @@ import pytest
 
 from dummyindex.context.build.graph import build_graph
 from dummyindex.context.build.portable_graph import normalize_extraction_paths
-from dummyindex.pipeline.build import build_structure
-from dummyindex.pipeline.extract import extract
-from dummyindex.pipeline.extract.common import _make_id
+from dummyindex.context.pipeline.build import build_structure
+from dummyindex.context.pipeline.extract import extract
+from dummyindex.context.pipeline.extract.common import _make_id
 
 
 def _extraction(root: Path) -> dict:

@@ -80,6 +80,7 @@
     "test_preflight_test_render_states_context_ownership",
     "test_preflight_test_render_warns_on_foreign_context",
     "test_preflight_test_render_warns_on_unparseable_settings",
+    "test_preflight_test_requirements_only_hooks_are_neither_user_nor_ours",
     "test_preflight_test_submodule_git_file_reports_repo",
     "test_preflight_test_unparseable_meta_json_is_not_owned",
     "test_preflight_test_weird_hook_shapes_do_not_crash",
@@ -93,7 +94,7 @@
     "dummyindex/context/domains/preflight/models.py",
     "dummyindex/context/domains/preflight/ownership.py",
     "dummyindex/context/domains/preflight/render.py",
-    "dummyindex/usage/models.py",
+    "dummyindex/context/usage/models.py",
     "tests/context/domains/equip/test_equip_adopt.py",
     "tests/context/domains/test_preflight.py"
   ],

@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli.config import run as run_config
-from dummyindex.cli.onboard import run as run_onboard
+from dummyindex.context.cli.config import run as run_config
+from dummyindex.context.cli.onboard import run as run_onboard
 from dummyindex.context.default_plugins import (
     WiredEntry,
     WiredKind,
@@ -544,6 +544,53 @@ def test_onboard_defaults_writes_config(
 
 
 @pytest.mark.integration
+def test_onboard_defaults_seeds_config_toml_after_config_json(tmp_path: Path) -> None:
+    ctx = _context_dir(tmp_path)
+
+    rc = run_onboard(["--defaults", str(tmp_path)])
+
+    assert rc == 0
+    assert (ctx / "config.toml").is_file()
+
+
+@pytest.mark.integration
+def test_onboard_keeps_an_existing_config_toml_untouched(tmp_path: Path) -> None:
+    ctx = _context_dir(tmp_path)
+    sentinel = "# owned by the user\n"
+    (ctx / "config.toml").write_text(sentinel, encoding="utf-8")
+
+    rc = run_onboard(["--defaults", str(tmp_path)])
+
+    assert rc == 0
+    assert (ctx / "config.toml").read_text(encoding="utf-8") == sentinel
+
+
+@pytest.mark.unit
+def test_onboard_survives_a_requirements_error_on_toml_seed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from dummyindex.context.domains.requirements import RequirementsError
+
+    _context_dir(tmp_path)
+
+    def _malformed(*_a, **_k):
+        raise RequirementsError("config.toml is malformed")
+
+    monkeypatch.setattr(
+        "dummyindex.context.build.context_upgrade.seed_config_toml", _malformed
+    )
+
+    rc = run_onboard(["--defaults", str(tmp_path)])
+
+    assert rc == 0
+    assert (
+        "config.toml not seeded (config.toml is malformed)" in capsys.readouterr().err
+    )
+
+
+@pytest.mark.integration
 def test_onboard_defaults_explicit_codex_platform_overrides_guidance(
     tmp_path: Path,
 ) -> None:
@@ -782,7 +829,7 @@ def test_onboard_platform_codex_alias_warns_once_on_stderr(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    import dummyindex.installer.common as common_module
+    import dummyindex.context.installer.common as common_module
 
     monkeypatch.setattr(common_module, "_CODEX_PLATFORM_ALIAS_WARNED", False)
     ctx = _context_dir(tmp_path)
@@ -1661,3 +1708,108 @@ def test_mistyped_build_policy_raises(payload: dict, message: str) -> None:
     base.update(payload)
     with pytest.raises(ConfigError, match=message):
         Config.from_dict(base)
+
+
+# config.toml owns required plugins/skills once it exists (spec contract 7).
+_TOML_WIRED = """\
+# Team setup. Hand edits here must survive dummyindex writes.
+schema_version = 1
+
+[dummyindex]
+min_version = "1.0.0"
+
+[[plugins]]
+id = "a@b"
+version = ">=1.0.0"
+
+[[skills]]
+name = "dummyindex-plan"
+from = "dummyindex"
+
+[[skills]]
+name = "foo"
+from = "project"
+"""
+
+
+def _toml_path(ctx: Path) -> Path:
+    return ctx / "config.toml"
+
+
+@pytest.mark.unit
+def test_read_config_derives_wired_from_toml(tmp_path: Path) -> None:
+    ctx = _context_dir(tmp_path)
+    write_config(ctx, default_config())
+    _toml_path(ctx).write_text(_TOML_WIRED, encoding="utf-8")
+
+    cfg = read_config(ctx)
+    assert cfg is not None
+    assert cfg.wired == (
+        WiredEntry(kind=WiredKind.PLUGIN, target="a@b", version=">=1.0.0"),
+        WiredEntry(kind=WiredKind.SKILL, target="foo"),
+    )
+
+
+@pytest.mark.unit
+def test_reconcile_wired_writes_toml_and_leaves_json_wired(tmp_path: Path) -> None:
+    from dummyindex.context.domains.config import reconcile_wired_with_equipment
+
+    ctx = _context_dir(tmp_path)
+    write_config(ctx, default_config())
+    _toml_path(ctx).write_text(_TOML_WIRED, encoding="utf-8")
+    json_before = (ctx / "config.json").read_text(encoding="utf-8")
+    _write_equipment(ctx, "impeccable@impeccable")
+
+    assert reconcile_wired_with_equipment(ctx) is True
+
+    assert "impeccable@impeccable" in _toml_path(ctx).read_text(encoding="utf-8")
+    assert (ctx / "config.json").read_text(encoding="utf-8") == json_before
+    assert reconcile_wired_with_equipment(ctx) is False
+
+
+@pytest.mark.unit
+def test_reconcile_default_plugins_writes_toml_when_present(tmp_path: Path) -> None:
+    from dummyindex.context.domains.config import reconcile_default_plugins
+
+    ctx = _context_dir(tmp_path)
+    write_config(ctx, default_config())
+    _toml_path(ctx).write_text(_TOML_WIRED, encoding="utf-8")
+    json_before = (ctx / "config.json").read_text(encoding="utf-8")
+
+    assert reconcile_default_plugins(ctx, platform="claude") is True
+
+    toml_text = _toml_path(ctx).read_text(encoding="utf-8")
+    assert "superpowers@claude-plugins-official" in toml_text
+    assert (ctx / "config.json").read_text(encoding="utf-8") == json_before
+
+
+@pytest.mark.unit
+def test_toml_hand_comments_survive_reconcile(tmp_path: Path) -> None:
+    from dummyindex.context.domains.config import reconcile_wired_with_equipment
+
+    ctx = _context_dir(tmp_path)
+    write_config(ctx, default_config())
+    _toml_path(ctx).write_text(_TOML_WIRED, encoding="utf-8")
+    _write_equipment(ctx, "impeccable@impeccable")
+
+    reconcile_wired_with_equipment(ctx)
+
+    assert "# Team setup. Hand edits here must survive dummyindex writes." in (
+        _toml_path(ctx).read_text(encoding="utf-8")
+    )
+
+
+@pytest.mark.unit
+def test_read_config_falls_back_to_json_on_invalid_toml(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    ctx = _context_dir(tmp_path)
+    write_config(ctx, default_config())
+    json_wired = read_config(ctx).wired
+    _toml_path(ctx).write_text("[[plugins\nnot = toml", encoding="utf-8")
+
+    cfg = read_config(ctx)
+
+    assert cfg is not None
+    assert cfg.wired == json_wired
+    assert "config.toml" in capsys.readouterr().err

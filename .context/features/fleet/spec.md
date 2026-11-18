@@ -6,4 +6,4 @@ Checkpoint parallel proposal work and resumable feature maintenance.
 
 `dummyindex/context/domains/fleet.py` owns feature-maintenance runs, using council stage order and persisted completion. Maintain (`maintain-<ts>`) and proposal (`run-<id>`) runs use distinct namespaces under `.context/fleet/`.
 
-`dummyindex/cli/fleet.py` is the proposal-run interface; `dummyindex/cli/maintain.py` drives maintenance. Budget/ETA counters are bookkeeping, not guarantees of runtime or quality.
+`dummyindex/context/cli/fleet.py` is the proposal-run interface; `dummyindex/context/cli/maintain.py` drives maintenance. Budget/ETA counters are bookkeeping, not guarantees of runtime or quality.

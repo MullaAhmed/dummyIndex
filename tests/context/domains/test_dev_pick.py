@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli.dev_pick import run as run_dev_pick
+from dummyindex.context.cli.dev_pick import run as run_dev_pick
 from dummyindex.context.domains.dev_pick import pick_dev
 
 

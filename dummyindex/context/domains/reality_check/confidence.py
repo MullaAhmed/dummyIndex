@@ -13,7 +13,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from dummyindex.pipeline.enums import ConfidenceLevel
+from dummyindex.context.pipeline.enums import ConfidenceLevel
 
 from .models import RealityReport
 

@@ -1,11 +1,11 @@
-"""Tests for the neutral version comparator in `dummyindex/versioning.py`."""
+"""Tests for the neutral version comparator in `dummyindex/context/versioning.py`."""
 
 from __future__ import annotations
 
 import pytest
 
-from dummyindex.installer.common import _compare_stamp, _parse_version
-from dummyindex.versioning import VersionOrder, compare_versions, parse_version
+from dummyindex.context.installer.common import _compare_stamp, _parse_version
+from dummyindex.context.versioning import VersionOrder, compare_versions, parse_version
 
 pytestmark = pytest.mark.unit
 

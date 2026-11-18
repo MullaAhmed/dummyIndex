@@ -47,14 +47,14 @@ CLI dispatcher is wire-only. It parses flags, calls a domain function, prints, a
 
 `print` lives only in `cli/*`. Domain modules return and raise.
 
-Dispatcher maps typed exceptions to exit codes. `0` ok, `2` bad args or usage, `1` runtime failure. It catches specific before base (`dummyindex/cli/audit.py:84-92`). `run` returns `2` on missing args at `audit.py:31-43`.
+Dispatcher maps typed exceptions to exit codes. `0` ok, `2` bad args or usage, `1` runtime failure. It catches specific before base (`dummyindex/context/cli/audit.py:84-92`). `run` returns `2` on missing args at `audit.py:31-43`.
 
 This is **dependency injection by Callable seam, not Protocol.** The one equip module that shells out hides subprocess behind a `Runner = Callable[[list[str]],
 RunResult]` type alias. Its `default_runner` default arg lets tests inject a fake. Tests never touch the network (`dummyindex/context/domains/equip/plugins/sources.py:30-62`).
 
 `default_runner` uses fixed argv and no shell. It sets `check=False`. A missing executable maps to returncode 127. It never raises on non-zero (`sources.py:33-48`). Same precedent governs `context/build/git_delta.py` (`sources.py:5-8`).
 
-File writes are atomic: tmp file + `replace`. They are byte-faithful by contract. Otherwise equip hash-baselines misread a silent rewrite as a user edit (`dummyindex/context/domains/atomic_io.py:11-24`).
+File writes are atomic: tmp file + `replace`. They are byte-faithful by contract. Otherwise equip hash-baselines misread a silent rewrite as a user edit (`dummyindex/context/shared/atomic_io.py:10-23`).
 
 ## Sync vs async — N/A here
 

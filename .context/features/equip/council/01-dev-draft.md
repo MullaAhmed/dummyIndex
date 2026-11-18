@@ -22,8 +22,8 @@ does not own an optimizer service or model-execution engine.
 1. `run_apply` defaults to portable `agents` and resolves flags/root. Preparation
    reads prior equipment, preflight inventory, stack and conventions, then asks
    `build_catalog` for the core four, template-backed specialists, adoptions and
-   formatter-hook intent (`dummyindex/cli/equip/dispatch.py:169-199`,
-   `dummyindex/cli/equip/dispatch.py:257-345`,
+   formatter-hook intent (`dummyindex/context/cli/equip/dispatch.py:169-199`,
+   `dummyindex/context/cli/equip/dispatch.py:257-345`,
    `dummyindex/context/domains/equip/generate/catalog.py:74-110`). This is a
    decision/render/write pipeline; the pure catalog does not mutate the project.
 2. `render_generated_set` emits `(EquipmentItem, path, content)` triples. It
@@ -36,8 +36,8 @@ does not own an optimizer service or model-execution engine.
    writes eligible files and merges prior records into the registry. Known-content
    native adapters reference canonical bodies; pristine legacy migration is the
    only path for replacing a recorded old native body
-   (`dummyindex/cli/equip/dispatch.py:385-435`,
-   `dummyindex/cli/equip/dispatch.py:436-687`,
+   (`dummyindex/context/cli/equip/dispatch.py:385-435`,
+   `dummyindex/context/cli/equip/dispatch.py:436-687`,
    `dummyindex/context/domains/equip/generate/adapters.py:54-88`).
 
 ## Lifecycle and ownership decisions
@@ -56,16 +56,16 @@ frontmatter/content and baseline/version, then persist the manifest. Refresh and
 reset reuse `fresh_rendered`, the same detection/catalog/render route as apply;
 evolved or user-owned bodies do not silently become fresh templates
 (`dummyindex/context/domains/equip/lifecycle/evolve.py:26-71`,
-`dummyindex/cli/equip/common.py:199-245`,
+`dummyindex/context/cli/equip/common.py:199-245`,
 `dummyindex/context/domains/equip/lifecycle/status.py:217-357`).
 
 Each file write can be atomic without making the whole operation transactional.
 Apply restores converted legacy pointers on specified later required-write
 failures; new canonical files, settings and the registry do not share one global
 rollback. Keeping partial progress and warnings is the implemented tradeoff
-(`dummyindex/cli/equip/dispatch.py:467-478`,
-`dummyindex/cli/equip/dispatch.py:551-553`,
-`dummyindex/cli/equip/dispatch.py:617-687`). `write_text_atomic` is
+(`dummyindex/context/cli/equip/dispatch.py:467-478`,
+`dummyindex/context/cli/equip/dispatch.py:551-553`,
+`dummyindex/context/cli/equip/dispatch.py:617-687`). `write_text_atomic` is
 byte-faithful by contract, which keeps origin hashes stable
 (`dummyindex/context/domains/atomic_io.py:71-81`). The fail-closed `is_link`
 in the same module (`dummyindex/context/domains/atomic_io.py:16-35`: `lstat`,
@@ -73,7 +73,7 @@ Windows reparse-point bit, `OSError` counts as linked) is consumed only by the
 retired-path cleanup in `dummyindex/context/build/upgrade.py`. Equip's own
 link guards still use `Path.is_symlink()` plus `is_junction` where it exists
 (`dummyindex/context/domains/equip/generate/adapters.py:45-51`,
-`dummyindex/cli/equip/dispatch.py:714-720`), so on Python 3.10/3.11 a Windows
+`dummyindex/context/cli/equip/dispatch.py:714-720`), so on Python 3.10/3.11 a Windows
 junction parent passes them.
 
 ## Dependencies and feedback
@@ -81,7 +81,7 @@ junction parent passes them.
 Upstream are the context spine, conventions, detected project commands, prior
 manifest and optional proposal capability requests. Downstream build dispatch
 uses each recorded `role_path`, including a preserved legacy path
-(`dummyindex/cli/build_loop/waves.py:320-336`). `capability_identity` reads actual
+(`dummyindex/context/cli/build_loop/waves.py:320-336`). `capability_identity` reads actual
 loaded bytes; qualification additionally requires a matching baseline, permitting
 normalized legacy line endings
 (`dummyindex/context/domains/equip/identity.py:26-56`).
@@ -96,7 +96,7 @@ inputs, not measured agent-quality improvement.
 
 Adapter/shared-preparation tests cover migration, collisions and preservation:
 `tests/context/domains/equip/test_equip_adapters.py` and
-`tests/cli/equip/test_shared_preparation.py`. The specialist round trips distinguish
+`tests/context/cli/equip/test_shared_preparation.py`. The specialist round trips distinguish
 a deleted invariant from a cosmetic edit
 (`tests/context/domains/equip/test_equip_specialist_invariants.py:121-155`).
 `tests/context/domains/equip/test_capability_identity.py` covers loaded identity,

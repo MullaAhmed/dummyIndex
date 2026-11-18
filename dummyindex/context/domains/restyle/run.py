@@ -17,7 +17,6 @@ from typing import Any
 
 from dummyindex.context.build.meta import read_meta, write_meta
 from dummyindex.context.domains import fleet
-from dummyindex.context.domains.atomic_io import write_text_atomic
 from dummyindex.context.domains.docbudget import (
     BudgetGroup,
     StyleViolation,
@@ -40,6 +39,7 @@ from dummyindex.context.domains.restyle.errors import (
 )
 from dummyindex.context.domains.restyle.snapshot import diff_tokens
 from dummyindex.context.output.bootstrap import STE_DOC_STANDARD
+from dummyindex.context.shared.atomic_io import write_text_atomic
 
 __all__ = [
     "PlanUnit",

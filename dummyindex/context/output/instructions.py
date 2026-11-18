@@ -139,6 +139,14 @@ The nudge reads `N commits since last hygiene sweep — run /dummyindex-gc`. Cod
 | `gc stamp [--to SHA]` | advance the committed GC anchor in `gc/state.json` to HEAD (off-git no-op). |
 | `gc signal` | Claude's SessionStart throttle probe. Prints the nudge iff over threshold and not already signalled this session. |
 
+## Upgrade, requirements and grounding
+
+- `install` and `context init` run the upgrade in-process. The Claude SessionStart hook runs `dummyindex context upgrade --if-stale`.
+- `.context/config.toml` declares the required setup. Its gate applies only when the file exists.
+- `dummyindex context requirements check|sync` reports and fixes gaps. Run `sync` in another terminal.
+- Unmet requirements block the prompt. `requirements bypass --hours N` allows a temporary exception.
+- `.context/equipment/grounding/<name>.md` is generated. Never edit it. Read it before `dummyindex context query "<focus>"`.
+
 ## CI, linting & secret scanners
 
 - `sha256` fields in `map/files.json` and `source-docs/INDEX.json` are **content fingerprints** of source files, not credentials. Entropy scanners (e.g. detect-secrets' "Hex High Entropy String") flag them as false positives.
@@ -562,6 +570,35 @@ Use this when the user asks for a new capability not present yet (page, endpoint
 - Renaming things en masse without checking call sites.
 - Skipping the tests-first step.
 """,
+    "gc-context": """\
+# Playbook — context-hygiene GC
+
+Use this when the user asks to retire stale proposals, audits or equipment.
+Run `/dummyindex-gc` on Claude or `$dummyindex-gc` on Codex.
+
+## 1. Read the candidates
+- Run `dummyindex context gc status --json`. Read each candidate and its signals.
+- A `scope=task` equipment item is a candidate only when all its refs end. An in-progress ref blocks it.
+- An evidence-free db or search specialist is a `review` candidate.
+
+## 2. Close out and dry-run docs
+- For a finished workspace, run `dummyindex context gc closeout --draft`. Fill the draft.
+- Then run `dummyindex context gc closeout --manifest <file>`.
+- Run `dummyindex context gc delete --kind proposal|audit --slug <slug>` without `--yes`. It removes nothing.
+
+## 3. Confirm
+- Docs: show one batch table. Ask for one explicit confirmation.
+- Equipment: ask about one item at a time. Never delete a group on one "yes".
+- Add `--allow-untracked` or `--force-partial` only for a row the user confirmed alone.
+
+## 4. Delete
+- Docs: run `dummyindex context gc delete --kind proposal|audit --slug <slug> --yes`. One failure does not stop the others.
+- Equipment: run `dummyindex context gc delete --kind equipment --slug <slug> --yes`. Add `--force` only after that item's confirm.
+- Library entries stay. Restore one with `dummyindex context equip reuse <capability_id>`.
+
+## 5. Stamp
+- Run `dummyindex context gc stamp` to reset the sweep counter.
+""",
 }
 
 
@@ -600,7 +637,14 @@ def write_architecture_overview_md(
     )
 
 
+# Playbooks a repo may hand-edit. Written only when missing, so a rebuild
+# never overwrites the curated copy.
+_CREATE_ONLY_PLAYBOOKS: frozenset[str] = frozenset({"gc-context"})
+
+
 def write_playbook_md(path: Path, playbook_id: str) -> None:
+    if playbook_id in _CREATE_ONLY_PLAYBOOKS and path.exists():
+        return
     _atomic_write(path, generate_playbook_md(playbook_id))
 
 

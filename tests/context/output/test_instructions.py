@@ -220,13 +220,69 @@ def test_architecture_overview_unknown_dir_no_role_hint(tmp_path: Path) -> None:
 
 @pytest.mark.unit
 def test_playbook_ids_complete() -> None:
-    expected = {"add-feature", "add-endpoint", "add-migration", "fix-bug", "refactor"}
+    expected = {
+        "add-feature",
+        "add-endpoint",
+        "add-migration",
+        "fix-bug",
+        "refactor",
+        "gc-context",
+    }
     assert set(PLAYBOOK_IDS) == expected
 
 
 @pytest.mark.unit
+def test_how_to_use_md_documents_upgrade_requirements_and_grounding() -> None:
+    text = generate_how_to_use_md()
+    assert "upgrade --if-stale" in text
+    assert ".context/config.toml" in text
+    assert "requirements check|sync" in text
+    assert "requirements bypass --hours N" in text
+    assert ".context/equipment/grounding/" in text
+
+
+@pytest.mark.unit
+def test_gc_context_playbook_covers_equipment_confirm_and_force() -> None:
+    text = generate_playbook_md("gc-context")
+    assert "gc delete --kind equipment --slug <slug> --yes" in text
+    assert "Equipment: ask about one item at a time." in text
+    assert "Add `--force` only after that item's confirm." in text
+    assert "gc delete --kind proposal|audit --slug <slug> --yes" in text
+    assert "gc closeout --draft" in text
+    assert "equip reuse <capability_id>" in text
+    assert "all its refs end" in text
+    assert "`review` candidate" in text
+
+
+@pytest.mark.unit
+def test_gc_context_playbook_is_create_only(tmp_path: Path) -> None:
+    out = tmp_path / "playbooks" / "gc-context.md"
+    out.parent.mkdir(parents=True)
+    out.write_text("hand-written curated copy\n", encoding="utf-8")
+    write_playbook_md(out, "gc-context")
+    assert out.read_text(encoding="utf-8") == "hand-written curated copy\n"
+
+
+@pytest.mark.unit
+def test_gc_context_playbook_created_when_missing(tmp_path: Path) -> None:
+    out = tmp_path / "playbooks" / "gc-context.md"
+    write_playbook_md(out, "gc-context")
+    assert out.read_text(encoding="utf-8") == generate_playbook_md("gc-context")
+
+
+@pytest.mark.unit
+def test_regular_playbook_still_overwritten(tmp_path: Path) -> None:
+    out = tmp_path / "playbooks" / "add-feature.md"
+    out.parent.mkdir(parents=True)
+    out.write_text("stale\n", encoding="utf-8")
+    write_playbook_md(out, "add-feature")
+    assert out.read_text(encoding="utf-8") == generate_playbook_md("add-feature")
+
+
+@pytest.mark.unit
 @pytest.mark.parametrize(
-    "pid", ["add-feature", "add-endpoint", "add-migration", "fix-bug", "refactor"]
+    "pid",
+    ["add-feature", "add-endpoint", "add-migration", "fix-bug", "refactor", "gc-context"],
 )
 def test_playbook_returns_content(pid: str) -> None:
     text = generate_playbook_md(pid)

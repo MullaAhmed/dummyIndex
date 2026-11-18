@@ -5,8 +5,8 @@
 
 **Files involved:**
 
-- `dummyindex/pipeline/io/git.py`
-- `tests/pipeline/io/test_git.py`
+- `dummyindex/context/pipeline/io/git.py`
+- `tests/context/pipeline/io/test_git.py`
 
 **Original notes:**
 
@@ -23,8 +23,8 @@ _Deterministic stub (`confidence: ConfidenceLevel.EXTRACTED`). The `/dummyindex`
 
 ## Files involved
 
-- `dummyindex/pipeline/io/git.py`
-- `tests/pipeline/io/test_git.py`
+- `dummyindex/context/pipeline/io/git.py`
+- `tests/context/pipeline/io/test_git.py`
 
 ## Flows
 
@@ -41,7 +41,7 @@ _Deterministic stub (`confidence: ConfidenceLevel.EXTRACTED`). The `/dummyindex`
 
 **Files involved:**
 
-- `dummyindex/analysis/cluster.py`
+- `dummyindex/context/analysis/cluster.py`
 
 **Original notes:**
 
@@ -58,7 +58,7 @@ _Deterministic stub (`confidence: ConfidenceLevel.EXTRACTED`). The `/dummyindex`
 
 ## Files involved
 
-- `dummyindex/analysis/cluster.py`
+- `dummyindex/context/analysis/cluster.py`
 
 ## Flows
 

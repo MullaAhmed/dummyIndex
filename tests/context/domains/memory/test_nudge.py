@@ -7,7 +7,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from dummyindex.cli import dispatch
+from dummyindex.context.cli import dispatch
 from dummyindex.context.domains.memory import SessionSignal
 from dummyindex.context.domains.memory import nudge as nudge_mod
 from dummyindex.context.domains.memory.enums import AUTO_BREADCRUMB_TAG, MemoryVerb

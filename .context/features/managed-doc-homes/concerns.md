@@ -4,7 +4,7 @@
 
 - `migrate.py:193` against `:197-224`: `_ensure_head` creates the managed home before any move. If every move is skipped, an orphan `proposal.json` at `done`, or a bare audit workspace, remains. It reads as a real record. Fix: create the head lazily, on the first move that runs.
 
-- `migrate.py:180-181`: dry-run returns before the per-file loop. A `--force --json` preview predicts moves that `--yes` then refuses. No test pins preview and apply parity. `tests/cli/test_migrate_docs_cli.py` pins only the key set. Fix: compute target presence in `plan_moves` and record those skips in the plan.
+- `migrate.py:180-181`: dry-run returns before the per-file loop. A `--force --json` preview predicts moves that `--yes` then refuses. No test pins preview and apply parity. `tests/context/cli/test_migrate_docs_cli.py` pins only the key set. Fix: compute target presence in `plan_moves` and record those skips in the plan.
 
 - `classify.py:236-243` with `migrate.py:127-136,197-213`: `_disambiguate` seeds `used` only from this run's slugs. Run 1 migrates `foo-2` and skips `foo`. Run 2 sees the survivor alone, assigns bare `foo`, and `--force` fills the unrelated existing proposal's empty `spec.md`. Clobber protection covers only non-empty targets, so the mix-up is silent. Fix: seed `used` from existing `proposals/` and `audits/` slugs.
 
@@ -37,7 +37,7 @@
 
 Threat model: a hygiene control over a semi-trusted agent, not a containment boundary. Anything that removes `dummyindex` from PATH, or the `2>/dev/null || true` and `exit 0` wrapper in `hooks.py:273-275`, already disables it.
 
-- **[1] `cli/guard_doc_write.py:212-223` with `cli/common.py:31-34` against `domains/docguard/classify.py:174-185`**: `resolve_context_root` follows symlinks, but `_rel_posix` is lexical. Through a symlinked root, `relative_to` raises `DocPathError`, and `run` returns 0. The guard is off for every write, silently. Nothing in `tests/cli/test_guard_doc_write_e2e.py` builds a symlinked root. Fix: compare `os.path.realpath` of both sides once, in `_decide`.
+- **[1] `cli/guard_doc_write.py:212-223` with `cli/common.py:31-34` against `domains/docguard/classify.py:174-185`**: `resolve_context_root` follows symlinks, but `_rel_posix` is lexical. Through a symlinked root, `relative_to` raises `DocPathError`, and `run` returns 0. The guard is off for every write, silently. Nothing in `tests/context/cli/test_guard_doc_write_e2e.py` builds a symlinked root. Fix: compare `os.path.realpath` of both sides once, in `_decide`.
 
 - **[2] `domains/docguard/classify.py:89-98`**: the location gate reads un-normalized parts. `src/../docs/plans/x.md` is allowed, though it lands in `docs/plans/`. `docs/plans/../guide/x.md` is denied, though it lands in an excluded subtree. This assumes Claude Code normalizes `file_path`, which nothing pins. Fix: `os.path.normpath` in `_rel_posix`.
 

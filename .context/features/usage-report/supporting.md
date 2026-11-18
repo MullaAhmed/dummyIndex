@@ -5,7 +5,7 @@
 
 **Files involved:**
 
-- `tests/usage/test_report.py`
+- `tests/context/usage/test_report.py`
 
 **Original notes:**
 
@@ -22,6 +22,6 @@ _Deterministic stub (`confidence: ConfidenceLevel.EXTRACTED`). The `/dummyindex`
 
 ## Files involved
 
-- `tests/usage/test_report.py`
+- `tests/context/usage/test_report.py`
 
 <!-- dummyindex:merged:end -->

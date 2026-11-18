@@ -50,15 +50,15 @@ Shared test scaffolding (the contract every other test module depends on):
   - two sessions/projects/days
   - a >5h idle gap forcing block splitting
 
-  So usage tests assert exact numbers (`tests/usage/conftest.py:50-145`).
+  So usage tests assert exact numbers (`tests/context/usage/conftest.py:50-145`).
 - `tests/fixtures/sample_repo/web/app.ts`: frozen TS entry (`WebApp`, `startWebApp`) the extraction pipeline parses; copied, never mutated in place (`tests/fixtures/sample_repo/web/app.ts:3-15`).
 
 Guard tests (executable docs-consistency contracts, all `@pytest.mark.unit`):
 
-- Every `context` subcommand answers `-h`/`--help` with exit 0 and a non-empty usage block naming it. Zero writes to cwd (`tests/cli/test_subcommand_help.py:26-53`).
-- Top-level `install`/`ingest --help` exit 0 with no side effects (`tests/cli/test_subcommand_help.py:73-99`).
+- Every `context` subcommand answers `-h`/`--help` with exit 0 and a non-empty usage block naming it. Zero writes to cwd (`tests/context/cli/test_subcommand_help.py:26-53`).
+- Top-level `install`/`ingest --help` exit 0 with no side effects (`tests/context/cli/test_subcommand_help.py:73-99`).
 - The shipped `/dummyindex-update` SKILL.md must not reference the non-existent `.context/cache/_meta.json`. It must reference the real `.context/meta.json`.
-- It must drop the false non-destructive `build_all(bootstrap=True)` claim in favour of "curated"-preservation language (`tests/cli/test_update_skill_doc.py:17-41`).
+- It must drop the false non-destructive `build_all(bootstrap=True)` claim in favour of "curated"-preservation language (`tests/context/cli/test_update_skill_doc.py:17-41`).
 
 ## Examples
 

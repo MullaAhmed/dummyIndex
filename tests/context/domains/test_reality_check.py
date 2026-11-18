@@ -23,7 +23,7 @@ from dummyindex.context.domains.reality_check import (
     render_report_md,
     write_report,
 )
-from dummyindex.pipeline.enums import ConfidenceLevel
+from dummyindex.context.pipeline.enums import ConfidenceLevel
 
 
 def _add_repo_file(root: Path, rel_path: str, line_count: int) -> None:
@@ -338,7 +338,7 @@ def test_missing_feature_raises(fake_context: Path) -> None:
 
 
 def test_cli_reality_check_subcommand(fake_context: Path, capsys) -> None:
-    from dummyindex.cli import dispatch
+    from dummyindex.context.cli import dispatch
 
     feat = fake_context / ".context" / "features" / "community-0"
     (feat / "implementation.md").write_text("`run` calls `helper`.\n", encoding="utf-8")
@@ -358,7 +358,7 @@ def test_cli_reality_check_subcommand(fake_context: Path, capsys) -> None:
 
 
 def test_cli_reality_check_requires_feature(fake_context: Path, capsys) -> None:
-    from dummyindex.cli import dispatch
+    from dummyindex.context.cli import dispatch
 
     rc = dispatch(["reality-check", "--root", str(fake_context)])
     captured = capsys.readouterr()
@@ -572,7 +572,7 @@ def test_cli_demote_then_clean_run_restores_confidence(
 ) -> None:
     """The documented loop: fix the docs, re-run `reality-check --demote`,
     and the demotion self-heals."""
-    from dummyindex.cli import dispatch
+    from dummyindex.context.cli import dispatch
 
     feat = fake_context / ".context" / "features" / "community-0"
     (feat / "plan.md").write_text(
@@ -614,7 +614,7 @@ def test_cli_demote_ignores_false_positive_shaped_claims(
 ) -> None:
     """External references + unindexed-but-real file citations must not
     demote: the report carries no contradictions at all."""
-    from dummyindex.cli import dispatch
+    from dummyindex.context.cli import dispatch
 
     (fake_context / "package.json").write_text("{}\n" * 30, encoding="utf-8")
     feat = fake_context / ".context" / "features" / "community-0"
@@ -642,7 +642,7 @@ def test_cli_demote_reports_all_three_transitions(fake_context: Path, capsys) ->
     """`reality-check --demote` prints the confidence delta the mutation
     applied — one line per transition: `demoted X→AMBIGUOUS`, then on a clean
     re-run `restored …→Y`, and `unchanged` when nothing moved."""
-    from dummyindex.cli import dispatch
+    from dummyindex.context.cli import dispatch
 
     feat = fake_context / ".context" / "features" / "community-0"
     args = [
@@ -953,7 +953,7 @@ def test_cli_rejects_feature_id_traversal(
 ) -> None:
     """``reality-check --feature ../../escape`` is rejected at the CLI boundary
     with a non-zero exit and NO write outside ``.context/features/``."""
-    from dummyindex.cli import dispatch
+    from dummyindex.context.cli import dispatch
 
     features_dir = fake_context / ".context" / "features"
     before = sorted(p.name for p in features_dir.iterdir())

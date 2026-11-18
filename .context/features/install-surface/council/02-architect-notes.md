@@ -5,7 +5,7 @@
 - `plan.md` 84 → 83 lines. Kept `confidence: INFERRED`, the dev's five sections, and exactly
   three sentences under "Architecture in three sentences".
 - Boundary comes first now: the installer writes skill families, `.claude/commands/` and
-  `~/.claude/CLAUDE.md` itself (`dummyindex/installer/install/orchestrate.py:384-396`).
+  `~/.claude/CLAUDE.md` itself (`dummyindex/context/installer/install/orchestrate.py:384-396`).
   `context/hooks.py`, `context/default_plugins.py` and
   `context/domains/equip/lifecycle/status.py` are also listed in `equip/feature.json`, and
   `context/build/enriched_refresh.py` belongs to `index-lifecycle`, so they are marked
@@ -19,9 +19,9 @@
   - `_advance_version_stamp`: `362-401` → `362-409` (the write is at `405-408`).
   - "held-back stamp still returns True" now also cites `project_init.py:130`, where the
     `return True` is.
-  - Dropped `common.py:384-398` (the comment block starts at `383`; the alias pair at
+  - Dropped `common.py:385-399` (the comment block starts at `383`; the alias pair at
     `397-398` is already pinned in `spec.md` Contracts).
-- Data model now lists the manifest keys (`ownership.py:219-228`). Moved
+- Data model now lists the manifest keys (`ownership.py:220-229`). Moved
   `~/.claude/CLAUDE.md` out of "via other features", because `_register_claude_user_skill`
   writes it directly.
 - Moved the "one `--force-downgrade`" decision into Open questions. The code gives no
@@ -36,7 +36,7 @@
   `..common`, but `link/create.py:253` and `355` lazily import `..ownership`. No cycle
   results, because `ownership` never imports `link`, so I kept this out of the plan.
 - Flagged conflict (code wins): the `_all_claude_families_missing` docstring says "8
-  enumerated" families (`link_dispatch.py:28`). The registry at `common.py:89-99` holds
+  enumerated" families (`link_dispatch.py:28`). The registry at `common.py:90-100` holds
   main plus 9 siblings, which is 10. The function has no caller.
 - Flagged conflict (code wins): the `_claude_narrowing_link_gate` docstring
   (`link_dispatch.py:154-157`) describes an AUTO fallback. `install()` never reaches it,
@@ -50,16 +50,16 @@
 
 ## Patterns named
 
-- Linear orchestrator: `install()` (`dummyindex/installer/install/orchestrate.py:55-381`).
+- Linear orchestrator: `install()` (`dummyindex/context/installer/install/orchestrate.py:55-381`).
 - Plan → execute → describe: `plan_repairs` (`repair.py:331`), `execute_repairs` (`:447`),
   `describe_plan` (`:609`), wired at `orchestrate.py:187-204`.
-- Enum-switched tri-state dispatcher: `LinkMode` (`common.py:49`) and `run_link_install`
+- Enum-switched tri-state dispatcher: `LinkMode` (`common.py:50`) and `run_link_install`
   (`link/orchestrate.py:130-220`), with the caller's branch at `orchestrate.py:228-285`.
-- Single write gate: `sync_family` (`ownership.py:157-241`). Callers are
-  `family_write.py:75-81`, `146-153` and `common.py:262-264`.
-- Single remover: `remove_family` (`ownership.py:263-299`). Callers are `common.py:282` and
+- Single write gate: `sync_family` (`ownership.py:158-242`). Callers are
+  `family_write.py:75-81`, `146-153` and `common.py:263-265`.
+- Single remover: `remove_family` (`ownership.py:264-300`). Callers are `common.py:283` and
   `uninstall.py:156`, `185`.
-- Static family registry: `common.py:89-99`, read at `family_write.py:38`, `:178`,
+- Static family registry: `common.py:90-100`, read at `family_write.py:38`, `:178`,
   `link_dispatch.py:43` and `link/families.py:12`. It is enumerated, not globbed
   (`link_dispatch.py:28-29`). This is named in "Where it lives" only.
 - Best-effort step chain: `_auto_init_project` (`project_init.py:55-180`). Each step
@@ -71,7 +71,7 @@
 - Evidenced but left out of the plan as not boundary-defining:
   - Callable seam `symlink_fn=os.symlink` (`link/orchestrate.py:134`), which matches
     `.context/conventions/coding-practices.md:64-71`.
-  - Closed `(str, Enum)` alphabets: `LinkMode` (`common.py:49`) and `FamilyLinkState`
+  - Closed `(str, Enum)` alphabets: `LinkMode` (`common.py:50`) and `FamilyLinkState`
     (`link/models.py:17`).
 
 ## Dependencies surfaced
@@ -97,7 +97,7 @@
 - Cycles, each held apart by function-local imports:
   - `install` ↔ `repair`: `repair.py:65` imports eagerly; `orchestrate.py:187` and `288`
     import lazily.
-  - `common` ↔ `ownership`: `common.py:255` and `ownership.py:169`, both lazy.
+  - `common` ↔ `ownership`: `common.py:256` and `ownership.py:170`, both lazy.
   - `installer` ↔ `cli`: the installer side is lazy (`project_init.py:56`, `196`). The cli
     side is lazy in `cli/check.py` and eager in `cli/onboard.py:54` and
     `cli/equip/dispatch.py:69`.
@@ -126,7 +126,7 @@
 - A curated index is refreshed and never re-clustered, because a bare `install` (the
   `/dummyindex-update` flow) must not flatten council taxonomy (`project_init.py:74-81`).
 - Degrade, don't fail, because the skill install already succeeded
-  (`project_init.py:47-51`). Hooks likewise always return True (`project_init.py:232-234`).
+  (`project_init.py:46-50`). Hooks likewise always return True (`project_init.py:232-234`).
 - Calls go through the package object because tests monkeypatch the package attribute
   (`orchestrate.py:5-13`; `project_init.py:6-14`).
 - `link/` is a leaf because install, repair and uninstall import it

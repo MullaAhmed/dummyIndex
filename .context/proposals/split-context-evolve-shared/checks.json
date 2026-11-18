@@ -1,0 +1,1012 @@
+{
+  "task-72e2fbe28d0818dc": {
+    "artifacts": [
+      {
+        "path": "dummyindex/cli/__init__.py",
+        "sha256": "2c264eb5e793ff1993536a68e1cceaccdee36454937f197850a61d6767899a8c"
+      },
+      {
+        "path": "dummyindex/cli/build_loop/dispatch.py",
+        "sha256": "c3fbab67a7a64aa8c2d89120aa450d8e8893523861e3a37af077ec34f01eb528"
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/cli/evolve.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/cli/evolve_probation.py",
+        "sha256": null
+      },
+      {
+        "path": "dummyindex/cli/gc.py",
+        "sha256": "02bba9e178dfc5bdd73910e6a2409fef55114179ef8f801f59a0f7e842841dde"
+      },
+      {
+        "path": "dummyindex/cli/memory.py",
+        "sha256": "e766f59e5d492a4bf376300ff2ee63cb09677ed4dcccf36e7bb9a7d2be95c773"
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/evidence.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/evolve.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/evolve_experiments.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/evolve_gate.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/evolve_learning.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/evolve_native.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/evolve_native_response.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/evolve_native_snapshot.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/evolve_promotion.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/living_rules.py",
+        "sha256": null
+      },
+      {
+        "path": "dummyindex/context/domains/memory/miner/scan.py",
+        "sha256": "e90ef1d8a6afc9c6e672533b4db17e22aa3287c0887d6288fa55fa4480c7e93f"
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/observe/__init__.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/observe/attribution.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/observe/enums.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/observe/importer.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/observe/keys.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/observe/ledger.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/observe/models.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/observe/security.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/probation/__init__.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/probation/actions.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/probation/constants.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/probation/enums.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/probation/models.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/probation/render.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/probation/rules.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/probation/store.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/probation/sync.py",
+        "sha256": null
+      },
+      {
+        "path": "dummyindex/context/domains/proposals/closeout.py",
+        "sha256": "99015be703d533f5d44da5a6d4b9762425827106fab4d13826f668be86784b91"
+      },
+      {
+        "path": "dummyindex/evolve/__init__.py",
+        "sha256": "5ff822c8396f1dcdaa50334be70049ae900473b262673835486e9f4be74f8534"
+      },
+      {
+        "path": "dummyindex/evolve/cli/__init__.py",
+        "sha256": "9afcde18045ac683d17e2ffa2558727e313a8727ab0b1be51cddede2550f75ea"
+      },
+      {
+        "path": "dummyindex/evolve/cli/evolve.py",
+        "sha256": "e5347cdd3731f72819361b2f9840c7a7be654b7c0f967a4f74a7c91662dbd7fa"
+      },
+      {
+        "path": "dummyindex/evolve/cli/evolve_probation.py",
+        "sha256": "d69fcdace9cbff7037ec8c7ab11d9f5bc9336a93bc01da3898aa17d27110e326"
+      },
+      {
+        "path": "dummyindex/evolve/evidence.py",
+        "sha256": "655470eebb05d718c2aab2e621a1780728c4ce85a79564c475bffdec81eb0717"
+      },
+      {
+        "path": "dummyindex/evolve/evolve.py",
+        "sha256": "52f5f6a200ce8a4060eb0c28ec367e633138b456bf0fc757f1ac828d3387e423"
+      },
+      {
+        "path": "dummyindex/evolve/evolve_experiments.py",
+        "sha256": "6ab1f40c074c07ecf7ff61c09b0a4bbe2ce9ca09ad43c6b8b7be84c7e8969508"
+      },
+      {
+        "path": "dummyindex/evolve/evolve_gate.py",
+        "sha256": "151397db72d0d144ae26ebbac98cfdf1c36bcc69bce8b90b57e35d4d1ddd2248"
+      },
+      {
+        "path": "dummyindex/evolve/evolve_learning.py",
+        "sha256": "6605159c22671b0cc609a731afc4c7d37893c78ad04e0ab2a9d842fc90aca76c"
+      },
+      {
+        "path": "dummyindex/evolve/evolve_native.py",
+        "sha256": "38ee59c49a4fc0ff6bfc9aa23ff1d084ccef0b406b637b8b85aeea25bee81c57"
+      },
+      {
+        "path": "dummyindex/evolve/evolve_native_response.py",
+        "sha256": "cf4ebd64a7a70ce44627119fd52880c4acf5d91f5a911498bd272ea4492165bd"
+      },
+      {
+        "path": "dummyindex/evolve/evolve_native_snapshot.py",
+        "sha256": "e5385c7eb1529cb1f81a2c16743a17a2aa82ff5907c4c63940d989cf0894170d"
+      },
+      {
+        "path": "dummyindex/evolve/evolve_promotion.py",
+        "sha256": "1dbb8611e66ba03d6f3a19f1c2f4759496102df84f9791ee452c25093e711b08"
+      },
+      {
+        "path": "dummyindex/evolve/living_rules.py",
+        "sha256": "580b49d8d1d3ea26cae205a0e7e5ef53724580c7af9b02d4aa88d02927771e18"
+      },
+      {
+        "path": "dummyindex/evolve/observe/__init__.py",
+        "sha256": "a60d3271c876a610ca139b6367e0e7dcdd7e644bd779fd1a2670242315049ed3"
+      },
+      {
+        "path": "dummyindex/evolve/observe/attribution.py",
+        "sha256": "dee24380695dddf2c7d3bd3410a7c1ef58c19ba8998346d9334147bf3e87e5a4"
+      },
+      {
+        "path": "dummyindex/evolve/observe/enums.py",
+        "sha256": "d62cfe5e0aff02452096b86279ec54a133ee6452162d5a060ac94dad9233e12a"
+      },
+      {
+        "path": "dummyindex/evolve/observe/importer.py",
+        "sha256": "b5a4387246e9d52b070b8bca971849481b091cef8bc88641b6faa31fcddaeb4d"
+      },
+      {
+        "path": "dummyindex/evolve/observe/keys.py",
+        "sha256": "9abdd8f8dbb9bb259a23fdab0c878542dfd9b45f57000dcaf5cf7964f639afbf"
+      },
+      {
+        "path": "dummyindex/evolve/observe/ledger.py",
+        "sha256": "cff25c5b6a54a2baa915da38cc4516b8e4f287759a8feca5cd43807aff541dbb"
+      },
+      {
+        "path": "dummyindex/evolve/observe/models.py",
+        "sha256": "588163dcbef70f401b6bf25dfe6af37974e083bacd11c5cd1e47c14d25d097a2"
+      },
+      {
+        "path": "dummyindex/evolve/observe/security.py",
+        "sha256": "9074617ef0767cefc6d91e299f97b9b9cba9485c14d5950de0d8cd89a56a1782"
+      },
+      {
+        "path": "dummyindex/evolve/probation/__init__.py",
+        "sha256": "ebe011d675e89c5dbad3e885d9ae46fd916f7a3be67ef5a2de0097a1cdaa21ac"
+      },
+      {
+        "path": "dummyindex/evolve/probation/actions.py",
+        "sha256": "8c709540e3fd5cf56c99b6bdd40e1f0e99a10d07b7e7302f29015235568cdcb5"
+      },
+      {
+        "path": "dummyindex/evolve/probation/constants.py",
+        "sha256": "1f9225937b48929d9b6a7aafe4798fff2050a2743d9a8b13a30b0b323e451a9b"
+      },
+      {
+        "path": "dummyindex/evolve/probation/enums.py",
+        "sha256": "05ca901651820113bb46f7ac827745e52c5899cd48130d435b3b09efa820ecc7"
+      },
+      {
+        "path": "dummyindex/evolve/probation/models.py",
+        "sha256": "6cd3db4f9747951a4b8617510f9210018b6d2021a211cae95b3bd9de137c4aa3"
+      },
+      {
+        "path": "dummyindex/evolve/probation/render.py",
+        "sha256": "cbfe695bd18d3a04c32c1e371c1183c2348f5ed1c68e43125c37f1674c54c607"
+      },
+      {
+        "path": "dummyindex/evolve/probation/rules.py",
+        "sha256": "81271803117c8cba43c6e4d6162f12c9896b1415573ffbd10419adaa1c226708"
+      },
+      {
+        "path": "dummyindex/evolve/probation/store.py",
+        "sha256": "eace4d019c127c57d080cf8794ae81dfef89de3a01cdc20f17f49a43c2961ecb"
+      },
+      {
+        "path": "dummyindex/evolve/probation/sync.py",
+        "sha256": "60979b5208fecb00ee6136746592c8a04ec31764d7bb4e63dd56fbcdb8d5d65e"
+      },
+      {
+        "path": "dummyindex/export/storage.py",
+        "sha256": "4c0a40214483f125902b838875a3f88bc7b6ea5779732f69c5949f354033c1f6"
+      },
+      {
+        "path": "tests/cli/test_closeout_exit_codes.py",
+        "sha256": "ee352b417ef39b0fc9744cf404adf69dd5420b7a0263c49b1647658e51eb0a77"
+      },
+      {
+        "deleted": true,
+        "path": "tests/cli/test_evolve_cli.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "tests/cli/test_evolve_probation_cli.py",
+        "sha256": null
+      },
+      {
+        "path": "tests/context/domains/gc/test_delete.py",
+        "sha256": "d82cca6cf8bf77f5508c70fe4f742bbbee602984b30e48c11ba46f86610cb694"
+      },
+      {
+        "path": "tests/context/domains/memory/test_memory_cli.py",
+        "sha256": "22cbc90764806c942a60c83ee25d4e331ea549048196d55165f307826785877d"
+      },
+      {
+        "path": "tests/context/domains/test_build_loop.py",
+        "sha256": "898e39ba5bba08701757c548991a1b6c68831cc15e88e66abfc19095a8ed89d0"
+      },
+      {
+        "path": "tests/context/domains/test_closeout.py",
+        "sha256": "017785d554a3b532ad1d6ed40f4fc3c0ac276badd65e0e0677e253bb4ac24c73"
+      },
+      {
+        "path": "tests/context/domains/test_closeout_draft.py",
+        "sha256": "523d77bb7e08e24e465a95bd2b2cc5fc1a2de78dd172c9a0d9f3270b3dcf6e62"
+      },
+      {
+        "deleted": true,
+        "path": "tests/context/domains/test_evidence.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "tests/context/domains/test_evolve.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "tests/context/domains/test_evolve_experiments.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "tests/context/domains/test_evolve_gate.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "tests/context/domains/test_evolve_learning.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "tests/context/domains/test_evolve_native.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "tests/context/domains/test_observe_attribution.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "tests/context/domains/test_observe_import.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "tests/context/domains/test_observe_units.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "tests/context/domains/test_probation.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "tests/context/domains/test_probation_actions.py",
+        "sha256": null
+      },
+      {
+        "path": "tests/evolve/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "tests/evolve/cli/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "tests/evolve/cli/test_evolve_cli.py",
+        "sha256": "c4a6e8469cbdebb2db8a1c8e0758c300633ded040dcdbea2d67224f4ef3c25cf"
+      },
+      {
+        "path": "tests/evolve/cli/test_evolve_probation_cli.py",
+        "sha256": "bb35dee81d959340785a7ca47eb5da46271ea30e752b2da4e025824dd8810893"
+      },
+      {
+        "path": "tests/evolve/test_evidence.py",
+        "sha256": "addd62771735f25b97aa57dfa600b293c7bc2696262fc9b73a2aa48bc028ca94"
+      },
+      {
+        "path": "tests/evolve/test_evolve.py",
+        "sha256": "54113884c83b20665c1575f1fca5cd5b9cb2cae1a26094bb0fc817f8a4623d79"
+      },
+      {
+        "path": "tests/evolve/test_evolve_experiments.py",
+        "sha256": "d58fac72258b1fc1c3b32a94cd03ee9145707ab7df43282257f4fccf36d813c1"
+      },
+      {
+        "path": "tests/evolve/test_evolve_gate.py",
+        "sha256": "d1da357898b9e6e67d3025c752de7819dc5e9a1ae37e6b676f926cb886276b60"
+      },
+      {
+        "path": "tests/evolve/test_evolve_learning.py",
+        "sha256": "35549081e0105533bf24e9bc80a9dc615b3cdd3966732da7a1fa02da9790f945"
+      },
+      {
+        "path": "tests/evolve/test_evolve_native.py",
+        "sha256": "de9858be2e5769dbb2d3d8de9cc20bac1f3d803e402b5527cc606ff661d0a4ad"
+      },
+      {
+        "path": "tests/evolve/test_observe_attribution.py",
+        "sha256": "c3eb14dc882b4cd141528221a288827154701e811e02bcab95cebb1e8090804d"
+      },
+      {
+        "path": "tests/evolve/test_observe_import.py",
+        "sha256": "844d970406990df3f31dec4ef8e10d5052b537dfd0bc8dcb0570b767f5d00d2b"
+      },
+      {
+        "path": "tests/evolve/test_observe_units.py",
+        "sha256": "697ba54da8ad99623a5d02e3575cfaee3a368b3b8e02f5e087bb173bda5e5527"
+      },
+      {
+        "path": "tests/evolve/test_probation.py",
+        "sha256": "22d8205be67f34c347ac3deb51a91660c3188b465ac932a68e9c1697cb9e0563"
+      },
+      {
+        "path": "tests/evolve/test_probation_actions.py",
+        "sha256": "b75a8350b3cc6ce40002491f6bec0393ff7cad2e3a50c4d0e58c5fe70748d199"
+      },
+      {
+        "path": "tests/shared/test_lesson.py",
+        "sha256": "30ed0311937343a8ea97afa4a1fd5653b0b335da54578ee316a1dcbceb4f5f4b"
+      },
+      {
+        "path": "tests/test_import_boundaries.py",
+        "sha256": "559a769630b2c3f2be37341bc74bbaf8159e575e4490cb431994c8362f25bd48"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/test_import_boundaries.py",
+        "sha256": "559a769630b2c3f2be37341bc74bbaf8159e575e4490cb431994c8362f25bd48"
+      },
+      {
+        "path": "tests/cli/test_closeout_exit_codes.py",
+        "sha256": "ee352b417ef39b0fc9744cf404adf69dd5420b7a0263c49b1647658e51eb0a77"
+      },
+      {
+        "path": "tests/context/domains/test_closeout.py",
+        "sha256": "017785d554a3b532ad1d6ed40f4fc3c0ac276badd65e0e0677e253bb4ac24c73"
+      },
+      {
+        "path": "tests/context/domains/memory/test_memory_cli.py",
+        "sha256": "22cbc90764806c942a60c83ee25d4e331ea549048196d55165f307826785877d"
+      }
+    ],
+    "source_commit": "aa24f3c0e7ee63a35d833147bd7d1de7dc6460b4",
+    "state": "verified",
+    "task_id": "task-72e2fbe28d0818dc",
+    "task_sha256": "72e2fbe28d0818dccf2361ee9dfefd97c17039f868cf254c278ad8c9fe467a36"
+  },
+  "task-929fac83f54a63e1": {
+    "artifacts": [
+      {
+        "path": "dummyindex/cli/debt.py",
+        "sha256": "6af2d0e02856f4a48348efd5d775b0628bce594f7e5c14d5b9c0216263692354"
+      },
+      {
+        "path": "dummyindex/cli/equip/dispatch.py",
+        "sha256": "68a8448ffc2e85883bc848a47704bfac8c18b54d434da55b796cb1ad7fe4a10b"
+      },
+      {
+        "path": "dummyindex/cli/equip/install.py",
+        "sha256": "7d0c815f87be522e8963d69c6a35ef7cd6f06c58f2791ae902b590605f19dd58"
+      },
+      {
+        "path": "dummyindex/cli/evolve.py",
+        "sha256": "6edf0fec447304ed0422ffd9db68e68fddfd3697a3cd442e56e33fe3c4bcaa9f"
+      },
+      {
+        "path": "dummyindex/cli/evolve_probation.py",
+        "sha256": "fc89ffd872465c1c8049f8908bee0202ff31e95e9c896985a70081f6646628d9"
+      },
+      {
+        "path": "dummyindex/cli/plan_update.py",
+        "sha256": "484fe67ac0a0836894e462f062a2de0bf4e3128bf2a06c07eaca6deae60d9cb9"
+      },
+      {
+        "path": "dummyindex/context/build/common.py",
+        "sha256": "6906369de39c9db9813ba6d4cff8501a394140d96ec14183ea79ca2ccbd6d7e9"
+      },
+      {
+        "path": "dummyindex/context/build/communities.py",
+        "sha256": "f35e333e2255d6fd13b4c83f391d50c115bbe4b77a51d7289bb55db1a1790851"
+      },
+      {
+        "path": "dummyindex/context/build/coverage.py",
+        "sha256": "5fba45e80fe75d91da651735a714254f820618a921f6b2372c763ce0dedfc85a"
+      },
+      {
+        "path": "dummyindex/context/build/enriched_refresh.py",
+        "sha256": "15318065fa10120af7996d894b81bc42b44946bf893f79fa32637b24e2b86da0"
+      },
+      {
+        "path": "dummyindex/context/build/graph.py",
+        "sha256": "803f8c93aa5794eca9c4608cfc45f332cfab3c68dd69804194c1bca01982f37d"
+      },
+      {
+        "path": "dummyindex/context/build/navigation_refresh.py",
+        "sha256": "975e19c5cf9d12a908002376b45cbecc7505feb098e6de0b4707d59360e04926"
+      },
+      {
+        "path": "dummyindex/context/build/reconcile.py",
+        "sha256": "556f706f59ae54eed104bf933d37badc9c0bbc3202740de8f62c93d3d29928a4"
+      },
+      {
+        "path": "dummyindex/context/build/upgrade.py",
+        "sha256": "b05dd43424ea4dfd3c0c41d1c80e846b18ad968f109eede9ec57e4f09c8dd125"
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/atomic_io.py",
+        "sha256": null
+      },
+      {
+        "path": "dummyindex/context/domains/audit/workspace.py",
+        "sha256": "00035e7ee1be900d01072c438a2244f376bc7960ed61e10bcec41760b056cf9c"
+      },
+      {
+        "path": "dummyindex/context/domains/buildloop/checklist.py",
+        "sha256": "720b654176210f0d31f81189f7cbb9dfea6362b0994b0911ddc7f194d0d1838e"
+      },
+      {
+        "path": "dummyindex/context/domains/buildloop/receipts.py",
+        "sha256": "c6abb3b08990f0f36058f327abaa84346636f8d40ff64040c5106175be93594e"
+      },
+      {
+        "path": "dummyindex/context/domains/docbudget/ratchet.py",
+        "sha256": "4710aa4add384700b7d7733f68a9c326caeadace5e843bffdced7bea32a333e3"
+      },
+      {
+        "path": "dummyindex/context/domains/drift_acks.py",
+        "sha256": "5ef76139e87e76a4b1170b2bfdc9cd5bdcbf6e354f65c4478629bd103a61b162"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/generate/adapters.py",
+        "sha256": "e52faf09b4310fd7b8e670d90fed6b1767bb043714dde7bffb67e4a37d896248"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/generate/grounding.py",
+        "sha256": "0e506fa31105c3c4567b0626de83e6dd5f08898f3f002e2a70d1eece33bd7d29"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/lifecycle/evolve.py",
+        "sha256": "5cb13c5f457f16551cee571f9c8251df0b1731a704e98739792fb74a112e8963"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/lifecycle/library.py",
+        "sha256": "d1d0b2881e709c71c0f4b96ea9a9ece3ebd0d309112f7c944ae06ac0f4eca880"
+      },
+      {
+        "path": "dummyindex/context/domains/equip/lifecycle/status.py",
+        "sha256": "f9295596af5b959e32e4bd04c9f296310db322f4d5a0ac48810ed298a1a7bd0b"
+      },
+      {
+        "path": "dummyindex/context/domains/evidence.py",
+        "sha256": "4c76f81f4035bc9dcd8ec46f9968abc69d682dbdb955f9cfb6f75fbdeef9c4c9"
+      },
+      {
+        "path": "dummyindex/context/domains/evolve.py",
+        "sha256": "a10037b2a437993eb503f6bbbf669d03b990c058b34ca865b50348421d11c4fd"
+      },
+      {
+        "path": "dummyindex/context/domains/evolve_experiments.py",
+        "sha256": "6ab1f40c074c07ecf7ff61c09b0a4bbe2ce9ca09ad43c6b8b7be84c7e8969508"
+      },
+      {
+        "path": "dummyindex/context/domains/evolve_gate.py",
+        "sha256": "b483c7adab978c8ac7b97c3fcd2dcf635d524aa651d949aef67ffaae26e99350"
+      },
+      {
+        "path": "dummyindex/context/domains/evolve_learning.py",
+        "sha256": "be70c6167696a2075b4a3f7cc70aee9c20b171871ecc5cfa883dbe7858c1f399"
+      },
+      {
+        "path": "dummyindex/context/domains/evolve_native.py",
+        "sha256": "38ee59c49a4fc0ff6bfc9aa23ff1d084ccef0b406b637b8b85aeea25bee81c57"
+      },
+      {
+        "path": "dummyindex/context/domains/evolve_native_response.py",
+        "sha256": "cf4ebd64a7a70ce44627119fd52880c4acf5d91f5a911498bd272ea4492165bd"
+      },
+      {
+        "path": "dummyindex/context/domains/evolve_native_snapshot.py",
+        "sha256": "53584f037f1575a89a3eff40c7e10cf3b3fe5cc3e95ea02937c769cd496fb717"
+      },
+      {
+        "path": "dummyindex/context/domains/evolve_promotion.py",
+        "sha256": "1dbb8611e66ba03d6f3a19f1c2f4759496102df84f9791ee452c25093e711b08"
+      },
+      {
+        "path": "dummyindex/context/domains/fleet.py",
+        "sha256": "273c97bf2847eabe10e3306493ef23f99a5baa8263cf137543f82a82f29a6035"
+      },
+      {
+        "path": "dummyindex/context/domains/fleetrun.py",
+        "sha256": "72c7746b1e17ac01131c1e005e4c424b7fb6c384e0328d955b810f98a5d4d0a0"
+      },
+      {
+        "path": "dummyindex/context/domains/gc/anchor.py",
+        "sha256": "976ec9f52322c33bdf012e1bd6be9dd3e8f087ef7a1429b4b5c99441a0cf6932"
+      },
+      {
+        "path": "dummyindex/context/domains/gc/delete.py",
+        "sha256": "9187d399f305d2e3f405033b4a7bbe3ee8c763f6aaa3a40adab67b6a53289609"
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/lesson/__init__.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/lesson/enums.py",
+        "sha256": null
+      },
+      {
+        "deleted": true,
+        "path": "dummyindex/context/domains/lesson/models.py",
+        "sha256": null
+      },
+      {
+        "path": "dummyindex/context/domains/living_rules.py",
+        "sha256": "580b49d8d1d3ea26cae205a0e7e5ef53724580c7af9b02d4aa88d02927771e18"
+      },
+      {
+        "path": "dummyindex/context/domains/log_scan.py",
+        "sha256": "9ea13e03a09bd31d235bf5d97203a45c3dcc45a04ac8c97620ae6a0181c36765"
+      },
+      {
+        "path": "dummyindex/context/domains/memory/breadcrumb.py",
+        "sha256": "109116e9ffeb00fce8a25298df1703267128de4fb1ae0a244ff14d58e404d19e"
+      },
+      {
+        "path": "dummyindex/context/domains/memory/miner/feedback.py",
+        "sha256": "c3422640cc7b165703e75bb3e2cdbb9e819e616dc405503e37f57b987f1d6df5"
+      },
+      {
+        "path": "dummyindex/context/domains/memory/miner/render.py",
+        "sha256": "65e9cf05c13e998434d4f54876aa0d16bdf69b0c4e842bca9afebbb21d2b416f"
+      },
+      {
+        "path": "dummyindex/context/domains/memory/nudge.py",
+        "sha256": "5f47ca17e2f9752eff85d6e4fcd14c48ef1a70123cc65b4db125601ada6e256f"
+      },
+      {
+        "path": "dummyindex/context/domains/memory/roll.py",
+        "sha256": "10593c4fd0b9030016870e13ec241d63bf7a29ca105efbc4b40bbce006c84fd9"
+      },
+      {
+        "path": "dummyindex/context/domains/memory/store.py",
+        "sha256": "98aeb4a40876702a2eeefe01ad8fa474ed01cda381461b8bc4a12cac124dfe0f"
+      },
+      {
+        "path": "dummyindex/context/domains/observe/attribution.py",
+        "sha256": "b8fcc4abfd1560d63ff11bae411438e969592e7c2ab8ca872f93bdcdd8801bd8"
+      },
+      {
+        "path": "dummyindex/context/domains/observe/importer.py",
+        "sha256": "b9f8d0a6fa29da654fdd0bcdac7856b2c517b65ee5febf354dd94ad3bc54de5b"
+      },
+      {
+        "path": "dummyindex/context/domains/observe/ledger.py",
+        "sha256": "cff25c5b6a54a2baa915da38cc4516b8e4f287759a8feca5cd43807aff541dbb"
+      },
+      {
+        "path": "dummyindex/context/domains/probation/actions.py",
+        "sha256": "8c709540e3fd5cf56c99b6bdd40e1f0e99a10d07b7e7302f29015235568cdcb5"
+      },
+      {
+        "path": "dummyindex/context/domains/probation/models.py",
+        "sha256": "6cd3db4f9747951a4b8617510f9210018b6d2021a211cae95b3bd9de137c4aa3"
+      },
+      {
+        "path": "dummyindex/context/domains/probation/rules.py",
+        "sha256": "81271803117c8cba43c6e4d6162f12c9896b1415573ffbd10419adaa1c226708"
+      },
+      {
+        "path": "dummyindex/context/domains/probation/store.py",
+        "sha256": "eace4d019c127c57d080cf8794ae81dfef89de3a01cdc20f17f49a43c2961ecb"
+      },
+      {
+        "path": "dummyindex/context/domains/probation/sync.py",
+        "sha256": "60979b5208fecb00ee6136746592c8a04ec31764d7bb4e63dd56fbcdb8d5d65e"
+      },
+      {
+        "path": "dummyindex/context/domains/proposals/closeout.py",
+        "sha256": "c03533e451ff28f68d66a7a30d512b6fbd9b5c9e910bfdc15423036ad8528548"
+      },
+      {
+        "path": "dummyindex/context/domains/proposals/draft.py",
+        "sha256": "7d86a3388419367615f0342891365f6756e7abc827aaca5b17262d9d60bb4e49"
+      },
+      {
+        "path": "dummyindex/context/domains/proposals/store.py",
+        "sha256": "8d98af9a090916a9b69e24541f1a321f5221fc3c878f9ec95e5bf5dda115de39"
+      },
+      {
+        "path": "dummyindex/context/domains/reality_check/render.py",
+        "sha256": "84d6e7d48be56d2916a0c214fc4a1fd7bbc6fcf0b10fe4b1b32340369e4a20a6"
+      },
+      {
+        "path": "dummyindex/context/domains/requirements/gate.py",
+        "sha256": "ec1ef4eb833f294c5538089f592a68d10ee82491215e8486819773520382a664"
+      },
+      {
+        "path": "dummyindex/context/domains/requirements/toml_io.py",
+        "sha256": "6d932168eda5140e89f2aa1158c486f3f60b3d79346c7c20113b295870de8f13"
+      },
+      {
+        "path": "dummyindex/context/domains/restyle/run.py",
+        "sha256": "6131c9d7807652b0247ef6d60edd14f99d11fb4ca54e95e2db77860dd8cb477c"
+      },
+      {
+        "path": "dummyindex/context/domains/toolkit/bundle.py",
+        "sha256": "c2ab3c4f542ffb296140264d1c8d1f0f5c9a7a5a66d83a1bef37bc5901ff5903"
+      },
+      {
+        "path": "dummyindex/context/domains/toolkit/host.py",
+        "sha256": "8c10f05eca468fe22bc13cd921372a03a9e76f6d408a44d62548d1e96f791490"
+      },
+      {
+        "path": "dummyindex/context/domains/toolkit/mutate.py",
+        "sha256": "2f2cf91bc3642eba05411a277b0899aa64a3e9fbbd491baf0f37d1725a05ea8d"
+      },
+      {
+        "path": "dummyindex/context/output/claude_md.py",
+        "sha256": "84a8e8050c02696587375b32c030f72f847cc2a4da8d43d05cb5f6e47d9240f6"
+      },
+      {
+        "path": "dummyindex/context/reconcile_gate.py",
+        "sha256": "f9120a89a000d5d7c82041684c67c0797df6e027e95c07cda9ac47d07aceeae6"
+      },
+      {
+        "path": "dummyindex/installer/ownership.py",
+        "sha256": "d6e8858ec5538623ecc3b044f9a53782ae36b05c8f2879d671ae7ec388b3a346"
+      },
+      {
+        "path": "dummyindex/pipeline/io/cache.py",
+        "sha256": "1f601211a134ffd50c586042d6f2e595862e62b3880f9930c19854a709da7cac"
+      },
+      {
+        "path": "dummyindex/shared/__init__.py",
+        "sha256": "dafd27e56c096e248d0fb660f3f5c4742a143ee9d9b84120044d5b368f4efc80"
+      },
+      {
+        "path": "dummyindex/shared/atomic_io.py",
+        "sha256": "e52cd4cdd51085d2d9b1df187b6d72cef218aefa271c6881872c828df906f327"
+      },
+      {
+        "path": "dummyindex/shared/errors.py",
+        "sha256": "d53b27ad6d3cf9868da62e70ee1ade0ce55f864db1e0deae509d25d349109f66"
+      },
+      {
+        "path": "dummyindex/shared/guard.py",
+        "sha256": "4dbb86f2e5f7e778616819b59603658488c80f26c6612595238140d01351d173"
+      },
+      {
+        "path": "dummyindex/shared/lesson/__init__.py",
+        "sha256": "d7bde2e2f7b9835697dbe4d25d913a100ba00039d2043e7b001b452c9c138479"
+      },
+      {
+        "path": "dummyindex/shared/lesson/enums.py",
+        "sha256": "0f1e191379b5eb1cc59d253892db432b1e64ba622923626abd8fc44a5a65f7d2"
+      },
+      {
+        "path": "dummyindex/shared/lesson/models.py",
+        "sha256": "a0c84ce3129abd39f605594140896ff8a9aefcabae61e36a23c5ab2247fe1aae"
+      },
+      {
+        "path": "dummyindex/shared/lesson/rules.py",
+        "sha256": "f11351c59ccef0b920fd19d7e3f51e92c5e40b4374299f303e74d19971d17bb8"
+      },
+      {
+        "path": "tests/cli/test_evolve_cli.py",
+        "sha256": "63d98a9f8625136a98dbb1a830129ea5d082ae4e3477ccd8e91907b73161c4b6"
+      },
+      {
+        "path": "tests/context/build/test_upgrade.py",
+        "sha256": "6f6f8c39c9c74a08c310465175d6b7d29ff8f2c46af8194cf9baa5b1c2c8780c"
+      },
+      {
+        "path": "tests/context/domains/equip/test_capability_identity.py",
+        "sha256": "77bad1da65a334842a4bd739305a0c99d866001567b4a18f3d3f1cc5dc1432fd"
+      },
+      {
+        "path": "tests/context/domains/equip/test_equip_canary.py",
+        "sha256": "21fd36ce7c8a50e5964bf43586c65ad67e837413bebca46b3534d7db85c0b68b"
+      },
+      {
+        "path": "tests/context/domains/equip/test_equip_evolve.py",
+        "sha256": "f3c977731707b467e9a4264fd618ec0d4720344534ca77314cb4b3193517280a"
+      },
+      {
+        "path": "tests/context/domains/equip/test_equip_lifecycle.py",
+        "sha256": "877008365fd8b6a7d9f131f1ba7a6e040a6a962fdc0f891481597b1b94dfbc4c"
+      },
+      {
+        "path": "tests/context/domains/gc/test_delete.py",
+        "sha256": "fe05ec496ce7f1ec425712fdb390b584598b02f2d636b5602bf8dab6103c3f98"
+      },
+      {
+        "deleted": true,
+        "path": "tests/context/domains/test_atomic_io.py",
+        "sha256": null
+      },
+      {
+        "path": "tests/context/domains/test_closeout.py",
+        "sha256": "74026199f9d710cbbb13154c4567dcd61fc2cf6b63f429a160ff159bf30d5986"
+      },
+      {
+        "path": "tests/context/domains/test_evidence.py",
+        "sha256": "0da5e0800b03e96bf388ac942dd57cf8d1e269d7af8547ef585416793dc31a42"
+      },
+      {
+        "path": "tests/context/domains/test_evolve_experiments.py",
+        "sha256": "9a9b4041be13419db18f99bb5027db7f4c2ff22f065f60f2ddb609478f5e7e9f"
+      },
+      {
+        "path": "tests/context/domains/test_evolve_gate.py",
+        "sha256": "9c278126109a3bb217a7555f441bddfb80148f9d5f6b806ca726746080cdd182"
+      },
+      {
+        "path": "tests/context/domains/test_evolve_learning.py",
+        "sha256": "2dc6cd498e075a622e166616af56951c2bc544fdad65695c8caa27651be4e5fe"
+      },
+      {
+        "path": "tests/context/domains/test_evolve_native.py",
+        "sha256": "d5f121bbcc0b309c985f93d6210de92055472b00f28b8a18d4ada3f50006d93b"
+      },
+      {
+        "deleted": true,
+        "path": "tests/context/domains/test_lesson.py",
+        "sha256": null
+      },
+      {
+        "path": "tests/context/domains/test_observe_attribution.py",
+        "sha256": "0baf7b5f3b02fc20674a3149e737453b8ca469a8041dbf0ad61a65eab2de1855"
+      },
+      {
+        "path": "tests/context/domains/test_observe_import.py",
+        "sha256": "3c1f6853509e4afa6638ef5ad8b680ccbfcee2945c73289d818b848393a730fc"
+      },
+      {
+        "path": "tests/context/domains/test_probation.py",
+        "sha256": "e51ed0efe7b8e4cad4471ae483db999c9fbd6175b3a0aab20692ce7d94910627"
+      },
+      {
+        "path": "tests/context/domains/test_probation_actions.py",
+        "sha256": "a498d4b6664ed47130e2f1c0bae5cb818740b3ad1b9d8705288e6466e92690b4"
+      },
+      {
+        "path": "tests/shared/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "tests/shared/test_atomic_io.py",
+        "sha256": "63e7599d93bfafecb96812743911b44fa7d4d96a99cf5a3d88fe837378d91c34"
+      },
+      {
+        "path": "tests/shared/test_lesson.py",
+        "sha256": "3adff1f49865fd1f9803d0c061725fcbedaff44dbb206f640d6a82a878488061"
+      },
+      {
+        "path": "tests/test_import_boundaries.py",
+        "sha256": "94f040b57f472f643847bf6371c96d13cd477cdb638e53d931c39088695b28a2"
+      },
+      {
+        "path": "tests/test_install.py",
+        "sha256": "496ac57311b8a5ba654a9601844b8928d481e9eb0bb4f934cf971f281e62e7ad"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/test_import_boundaries.py",
+        "sha256": "94f040b57f472f643847bf6371c96d13cd477cdb638e53d931c39088695b28a2"
+      },
+      {
+        "path": "tests/shared/test_atomic_io.py",
+        "sha256": "63e7599d93bfafecb96812743911b44fa7d4d96a99cf5a3d88fe837378d91c34"
+      },
+      {
+        "path": "tests/shared/test_lesson.py",
+        "sha256": "3adff1f49865fd1f9803d0c061725fcbedaff44dbb206f640d6a82a878488061"
+      }
+    ],
+    "source_commit": "8cb1c3f5c2b048d6fbe39c4a106d6d724f13c713",
+    "state": "verified",
+    "task_id": "task-929fac83f54a63e1",
+    "task_sha256": "929fac83f54a63e1773be7ed4d86098f727143f538cef21810dde73160a8c40a"
+  },
+  "task-9d0b034dedba70ff": {
+    "artifacts": [
+      {
+        "path": "docs/reference/01-conventions.md",
+        "sha256": "d22a4c92f9254ec9b4a2cc7a238501dbbfc34467252203bc234d2efb3ffd780e"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/test_repo_doc_style.py",
+        "sha256": "127aa7a02ec3993a0ce5f8efa6704076bb67a2e98c593d9b6e6fb4149277b193"
+      }
+    ],
+    "source_commit": "aa24f3c0e7ee63a35d833147bd7d1de7dc6460b4",
+    "state": "verified",
+    "task_id": "task-9d0b034dedba70ff",
+    "task_sha256": "9d0b034dedba70ff69eb820c15e68a734e8444c763935a791dca451fd4ce5fa0"
+  },
+  "task-e3ee224071060a62": {
+    "artifacts": [
+      {
+        "path": "pyproject.toml",
+        "sha256": "b476dc5de3225523cf0544632b7bf0d6367d9221ad9f1e037121c692b73eda67"
+      },
+      {
+        "path": "docs/COMMANDS.md",
+        "sha256": "8c477f8840baf759fcae0e1ef645f8b72d86a64d92e35ea4469e727d8203a878"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "dummyindex/context/hooks.py",
+        "sha256": "2b79483bf455c6f7293a5bfb86b296677266876c7a65d4a7fc7586136b897d04"
+      },
+      {
+        "path": "dummyindex/context/enums.py",
+        "sha256": "56feb1c267ee04ac45f437c233e8a5bb1484fe77b1324f20e082537387b2c225"
+      }
+    ],
+    "source_commit": "f6c48248bf200c84a6a5f9380f7320fbe96630de",
+    "state": "verified",
+    "task_id": "task-e3ee224071060a62",
+    "task_sha256": "e3ee224071060a62fe4edd4b85690c81db7e5ec9fede9bfade45263318ddaed0"
+  },
+  "task-f8bab17a5286cfb7": {
+    "artifacts": [
+      {
+        "path": "dummyindex/cli/__init__.py",
+        "sha256": "2c264eb5e793ff1993536a68e1cceaccdee36454937f197850a61d6767899a8c"
+      },
+      {
+        "path": "dummyindex/evolve/evolve_learning.py",
+        "sha256": "6605159c22671b0cc609a731afc4c7d37893c78ad04e0ab2a9d842fc90aca76c"
+      },
+      {
+        "path": "dummyindex/context/domains/proposals/closeout.py",
+        "sha256": "99015be703d533f5d44da5a6d4b9762425827106fab4d13826f668be86784b91"
+      },
+      {
+        "path": "dummyindex/cli/memory.py",
+        "sha256": "e766f59e5d492a4bf376300ff2ee63cb09677ed4dcccf36e7bb9a7d2be95c773"
+      },
+      {
+        "path": "dummyindex/shared/guard.py",
+        "sha256": "7bc5841072ee4673d9f3c3b3fa52adf63012f4719ec9604ba8e8602659054deb"
+      }
+    ],
+    "evidence": [
+      {
+        "path": "tests/test_import_boundaries.py",
+        "sha256": "4fc9d95e2ca7beaaeed3d2800e9afcdce2c8f612a41f154c184c1499d4b2d6af"
+      },
+      {
+        "path": "tests/cli/test_closeout_exit_codes.py",
+        "sha256": "ee352b417ef39b0fc9744cf404adf69dd5420b7a0263c49b1647658e51eb0a77"
+      },
+      {
+        "path": "tests/context/domains/test_closeout.py",
+        "sha256": "ea8e1ec09b5ffe265a8f736d19b632ebbbea745ed08a2253cc6ca84d9d66245f"
+      },
+      {
+        "path": "tests/context/domains/memory/test_memory_cli.py",
+        "sha256": "22cbc90764806c942a60c83ee25d4e331ea549048196d55165f307826785877d"
+      }
+    ],
+    "source_commit": "f6c48248bf200c84a6a5f9380f7320fbe96630de",
+    "state": "verified",
+    "task_id": "task-f8bab17a5286cfb7",
+    "task_sha256": "f8bab17a5286cfb7b6623ab8a5c0712efa9e394623ac3f5856dbfed65724b898"
+  }
+}

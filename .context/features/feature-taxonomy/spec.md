@@ -18,7 +18,7 @@ It also owns the tolerant loaders for the graph-consumption artifacts: `seed-ran
 
 ## User-visible behavior
 
-Ops run as `dummyindex context <cmd>` (CLI layer `dummyindex/cli/features.py`), on `<root>/.context/features/`.
+Ops run as `dummyindex context <cmd>` (CLI layer `dummyindex/context/cli/features.py`), on `<root>/.context/features/`.
 
 The CLI maps domain `FeatureRenameError` to exit 2. On success, each op prints a one-line summary.
 

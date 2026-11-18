@@ -14,7 +14,6 @@ from pathlib import Path
 import pytest
 
 from dummyindex.context.claude_settings import install_hook_entry
-from dummyindex.context.domains.atomic_io import write_text_atomic
 from dummyindex.context.domains.equip import (
     EQUIP_SENTINEL,
     EQUIPMENT_REL,
@@ -28,6 +27,7 @@ from dummyindex.context.domains.equip.enums import (
     EquipmentSource,
     ItemState,
 )
+from dummyindex.context.domains.equip.generate.adapters import native_adapter_content
 from dummyindex.context.domains.equip.lifecycle.status import (
     classify_item,
     is_sourced,
@@ -36,6 +36,7 @@ from dummyindex.context.domains.equip.lifecycle.status import (
     status,
     uninstall,
 )
+from dummyindex.context.shared.atomic_io import write_text_atomic
 
 # --- fixture helpers
 
@@ -217,6 +218,65 @@ def test_uninstall_only_ours(tmp_path: Path) -> None:
     assert any("USER" in c for c in commands)
     # manifest deleted
     assert not (root / ".context" / EQUIPMENT_REL).exists()
+
+
+def _canonical_fixture(root: Path, description: str | None) -> EquipmentManifest:
+    """One canonical body plus its native adapter, written with ``description``."""
+    rel = ".context/equipment/python-implementer.md"
+    write_text_atomic(root / rel, _IMPL_BODY)
+    item = EquipmentItem(
+        kind=EquipmentKind.AGENT,
+        name="python-implementer",
+        path=rel,
+        source=EquipmentSource.GENERATED,
+        capabilities=("implement",),
+        version="1.0.0",
+        origin_hash=content_hash(_IMPL_BODY),
+    )
+    write_text_atomic(
+        root / ".claude" / "agents" / "python-implementer.md",
+        native_adapter_content(item, description=description),
+    )
+    return EquipmentManifest(schema_version=2, items=(item,))
+
+
+_ADAPTER_REL = ".claude/agents/python-implementer.md"
+
+
+@pytest.mark.integration
+def test_uninstall_removes_pristine_new_format_adapter(tmp_path: Path) -> None:
+    manifest = _canonical_fixture(tmp_path, description="X")
+    uninstall(tmp_path, manifest)
+    assert not (tmp_path / ".context" / "equipment" / "python-implementer.md").exists()
+    assert not (tmp_path / _ADAPTER_REL).exists()
+
+
+@pytest.mark.integration
+def test_uninstall_removes_adapter_when_body_is_missing(tmp_path: Path) -> None:
+    manifest = _canonical_fixture(tmp_path, description="X")
+    (tmp_path / ".context" / "equipment" / "python-implementer.md").unlink()
+    report = uninstall(tmp_path, manifest)
+    assert "python-implementer" not in report.removed
+    assert not (tmp_path / _ADAPTER_REL).exists()
+
+
+@pytest.mark.integration
+def test_uninstall_keeps_adapter_when_body_is_user_modified(tmp_path: Path) -> None:
+    manifest = _canonical_fixture(tmp_path, description="X")
+    body = tmp_path / ".context" / "equipment" / "python-implementer.md"
+    body.write_text(body.read_text(encoding="utf-8") + "\nmine\n", encoding="utf-8")
+    adapter = tmp_path / _ADAPTER_REL
+    before = adapter.read_text(encoding="utf-8")
+    report = uninstall(tmp_path, manifest)
+    assert "python-implementer" in report.skipped_user_modified
+    assert adapter.read_text(encoding="utf-8") == before
+
+
+@pytest.mark.integration
+def test_uninstall_removes_pre_fix_generic_adapter(tmp_path: Path) -> None:
+    manifest = _canonical_fixture(tmp_path, description=None)
+    uninstall(tmp_path, manifest)
+    assert not (tmp_path / _ADAPTER_REL).exists()
 
 
 @pytest.mark.integration
@@ -420,7 +480,7 @@ def test_deleting_adopted_record_changes_status_output(tmp_path: Path) -> None:
 def test_status_cli_json_includes_adopted_rows(tmp_path: Path, capsys) -> None:
     import json as _json
 
-    from dummyindex.cli.equip import run as run_equip
+    from dummyindex.context.cli.equip import run as run_equip
     from dummyindex.context.domains.equip import SCHEMA_VERSION, write_manifest
 
     write_manifest(
@@ -443,7 +503,7 @@ def test_status_cli_empty_manifest_message_covers_all_kinds(
 ) -> None:
     # The manifest tracks adopted/marketplace/vendored records too, so the empty
     # message must not say 'no generated items'.
-    from dummyindex.cli.equip import run as run_equip
+    from dummyindex.context.cli.equip import run as run_equip
     from dummyindex.context.domains.equip import SCHEMA_VERSION, write_manifest
 
     write_manifest(

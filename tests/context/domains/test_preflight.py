@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli import dispatch
 from dummyindex.context import bootstrap_claude_md
+from dummyindex.context.cli import dispatch
 from dummyindex.context.domains.preflight import (
     ContextOwnership,
     build_preflight_report,
@@ -17,6 +17,7 @@ from dummyindex.context.domains.preflight import (
     render_preflight_md,
 )
 from dummyindex.context.hooks import install as install_hooks
+from dummyindex.context.hooks_requirements import install_requirements_hooks
 
 
 def _init_git_repo(path: Path) -> None:
@@ -111,6 +112,18 @@ def test_classifies_user_vs_dummyindex_hooks(tmp_path: Path) -> None:
         "SessionStart" not in report.settings.user_hook_events
     )  # ours, not the user's
     assert report.settings.dummyindex_hook_present is True
+    # Requirements hooks (UserPromptSubmit + SessionStart) are ours, not the user's.
+    assert "UserPromptSubmit" not in report.settings.user_hook_events
+
+
+@pytest.mark.unit
+def test_requirements_only_hooks_are_neither_user_nor_ours(tmp_path: Path) -> None:
+    settings_path = tmp_path / ".claude" / "settings.json"
+    install_requirements_hooks(settings_path, cli_version="0.39.0")
+
+    settings = build_preflight_report(tmp_path).settings
+    assert settings.user_hook_events == ()
+    assert settings.dummyindex_hook_present is False
 
 
 @pytest.mark.unit

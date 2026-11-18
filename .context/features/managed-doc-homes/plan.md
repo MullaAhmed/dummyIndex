@@ -37,9 +37,9 @@
 
 **Tests:**
 - `tests/context/domains/docguard/test_classify.py` (gate table), `test_migrate.py`, `test_citations.py`, `test_language.py` (CJK share).
-- `tests/context/test_git.py`, `tests/cli/test_migrate_docs_cli.py`, `tests/cli/test_check_refs.py`.
-- `tests/cli/test_guard_doc_write.py`: tool matrix, edits, language hint, fail-open.
-- `tests/cli/test_guard_doc_write_e2e.py`: subprocess, no-exit-2 and no-subprocess invariants.
+- `tests/context/test_git.py`, `tests/context/cli/test_migrate_docs_cli.py`, `tests/context/cli/test_check_refs.py`.
+- `tests/context/cli/test_guard_doc_write.py`: tool matrix, edits, language hint, fail-open.
+- `tests/context/cli/test_guard_doc_write_e2e.py`: subprocess, no-exit-2 and no-subprocess invariants.
 
 ## Architecture
 
@@ -78,7 +78,7 @@ No rollback exists. `plan_moves` pass 1 is the prepare step. Moves use `git mv` 
 
 **Decided: superpowers plan paths are strays.** When enabled, the guard denies `writing-plans` output under `docs/superpowers/{plans,specs}`. Repos exempt them with `doc_guard_allow` (`constants.py:49`, `:57`).
 
-**Decided: the guard hot path runs no subprocess or git calls.** `test_no_subprocess_on_guard_path` locks this (`tests/cli/test_guard_doc_write_e2e.py:342`). The citation check reads the target file (`guard_doc_write.py:192`).
+**Decided: the guard hot path runs no subprocess or git calls.** `test_no_subprocess_on_guard_path` locks this (`tests/context/cli/test_guard_doc_write_e2e.py:342`). The citation check reads the target file (`guard_doc_write.py:192`).
 
 **Decided: a failed `git mv` falls back to replace plus `git add`.** `migrate.py:277-281`.
 

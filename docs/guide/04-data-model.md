@@ -193,7 +193,7 @@ Query the backbone directly with `dummyindex context graph <verb>`
 - Small graphs use compact JSON. Larger graphs use a versioned manifest that
   points to bounded adjacent shards under `symbol-graph.parts/` (default file
   cap: 1,000,000 UTF-8 bytes). Commit the manifest and all referenced shards.
-- Programmatic readers use `dummyindex.export.storage.read_graph_payload(path)`.
+- Programmatic readers use `dummyindex.context.export.storage.read_graph_payload(path)`.
   This function also reads legacy monolithic JSON. Do not treat a manifest's
   lack of a top-level `nodes` array as an empty graph.
 - Query through `dummyindex context graph` for bounded, cited output. The viewer

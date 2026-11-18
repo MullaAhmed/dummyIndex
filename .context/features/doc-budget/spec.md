@@ -2,7 +2,7 @@
 
 `confidence: EXTRACTED`
 
-Caps word counts and style violations of authored `.context/` docs and `SKILL.md` files. A recorded doc may not grow. Entry point: `dummyindex context check --budget` or `--style`, dispatched at `dummyindex/cli/check.py:75-80`.
+Caps word counts and style violations of authored `.context/` docs and `SKILL.md` files. A recorded doc may not grow. Entry point: `dummyindex context check --budget` or `--style`, dispatched at `dummyindex/context/cli/check.py:75-80`.
 
 ## Behavior
 
@@ -22,4 +22,4 @@ Caps word counts and style violations of authored `.context/` docs and `SKILL.md
 
 ## Tests
 
-- `tests/context/domains/docbudget/`, `tests/cli/test_check_budget.py`, `tests/test_skills_doc_hygiene.py:738-791`.
+- `tests/context/domains/docbudget/`, `tests/context/cli/test_check_budget.py`, `tests/test_skills_doc_hygiene.py:738-791`.

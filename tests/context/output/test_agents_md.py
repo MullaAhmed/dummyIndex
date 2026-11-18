@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-import dummyindex.codex_guidance as codex_guidance
+import dummyindex.context.codex_guidance as codex_guidance
 from dummyindex.context.output.agents_md import (
     AGENTS_BEGIN_MARKER,
     AGENTS_END_MARKER,

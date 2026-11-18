@@ -10,7 +10,7 @@ _Pointer list — the canonical entries (with confidence + broken-references) li
   - ⚠ broken refs: `Runner`, `.context/equipment.json`, `.claude/settings.json`, … +29 more
 - [`dummyindex/skills/council/18-filter-trivial.md`](../../../dummyindex/skills/council/18-filter-trivial.md) (**DocConfidence.MEDIUM** — Trivial-feature filter → consolidation decision) _matched on:_ `symbol:__init__.py`
   - ⚠ broken refs: `entry_points`, `len()`, `noise-absorbed.md`, … +1 more
-- [`docs/internal/audits/01-dead-broken-incomplete.md`](../../../docs/internal/audits/01-dead-broken-incomplete.md) (**DocConfidence.LOW** — 01 — Dead / broken / incomplete audit) _matched on:_ `path:dummyindex/pipeline/extract/config.py, symbol:LanguageConfig`
+- [`docs/internal/audits/01-dead-broken-incomplete.md`](../../../docs/internal/audits/01-dead-broken-incomplete.md) (**DocConfidence.LOW** — 01 — Dead / broken / incomplete audit) _matched on:_ `path:dummyindex/context/pipeline/extract/config.py, symbol:LanguageConfig`
   - ⚠ broken refs: `NotImplementedError`, `languages/objc.py`, `build/maps.py`, … +22 more
 - [`CHANGELOG.md`](../../../CHANGELOG.md) (**DocConfidence.LOW** — Changelog) _matched on:_ `symbol:LanguageConfig`
   - ⚠ broken refs: `.context/equipment.json`, `checklist.md`, `stop_hook_active`, … +120 more

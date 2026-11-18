@@ -11,7 +11,7 @@ instruction surface, never authority on behavior — behavior claims are checked
   `dummyindex/skills/council/22-parallel-dispatch.md:10-24`, catalog `high`);
   `dummyindex/skills/agents/dev.md` has no tree-enrich, `enrich-plan` or
   `enrich-apply` instruction. `enrich-plan`/`enrich-apply` take no feature
-  (`dummyindex/cli/enrich.py:12-51`, `dummyindex/cli/enrich.py:54-123`), so nothing
+  (`dummyindex/context/cli/enrich.py:12-51`, `dummyindex/context/cli/enrich.py:54-123`), so nothing
   assigns a unit a feature-scoped node subset. The procedure instead describes one
   architect (standard) or one dev per `file_subtree` (deep), with the conductor
   merging and applying (`52-tree-enrich.md:39-76`), and has no per-feature stage-5
@@ -21,7 +21,7 @@ instruction surface, never authority on behavior — behavior claims are checked
   `_council-log.json` holds a stage-5 entry and all 6445 nodes are `EXTRACTED`.
 - **Choosing light mode** — `active_stages` appends `TREE` in every mode unless
   `--no-tree-enrich` (`dummyindex/context/domains/council_batch.py:62-77`,
-  `dummyindex/cli/council_batch.py:105`), and `is_stage_complete` is `False` for a
+  `dummyindex/context/cli/council_batch.py:105`), and `is_stage_complete` is `False` for a
   stage with no log entry (`dummyindex/context/domains/council.py:163-180`) — a
   conductor following "light skips" (`dummyindex/skills/skill.md:334`,
   `dummyindex/skills/council/52-tree-enrich.md:41`) without logging `skipped` per
@@ -31,8 +31,8 @@ instruction surface, never authority on behavior — behavior claims are checked
   `22-parallel-dispatch.md:28-30` (`high`) win. Neither doc names the `skipped` status.
 - **Reading exit 1 from `enrich-apply`** — exit `1` means either "known IDs written,
   `tree.json` replaced, some IDs unknown" (`dummyindex/context/domains/enrich.py:209-218`,
-  `dummyindex/cli/enrich.py:110-122`) or "nothing written, `JSONDecodeError`
-  traceback" (`dummyindex/cli/enrich.py:100`). The traceback path covers truncated JSON
+  `dummyindex/context/cli/enrich.py:110-122`) or "nothing written, `JSONDecodeError`
+  traceback" (`dummyindex/context/cli/enrich.py:100`). The traceback path covers truncated JSON
   and a UTF-8 BOM (read as `encoding="utf-8"`; probe: `Unexpected UTF-8 BOM (decode
   using utf-8-sig)`) when the mapping is written with Windows PowerShell 5.1 `Out-File`
   (BOM by default) rather than the `Write` the procedure names (`52-tree-enrich.md:67`); a
@@ -71,7 +71,7 @@ instruction surface, never authority on behavior — behavior claims are checked
   `tree.json`, which also run for `{}` or an identical mapping
   (`dummyindex/context/domains/enrich.py:205-217`) — the doc's "no-op" is no-op in
   content only. The CLI prints `batches: 554` without splitting batch kinds
-  (`dummyindex/cli/enrich.py:46-50`). `estimate_run` counts the tree stage as one unit
+  (`dummyindex/context/cli/enrich.py:46-50`). `estimate_run` counts the tree stage as one unit
   per feature in every mode, counts symbol stubs in standard/light, and hardcodes
   `tree_enrich=True` (`dummyindex/context/domains/fleet.py:414-435`), so it understates
   deep fan-out and estimates stage 5 for `--no-tree-enrich` runs. Each in-file stub
@@ -83,20 +83,20 @@ instruction surface, never authority on behavior — behavior claims are checked
   `stubs: 6445` therefore covers 6437 distinct IDs (`dummyindex/context/domains/enrich.py:158`),
   and `_apply` appends per matching node: `{"rebuild_run": …}` returns
   `['rebuild_run', 'rebuild_run']` and prints `updated 2 abstract(s)`
-  (`dummyindex/context/domains/enrich.py:259-276`, `dummyindex/cli/enrich.py:111-114`).
+  (`dummyindex/context/domains/enrich.py:259-276`, `dummyindex/context/cli/enrich.py:111-114`).
   Batch `name` is the file basename and a batch carries no path
   (`dummyindex/context/domains/enrich.py:37-43`, `:128-130`, `:147-154`): 51 names repeat
   (`__init__.py` × 64), so keying deep-mode progress or the per-file `dev-pick`
   (`dummyindex/skills/council/52-tree-enrich.md:56-58`) on batch name collides.
 - **Running `enrich-plan` to check remaining work** — every call first runs
-  `migrate_context_layout` (`dummyindex/cli/enrich.py:37`): merges managed
+  `migrate_context_layout` (`dummyindex/context/cli/enrich.py:37`): merges managed
   `.gitignore`/`.gitattributes`, deletes the legacy root `_enrich_plan.json`, retires
   `equipment-evals/` and `graph/` (unedited starter suites deleted, others backed up
   under `_doc_backups/retired/<version>/`) (`dummyindex/context/build/upgrade.py:300-307`,
   `:501-552`). The returned `LayoutMigration` is discarded, though
   `format_migration_report` (`dummyindex/context/build/upgrade.py:577-615`) exists and
-  `rebuild` prints it (`dummyindex/cli/rebuild.py:138-145`); help says only "Emit
-  .context/cache/_enrich_plan.json (work-list)" (`dummyindex/cli/help.py:108`). Removals,
+  `rebuild` prints it (`dummyindex/context/cli/rebuild.py:138-145`); help says only "Emit
+  .context/cache/_enrich_plan.json (work-list)" (`dummyindex/context/cli/help.py:108`). Removals,
   backups and step errors go unreported, and each replan overwrites the plan file.
 
 ### Resolved since last review
@@ -105,7 +105,7 @@ instruction surface, never authority on behavior — behavior claims are checked
   success and malformed JSON merged into bullet 3, light mode into bullet 2,
   whole-tree rewrite per apply into bullet 6, identical-prose stale no-op into bullet 5.
 - Audit trail (doc vs code; code wins): `plan.md`/`spec.md` line citations drifted with
-  the comment-shortening pass — `dummyindex/cli/enrich.py` `run_plan` `:12-51` (cited
+  the comment-shortening pass — `dummyindex/context/cli/enrich.py` `run_plan` `:12-51` (cited
   `:12-54`), `run_apply` `:54-123` (`:57-126`), `json.loads` `:100` (`:103`);
   `dummyindex/context/domains/enrich.py` `build_plan` `:86-173` (`:93-182`),
   `apply_updates` `:198-218` (`:207-227`), `_apply` `:259-276` (`:268-285`);

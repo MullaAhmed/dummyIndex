@@ -15,8 +15,8 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli import dispatch
 from dummyindex.context.build.reconcile import DOC_BASIS_REL, blob_sha
+from dummyindex.context.cli import dispatch
 from dummyindex.context.domains.drift_acks import append_ack
 from dummyindex.context.domains.features import PENDING_ENRICHMENT_MARKER
 from dummyindex.context.drift import (

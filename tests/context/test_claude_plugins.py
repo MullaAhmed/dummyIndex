@@ -164,3 +164,130 @@ def test_list_known_marketplaces_absent_is_empty(tmp_path: Path) -> None:
     from dummyindex.context.claude_plugins import list_known_marketplaces
 
     assert list_known_marketplaces(tmp_path) == ()
+
+
+# --- installed_plugin_record: registry reader (spec contract 9)
+
+
+def _write_registry(config_dir: Path, plugins: object) -> None:
+    path = config_dir / "plugins" / "installed_plugins.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({"version": 2, "plugins": plugins}), encoding="utf-8")
+
+
+@pytest.mark.unit
+def test_installed_plugin_record_reads_alt_config_dir(tmp_path: Path) -> None:
+    from dummyindex.context.claude_plugins import installed_plugin_record
+
+    alt = tmp_path / "alt-claude"
+    _write_registry(
+        alt,
+        {"p@m": [{"scope": "user", "version": "1.2.3", "installPath": "/x"}]},
+    )
+    record = installed_plugin_record(
+        "p@m", config_dir=alt, project_root=tmp_path / "repo"
+    )
+    assert record is not None and record["version"] == "1.2.3"
+    # The default dir is not consulted: same target absent under another dir.
+    assert (
+        installed_plugin_record("p@m", config_dir=tmp_path / "empty", project_root=None)
+        is None
+    )
+
+
+@pytest.mark.unit
+def test_installed_plugin_record_project_scope_must_match_repo(tmp_path: Path) -> None:
+    from dummyindex.context.claude_plugins import installed_plugin_record
+
+    repo = tmp_path / "repo"
+    other = tmp_path / "other"
+    repo.mkdir()
+    other.mkdir()
+    _write_registry(
+        tmp_path,
+        {
+            "p@m": [
+                {"scope": "project", "projectPath": str(other), "version": "9"},
+                {"scope": "local", "version": "8"},
+            ]
+        },
+    )
+    # Another repo's project-scope record, and one with no projectPath: skipped.
+    assert (
+        installed_plugin_record("p@m", config_dir=tmp_path, project_root=repo) is None
+    )
+    _write_registry(
+        tmp_path,
+        {
+            "p@m": [
+                {"scope": "project", "projectPath": str(other), "version": "9"},
+                {"scope": "project", "projectPath": str(repo), "version": "3"},
+            ]
+        },
+    )
+    record = installed_plugin_record("p@m", config_dir=tmp_path, project_root=repo)
+    assert record is not None and record["version"] == "3"
+
+
+@pytest.mark.unit
+def test_installed_plugin_record_absent_file_is_none(tmp_path: Path) -> None:
+    from dummyindex.context.claude_plugins import installed_plugin_record
+
+    assert (
+        installed_plugin_record("p@m", config_dir=tmp_path, project_root=tmp_path)
+        is None
+    )
+
+
+@pytest.mark.unit
+def test_installed_plugin_record_undecodable_registry_raises(tmp_path: Path) -> None:
+    from dummyindex.context.claude_plugins import (
+        PluginRegistryError,
+        installed_plugin_record,
+    )
+
+    path = tmp_path / "plugins" / "installed_plugins.json"
+    path.parent.mkdir(parents=True)
+    path.write_text("{not json", encoding="utf-8")
+    with pytest.raises(PluginRegistryError):
+        installed_plugin_record("p@m", config_dir=tmp_path, project_root=tmp_path)
+    # Bad shape is also unreadable, not "not installed".
+    _write_registry(tmp_path, ["not", "an", "object"])
+    with pytest.raises(PluginRegistryError):
+        installed_plugin_record("p@m", config_dir=tmp_path, project_root=tmp_path)
+
+
+@pytest.mark.unit
+def test_installed_plugin_record_local_scope_matches_repo(tmp_path: Path) -> None:
+    from dummyindex.context.claude_plugins import installed_plugin_record
+
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _write_registry(
+        tmp_path,
+        {"p@m": [{"scope": "local", "projectPath": str(repo), "version": "4"}]},
+    )
+    record = installed_plugin_record("p@m", config_dir=tmp_path, project_root=repo)
+    assert record is not None and record["version"] == "4"
+
+
+@pytest.mark.unit
+def test_installed_plugin_record_matches_case_insensitively_on_windows(
+    tmp_path: Path,
+) -> None:
+    import os
+
+    if os.name != "nt":
+        pytest.skip("case-folding path match is Windows-only")
+    from dummyindex.context.claude_plugins import installed_plugin_record
+
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _write_registry(
+        tmp_path,
+        {"p@m": [{"scope": "project", "projectPath": str(repo).upper()}]},
+    )
+    assert (
+        installed_plugin_record("p@m", config_dir=tmp_path, project_root=repo)
+        is not None
+    )

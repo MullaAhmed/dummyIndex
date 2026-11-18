@@ -381,6 +381,44 @@ Writes are atomic. Runs are prefix-scoped, so other proposals' runs under `.cont
 
 - Counts done, pending, and skipped units. It reports elapsed time and the labelled heuristic remaining estimate. It also reports the run's anchor and mode. It always exits 0.
 
+## Requirements (`requirements check|sync|gate|bypass`)
+
+The required-setup manifest lives in `.context/config.toml`. These verbs read it and act on it. Root resolves from `--root`, then `CLAUDE_PROJECT_DIR`, then the working directory.
+
+- `check` prints one row per requirement with its status and fix. It exits 0 when all rows are met and 3 when one is missing. An invalid config prints one `invalid` row and exits 0. A missing config prints a note and exits 0.
+- `sync` restores local files first. It then installs trusted plugins. `--yes` approves untrusted plugins. `--local-only` installs no plugins. It prints a restart hint when it writes agents. It exits 1 on any error.
+- `gate` is the UserPromptSubmit hook. It reads the prompt on stdin and blocks it while requirements are unmet. It fails open and always exits 0.
+- `bypass --hours N` allows prompts for N hours. N must be 1 to 24, else it exits 2.
+
+### `dummyindex context requirements check [--json] [--root DIR]`
+
+Prints one row per requirement. Exits 3 when a requirement is missing or below its version.
+
+### `dummyindex context requirements sync [--yes] [--local-only] [--root DIR]`
+
+Restores local files and installs trusted plugins. Exits 1 on any error.
+
+### `dummyindex context requirements gate [--root DIR]`
+
+Reads the prompt on stdin. Prints a block decision while requirements are unmet. Always exits 0.
+
+### `dummyindex context requirements bypass --hours N [--root DIR]`
+
+Allows prompts for N hours. N must be 1 to 24.
+
+## Upgrade (`upgrade`)
+
+Brings an existing `.context/` forward to the installed CLI. Root resolves from `--root`, then `CLAUDE_PROJECT_DIR`, then the working directory.
+
+- `--if-stale` runs the upgrade only when the stored version stamp is older than the CLI. It reads `meta.json` alone. A current index prints nothing and writes nothing. The SessionStart hook runs `dummyindex context upgrade --if-stale --root "$ROOT"`.
+- The upgrade refreshes the deterministic maps. It backfills `config.toml` and the equipment records. It moves the version stamp last, and only when no step fails.
+- The first output line is `dummyindex: upgraded .context/ to <version>` when something changes. It prints `restart Claude Code to load new agents` when an agent adapter is written.
+- A held lock prints `upgrade in progress` and exits 0. Without a `.context/` index, it prints a note and exits 0. A failed step exits 1. The next run retries it.
+
+### `dummyindex context upgrade [--if-stale] [--root DIR]`
+
+Upgrades the index when `--if-stale` is absent or the stamp is older. Exits 0 unless a step fails.
+
 ## Restyle loop (`restyle plan|begin|next|done|stamp|status`)
 
 This is an ASD-STE100 rewrite of curated `features/` and `conventions/` docs. The CLI is deterministic. It snapshots each unit, checks the rewrite, and records the ruleset. The host skill rewrites each unit between `next` and `done`. The restyle loop makes no LLM calls.
@@ -800,6 +838,12 @@ This is deterministic plumbing for the commit-throttled hygiene sweep. The GC de
 It refuses a sentinel such as `_archive` or a leading `_`. It refuses an out-of-charset slug. It refuses an escaping `--path`, and these refusals exit 2. It also refuses an untracked workspace unless `--allow-untracked` is given. An already-absent target is an exit-0 no-op.
 
 The command never deletes source code.
+
+### `dummyindex context gc delete --kind equipment --slug S [--yes] [--force] [--root DIR]`
+
+- It removes one equipment item. It deletes the body, the native adapter, and the manifest entry. It drops the item from `config.toml`.
+- The library entry stays, so `equip reuse` can restore it. Without `--yes`, the command is a dry run.
+- A user-modified body needs `--force`. Without it, the command exits non-zero and changes nothing.
 
 ### `dummyindex context gc stamp [--to <sha>] [--root DIR]`
 

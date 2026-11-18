@@ -100,6 +100,8 @@ Rows that need `--allow-untracked` or `--force-partial` are **excluded from the 
 
 An `in_progress` / `checklist-partial` proposal is delete-blocked unless the user explicitly okays `--force-partial`. Confirmation always gates deletion. No doc or code is removed without the explicit go-ahead surfaced here.
 
+**Equipment candidates.** A `scope=task` item becomes a candidate when all refs end. That means proposal done or superseded, audit closed, or no workspace. An in-progress ref blocks it. Evidence-free db or search specialists (`review`) are candidates too. Confirm each item separately.
+
 ### 5. Execute, per category (only user-confirmed items)
 
 - **Dead docs → CLI delete, one row at a time.** For each confirmed row:
@@ -108,6 +110,11 @@ An `in_progress` / `checklist-partial` proposal is delete-blocked unless the use
   dummyindex context gc delete --kind audit    --slug <slug> --yes
   ```
   One failure does not stop the others. A row refused at `--yes` is reported `blocked at delete`, with its reason. Add `--allow-untracked` only when the user explicitly okayed permanent deletion of that workspace. Add `--force-partial` only when the user explicitly okayed deleting that `in_progress` / `checklist-partial` proposal. Never add either speculatively. Re-deleting a gone target is an idempotent no-op (exit 0).
+- **Equipment → CLI delete, one confirmed item at a time.**
+  ```bash
+  dummyindex context gc delete --kind equipment --slug <name> --yes
+  ```
+  `--force` only after that item's confirm. Library entries stay.
 - **Trivially-dead code → implementer+tester (PROVE it green).** Dispatch the implementer to remove the symbol. Dispatch the tester to prove the full suite stays green. Keep the removal only if green. If anything goes red, the symbol was not dead: revert, route to a proposal.
 
   The graph proposes. The green suite disposes. GC never edits source directly. This path does.
@@ -189,6 +196,8 @@ dummyindex context gc closeout --kind proposal|audit --slug S (--manifest FILE |
       overwrites (exit 2 if it exists). A draft with an empty discard reason
       is refused by closeout until filled.
     → --manifest FILE closes the workspace from a reviewed manifest.
+dummyindex context gc delete --kind equipment --slug S [--yes] [--force] [--root DIR]
+    → delete ONE equipment item after per-item confirm. --force only after that confirm.
 dummyindex context gc stamp [--to SHA] [--root DIR]
     → advance the committed GC anchor to HEAD (or --to SHA); resets the
       commit-throttle counter. Off-git = no-op.

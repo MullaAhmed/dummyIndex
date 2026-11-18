@@ -9,4 +9,4 @@ Build portable navigation from source and repair it without discarding authored 
 - Graph paths and filename-derived IDs are repository-relative. Large symbol graphs use a validated manifest and content-addressed shards, each at most 1,000,000 bytes. The shared reader also accepts legacy JSON.
 - Reconciliation retains the old anchor until ownership and review are complete. An absent anchor requires a full scoped inventory and an explicit reviewed replacement commit.
 
-Sources: `dummyindex/context/build/`, `dummyindex/export/storage.py`, `dummyindex/pipeline/io/detect.py`.
+Sources: `dummyindex/context/build/`, `dummyindex/context/export/storage.py`, `dummyindex/context/pipeline/io/detect.py`.

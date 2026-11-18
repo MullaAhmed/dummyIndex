@@ -23,8 +23,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from dummyindex.context.shared.atomic_io import write_text_atomic
+
 from ...build.upgrade import ensure_context_gitignore
-from ..atomic_io import write_text_atomic
 from .constants import PROJECT_STASH_DIR, STASH_FILE, USER_STASH_DIR
 from .errors import ToolkitError
 from .paths import read_target, safe_target

@@ -13,7 +13,7 @@ import pytest
 from dummyindex.context.build.manifest import compare
 from dummyindex.context.build.runner import BuildResult, build_all
 from dummyindex.context.build.upgrade import ensure_context_gitignore
-from dummyindex.pipeline.io.detect import detect
+from dummyindex.context.pipeline.io.detect import detect
 from tests.paths import FIXTURES_DIR, SAMPLE_REPO
 
 _FIXTURE_ROOT = SAMPLE_REPO
@@ -246,7 +246,7 @@ def test_build_all_reuses_a_cache_stamped_with_its_own_version(
     assert entries, "first build wrote no extraction entries"
     (cache / _FAKE_CACHE_ENTRY).write_bytes(b'{"nodes": [], "edges": []}\n')
 
-    extract_module = importlib.import_module("dummyindex.pipeline.extract")
+    extract_module = importlib.import_module("dummyindex.context.pipeline.extract")
     real_save = extract_module.save_cached
     saved: list[Path] = []
 

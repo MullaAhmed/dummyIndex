@@ -8,10 +8,11 @@ unit-testable. The CLI boundary (Phase 2) renders + writes from this decision.
 Policy (spec §3 + §6):
 
 - **Generate** (always): ``{label}-implementer`` + ``{label}-tester`` agents, a
-  ``{proj}-reviewer`` agent, a ``{proj}-verify`` skill, and every undimensioned
-  GENERATED specialist (``{proj}-db-specialist`` …). The dimensioned ones
-  (frontend / api / migration / ci) are signal-gated: stack evidence, a
-  proposal capability, or an explicit ask.
+  ``{proj}-reviewer`` agent, a ``{proj}-verify`` skill, and the baseline
+  specialists (security / performance / docs) on every non-generic stack. The
+  evidence-gated ones (db / search) need stack evidence, a proposal capability,
+  or an explicit ask; the dimensioned ones (frontend / api / migration / ci) are
+  signal-gated the same way.
 - **Hooks**: a PostToolUse format hook iff ``profile.format_command`` was
   detected (binary-guarded by the formatter name; spec §5).
 - **Adopt**: project/registry specialists covering the proposal capabilities a
@@ -26,8 +27,14 @@ from __future__ import annotations
 from dummyindex.context.domains.preflight.models import PreflightReport
 
 from ..constants import EQUIP_SENTINEL
-from ..enums import Capability, EquipmentKind
-from ..models import CatalogDecision, GenerateSpec, HookSpec, StackProfile
+from ..enums import Capability, EquipmentKind, RequestedBy
+from ..models import (
+    CatalogDecision,
+    EquipmentItem,
+    GenerateSpec,
+    HookSpec,
+    StackProfile,
+)
 from .adopt import resolve_coverage
 from .render import (
     IMPLEMENTER_TEMPLATE,
@@ -35,7 +42,13 @@ from .render import (
     TESTER_TEMPLATE,
     VERIFY_TEMPLATE,
 )
-from .specialists import SPECIALIST_TEMPLATES, specialist_specs, templated_capabilities
+from .specialists import (
+    ALWAYS_ON_CAPABILITIES,
+    EVIDENCE_GATED_CAPABILITIES,
+    SPECIALIST_TEMPLATES,
+    specialist_specs,
+    templated_capabilities,
+)
 
 _CAPABILITIES_DIR = ".context/equipment"
 _FORMAT_EVENT = "PostToolUse"
@@ -78,21 +91,70 @@ def _stack_signalled_capabilities(profile: StackProfile) -> tuple[str, ...]:
     return tuple(out)
 
 
-def _all_templated_capabilities(forced: tuple[str, ...]) -> tuple[str, ...]:
-    """``forced`` followed by every *undimensioned* template-backed capability.
+def _evidenced_capabilities(profile: StackProfile) -> frozenset[str]:
+    """Evidence-gated capabilities the detected stack actually backs."""
+    out: set[str] = set()
+    if profile.data_stores:
+        out.add(Capability.DATABASE)
+    if profile.search_backends:
+        out.add(Capability.SEARCH)
+    return frozenset(out)
 
-    Legacy specialists (db / security / ...) are generated unconditionally, so
-    they join the forced set. Dimensioned capabilities (frontend / api /
-    migration / ci) are NOT forced: they are signal-gated, so a backend repo
-    gets no frontend specialist and a user's own matching project agent is still
-    adopted. Explicit / manifest-carried capabilities lead the order so their
-    spec order (and manifest order) is stable across re-applies; the remainder
-    follow in :data:`SPECIALIST_TEMPLATES` declaration order for determinism.
+
+def capability_values(capabilities) -> frozenset[str]:
+    """Plain capability strings; ``Capability`` members hash by name, not value."""
+    return frozenset(c.value if hasattr(c, "value") else str(c) for c in capabilities)
+
+
+def stack_evidence(profile: StackProfile) -> frozenset[str]:
+    """Evidence-gated capability values the detected stack backs."""
+    return capability_values(_evidenced_capabilities(profile))
+
+
+def lacks_evidence(item: EquipmentItem, evidenced: frozenset[str]) -> bool:
+    """True for an evidence-gated specialist that the stack does not back.
+
+    Always-on capabilities never lack evidence. ``add_specialist`` and ``proposal``
+    items were asked for explicitly, so they are never reported.
     """
+    if item.requested_by in (RequestedBy.ADD_SPECIALIST, RequestedBy.PROPOSAL):
+        return False
+    wanted = capability_values(item.capabilities) & capability_values(
+        EVIDENCE_GATED_CAPABILITIES
+    )
+    return bool(wanted) and not (wanted & evidenced)
+
+
+def specialists_without_evidence(
+    items: tuple[EquipmentItem, ...] | list[EquipmentItem], profile: StackProfile
+) -> tuple[str, ...]:
+    """Names of the items :func:`lacks_evidence` flags, in input order."""
+    evidenced = stack_evidence(profile)
+    return tuple(item.name for item in items if lacks_evidence(item, evidenced))
+
+
+def _all_templated_capabilities(
+    forced: tuple[str, ...], profile: StackProfile
+) -> tuple[str, ...]:
+    """``forced`` followed by the undimensioned capabilities this stack earns.
+
+    Baseline specialists (security / performance / docs) join on every non-generic
+    stack; evidence-gated ones (db / search) join only when the stack evidences
+    them. Dimensioned capabilities (frontend / api / migration / ci) are NOT
+    forced: they are signal-gated, so a backend repo gets no frontend specialist
+    and a user's own matching project agent is still adopted. Explicit /
+    manifest-carried capabilities lead the order so their spec order (and
+    manifest order) is stable across re-applies; the remainder follow in
+    :data:`SPECIALIST_TEMPLATES` declaration order for determinism.
+    """
+    baseline: frozenset[str] = (
+        frozenset() if profile.label == "generic" else ALWAYS_ON_CAPABILITIES
+    )
+    earned = baseline | _evidenced_capabilities(profile)
     ordered = list(forced) + [
         t.capability
         for t in SPECIALIST_TEMPLATES.values()
-        if t.dimension is None and t.capability not in forced
+        if t.dimension is None and t.capability in earned and t.capability not in forced
     ]
     return tuple(dict.fromkeys(ordered))
 
@@ -108,9 +170,10 @@ def build_catalog(
 ) -> CatalogDecision:
     """Decide the full equip toolkit for this repo. Pure; no I/O.
 
-    Every undimensioned template-backed specialist is generated on **every**
-    equip pass. Dimensioned ones (frontend / api / migration / ci) are generated
-    only on a stack / proposal signal or an explicit ask.
+    Baseline specialists are generated on every equip pass of a non-generic
+    stack. Evidence-gated ones (db / search) and dimensioned ones (frontend / api
+    / migration / ci) are generated only on a stack / proposal signal or an
+    explicit ask.
 
     ``forced_specialist_capabilities`` (an explicit ``add-specialist`` ask, plus
     already-applied specialists carried forward from the manifest) are still
@@ -130,7 +193,9 @@ def build_catalog(
     coverage = resolve_coverage(
         preflight=preflight,
         proposal_capabilities=proposal_capabilities + signalled,
-        forced_capabilities=_all_templated_capabilities(forced_specialist_capabilities),
+        forced_capabilities=_all_templated_capabilities(
+            forced_specialist_capabilities, profile
+        ),
         templated_capabilities=templated_capabilities(),
         stack_frontend=profile_has_frontend(profile),
     )

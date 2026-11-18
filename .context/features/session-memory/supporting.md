@@ -5,7 +5,7 @@
 
 **Files involved:**
 
-- `dummyindex/cli/plan_update.py`
+- `dummyindex/context/cli/plan_update.py`
 - `dummyindex/context/domains/memory/transcript.py`
 - `dummyindex/context/drift.py`
 - `dummyindex/context/reconcile_gate.py`
@@ -24,7 +24,7 @@ This feature is the "is the index still trustworthy?" signal for a `.context/` r
 
 ## User-visible behavior
 
-**SessionStart drift report.** `dummyindex context plan-update` runs from the SessionStart hook, computes drift, and prints a markdown body to stdout that Claude Code appends to the session as `additionalContext`; exit code is always 0 because drift is a signal, not an error (`dummyindex/cli/plan_update.py:9-14`). On a clean index it prints nothing (`plan_update.py:76-78`). When there is drift the body is headed `## .context/ drift report` and renders up to three sections: stale per-feature docs (the mtime signal), net-new files owned by no feature, and features placed-but-not-enriched (`drift.py:189-205`). The mtime section names each drifted feature and its files and reminds the agent the entry clears once a feature doc is edited (`drift.py:235-256`); the two commit-anchored sections only appear when the index carries a usable anchor and point at the reconcile procedure (`drift.py:259-290`).
+**SessionStart drift report.** `dummyindex context plan-update` runs from the SessionStart hook, computes drift, and prints a markdown body to stdout that Claude Code appends to the session as `additionalContext`; exit code is always 0 because drift is a signal, not an error (`dummyindex/context/cli/plan_update.py:9-14`). On a clean index it prints nothing (`plan_update.py:76-78`). When there is drift the body is headed `## .context/ drift report` and renders up to three sections: stale per-feature docs (the mtime signal), net-new files owned by no feature, and features placed-but-not-enriched (`drift.py:189-205`). The mtime section names each drifted feature and its files and reminds the agent the entry clears once a feature doc is edited (`drift.py:235-256`); the two commit-anchored sections only appear when the index carries a usable anchor and point at the reconcile procedure (`drift.py:259-290`).
 
 **Stop reconcile gate.** When a substantial session that plausibly edited source tries to end and an index is still stale in a gate-relevant way, the gate emits a single Stop `decision: block` whose `reason` is an agent-facing reconcile directive — run the council/reconcile, `reconcile-stamp`, commit the refreshed index — naming exactly the drifted features, new files, and awaiting-enrichment features (`reconcile_gate.py:79-124`). It blocks at most once per session, covers the session root and every submodule index beneath it, and is silenced by `"auto_council": false` in `.context/config.json` (`reconcile_gate.py:298-346`).
 
@@ -42,7 +42,7 @@ This feature is the "is the index still trustworthy?" signal for a `.context/` r
 - `render_drift_summary(report: DriftReport) -> str` — the SessionStart markdown body; `""` when `not report.has_drift` (`drift.py:178-205`).
 - `compute_badge(report: DriftReport) -> str` — pure (no I/O, no side effects); `"[ctx ✓]"` on no drift, else `"[ctx: N drift]"` with `N = distinct rel_path in rows + len(unassigned_new_files) + len(awaiting_enrichment)` (`drift.py:91-109`).
 
-### CLI boundary (`dummyindex/cli/plan_update.py`)
+### CLI boundary (`dummyindex/context/cli/plan_update.py`)
 
 - `run(args: list[str]) -> int` — `plan-update` entry; rejects unknown args with exit 2, no-ops on a non-`.context/` repo, computes drift, writes the badge cache (swallowing every error), prints the summary, returns 0 (`plan_update.py:53-79`).
 - `badge_cache_path(context_dir: Path) -> Path` — `.context/cache/freshness-badge`; the single source of truth shared with the statusline reader (`plan_update.py:31-36`).

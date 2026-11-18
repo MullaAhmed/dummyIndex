@@ -12,10 +12,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from dummyindex.pipeline.build import build_structure
-from dummyindex.pipeline.enums import ConfidenceLevel
-from dummyindex.pipeline.extract import extract
-from dummyindex.pipeline.io.detect import detect
+from dummyindex.context.pipeline.build import build_structure
+from dummyindex.context.pipeline.enums import ConfidenceLevel
+from dummyindex.context.pipeline.extract import extract
+from dummyindex.context.pipeline.io.detect import detect
 
 SCHEMA_VERSION = 1
 

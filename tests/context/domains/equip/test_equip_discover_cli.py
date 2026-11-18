@@ -11,8 +11,8 @@ import json
 import tempfile
 from pathlib import Path
 
-from dummyindex.cli.equip import run as run_equip
-from dummyindex.cli.equip.discover import _needed_caps
+from dummyindex.context.cli.equip import run as run_equip
+from dummyindex.context.cli.equip.discover import _needed_caps
 from dummyindex.context.default_plugins import WiredKind
 from dummyindex.context.domains.config import default_config, read_config, write_config
 from dummyindex.context.domains.equip import RunResult, StackProfile
@@ -93,7 +93,7 @@ def _install_fake_runner(monkeypatch, *, catalogs=None, home=None, record=None):
             )
         return RunResult(1, "", "")
 
-    monkeypatch.setattr("dummyindex.cli.equip.discover._RUNNER", runner, raising=False)
+    monkeypatch.setattr("dummyindex.context.cli.equip.discover._RUNNER", runner, raising=False)
     return runner
 
 
@@ -387,7 +387,7 @@ def test_install_explicit_repo_rejects_reserved_name(monkeypatch, tmp_path):
             )
         return RunResult(1, "", "")
 
-    monkeypatch.setattr("dummyindex.cli.equip.discover._RUNNER", runner, raising=False)
+    monkeypatch.setattr("dummyindex.context.cli.equip.discover._RUNNER", runner, raising=False)
     rc = run_equip(
         [
             "install",
@@ -560,7 +560,7 @@ def test_discover_rejects_reserved_name_impersonation(monkeypatch, tmp_path, cap
             )
         return RunResult(1, "", "")
 
-    monkeypatch.setattr("dummyindex.cli.equip.discover._RUNNER", runner, raising=False)
+    monkeypatch.setattr("dummyindex.context.cli.equip.discover._RUNNER", runner, raising=False)
     rc = run_equip(["discover", "evil-tool", "--root", str(tmp_path)])
     captured = capsys.readouterr()
     assert rc == 0
@@ -1016,7 +1016,12 @@ def test_verify_reports_loaded_plugin(monkeypatch, tmp_path, capsys):
                 "version": 2,
                 "plugins": {
                     "pg-tuner@claude-plugins-official": [
-                        {"scope": "project", "installPath": "/x", "version": "3.5.0"}
+                        {
+                            "scope": "project",
+                            "projectPath": str(Path.cwd().resolve()),
+                            "installPath": "/x",
+                            "version": "3.5.0",
+                        }
                     ]
                 },
             }
@@ -1208,7 +1213,7 @@ def test_install_write_config_failure_warned_and_continues(
     def boom(context_dir, config):
         raise OSError("disk full")
 
-    monkeypatch.setattr("dummyindex.cli.equip.install.write_config", boom)
+    monkeypatch.setattr("dummyindex.context.cli.equip.install.write_config", boom)
     rc = run_equip(
         [
             "install",
@@ -1255,7 +1260,7 @@ def _write_manifest(tmp_path: Path, caps: list[str]) -> None:
 def test_needed_caps_excludes_capabilities_already_covered(monkeypatch, tmp_path):
     # Capabilities already in the manifest are not gaps: fully equipped -> none.
     monkeypatch.setattr(
-        "dummyindex.cli.equip.discover.detect_stack",
+        "dummyindex.context.cli.equip.discover.detect_stack",
         lambda _ctx: StackProfile(
             label="python", test_runner="pytest", formatter="ruff"
         ),
@@ -1266,7 +1271,7 @@ def test_needed_caps_excludes_capabilities_already_covered(monkeypatch, tmp_path
 
 def test_needed_caps_surfaces_uncovered_stack_gap(monkeypatch, tmp_path):
     monkeypatch.setattr(
-        "dummyindex.cli.equip.discover.detect_stack",
+        "dummyindex.context.cli.equip.discover.detect_stack",
         lambda _ctx: StackProfile(label="python", test_runner="pytest"),
     )
     # No manifest at all → the stack baseline itself is the gap.
@@ -1279,7 +1284,7 @@ def test_needed_caps_degrades_on_unreadable_manifest(monkeypatch, tmp_path, caps
     # A corrupt equipment.json must not crash discover; it degrades to a
     # stack-only gap and warns on stderr (mirrors _record_native's handling).
     monkeypatch.setattr(
-        "dummyindex.cli.equip.discover.detect_stack",
+        "dummyindex.context.cli.equip.discover.detect_stack",
         lambda _ctx: StackProfile(label="python", test_runner="pytest"),
     )
     ctx = tmp_path / ".context"
@@ -1342,7 +1347,7 @@ def _install_collection_runner(monkeypatch, *, record=None):
                     )
         return RunResult(1, "", "not found")
 
-    monkeypatch.setattr("dummyindex.cli.equip.discover._RUNNER", runner, raising=False)
+    monkeypatch.setattr("dummyindex.context.cli.equip.discover._RUNNER", runner, raising=False)
     return runner
 
 
@@ -1476,7 +1481,7 @@ def test_install_vendor_rejects_unsafe_skill_name(monkeypatch, tmp_path):
             return RunResult(0, json.dumps(listing), "")
         return RunResult(1, "", "not found")
 
-    monkeypatch.setattr("dummyindex.cli.equip.discover._RUNNER", runner, raising=False)
+    monkeypatch.setattr("dummyindex.context.cli.equip.discover._RUNNER", runner, raising=False)
     rc = run_equip(
         [
             "install",
@@ -1540,7 +1545,7 @@ def test_install_vendor_resolve_ref_source_error(monkeypatch, tmp_path, capsys):
             return RunResult(0, "<<not json>>", "")  # present but undecodable
         return RunResult(1, "", "not found")
 
-    monkeypatch.setattr("dummyindex.cli.equip.discover._RUNNER", runner, raising=False)
+    monkeypatch.setattr("dummyindex.context.cli.equip.discover._RUNNER", runner, raising=False)
     rc = run_equip(
         [
             "install",
@@ -1584,7 +1589,7 @@ def test_install_vendor_list_skills_source_error(monkeypatch, tmp_path, capsys):
             return RunResult(0, json.dumps(listing), "")
         return RunResult(1, "", "not found")
 
-    monkeypatch.setattr("dummyindex.cli.equip.discover._RUNNER", runner, raising=False)
+    monkeypatch.setattr("dummyindex.context.cli.equip.discover._RUNNER", runner, raising=False)
     rc = run_equip(
         [
             "install",
@@ -1642,7 +1647,7 @@ def test_discover_collection_undecodable_listing_degrades(
             return RunResult(0, "<<not json>>", "")  # present but undecodable
         return RunResult(1, "", "not found")
 
-    monkeypatch.setattr("dummyindex.cli.equip.discover._RUNNER", runner, raising=False)
+    monkeypatch.setattr("dummyindex.context.cli.equip.discover._RUNNER", runner, raising=False)
     rc = run_equip(["discover", "--root", str(tmp_path)])
     assert rc == 0  # degraded, did not crash
     assert "could not enumerate skills" in capsys.readouterr().err

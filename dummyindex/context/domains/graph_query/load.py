@@ -14,7 +14,7 @@ from typing import Any
 
 import networkx as nx
 
-from dummyindex.export.storage import read_graph_payload
+from dummyindex.context.export.storage import read_graph_payload
 
 from .enums import GraphRelation
 from .errors import GraphArtifactInvalidError, GraphArtifactMissingError

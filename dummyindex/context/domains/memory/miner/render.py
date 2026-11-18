@@ -11,7 +11,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ...atomic_io import write_text_atomic
+from dummyindex.context.shared.atomic_io import write_text_atomic
+
 from ..store import memory_dir
 from .enums import DEFAULT_MIN_OCCURRENCES
 from .models import MinerReport

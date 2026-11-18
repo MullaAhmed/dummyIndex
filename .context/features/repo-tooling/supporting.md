@@ -6,7 +6,7 @@
 **Files involved:**
 
 - `tests/conftest.py`
-- `tests/usage/conftest.py`
+- `tests/context/usage/conftest.py`
 
 **Original notes:**
 
@@ -24,7 +24,7 @@ _Deterministic stub (`confidence: ConfidenceLevel.EXTRACTED`). The `/dummyindex`
 ## Files involved
 
 - `tests/conftest.py`
-- `tests/usage/conftest.py`
+- `tests/context/usage/conftest.py`
 
 ## Flows
 
@@ -43,7 +43,7 @@ _Deterministic stub (`confidence: ConfidenceLevel.EXTRACTED`). The `/dummyindex`
 
 **Files involved:**
 
-- `tests/cli/test_update_skill_doc.py`
+- `tests/context/cli/test_update_skill_doc.py`
 
 **Original notes:**
 
@@ -60,7 +60,7 @@ _Deterministic stub (`confidence: ConfidenceLevel.EXTRACTED`). The `/dummyindex`
 
 ## Files involved
 
-- `tests/cli/test_update_skill_doc.py`
+- `tests/context/cli/test_update_skill_doc.py`
 
 <!-- dummyindex:merged:end -->
 

@@ -51,11 +51,11 @@
     "test_harvest_write"
   ],
   "files": [
-    "dummyindex/cli/debt.py",
+    "dummyindex/context/cli/debt.py",
     "dummyindex/context/domains/debt/__init__.py",
     "dummyindex/context/domains/debt/harvest.py",
     "dummyindex/context/domains/debt/models.py",
-    "tests/cli/test_debt_cli.py",
+    "tests/context/cli/test_debt_cli.py",
     "tests/context/domains/debt/__init__.py",
     "tests/context/domains/debt/test_harvest.py"
   ],

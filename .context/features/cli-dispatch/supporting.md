@@ -5,11 +5,11 @@
 
 **Files involved:**
 
-- `dummyindex/cli/help.py`
+- `dummyindex/context/cli/help.py`
 - `dummyindex/context/domains/equip/enums.py`
 - `dummyindex/context/enums.py`
-- `tests/cli/test_cli_doc_sync.py`
-- `tests/cli/test_debt_statusline_dispatch.py`
+- `tests/context/cli/test_cli_doc_sync.py`
+- `tests/context/cli/test_debt_statusline_dispatch.py`
 
 **Original notes:**
 
@@ -26,11 +26,11 @@ _Deterministic stub (`confidence: ConfidenceLevel.EXTRACTED`). The `/dummyindex`
 
 ## Files involved
 
-- `dummyindex/cli/help.py`
+- `dummyindex/context/cli/help.py`
 - `dummyindex/context/domains/equip/enums.py`
 - `dummyindex/context/enums.py`
-- `tests/cli/test_cli_doc_sync.py`
-- `tests/cli/test_debt_statusline_dispatch.py`
+- `tests/context/cli/test_cli_doc_sync.py`
+- `tests/context/cli/test_debt_statusline_dispatch.py`
 
 ## Flows
 

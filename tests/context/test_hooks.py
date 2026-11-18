@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli import dispatch
+from dummyindex.context.cli import dispatch
 from dummyindex.context.hooks import (
     HookStatus,
     install,
@@ -42,6 +42,14 @@ _LEGACY_SENTINEL_HOOK = {
 }
 
 _LEGACY_GIT_HOOK_BODY = "#!/usr/bin/env bash\n# DUMMYINDEX_AUTO_REFRESH\nexit 0\n"
+
+# Entry counts per event: managed hooks first, requirements hooks appended after.
+_MANAGED_UPS_ENTRIES = 1
+_REQ_UPS_ENTRIES = 1
+_MANAGED_SESSION_START_ENTRIES = 1
+_REQ_SESSION_START_ENTRIES = 1
+_MANAGED_SESSION_START_COMMANDS = 4
+_REQ_SESSION_START_COMMANDS = 1
 
 
 @pytest.fixture
@@ -100,7 +108,7 @@ def test_install_writes_per_prompt_behavior_and_skill_contract(
     settings_path = tmp_path / ".claude" / "settings.json"
     settings = json.loads(settings_path.read_text(encoding="utf-8"))
     entries = settings["hooks"]["UserPromptSubmit"]
-    assert len(entries) == 1
+    assert len(entries) == _MANAGED_UPS_ENTRIES + _REQ_UPS_ENTRIES
     entry = entries[0]
     assert "matcher" not in entry  # this event has no matcher support
     assert len(entry["hooks"]) == 2
@@ -166,7 +174,7 @@ def test_per_prompt_contract_is_idempotent_and_upgrade_additive(tmp_path: Path) 
     assert before_second == after_second
     entries = json.loads(settings_path.read_text())["hooks"]["UserPromptSubmit"]
     assert entries[0] == foreign
-    assert len(entries) == 2
+    assert len(entries) == 1 + _MANAGED_UPS_ENTRIES + _REQ_UPS_ENTRIES
     managed = [
         entry
         for entry in entries
@@ -292,8 +300,10 @@ def test_install_preserves_user_authored_hooks(tmp_path: Path) -> None:
 
     install(tmp_path)
     after = json.loads(settings_path.read_text())
-    # User's entry + our entry → 2 entries total.
-    assert len(after["hooks"]["SessionStart"]) == 2
+    # User's entry + our managed entry + requirements entry.
+    assert len(after["hooks"]["SessionStart"]) == (
+        1 + _MANAGED_SESSION_START_ENTRIES + _REQ_SESSION_START_ENTRIES
+    )
 
 
 @pytest.mark.integration
@@ -1110,7 +1120,9 @@ def test_install_idempotent_does_not_duplicate_gc_signal(tmp_path: Path) -> None
     assert sum("plan-update" in c for c in commands) == 1
     assert sum("memory session-start" in c for c in commands) == 1
     assert sum("memory mine" in c for c in commands) == 1
-    assert len(commands) == 4
+    assert len(commands) == (
+        _MANAGED_SESSION_START_COMMANDS + _REQ_SESSION_START_COMMANDS
+    )
 
 
 @pytest.mark.integration

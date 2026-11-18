@@ -3,7 +3,7 @@
 Public surface: detect the stack + formatter, render the shipped templates with
 project values, guard every write so it never clobbers a user file, and record
 the result in ``.context/equipment.json``. The CLI boundary
-(``dummyindex/cli/equip/``) wires these together; this package holds the logic.
+(``dummyindex/context/cli/equip/``) wires these together; this package holds the logic.
 """
 
 from __future__ import annotations

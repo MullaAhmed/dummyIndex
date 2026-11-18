@@ -15,13 +15,13 @@ from pathlib import Path
 import pytest
 
 from dummyindex.context.domains import docbudget
+from dummyindex.context.installer.common import _SIBLING_SKILLS
 from dummyindex.context.output.bootstrap import generate_managed_block
 from dummyindex.context.output.instructions import (
     PLAYBOOK_IDS,
     generate_how_to_use_md,
     generate_playbook_md,
 )
-from dummyindex.installer.common import _SIBLING_SKILLS
 from tests.paths import REPO_ROOT
 
 _SKILLS_DIR = REPO_ROOT / "dummyindex" / "skills"
@@ -500,18 +500,32 @@ def test_update_skill_documents_version_pinning() -> None:
 
 
 @pytest.mark.unit
-def test_update_skill_documents_generated_tool_refresh() -> None:
-    """The update skill documents that `install` also refreshes equip-generated
-    tools: `equip refresh`, the never-clobber guarantee and the equipped-only guard."""
+def test_update_skill_documents_automatic_upgrade() -> None:
+    """The upgrade is automatic: install, context init and the SessionStart hook run
+    `context upgrade --if-stale`. The manual `equip refresh` fallback is gone."""
     text = (_SKILLS_DIR / "update" / "SKILL.md").read_text(encoding="utf-8")
-    assert "equip refresh" in text
-    assert "generated" in text
-    assert "USER_MODIFIED" in text or "hand-edited" in text
+    assert "dummyindex context upgrade --if-stale" in text
+    assert "SessionStart" in text
+    assert "no manual fallback" in text
+    assert "USER_MODIFIED" in text
     assert "equipment.json" in text
-    # It is a VERIFIED layer with an explicit fallback when install's best-effort
-    # refresh is skipped — not a silent hope.
-    assert "dummyindex context equip refresh" in text
-    assert "skipped" in text
+    assert "equip refresh" not in text
+    assert "run the same upgrade in-process" in text
+
+
+@pytest.mark.unit
+def test_gc_skill_keeps_dead_docs_and_equipment_text_separate() -> None:
+    """Dead-docs flags and the no-op note stay under the dead-docs row, not equipment."""
+    text = (_SKILLS_DIR / "gc" / "SKILL.md").read_text(encoding="utf-8")
+    docs_row = text.split("- **Dead docs → CLI delete")[1].split("- **Equipment")[0]
+    equip_row = text.split("- **Equipment → CLI delete")[1].split("- **Trivially-dead")[0]
+    assert "One failure does not stop the others." in docs_row
+    assert "--force-partial" in docs_row
+    assert "idempotent no-op" in docs_row
+    assert "--force-partial" not in equip_row
+    assert "--allow-untracked" not in equip_row
+    assert "`--force` only after that item's confirm." in equip_row
+    assert "Library entries stay." in equip_row
 
 
 @pytest.mark.unit

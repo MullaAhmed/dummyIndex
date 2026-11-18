@@ -2,7 +2,7 @@
 
 Each raises `FeatureRenameError` for anything that would leave the on-disk
 scaffolding inconsistent (slug collisions, missing sources, bad targets);
-`dummyindex/cli/features.py` maps it to exit codes.
+`dummyindex/context/cli/features.py` maps it to exit codes.
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from dummyindex.context.output.viewer import render_viewer_html
-from dummyindex.pipeline.enums import ConfidenceLevel
+from dummyindex.context.pipeline.enums import ConfidenceLevel
 
 from .constants import _VALID_MERGE_SECTIONS
 from .errors import FeatureRenameError

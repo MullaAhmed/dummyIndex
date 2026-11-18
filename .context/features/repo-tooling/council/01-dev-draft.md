@@ -7,11 +7,11 @@ confidence: INFERRED
 Nine files across three trees, with no shared module. The release driver is
 `scripts/release.py` (outside `testpaths`, loaded by path in its test). Shared test
 scaffolding is `tests/conftest.py` (`tmp_repo`, autouse `_no_real_plugin_install`),
-`tests/paths.py` (filesystem anchors), `tests/usage/conftest.py` (the synthetic
+`tests/paths.py` (filesystem anchors), `tests/context/usage/conftest.py` (the synthetic
 usage corpus), and the frozen TS fixture `tests/fixtures/sample_repo/web/app.ts`.
 The statusline hot-path is `dummyindex/skills/statusline/statusline.ps1`. The guard
-tests are `tests/test_release_script.py`, `tests/cli/test_subcommand_help.py`, and
-`tests/cli/test_update_skill_doc.py`.
+tests are `tests/test_release_script.py`, `tests/context/cli/test_subcommand_help.py`, and
+`tests/context/cli/test_update_skill_doc.py`.
 
 ## Architecture in three sentences
 
@@ -47,12 +47,12 @@ and it is a throwaway `tmp_path` fixture rebuilt per test, not a model.
   `REPO_ROOT`/`SAMPLE_REPO` so deep modules don't compute their own
   (`tests/paths.py:1-14`).
 - **Deterministic corpora over recordings.** Fixed timestamps/token counts let
-  usage tests assert exact aggregates (`tests/usage/conftest.py:1-8`).
+  usage tests assert exact aggregates (`tests/context/usage/conftest.py:1-8`).
 - **Guard tests as executable docs-consistency contracts.** The help-guard pins
   exit-0 + no-mutation for every subcommand after a dispatcher bug let `--help`
   fall through and even mutate the repo; the skill-doc guards pin SKILL.md against
-  stale/false claims (`tests/cli/test_subcommand_help.py:1-12`,
-  `tests/cli/test_update_skill_doc.py:1-12`).
+  stale/false claims (`tests/context/cli/test_subcommand_help.py:1-12`,
+  `tests/context/cli/test_update_skill_doc.py:1-12`).
 - **Statusline never recomputes.** It reads a hook-cached badge and exits 0 on any
   error so a shell can't be broken (`dummyindex/skills/statusline/statusline.ps1:11-20`).
 
@@ -61,7 +61,7 @@ and it is a throwaway `tmp_path` fixture rebuilt per test, not a model.
 This feature pools unrelated infrastructure; several members arguably belong to a
 product feature rather than here:
 
-- The `usage_corpus` fixture (`tests/usage/conftest.py`) exists solely to test the
+- The `usage_corpus` fixture (`tests/context/usage/conftest.py`) exists solely to test the
   usage-reporting feature; it could live with that feature's docs.
 - `test_update_skill_doc.py` and `statusline.ps1` both concern the skills/SessionStart
   freshness surface and could attach to a statusline/freshness feature.
