@@ -421,7 +421,7 @@
     "dummyindex/context/output/viewer/script.py",
     "dummyindex/context/output/viewer/styles.py",
     "dummyindex/context/output/viewer/tiers.py",
-    "dummyindex/pipeline/enums.py",
+    "dummyindex/context/pipeline/enums.py",
     "tests/context/domains/features/test_communities.py",
     "tests/context/domains/features/test_features.py",
     "tests/context/domains/features/test_placement.py",

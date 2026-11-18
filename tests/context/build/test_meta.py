@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from dataclasses import FrozenInstanceError
+import json
+from dataclasses import FrozenInstanceError, replace
 from pathlib import Path
 
 import pytest
 
+from dummyindex.context.build.enriched_refresh import refresh_deterministic_artifacts
 from dummyindex.context.build.meta import (
     SCHEMA_VERSION,
     Meta,
@@ -14,6 +16,7 @@ from dummyindex.context.build.meta import (
     read_meta,
     write_meta,
 )
+from dummyindex.context.build.runner import build_all
 
 
 @pytest.mark.unit
@@ -174,3 +177,57 @@ def test_write_meta_creates_parent_dirs(tmp_repo: Path) -> None:
     m = new_meta(tmp_repo, dummyindex_version="0.0.0-test")
     write_meta(path, m)
     assert path.exists()
+
+
+@pytest.mark.unit
+def test_restyled_ruleset_roundtrip(tmp_repo: Path) -> None:
+    original = replace(new_meta(tmp_repo, dummyindex_version="0.0.0-test"), restyled_ruleset=1)
+    path = tmp_repo / ".context" / "meta.json"
+    write_meta(path, original)
+    assert read_meta(path).restyled_ruleset == 1
+
+
+@pytest.mark.unit
+def test_restyled_ruleset_missing_key_reads_none(tmp_repo: Path) -> None:
+    path = tmp_repo / ".context" / "meta.json"
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        '{"schema_version": 2, "dummyindex_version": "x", '
+        '"created_at": "2026-01-01T00:00:00+00:00", '
+        '"updated_at": "2026-01-01T00:00:00+00:00", "root": "."}',
+        encoding="utf-8",
+    )
+    assert read_meta(path).restyled_ruleset is None
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("raw", ['"1"', "true", "null"])
+def test_restyled_ruleset_non_int_reads_none(tmp_repo: Path, raw: str) -> None:
+    path = tmp_repo / ".context" / "meta.json"
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        '{"schema_version": 2, "dummyindex_version": "x", '
+        '"created_at": "x", "updated_at": "x", "root": ".", '
+        f'"restyled_ruleset": {raw}}}',
+        encoding="utf-8",
+    )
+    assert read_meta(path).restyled_ruleset is None
+
+
+@pytest.mark.integration
+def test_restyled_ruleset_survives_version_restamp(tmp_repo: Path) -> None:
+    """Real enriched_refresh restamp path (:337) must keep restyled_ruleset."""
+    root = tmp_repo
+    (root / "src").mkdir()
+    (root / "src/main.py").write_text("def f():\n    return 1\n", encoding="utf-8")
+    build_all(root)
+    meta_path = root / ".context" / "meta.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta["restyled_ruleset"] = 1
+    meta["dummyindex_version"] = "0.0.1"
+    meta_path.write_text(json.dumps(meta), encoding="utf-8")
+
+    refresh_deterministic_artifacts(root, dummyindex_version="9.9.9")
+
+    assert read_meta(meta_path).restyled_ruleset == 1
+    assert read_meta(meta_path).dummyindex_version == "9.9.9"

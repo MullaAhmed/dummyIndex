@@ -4,9 +4,9 @@ How an agent follows a flow narrative to the actual source.
 
 ## When to use
 
-The task is about a **sequence**: "what happens when a user logs in?", "trace the checkout from cart to receipt", "what triggers an email send?".
+The task is about a **sequence**. Examples: "what happens when a user logs in?", "trace the checkout from cart to receipt", "what triggers an email send?".
 
-Don't use this for symbol-level questions (`20-symbol-lookup.md` is faster) or feature-level questions (`10-feature-lookup.md` first).
+Do not use this for symbol-level questions (`20-symbol-lookup.md` is faster) or feature-level questions (`10-feature-lookup.md` first).
 
 ## Step 1 — Find the right feature
 
@@ -57,7 +57,7 @@ If multiple flows match, pick the one with the most relevant `files[]` overlap w
 The narrative cites `path:range` for every step. Use the `Read` tool to load the actual function when:
 - The task requires modifying the step.
 - The narrative is ambiguous and you need confirmation.
-- The narrative is `confidence: INFERRED` and you're about to act on a high-stakes claim.
+- The narrative is `confidence: INFERRED` and you are about to act on a high-stakes claim.
 
 ## Step 5 — Cross-reference with the call graph
 
@@ -68,17 +68,17 @@ dummyindex context graph callees-of app_auth_login_handler --limit 20
 ```
 
 Confirm the next symbol and cited call site. The CLI reads the complete logical
-graph whether storage is legacy JSON or bounded shards; do not hand-read its
+graph. This holds whether storage is legacy JSON or bounded shards. Do not hand-read its
 manifest or assume NetworkX `source` / `target` ordering carries direction.
-If a step has no matching edge, check the cited source and flag possible
-extraction or narrative drift before refreshing the index.
+If a step has no matching edge, check the cited source. Flag possible
+extraction or narrative drift before you refresh the index.
 
 ## When the flow doesn't exist
 
 - The deterministic flow detector may have missed it (decorator-wrapped entry, dynamic dispatch).
-- Or the dev's flow filter discarded what looked like a flow but was actually meaningful.
+- Or the dev's flow filter discarded what looked like a flow but was meaningful.
 
-If you can't find a flow that should exist:
+If you cannot find a flow that should exist:
 
 1. Check `features/<id>/feature.json` — is the entry point in `entry_points`?
 2. Check `flows/` — was it discarded? (No JSON for it means yes.)
@@ -87,6 +87,6 @@ If you can't find a flow that should exist:
 
 ## Anti-patterns
 
-- ❌ Reading the flow `.json` instead of the narrated `.md`. The narrative has the prose; the JSON is just the spine.
-- ❌ Following the flow `.md` blindly without spot-checking `path:line`. The narrative is `INFERRED`; the code is truth.
+- ❌ Reading the flow `.json` instead of the narrated `.md`. The narrative has the prose. The JSON is the spine.
+- ❌ Following the flow `.md` blindly without spot-checking `path:line`. The narrative is `INFERRED`. The code is truth.
 - ❌ Reconstructing a flow from `tree.json` when a narrated flow `.md` exists.

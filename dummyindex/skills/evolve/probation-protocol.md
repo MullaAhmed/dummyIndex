@@ -18,7 +18,7 @@ Local and provisional. Unverified. Exposure is not applicability.
 2. Loop `dummyindex context evolve attribute --next`. Per packet, record one verdict:
    `dummyindex context evolve attribute --event ID --verdict attributed|unrelated|unknown [--item ITEM] [--durable] [--retracts]`
 3. Run `dummyindex context evolve learning --next`. Write one reflection, or `--no-entry`.
-   Optional: `applies_when`; `probe` as `{"require": REGEX}` or `{"forbid": REGEX}`. Regex max 200 chars.
+   Optional: `applies_when`. Optional: `probe` as `{"require": REGEX}` or `{"forbid": REGEX}`. Regex max 200 chars.
 4. Run `dummyindex context evolve probation report`.
 5. Review eligible items.
 6. Run `dummyindex context evolve probation promote [--item ID]`.

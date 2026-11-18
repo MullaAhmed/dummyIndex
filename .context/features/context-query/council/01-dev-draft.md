@@ -10,7 +10,7 @@
 - `dummyindex/context/domains/query.py:428-633` computes IDF, scores features and
   joins feature members/files to one parsed symbol map. `:636-780` constructs
   citations and excerpts; `:786-837` renders both output formats.
-- `dummyindex/cli/query.py:10-126` owns flags, output and exit codes.
+- `dummyindex/context/cli/query.py:10-126` owns flags, output and exit codes.
 - `tests/context/domains/test_query.py:339-483` isolates ranking signals with
   synthetic indexes. `tests/eval/test_retrieval_eval.py:117-206` supplies the
   frozen correctness gate; `benchmarks/retrieval/run_eval.py:121-184` is the

@@ -13,7 +13,7 @@ The logic is a package `dummyindex/context/domains/reality_check/` (formerly the
 - `render.py:10-66` — `write_report` (`render.py:10-18`), `render_report_md` (`render.py:21-59`), `_atomic_write` (`render.py:62-66`).
 - `confidence.py:26-111` — `demote_feature_on_contradiction`, `promote_feature_on_clean`, `_mirror_confidence_to_index`, keyed on `DEMOTED_FROM_KEY` (`confidence.py:21`).
 
-CLI dispatcher `dummyindex/cli/reality_check.py:8-75` (unchanged) imports the public surface lazily inside `run` (`cli/reality_check.py:16-22`).
+CLI dispatcher `dummyindex/context/cli/reality_check.py:8-75` (unchanged) imports the public surface lazily inside `run` (`cli/reality_check.py:16-22`).
 
 ## Architecture in three sentences
 

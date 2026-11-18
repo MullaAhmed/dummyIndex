@@ -11,8 +11,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from dummyindex.context.drift import _rel_or_none
-from dummyindex.pipeline.extract.python_rationale import DEBT_PREFIXES
-from dummyindex.pipeline.io.detect import detect
+from dummyindex.context.pipeline.extract.python_rationale import DEBT_PREFIXES
+from dummyindex.context.pipeline.io.detect import detect
 
 from .models import DebtLedger, DebtRow
 

@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from dummyindex.pipeline.enums import ConfidenceLevel
+from dummyindex.context.pipeline.enums import ConfidenceLevel
 
 SCHEMA_VERSION = 1
 

@@ -2,7 +2,7 @@
 
 The canonical reference for *how* this codebase is organised and *how* code
 in it is written. Adapted from the BOS Backend conventions doc for a
-**synchronous Python CLI tool** — sections that assumed HTTP/JWT/Postgres
+**synchronous Python CLI tool**. Sections that assumed HTTP/JWT/Postgres
 /async have been replaced by their CLI-equivalents, dropped, or marked
 N/A with rationale.
 
@@ -11,10 +11,10 @@ Hierarchy of authority:
 1. **Code wins.** When this doc disagrees with code, the code is right.
    Open a PR to fix the doc.
 2. **`.context/`** — the live, machine-generated index. When it disagrees
-   with the code, the code wins; rebuild the index.
+   with the code, the code wins. Rebuild the index.
 3. **This file** — the long form, with examples and rationale.
 4. **Host guidance** — `.claude/CLAUDE.md` on Claude or the active Codex
-   project instruction file; short and points agents at `.context/` first.
+   project instruction file. It is short and points agents at `.context/` first.
 
 ## Table of contents
 
@@ -47,105 +47,120 @@ Pieces of the same domain live next to each other.
 ```
 dummyindex/
 ├── __init__.py              # narrow public surface via lazy __getattr__
-├── __main__.py              # thin entrypoint: --version / help + dispatch to installer / cli / usage
-├── codex_guidance.py        # Codex home/config/fallback-name policy shared across layers
+├── __main__.py              # thin entrypoint: --version / help + dispatch to context/installer, context/cli, context/usage
 │
-├── installer/               # `dummyindex install` / `uninstall`
-│   ├── __init__.py          # public installer surface + Claude/Codex skill paths
-│   ├── common.py            # host-aware skill paths/rendering + command helpers
-│   ├── args.py              # install/uninstall flag parsing
-│   ├── install.py           # host skill-family copy + git-repo auto-init
-│   └── uninstall.py         # scoped, ownership-aware removal
-│
-├── cli/                     # `dummyindex context <subcommand>` dispatch
-│   ├── __init__.py          # public: dispatch, resolve_context_root + handlers table
-│   ├── help.py              # `USAGE` help text
-│   ├── common.py            # arg parsing + scope/root resolution
-│   ├── migrate.py           # legacy `.context/` layout migrations
-│   ├── init.py              # run
-│   ├── rebuild.py           # run
-│   ├── bootstrap.py         # run (regenerate selected host guidance)
-│   ├── enrich.py            # run_plan + run_apply
-│   ├── features.py          # run_rename / run_merge / run_flow_remove / …
-│   ├── refresh.py           # run (refresh-indexes)
-│   ├── check.py             # run (drift detection)
-│   ├── hooks.py             # run
-│   ├── council.py           # run (council-log)
-│   ├── conventions.py       # run (conventions-write)
-│   ├── query.py             # run (PageIndex retrieval)
-│   ├── reality_check.py     # run
-│   ├── plan_update.py       # run (SessionStart drift report)
-│   ├── dev_pick.py          # run (per-feature dev persona)
-│   ├── onboard.py           # run (persist onboarding answers)
-│   ├── config.py            # run (show .context/config.json)
-│   ├── preflight.py         # run (pre-write .claude/ inventory)
-│   ├── doc_reorg.py         # run (guard/list/backup/restore)
-│   ├── memory.py            # run (session-memory verbs)
-│   ├── propose.py           # run (build loop: NL → proposal)
-│   ├── audit.py             # run + run_log (argue-and-audit panel plumbing)
-│   ├── reconcile.py         # run + run_stamp
-│   ├── reconcile_gate.py    # run (Stop-hook gate: block turn-end pending reconcile)
-│   ├── status.py            # run (read-only .context/ overview; also `dummyindex status`)
-│   ├── statusline.py        # run (cached freshness badge for a shell statusLine)
-│   ├── council_batch.py     # run (next parallel council dispatch batch)
-│   ├── debt.py              # run (TODO/FIXME/HACK/DEBT ledger over source)
-│   ├── gc.py                # run (context-hygiene GC: status/delete/stamp/signal)
-│   ├── migrate_docs.py      # run (relocate stray planning docs into .context/ homes)
-│   ├── guard_doc_write.py   # run (PreToolUse Write-hook: deny unmanaged planning docs)
-│   ├── wire.py              # run (interactive escalation for the `wired` config list)
-│   ├── build_loop/          # `context build` (drive a proposal's checklist)
-│   │   ├── __init__.py      # re-exports run
-│   │   ├── dispatch.py      # run: flag parsing + status / done verbs
-│   │   └── waves.py         # --next / --next-wave dispatch (wave grouping)
-│   └── equip/               # `context equip` (toolkit engine verbs)
-│       ├── __init__.py      # re-exports run, project_slug
-│       ├── dispatch.py      # run: verb dispatcher + apply / add-specialist
-│       ├── common.py        # flag pulling + root/slug helpers
-│       ├── verbs.py         # run_status / run_refresh / run_reset / …
-│       ├── discover.py      # run_discover (plugin manager)
-│       ├── install.py       # run_install: wire a plugin / vendor a collection skill
-│       ├── plugin_state.py  # local plugin-state readers + `equip verify`
-│       ├── seed.py          # apply-time seeding of starter eval suites
-│       └── eval.py          # `equip eval` / `equip benchmark` I/O boundary
-│
-├── pipeline/                # the deterministic backbone
-│   ├── __init__.py
-│   ├── enums.py             # ConfidenceLevel
-│   ├── io/                  # filesystem-touching helpers
-│   │   ├── __init__.py      # re-exports detect, file_hash, save_cached…
-│   │   ├── cache.py         # content-hash cache for tree-sitter parses
-│   │   ├── detect.py        # file-type detection + collection
-│   │   ├── git.py           # git-repo detection + submodule paths
-│   │   └── paths.py         # safe-read-target + resolve-under-root guards
-│   ├── build/               # extraction → structure / graph
-│   │   ├── __init__.py      # build_from_json, build_structure, validate_extraction
-│   │   ├── structure.py     # nodes+edges → folder/file/class hierarchy
-│   │   └── validate.py      # schema check before assembly
-│   └── extract/             # tree-sitter AST → nodes+edges
-│       ├── __init__.py      # public: extract(), collect_files()
-│       ├── config.py        # LanguageConfig dataclass
-│       ├── common.py        # _make_id / _read_text / _find_body
-│       ├── imports.py       # per-language _import_<lang> handlers
-│       ├── helpers.py       # C/C++ name resolvers + JS/C#/Swift extra walks
-│       ├── language_configs.py # _<LANG>_CONFIG instances
-│       ├── generic.py       # _extract_generic (the parametric driver)
-│       ├── python_rationale.py # Python docstring + rationale post-pass
-│       ├── resolve.py       # cross-file import resolvers (Python, Java)
-│       └── languages/
-│           ├── __init__.py
-│           ├── wrappers.py  # thin wrappers around _extract_generic
-│           ├── blade.py / dart.py / verilog.py
-│           └── julia.py / go.py / rust.py / zig.py / powershell.py / elixir.py
-│
-├── export/                  # render graph → on-disk JSON
-│   ├── __init__.py          # public: to_json
-│   ├── common.py            # _CONFIDENCE_SCORE_DEFAULTS, _node_community_map, _strip_diacritics
-│   └── graph.py             # to_json (the HTML viewer lives in context/output/viewer.py)
-│
-├── analysis/                # graph analytics on top of pipeline output
-│   └── cluster.py            # Leiden community detection
-│
-├── context/                 # the `.context/` context-engine
+├── context/                 # the `.context/` engine, its CLI, installer and pipeline
+│   ├── codex_guidance.py    # Codex home/config/fallback-name policy shared across layers
+│   ├── versioning.py        # dotted-integer version comparison, no `dummyindex` imports
+│   │
+│   ├── shared/                  # primitives used by context and evolve
+│   │   ├── __init__.py          # shared layer package
+│   │   ├── atomic_io.py         # atomic writes: `write_text_atomic`, `replace_bytes`
+│   │   ├── errors.py            # `EvolveError`
+│   │   ├── guard.py             # `safe_file` path guard, `project_lock` writer lock
+│   │   └── lesson/              # lesson contract
+│   │       ├── __init__.py
+│   │       ├── enums.py         # `LearningStatus`
+│   │       ├── models.py
+│   │       └── rules.py         # `rules_in`
+│   │
+│   ├── installer/               # `dummyindex install` / `uninstall`
+│   │   ├── __init__.py          # public installer surface + Claude/Codex skill paths
+│   │   ├── common.py            # host-aware skill paths/rendering + command helpers
+│   │   ├── args.py              # install/uninstall flag parsing
+│   │   ├── install.py           # host skill-family copy + git-repo auto-init
+│   │   └── uninstall.py         # scoped, ownership-aware removal
+│   │
+│   ├── cli/                     # `dummyindex context <subcommand>` dispatch
+│   │   ├── __init__.py          # public: dispatch, resolve_context_root + handlers table; composition root
+│   │   ├── help.py              # `USAGE` help text
+│   │   ├── common.py            # arg parsing + scope/root resolution
+│   │   ├── migrate.py           # legacy `.context/` layout migrations
+│   │   ├── init.py              # run
+│   │   ├── rebuild.py           # run
+│   │   ├── bootstrap.py         # run (regenerate selected host guidance)
+│   │   ├── enrich.py            # run_plan + run_apply
+│   │   ├── features.py          # run_rename / run_merge / run_flow_remove / …
+│   │   ├── refresh.py           # run (refresh-indexes)
+│   │   ├── check.py             # run (drift detection)
+│   │   ├── hooks.py             # run
+│   │   ├── council.py           # run (council-log)
+│   │   ├── conventions.py       # run (conventions-write)
+│   │   ├── query.py             # run (PageIndex retrieval)
+│   │   ├── reality_check.py     # run
+│   │   ├── plan_update.py       # run (SessionStart drift report)
+│   │   ├── dev_pick.py          # run (per-feature dev persona)
+│   │   ├── onboard.py           # run (persist onboarding answers)
+│   │   ├── config.py            # run (show .context/config.json)
+│   │   ├── preflight.py         # run (pre-write .claude/ inventory)
+│   │   ├── doc_reorg.py         # run (guard/list/backup/restore)
+│   │   ├── memory.py            # run (session-memory verbs)
+│   │   ├── propose.py           # run (build loop: NL → proposal)
+│   │   ├── audit.py             # run + run_log (argue-and-audit panel plumbing)
+│   │   ├── reconcile.py         # run + run_stamp
+│   │   ├── reconcile_gate.py    # run (Stop-hook gate: block turn-end pending reconcile)
+│   │   ├── status.py            # run (read-only .context/ overview; also `dummyindex status`)
+│   │   ├── statusline.py        # run (cached freshness badge for a shell statusLine)
+│   │   ├── council_batch.py     # run (next parallel council dispatch batch)
+│   │   ├── debt.py              # run (TODO/FIXME/HACK/DEBT ledger over source)
+│   │   ├── gc.py                # run (context-hygiene GC: status/delete/stamp/signal)
+│   │   ├── migrate_docs.py      # run (relocate stray planning docs into .context/ homes)
+│   │   ├── guard_doc_write.py   # run (PreToolUse Write-hook: deny unmanaged planning docs)
+│   │   ├── wire.py              # run (interactive escalation for the `wired` config list)
+│   │   ├── build_loop/          # `context build` (drive a proposal's checklist)
+│   │   │   ├── __init__.py      # re-exports run
+│   │   │   ├── dispatch.py      # run: flag parsing + status / done verbs
+│   │   │   └── waves.py         # --next / --next-wave dispatch (wave grouping)
+│   │   └── equip/               # `context equip` (toolkit engine verbs)
+│   │       ├── __init__.py      # re-exports run, project_slug
+│   │       ├── dispatch.py      # run: verb dispatcher + apply / add-specialist
+│   │       ├── common.py        # flag pulling + root/slug helpers
+│   │       ├── verbs.py         # run_status / run_refresh / run_reset / …
+│   │       ├── discover.py      # run_discover (plugin manager)
+│   │       ├── install.py       # run_install: wire a plugin / vendor a collection skill
+│   │       ├── plugin_state.py  # local plugin-state readers + `equip verify`
+│   │       ├── seed.py          # apply-time seeding of starter eval suites
+│   │       └── eval.py          # `equip eval` / `equip benchmark` I/O boundary
+│   │
+│   ├── pipeline/                # the deterministic backbone
+│   │   ├── __init__.py
+│   │   ├── enums.py             # ConfidenceLevel
+│   │   ├── io/                  # filesystem-touching helpers
+│   │   │   ├── __init__.py      # re-exports detect, file_hash, save_cached…
+│   │   │   ├── cache.py         # content-hash cache for tree-sitter parses
+│   │   │   ├── detect.py        # file-type detection + collection
+│   │   │   ├── git.py           # git-repo detection + submodule paths
+│   │   │   └── paths.py         # safe-read-target + resolve-under-root guards
+│   │   ├── build/               # extraction → structure / graph
+│   │   │   ├── __init__.py      # build_from_json, build_structure, validate_extraction
+│   │   │   ├── structure.py     # nodes+edges → folder/file/class hierarchy
+│   │   │   └── validate.py      # schema check before assembly
+│   │   └── extract/             # tree-sitter AST → nodes+edges
+│   │       ├── __init__.py      # public: extract(), collect_files()
+│   │       ├── config.py        # LanguageConfig dataclass
+│   │       ├── common.py        # _make_id / _read_text / _find_body
+│   │       ├── imports.py       # per-language _import_<lang> handlers
+│   │       ├── helpers.py       # C/C++ name resolvers + JS/C#/Swift extra walks
+│   │       ├── language_configs.py # _<LANG>_CONFIG instances
+│   │       ├── generic.py       # _extract_generic (the parametric driver)
+│   │       ├── python_rationale.py # Python docstring + rationale post-pass
+│   │       ├── resolve.py       # cross-file import resolvers (Python, Java)
+│   │       └── languages/
+│   │           ├── __init__.py
+│   │           ├── wrappers.py  # thin wrappers around _extract_generic
+│   │           ├── blade.py / dart.py / verilog.py
+│   │           └── julia.py / go.py / rust.py / zig.py / powershell.py / elixir.py
+│   │
+│   ├── export/                  # render graph → on-disk JSON
+│   │   ├── __init__.py          # public: to_json
+│   │   ├── common.py            # _CONFIDENCE_SCORE_DEFAULTS, _node_community_map, _strip_diacritics
+│   │   └── graph.py             # to_json (the HTML viewer lives in context/output/viewer.py)
+│   │
+│   ├── analysis/                # graph analytics on top of pipeline output
+│   │   └── cluster.py            # Leiden community detection
+│   │
+│   ├── usage/               # `dummyindex usage`: token reports over Claude Code transcripts (stdlib only)
+│   │
 │   ├── __init__.py          # re-exports the public surface
 │   ├── enums.py             # DocConfidence, ContextSubcommand
 │   ├── hooks.py             # Claude hooks: per-prompt contract, drift, memory, and document guard
@@ -174,7 +189,6 @@ dummyindex/
 │   │   └── viewer.py        # `.context/features/` HTML scaffold
 │   └── domains/             # behaviour rooted in a particular .context/ area
 │       ├── __init__.py
-│       ├── atomic_io.py     # shared atomic JSON read/write helpers
 │       ├── log_scan.py      # shared resumption-log scan helper (no cross-domain dep)
 │       ├── enrich.py        # enrich-plan + enrich-apply work-list
 │       ├── query.py         # PageIndex-style retrieval
@@ -237,6 +251,25 @@ dummyindex/
 │           ├── writers.py   # write_catalog (INDEX.json + INDEX.md)
 │           └── readers.py   # read_catalog
 │
+├── evolve/                  # self-evolve loop
+│   ├── __init__.py
+│   ├── evolve.py
+│   ├── evolve_experiments.py
+│   ├── evolve_gate.py
+│   ├── evolve_learning.py
+│   ├── evolve_native.py
+│   ├── evolve_native_response.py
+│   ├── evolve_native_snapshot.py
+│   ├── evolve_promotion.py
+│   ├── evidence.py
+│   ├── living_rules.py
+│   ├── observe/
+│   ├── probation/
+│   └── cli/                 # evolve CLI verbs (see §2.1, exception 2)
+│       ├── __init__.py
+│       ├── evolve.py
+│       └── evolve_probation.py
+│
 └── skills/                  # bundled markdown for /dummyindex or $dummyindex + siblings
     ├── skill.md             # main host-neutral orchestrator (installed as SKILL.md)
     ├── council/ retrieval/ agents/  # companion procedures + persona prompts
@@ -253,16 +286,59 @@ file:
 - `<area>/models.py` — frozen dataclasses (data only, no behaviour).
 
 **Module filenames never carry a leading underscore.** Privacy lives at
-two levels only: the package boundary (what `__init__.py` re-exports is
-public; everything else is internal) and the function level (`_name` for
-private-to-module helpers). A `common.py` or `helpers.py` that isn't
-re-exported is already private; spelling it `_common.py` restated that
-in every import. When a domain outgrows a flat folder (≳ 10 modules),
-nest it by concern the way `context/domains/equip/` does.
+two levels only: the package boundary and the function level. The package
+boundary is what `__init__.py` re-exports. Re-exported names are public.
+Everything else is internal. The function level uses `_name` for
+private-to-module helpers.
+
+A `common.py` or `helpers.py` that is not re-exported is already private.
+Spelling it `_common.py` restated that in every import. When a domain
+outgrows a flat folder (≳ 10 modules), nest it by concern the way
+`context/domains/equip/` does.
 
 ---
 
 ## 2. Layering rules
+
+### 2.1 Three layers
+
+The package has three layers. Each module belongs to one layer.
+
+| Layer | Path | Contents |
+|---|---|---|
+| shared | `dummyindex/context/shared/` | Primitives that context and evolve both use. It sits inside the context package but stays the lowest layer. |
+| evolve | `dummyindex/evolve/` | The self-evolve loop, its evidence, living rules, observe, probation and CLI verbs. |
+| context | `dummyindex/context/`, except `shared/` | Creates, manages and updates `.context/`. |
+
+"Context" includes `context/cli/`, `context/installer/`, `context/pipeline/`, `context/analysis/`, `context/export/`, `context/usage/`, `context/versioning.py` and `context/codex_guidance.py`. It also includes the root `dummyindex/__init__.py` and `dummyindex/__main__.py`.
+
+`dummyindex/` holds only `context/`, `evolve/` and `skills/`, plus `__init__.py` and `__main__.py`. Rule R8 of the boundary test checks this.
+
+Import rules. The boundary test enforces them:
+
+| Layer | Can import | Cannot import |
+|---|---|---|
+| shared | shared, standard library | context, evolve |
+| context | context, shared | evolve |
+| evolve | evolve, shared, public context names | private context names |
+
+A name that starts with `_` stays inside its layer. A cross-layer import or attribute read must not use one.
+
+Exceptions:
+
+1. **Composition root.** `dummyindex/context/cli/__init__.py` may import three evolve modules. It imports each one inside a function:
+   - `dummyindex.evolve.cli.evolve` (`run`)
+   - `dummyindex.evolve.evolve_learning` (`learn_after_closeout`)
+   - `dummyindex.evolve.probation` (`session_block`)
+
+   `evolve/cli/evolve.py` imports `dummyindex.context.cli.common`. That import runs `dummyindex/context/cli/__init__.py`. A module-level evolve import there causes an import cycle. Context code receives evolve behavior through parameters, such as `after_closeout` and `session_block`. The root injects them.
+2. **Evolve CLI verbs.** They live in `dummyindex/evolve/cli/`. §3 lists this as the only exception to `context/cli/<subcommand>.py`.
+
+The boundary test is `tests/test_import_boundaries.py`. It scans every module with the `ast` module. Rules R1–R8 cover direction, root pairs, private names, moved symbols, old paths, unresolved imports, dynamic imports and the top-level layout.
+
+### 2.2 Rules inside the context layer
+
+Module names here are relative to `dummyindex/context/`. The name `context` means the engine modules: `build/`, `output/`, `domains/` and the loose files beside them.
 
 ```
 __main__   → installer, cli, context (public surface), usage
@@ -283,17 +359,15 @@ usage      → (stdlib only)
 | `pipeline` | stdlib + third-party (networkx, tree-sitter) | `analysis`, `context` |
 | `usage` | stdlib only | `context`, `pipeline`, `analysis` |
 
-> `usage/` is a standalone domain at the bottom of the tree: it reads Claude
-> Code's own transcripts under `~/.claude/projects/` for `dummyindex usage`
-> and has nothing to do with `.context/`, so it imports only the stdlib. Its
+> `context/usage/` is a standalone domain at the bottom of the tree. It reads Claude
+> Code's own transcripts under `~/.claude/projects/` for `dummyindex usage`. It has nothing to do with `.context/`, so it imports only the stdlib. Its
 > CLI boundary lives in `__main__` (`_run_usage`), mirroring `install`
-> (whose logic lives in `installer/`, with `__main__` only dispatching).
+> (whose logic lives in `context/installer/`, with `__main__` only dispatching).
 
 > There was once a `runtime/` layer (stdlib-only cross-cutting helpers). Its
 > only member — `security.py`'s `sanitize_label` — was removed with the
-> legacy `export.to_html` path, so the package is gone. Re-introduce a
-> `runtime/` layer at the bottom of this table if a genuinely cross-cutting,
-> stdlib-only helper appears again.
+> legacy `export.to_html` path, so the package is gone. A primitive that
+> context and evolve both use belongs in `context/shared/` (§2.1).
 
 **The CLI dispatcher is wire-only.** Each subcommand module parses its
 args, calls a domain function (under `context/` or `pipeline/`), and
@@ -305,24 +379,26 @@ prints/exits. No business logic in the dispatcher.
 
 | Kind of code | Lives in |
 |---|---|
-| Tree-sitter extraction for language X | `pipeline/extract/languages/<x>.py` |
-| Cross-file resolution shared by N languages | `pipeline/extract/resolve.py` |
-| Output format (HTML/JSON/SVG/…) for graph/structure | `export/<format>.py` |
+| Tree-sitter extraction for language X | `context/pipeline/extract/languages/<x>.py` |
+| Cross-file resolution shared by N languages | `context/pipeline/extract/resolve.py` |
+| Output format (HTML/JSON/SVG/…) for graph/structure | `context/export/<format>.py` |
 | `.context/` domain logic (features, memory, equip, proposals, …) | `context/domains/<domain>.py` or `context/domains/<domain>/` |
-| CLI subcommand dispatcher | `cli/<subcommand>.py` (or `cli/<subcommand>/` once it needs private siblings) |
-| Skill install/uninstall surface | `installer/<file>.py` |
-| Pure analytics on the graph | `analysis/<file>.py` |
-| Cross-cutting helper used by ≥ 2 areas, no I/O | `runtime/<file>.py` |
-| Token reporting over Claude Code transcripts (`dummyindex usage`) | `usage/<file>.py` |
+| CLI subcommand dispatcher | `context/cli/<subcommand>.py` (or `context/cli/<subcommand>/` once it needs private siblings). Evolve verbs are the exception: see below. |
+| Evolve CLI verb | `evolve/cli/<verb>.py` (§2.1, exception 2) |
+| Self-evolve code (loop, evidence, living rules, observe, probation) | `evolve/<file>.py` or `evolve/<package>/` |
+| Skill install/uninstall surface | `context/installer/<file>.py` |
+| Pure analytics on the graph | `context/analysis/<file>.py` |
+| Primitive used by context and evolve (atomic I/O, errors, path guard, lock, lesson contract) | `context/shared/<file>.py` |
+| Token reporting over Claude Code transcripts (`dummyindex usage`) | `context/usage/<file>.py` |
 | Bundled markdown shipped with the skill (incl. slash commands) | `skills/...` |
 
-**The trap:** if a module merely *uses* a domain, that doesn't make it part
+**The trap:** if a module merely *uses* a domain, that does not make it part
 of that domain. Ask: "would a sibling domain need this same thing if it
-had the same requirement?" — if yes, it's cross-cutting.
+had the same requirement?" — if yes, it is cross-cutting.
 
-Worked example. The graph renderer in `export/graph.py` is consumed by
+Worked example. The graph renderer in `context/export/graph.py` is consumed by
 both `context/build/graph.py` and the features scaffolder. It lives in
-its own top-level `export/` because it's transport-shaped (graph →
+its own package `context/export/` because it is transport-shaped (graph →
 bytes), not feature-shaped.
 
 ---
@@ -334,9 +410,9 @@ Two independent rules — **whichever fires first wins.**
 ### A. Split by concern (always)
 
 Inside a package, separate files for separate concerns even when each file
-would be tiny. A 30-line `enums.py` is correct; a 200-line file mixing
-enums, dataclasses, free functions, and a builder class is wrong even
-under the size threshold.
+would be tiny. A 30-line `enums.py` is correct. A 200-line file that mixes
+enums, dataclasses, free functions, and a builder class is wrong. This is
+true even under the size threshold.
 
 | File | Holds |
 |---|---|
@@ -348,8 +424,8 @@ under the size threshold.
 
 Canonical layouts:
 
-- Multi-language extractor: `pipeline/extract/{__init__,config,common,resolve,generic,language_configs,…}.py` — extraction is parametric (one `_extract_generic` driver in `generic.py`, per-language `_<LANG>_CONFIG` in `language_configs.py`, thin wrappers under `languages/`), not one hand-written module per language
-- Graph exporter: `export/{__init__,common,graph}.py` (promoted to top-level; only `to_json` survives — `to_html` + `_html_assets.py` were removed as dead code, and the live HTML viewer is `context/output/viewer.py`)
+- Multi-language extractor: `context/pipeline/extract/{__init__,config,common,resolve,generic,language_configs,…}.py` — extraction is parametric. One `_extract_generic` driver lives in `generic.py`, per-language `_<LANG>_CONFIG` instances live in `language_configs.py`, and thin wrappers sit under `languages/`. It is not one hand-written module per language
+- Graph exporter: `context/export/{__init__,common,graph}.py`. It has its own package. Only `to_json` survives. `to_html` + `_html_assets.py` were removed as dead code. The live HTML viewer is `context/output/viewer.py`.
 - Feature builder: `context/domains/features/{__init__,constants,models,errors,helpers,builder,ops,render,indexes,docs}.py`
 
 ### B. Split by size
@@ -387,7 +463,7 @@ smell — extract `models.py`, `enums.py`, sibling per-concern files.
   `is_*`/`has_*`/`should_*`.
 - Path-typed parameters are `path`, `root`, `out_path`, `cache_root` —
   never `p`, `dir`, `file`.
-- Loop indices: `i`, `j` only in tight numeric loops; otherwise name the
+- Loop indices: `i`, `j` only in tight numeric loops. Otherwise name the
   thing (`for row in rows`, `for node_id in nodes`).
 
 ### 5.3 Pydantic-style suffixes are **not used here** (no HTTP boundary)
@@ -400,8 +476,8 @@ names dataclasses after the thing they represent (`Feature`, `Flow`,
 
 Module, class, function, and variable names use **generic / protocol-
 neutral** language. Reserve the third-party brand for the few wire/file
-literals where the spec requires the brand to appear (e.g. an Obsidian
-canvas key, a Neo4j Cypher keyword).
+literals. Use the brand there when the spec requires it to appear.
+For example, an Obsidian canvas key or a Neo4j Cypher keyword.
 
 | Layer | Convention | Example |
 |---|---|---|
@@ -414,24 +490,24 @@ canvas key, a Neo4j Cypher keyword).
 
 ## 6. Constants must be enums
 
-If a value has a fixed set of options, it is an `Enum` (or `StrEnum` /
-`IntEnum`) — not a bare string, not a `Literal`, not a tuple, not a dict
+If a value has a fixed set of options, it is an `Enum` (or `StrEnum` or
+`IntEnum`). It is not a bare string, not a `Literal`, not a tuple, and not a dict
 of magic strings.
 
 ### 6.1 Three locations, three purposes
 
 | Where | What | Example |
 |---|---|---|
-| `pipeline/enums.py` | Backbone enums | `ConfidenceLevel` |
+| `context/pipeline/enums.py` | Backbone enums | `ConfidenceLevel` |
 | `context/enums.py` | Context-engine enums | `DocConfidence`, `ContextSubcommand` |
 | `context/domains/<area>/enums.py` | Per-area enums + lookup sets | `MemoryTier`, `EquipVerb`, `DocReorgAction` |
-| `usage/enums.py` | Usage-report enums | `ReportKind` |
+| `context/usage/enums.py` | Usage-report enums | `ReportKind` |
 
 ### 6.2 String-valued enums for on-disk artefacts
 
 Every value that lands in a JSON/Markdown file as a string is a string-valued
-enum — `(str, Enum)` (Python 3.10 has no `enum.StrEnum`) — so `.value` is
-wire-compatible with the artefact format on disk.
+enum. Use `(str, Enum)` as the base, because Python 3.10 has no `enum.StrEnum`.
+So `.value` is wire-compatible with the artefact format on disk.
 
 ```python
 class ConfidenceLevel(str, Enum):
@@ -447,8 +523,8 @@ If the schema changes, mirror it here in the same commit.
 ### 6.3 Lookup sets are `frozenset`s
 
 Immutable, hashable, defined once. Node kinds and edge relations are emitted as
-raw strings at their call sites (the enum forms were dropped when they went
-unused), so their membership tests are raw-string `frozenset`s:
+raw strings at their call sites. The enum forms were dropped when they went
+unused. So their membership tests are raw-string `frozenset`s:
 
 ```python
 HIERARCHY_RELATIONS = frozenset({"folder_contains", "contains", "method"})
@@ -464,15 +540,15 @@ yes, make it an enum now.
 
 ## 7. Every data class is frozen
 
-This is the adapted form of BOS §7. The BOS rule says "every model is
-Pydantic, every model is frozen." This codebase has **no HTTP boundary
+This is the adapted form of BOS §7. The BOS rule says every model is
+Pydantic and every model is frozen. This codebase has **no HTTP boundary
 and no user-input validation surface**, so Pydantic adds runtime cost
 without payoff. The rule here:
 
 1. **`@dataclass(frozen=True)`** for every data class.
 2. **No exceptions outside `tests/`** — every Feature, Flow, Meta,
    DocEntry, BuildResult is frozen.
-3. **Behaviour goes elsewhere.** Data classes hold data; a sibling
+3. **Behaviour goes elsewhere.** Data classes hold data. A sibling
    `<domain>/builder.py` or service class holds the logic that produces
    them.
 
@@ -492,7 +568,7 @@ class Flow:
 ```
 
 **Use `tuple[...]` not `list[...]`** for collection fields on a frozen
-class. Lists are mutable; freezing the container hides that.
+class. Lists are mutable. Freezing the container hides that.
 
 ### 7.1 Mutable defaults
 
@@ -504,18 +580,18 @@ prefers, but a literal `()` is fine. Never `default=[]` or
 
 Field-level validation lives in `__post_init__` raising `ValueError`.
 Cross-cutting "is this artefact valid?" checks live in
-`pipeline/build/validate.py`. Do **not** push validation into the function that
+`context/pipeline/build/validate.py`. Do **not** push validation into the function that
 *uses* the dataclass.
 
 ---
 
 ## 8. CLI subcommand shape
 
-Every subcommand is a module under `cli/`. Each module exports
+Every subcommand is a module under `context/cli/`. Each module exports
 exactly one entry function and any subcommand-private helpers.
 
 ```python
-# cli/init.py
+# context/cli/init.py
 def run(argv: list[str]) -> int:
     """`dummyindex context init [path] [--root DIR] [--docs PATH]…`"""
     path, root, opts = _parse_args(argv)
@@ -524,7 +600,7 @@ def run(argv: list[str]) -> int:
     return 0
 ```
 
-`cli/__init__.py` keeps the dispatcher table:
+`context/cli/__init__.py` keeps the dispatcher table:
 
 ```python
 SUBCOMMANDS: dict[ContextSubcommand, Callable[[list[str]], int]] = {
@@ -543,14 +619,15 @@ Rules:
 2. **Each subcommand returns an `int` exit code.** `0` success, `2` bad
    args, `1` runtime failure.
 3. **Subcommands prefer not to import each other.** Shared helpers live in
-   `cli/common.py`. In practice this is a narrow, real exception rather than a
-   clean invariant: `check` re-runs `rebuild` (aliasing the entrypoint
-   explicitly — `run as run_rebuild`), and a handful of modules pull a single
+   `context/cli/common.py`. In practice this is a narrow, real exception rather than a
+   clean invariant. `check` re-runs `rebuild` (aliasing the entrypoint
+   explicitly — `run as run_rebuild`). A handful of modules pull a single
    helper from a sibling (`refresh` → `migrate.migrate_legacy_layout`,
    `reconcile_gate` → `memory.read_hook_stdin`, `statusline` →
-   `plan_update.badge_cache_path`). The spirit holds — each reuses one named
-   thing, not another subcommand's business logic — but new work should still
-   reach for `cli/common.py` first.
+   `plan_update.badge_cache_path`).
+
+   The spirit holds: each reuses one named thing, not another subcommand's
+   business logic. New work should still reach for `context/cli/common.py` first.
 4. **Subcommand names live in `ContextSubcommand`** (a `StrEnum`), not as
    bare strings in the dispatcher.
 
@@ -599,14 +676,15 @@ Each domain area that raises errors defines a typed exception in its
 package:
 
 ```
+context/shared/errors.py             # EvolveError: shared by context and evolve
 context/domains/features/errors.py    # FeatureRenameError
 context/domains/proposals/errors.py   # ProposalError → ProposalExistsError, ProposalSlugError
 context/domains/equip/errors.py       # EquipError → TemplateError, ResetError, PatchError, …
 context/domains/gc/errors.py          # GcError → GcPathError, GcTargetError
 ```
 
-Larger areas root a base exception (`EquipError`, `ProposalError`, `GcError`)
-and subclass per condition, so a caller can catch the whole family or one case.
+Larger areas root a base exception (`EquipError`, `ProposalError`, `GcError`).
+They subclass per condition. A caller can then catch the whole family or one case.
 
 Rules:
 
@@ -614,15 +692,17 @@ Rules:
    subclass so callers can `except FeatureRenameError`.
 2. **Carry context as kwargs on the exception**, accessible via attrs.
 3. **The CLI dispatcher catches typed exceptions** and maps them to exit
-   codes + stderr lines. Inner code raises; the CLI translates.
+   codes + stderr lines. Inner code raises. The CLI translates.
 
 ---
 
 ## 11. JSON read/write helpers
 
 All `.context/` artefacts are JSON. Use the existing helpers in
-`pipeline/io/cache.py` and the per-domain serialisers — do not re-implement
+`context/pipeline/io/cache.py` and the per-domain serialisers — do not re-implement
 `json.dumps(..., default=...)` ad-hoc.
+
+The shared atomic-write helpers live in `context/shared/atomic_io.py`. Context and evolve both import them.
 
 When serialising a frozen dataclass, write a `_to_dict()` helper next to
 the class (or use `dataclasses.asdict`). When loading, use a sibling
@@ -637,7 +717,7 @@ This is a CLI tool — user-visible output is **stdout/stderr via `print`**,
 not a structured logger. The rules:
 
 - **`print(...)` is allowed**, but only at the CLI boundary
-  (`cli/*` and `__main__.py`). Internal modules do not print.
+  (`context/cli/*` and `__main__.py`). Internal modules do not print.
 - **Errors go to stderr**: `print(msg, file=sys.stderr)`.
 - **Progress lines are stdout** and follow the existing two-space
   alignment seen in the installer:
@@ -657,19 +737,19 @@ sprinkle `logging.getLogger(__name__)` calls ad-hoc.
 ## 13. Security
 
 - The tool **reads** the user's filesystem but never executes code from
-  it. Tree-sitter parses source into an AST; nothing from the scanned repo
-  is ever `eval`'d, imported, or run.
+  it. Tree-sitter parses source into an AST. Nothing from the scanned repo
+  is ever passed to `eval`, imported, or run.
 - No network calls, no credentials, no secrets. If a future feature needs
-  a network call (e.g. pushing to a remote graph DB), credentials come from
-  explicit function args / env vars, never hardcoded.
+  a network call, credentials come from explicit function args or env vars.
+  For example, pushing to a remote graph DB needs them. They are never hardcoded.
 - **HTML output is the only injection surface.** The single HTML artefact is
   `.context/features/graph.html`, assembled by `render_viewer_html()` in
   `context/output/viewer/`. Its input — the codebase scan — is *model*-authored,
-  not just AST-derived, so treat it as untrusted at both boundaries:
+  not merely AST-derived, so treat it as untrusted at both boundaries:
   - **Server side (Python).** The scan is embedded as a
-    `<script type="application/json">` data island so the file opens over
-    `file://` with no server and no network. `_embed()` rewrites `</` → `<\/`
-    (a valid JSON escape for `/`) and `<!--`, because the HTML tokenizer ends a
+    `<script type="application/json">` data island. This lets the file open over
+    `file://` with no server and no network. The `_embed()` helper rewrites `</` → `<\/`
+    (a valid JSON escape for `/`) and `<!--`. It does so because the HTML tokenizer ends a
     script at the first literal `</` regardless of what JSON thinks. That is
     the only place Python writes scan-derived text into the document.
   - **Client side (JS).** Scan strings reach the DOM only via the viewer's own
@@ -690,9 +770,11 @@ sprinkle `logging.getLogger(__name__)` calls ad-hoc.
 ## 14. Testing
 
 - Framework: **pytest** with markers (`unit`, `integration`).
-- Tests mirror `dummyindex/` layout under `tests/` (`tests/cli/`,
-  `tests/context/build/`, `tests/context/output/`,
-  `tests/context/domains/…`). A domain with two or more test files gets
+- Tests mirror `dummyindex/` layout under `tests/` (`tests/context/cli/`,
+  `tests/context/shared/`, `tests/context/pipeline/`, `tests/context/analysis/`,
+  `tests/context/export/`, `tests/context/usage/`, `tests/context/build/`,
+  `tests/context/output/`, `tests/context/domains/…`, `tests/evolve/`).
+  A domain with two or more test files gets
   its own subdirectory (`domains/equip/`, `domains/memory/`, …); a
   single-file domain stays a flat `domains/test_<domain>.py`.
 - Filesystem anchors come from `tests/paths.py` (`REPO_ROOT`,
@@ -745,7 +827,7 @@ single-line comment saying why.
 
 ## 17. Things to avoid
 
-- ❌ `print(...)` outside `cli/*` and `__main__.py`. Domain
+- ❌ `print(...)` outside `context/cli/*` and `__main__.py`. Domain
   modules return values and raise typed exceptions; the CLI prints.
 - ❌ Bare-string magic values where a fixed alphabet exists. Use an enum.
 - ❌ Hardcoded paths under `.context/`. Use the helpers in
@@ -758,7 +840,7 @@ single-line comment saying why.
   `Neo4jBar`). Reserve the brand for wire literals.
 - ❌ Bare `raise ValueError(...)` for domain errors. Define a typed
   exception in the area's `errors.py`.
-- ❌ Cross-subcommand imports inside `cli/`. Shared helpers go in
+- ❌ Cross-subcommand imports inside `context/cli/`. Shared helpers go in
   `common.py`.
 - ❌ Underscore-prefixed module filenames (`_common.py`). The package
   boundary + `__init__.py` re-exports express privacy; the underscore

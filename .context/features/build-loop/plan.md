@@ -12,8 +12,8 @@ execute agents or judge their reported work.
 |---|---|
 | Parse IDs, groups and selectors; mutate checklist under the project lock | `dummyindex/context/domains/buildloop/checklist.py:72-320` |
 | Select an equipment capability for ordinary task text | `dummyindex/context/domains/buildloop/mapping.py:362-414` |
-| Translate gates, via tags and capability choices into dispatch records | `dummyindex/cli/build_loop/waves.py:239-348` |
-| Refuse live-testing items; filter dispatchable agents | `dummyindex/context/domains/buildloop/checklist_lint.py:27-33`, `dummyindex/cli/build_loop/waves.py:416-430`, `dummyindex/cli/build_loop/waves.py:159-188` |
+| Translate gates, via tags and capability choices into dispatch records | `dummyindex/context/cli/build_loop/waves.py:239-348` |
+| Refuse live-testing items; filter dispatchable agents | `dummyindex/context/domains/buildloop/checklist_lint.py:27-33`, `dummyindex/context/cli/build_loop/waves.py:416-430`, `dummyindex/context/cli/build_loop/waves.py:159-188` |
 | Bound task/result envelopes and bind actual capability/policy bytes | `dummyindex/context/domains/buildloop/envelopes.py:10-127` |
 | Validate and record completion before checking the box | `dummyindex/context/domains/buildloop/receipts.py:21-96` |
 
@@ -26,13 +26,13 @@ execute agents or judge their reported work.
    `dummyindex/context/domains/buildloop/models.py:49-56`). The parser trusts the
    authored grouping; it does not infer file independence.
 2. **Dispatch records, host execution.** `--next` and `--next-wave` first refuse
-   live-testing items (`dummyindex/cli/build_loop/waves.py:446`, `waves.py:526`).
+   live-testing items (`dummyindex/context/cli/build_loop/waves.py:446`, `waves.py:526`).
    The CLI resolves routing and chooses at most eight frontier items.
    It attaches handoffs and drops trailing entries until the payload fits 65,536 bytes. It reports `group_total` and `truncated`; a
    single oversized record fails. Each handoff separately caps its serialized
-   content at 8,192 bytes (`dummyindex/cli/build_loop/waves.py:484-542`,
+   content at 8,192 bytes (`dummyindex/context/cli/build_loop/waves.py:484-542`,
    `dummyindex/context/domains/buildloop/envelopes.py:13-46`). A gate stays main-session work even with an agent tag
-   (`dummyindex/cli/build_loop/waves.py:266-292`).
+   (`dummyindex/context/cli/build_loop/waves.py:266-292`).
 3. **Record before closing.** `check_with_receipt` holds the same lock as plain
    check/skip. It validates task text, source commit and current artifact bytes,
    then writes `checks.json` and flips the checkbox. The two files are ordered
@@ -44,7 +44,7 @@ execute agents or judge their reported work.
 Upstream inputs: proposal/checklist Markdown, routing metadata, equip manifest. `task_binding` reads the selected capability body and optional policy
 files; the host consumes their recorded identities and `role_path`
 (`dummyindex/context/domains/buildloop/envelopes.py:49-127`,
-`dummyindex/cli/build_loop/waves.py:320-336`). Completion receipts
+`dummyindex/context/cli/build_loop/waves.py:320-336`). Completion receipts
 return to the same checklist, forming a feedback loop rather than an
 agent-execution import cycle. The lock is reused from the evolution
 promotion domain (`dummyindex/context/domains/buildloop/checklist.py:295-320`).

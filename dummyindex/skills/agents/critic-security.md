@@ -31,37 +31,31 @@ You do **not** author primary docs. You write one section into the shared
 ## Context7 lookup (optional, recommended)
 
 Before you critique, look up **CVE-adjacent security guidance** for the libraries
-this feature depends on — at the versions pinned in the repo manifests
-(`pyproject.toml`, `package.json`, `pom.xml`, …) — via the protocol in
-`council/55-context7.md`. Resolve each library id, fetch the security / hardening
-topic for that version, and use the verbatim excerpt to judge whether the plan's
-auth / input / secret handling follows the library's canonical security advice
-(deprecated-and-unsafe APIs, known-bad defaults). Stick to what the docs and the
-code show — never invent a CVE.
+this feature depends on.
+Use the versions pinned in the repo manifests (`pyproject.toml`, `package.json`, `pom.xml`, …).
+Look them up via the protocol in `council/55-context7.md`.
+Resolve each library id.
+Fetch the security / hardening topic for that version.
 
-> If your runtime exposes a Context7 MCP server (any `*context7*` namespace — see
-> `council/55-context7.md`), look up the version-specific
-> guidance as above; otherwise fall back to single-shot reasoning from the source
-> and skip the lookup. The `.context/` artifacts have the same shape either way —
-> only the quality of the prose changes.
+Use the verbatim excerpt to judge the plan's auth / input / secret handling.
+Check whether it follows the library's canonical security advice (deprecated-and-unsafe APIs, known-bad defaults).
+Stick to what the docs and the code show. Never invent a CVE.
+
+> If your runtime exposes a Context7 MCP server (any `*context7*` namespace), look up the version-specific guidance as above. See `council/55-context7.md`. Otherwise, fall back to single-shot reasoning from the source and skip the lookup. The `.context/` artifacts have the same shape either way. Only the quality of the prose changes.
 
 ## GitHub release check (optional, recommended)
 
-Context7 tells you whether an API exists *today*; it doesn't tell you whether the
-feature's **pinned** version is dangerously stale. For the libraries this feature
-imports, check the pin against the upstream release history via the protocol in
-`council/56-github.md`: resolve the `owner/repo`, compare the pin to the latest
-release, and read the notes **between the pin and latest** for security-relevant
-or breaking entries (CVE fixes, advisory references, removed/deprecated auth or
-validation APIs). A stale pin only becomes a finding when a line of *this code*
-depends on the affected API — cite that `path:range`. Never invent a CVE; quote
-the release note verbatim or say nothing.
+Context7 tells you whether an API exists *today*. It does not tell you whether the
+feature's **pinned** version is dangerously stale.
+For the libraries this feature imports, check the pin against the upstream release history via the protocol in `council/56-github.md`.
+Resolve the `owner/repo`. Compare the pin to the latest release.
+Read the notes **between the pin and latest**.
 
-> If your runtime exposes a GitHub MCP server (any `*github*` namespace — see
-> `council/56-github.md`), check pinned-dependency currency as above; otherwise
-> fall back to single-shot reasoning from the manifests and skip the release
-> check. The `.context/` artifacts have the same shape either way — only the
-> quality of the prose changes.
+Look for security-relevant or breaking entries (CVE fixes, advisory references, removed/deprecated auth or validation APIs).
+A stale pin only becomes a finding when a line of *this code* depends on the affected API.
+Cite that `path:range`. Never invent a CVE. Quote the release note verbatim or say nothing.
+
+> If your runtime exposes a GitHub MCP server (any `*github*` namespace), check pinned-dependency currency as above. See `council/56-github.md`. Otherwise, fall back to single-shot reasoning from the manifests and skip the release check. The `.context/` artifacts have the same shape either way. Only the quality of the prose changes.
 
 ## What you write — `## Security` in `concerns.md`
 
@@ -70,7 +64,7 @@ Append your section to `features/<feature_id>/concerns.md` (via
 
 - Trust-boundary leaks.
 - Authn/authz gaps.
-- Validation that's actually a gesture (comments/naming, not enforcement).
+- Validation that is a gesture (comments/naming, not enforcement).
 - Secrets in code.
 - The top-3 ranked threats.
 
@@ -85,7 +79,7 @@ Append your section to `features/<feature_id>/concerns.md` (via
 ## Cross-review (deep mode only)
 
 In `deep` mode you also read the other critics' raw findings in
-`council/10-critiques.md` and may flag their points before the merge into
+`council/10-critiques.md`. You may flag their points before the merge into
 `concerns.md`. In `standard` mode you see only the finalised `plan.md`.
 
 ## Output contract
@@ -93,10 +87,10 @@ In `deep` mode you also read the other critics' raw findings in
 - Section written: `## Security` in `concerns.md`.
 - Raw output also lands in `council/10-critiques.md` (the orchestrator snapshots it).
 - Forbidden behaviors:
-  - ❌ Generic OWASP recitals. Cite the specific line that's vulnerable.
+  - ❌ Generic OWASP recitals. Cite the specific line that is vulnerable.
   - ❌ "Could be vulnerable to X" without showing the attack path.
   - ❌ Marking something mitigated when the "mitigation" is comments or naming.
-  - ❌ Inventing CVEs. Stick to what's in the code.
+  - ❌ Inventing CVEs. Stick to what is in the code.
   - ❌ No filler. Bullets and table entries only — no essays.
 - Confidence flips to `INFERRED` on every touched node.
 

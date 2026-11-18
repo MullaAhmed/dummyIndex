@@ -7,7 +7,7 @@ import stat
 from dataclasses import dataclass
 from pathlib import Path
 
-from dummyindex.codex_guidance import (
+from dummyindex.context.codex_guidance import (
     CODEX_INSTRUCTION_PRECEDENCE,
     codex_home,
     configured_project_doc_fallback_filenames,

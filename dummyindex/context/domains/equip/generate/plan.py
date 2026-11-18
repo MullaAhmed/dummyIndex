@@ -15,6 +15,7 @@ import re
 from ..enums import EquipmentKind, EquipmentSource
 from ..lifecycle.hashing import content_hash
 from ..models import EquipmentItem, GenerateSpec, StackProfile
+from .grounding import focus_query
 from .render import _load_template, render_template
 from .specialists import invariants_for
 
@@ -58,6 +59,9 @@ def render_generated_set(
                 else None
             ),
             framework=framework,
+            focus_query=focus_query(spec.capabilities[0])
+            if spec.capabilities
+            else None,
         )
         # Tool permissions belong to native adapters, not a shared mandate.
         content = re.sub(r"(?m)^allowed-tools:[^\n]*\n", "", content, count=1)

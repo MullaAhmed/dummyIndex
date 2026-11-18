@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from dummyindex.export.storage import read_graph_payload
+from dummyindex.context.export.storage import read_graph_payload
 
 
 def _read_json(path: Path) -> Any:

@@ -14,13 +14,13 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli import dispatch
 from dummyindex.context.build.reconcile import (
     AnchorStatus,
     ReconcileReport,
     compute_reconcile_report,
     stamp_reconciled,
 )
+from dummyindex.context.cli import dispatch
 from dummyindex.context.domains.features import PENDING_ENRICHMENT_MARKER
 
 

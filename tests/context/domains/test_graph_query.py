@@ -33,7 +33,7 @@ from dummyindex.context.domains.graph_query import (
     resolve_symbol,
 )
 from dummyindex.context.domains.graph_query.load import citation_for
-from dummyindex.export.storage import write_graph_payload
+from dummyindex.context.export.storage import write_graph_payload
 
 
 def _node(

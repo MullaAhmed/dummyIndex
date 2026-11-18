@@ -34,6 +34,17 @@ _HOW_TO_USE = ".context/HOW_TO_USE.md"
 _DECISIONS = ".context/DECISIONS.md"
 _DECISIONS_DOCS = ".context/docs/DECISIONS.md"
 
+# Baseline specialists: generated for every non-generic stack, no evidence needed.
+ALWAYS_ON_CAPABILITIES: frozenset[str] = frozenset(
+    {Capability.SECURITY, Capability.PERFORMANCE, Capability.DOCS}
+)
+# Generated only on stack evidence (StackProfile.data_stores / search_backends),
+# an explicit add-specialist ask, or a proposal capability: a repo with no data
+# store must not get a db agent it cannot ground.
+EVIDENCE_GATED_CAPABILITIES: frozenset[str] = frozenset(
+    {Capability.DATABASE, Capability.SEARCH}
+)
+
 
 @dataclass(frozen=True)
 class SpecialistTemplate:

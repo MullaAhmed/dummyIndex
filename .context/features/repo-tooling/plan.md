@@ -12,11 +12,11 @@ feature:
   it by file path.
 - `tests/conftest.py` — shared fixtures (`tmp_repo`, autouse `_no_real_plugin_install`).
 - `tests/paths.py` — importable filesystem anchors.
-- `tests/usage/conftest.py` — the synthetic usage corpus (`usage_corpus`).
+- `tests/context/usage/conftest.py` — the synthetic usage corpus (`usage_corpus`).
 - `tests/fixtures/sample_repo/web/app.ts` — frozen TS fixture for the extractor.
 - `dummyindex/skills/statusline/statusline.ps1` — PowerShell statusline hot-path.
-- `tests/test_release_script.py`, `tests/cli/test_subcommand_help.py`,
-  `tests/cli/test_update_skill_doc.py` — guard tests.
+- `tests/test_release_script.py`, `tests/context/cli/test_subcommand_help.py`,
+  `tests/context/cli/test_update_skill_doc.py` — guard tests.
 
 ## What each piece supports
 
@@ -27,7 +27,7 @@ each other.
 | --- | --- | --- |
 | `scripts/release.py` | the CI release workflow (this feature's one product-facing surface) | none in-process |
 | `conftest.py` fixtures + `paths.py` | **every other test module** in the repo | imported widely |
-| `usage_corpus` | the usage-reporting feature's tests only | scoped to `tests/usage/` |
+| `usage_corpus` | the usage-reporting feature's tests only | scoped to `tests/context/usage/` |
 | `sample_repo/web/app.ts` | the extraction/ingest pipeline's tests | copied, never imported here |
 | `statusline.ps1` | the SessionStart freshness surface (Windows shells) | reads a hook-written cache file |
 | three guard tests | the CLI dispatcher and the shipped SKILL.md docs | assertions only |
@@ -71,12 +71,12 @@ It is a throwaway `tmp_path` fixture rebuilt per test, not a persisted store.
   `REPO_ROOT`/`SAMPLE_REPO` so deep modules don't recompute their own
   (`tests/paths.py:1-14`).
 - **Deterministic corpora over recordings.** Fixed timestamps/token counts let usage
-  tests assert exact aggregates (`tests/usage/conftest.py:1-8`).
+  tests assert exact aggregates (`tests/context/usage/conftest.py:1-8`).
 - **Guard tests as executable docs-consistency contracts.** The help-guard pins
   exit-0 + no-mutation for every subcommand, after a dispatcher bug let `--help` fall
   through and mutate the repo. The skill-doc guards pin SKILL.md against stale/false
-  claims (`tests/cli/test_subcommand_help.py:1-12`,
-  `tests/cli/test_update_skill_doc.py:1-12`).
+  claims (`tests/context/cli/test_subcommand_help.py:1-12`,
+  `tests/context/cli/test_update_skill_doc.py:1-12`).
 - **Statusline never recomputes.** It reads a hook-cached badge and exits 0 on any
   error so a shell can't be broken
   (`dummyindex/skills/statusline/statusline.ps1:11-20`).
@@ -88,7 +88,7 @@ This feature pools unrelated infrastructure. The release driver and the
 owned by any one feature. The remaining members each lean on a single *product*
 feature and arguably belong with it:
 
-- **`usage_corpus`** (`tests/usage/conftest.py`) exists solely to test usage-reporting;
+- **`usage_corpus`** (`tests/context/usage/conftest.py`) exists solely to test usage-reporting;
   could live with that feature's docs.
 - **`test_update_skill_doc.py`** and **`statusline.ps1`** both concern the
   skills/SessionStart freshness surface and could attach to a statusline/freshness

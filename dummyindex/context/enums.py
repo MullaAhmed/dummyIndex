@@ -113,6 +113,7 @@ class ContextSubcommand(str, Enum):
     ENRICH_PLAN = "enrich-plan"
     ENRICH_APPLY = "enrich-apply"
     FEATURES_RENAME = "features-rename"
+    FEATURES_LIST = "features-list"
     FEATURES_MERGE = "features-merge"
     FLOW_REMOVE = "flow-remove"
     SECTION_WRITE = "section-write"
@@ -146,6 +147,8 @@ class ContextSubcommand(str, Enum):
     AUDIT_LOG = "audit-log"
     GC = "gc"
     MAINTAIN = "maintain"
+    RESTYLE = "restyle"
+    REQUIREMENTS = "requirements"
     FLEET = "fleet"
     STATUS = "status"
     WIRE = "wire"
@@ -155,3 +158,13 @@ class ContextSubcommand(str, Enum):
     GUARD_DOC_WRITE = "guard-doc-write"
     DRIFT_ACK = "drift-ack"
     EVOLVE = "evolve"
+    UPGRADE = "upgrade"
+
+
+class RequirementsVerb(str, Enum):
+    """`dummyindex context requirements <verb>` — the closed verb alphabet."""
+
+    CHECK = "check"
+    SYNC = "sync"
+    GATE = "gate"
+    BYPASS = "bypass"

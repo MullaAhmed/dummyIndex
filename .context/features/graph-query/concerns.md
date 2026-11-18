@@ -12,7 +12,7 @@ Two items below are **upstream artifact bugs this feature faithfully reproduces*
   So all five `common.py` files in this repo share one id namespace.
   A docstring node minted from one file can be wired to a symbol in another.
   Verified against the live artifact (2026-07-25): **173** `rationale_for` links whose rationale node's `source_file` differs from its target symbol's.
-  For example, `common_rationale_16` from `pipeline/extract/common.py` attaches to `common_resolve_context_root`, defined in `dummyindex/cli/common.py`.
+  For example, `common_rationale_16` from `pipeline/extract/common.py` attaches to `common_resolve_context_root`, defined in `dummyindex/context/cli/common.py`.
   So `graph callers-of resolve_context_root` prints another file's docstring under the subject.
   **Mitigated as of `acd07cb`**: `load.py`'s co-located-`source_file` guard now suppresses cross-file rationale attachment at the query surface.
   The ~173 cross-file `rationale_for` links (upstream id-collision root cause) still exist in the artifact.

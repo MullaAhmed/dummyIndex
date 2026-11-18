@@ -11,6 +11,7 @@ __all__ = [
     "CONTEXT_RATCHET_REL",
     "SKILLS_CEILING",
     "SKILLS_RATCHET_REL",
+    "STE_RULESET_VERSION",
     "STYLE_CEILING",
     "STYLE_RATCHET_REL",
     "RATCHET_SEPARATOR",
@@ -27,6 +28,8 @@ SKILLS_RATCHET_REL = "tests/data/skill-budget.txt"
 # Style-violation ceiling for an unrecorded doc: zero, no free violations.
 STYLE_CEILING = 0
 STYLE_RATCHET_REL = ".context/style-budget.txt"
+# Bump when a strict rule or the standard text changes; stale style ratchets re-seed.
+STE_RULESET_VERSION = 1
 
 # One ratchet line is `path<TAB>words`.
 RATCHET_SEPARATOR = "\t"

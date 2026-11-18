@@ -7,7 +7,7 @@ Authored `plan.md` from scratch (no prior plan existed). Grounding per section:
 - **Where it lives** — the 17 paths in `feature.json:153-171`, each opened and cited at
   real line ranges from the source, not from `spec.md`. Test files included because the
   guard's two hard invariants are only expressed as tests
-  (`tests/cli/test_guard_doc_write_e2e.py:255-258`, `:342-367`).
+  (`tests/context/cli/test_guard_doc_write_e2e.py:255-258`, `:342-367`).
 - **Architecture in three sentences** — read of `classify.py`, `decision.py`, `migrate.py`,
   `guard_doc_write.py`, `migrate_docs.py`, `git.py`. Named the functional-core /
   imperative-shell split that `spec.md` describes only as "pure/lexical, no I/O".
@@ -73,7 +73,7 @@ Left `spec.md` and all source untouched.
 - decided **the guard signals only through JSON and never exits non-zero** because a
   PreToolUse non-zero exit blocks the tool, so one classifier false positive would wedge a
   session with no user escape (was implicit at `cli/guard_doc_write.py:39-42` and enforced
-  only by `tests/cli/test_guard_doc_write_e2e.py:255-258`).
+  only by `tests/context/cli/test_guard_doc_write_e2e.py:255-258`).
 - decided **the error policy is deliberately asymmetric across the two consumers** — guard
   fails open, migration exits 2 — because one runs unattended on every write and the other
   runs deliberately behind `--yes` (was never stated; inferred from

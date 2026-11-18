@@ -1,7 +1,7 @@
 # build-time git interaction: shells out to git, degrades to None on any failure
 """Commit-anchored delta detection via ``git`` subprocess.
 
-Subprocess lives here, not in the deliberately subprocess-free ``pipeline/io/git.py``.
+Subprocess lives here, not in the deliberately subprocess-free ``context/pipeline/io/git.py``.
 Nothing here raises: a missing git, non-repo or unknown anchor yields ``None`` (or
 ``False``), because these results gate the non-destructive rebuild and must never crash
 the command they guard. :func:`changed_paths` merges tracked changes (``git diff``) with

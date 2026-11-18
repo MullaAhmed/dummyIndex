@@ -23,6 +23,16 @@ class UnbalancedMarkersError(ValueError):
     """Raised when CLAUDE.md has malformed dummyindex markers."""
 
 
+# Writing standard for every persisted repo doc. Checked by `check --style`.
+STE_DOC_STANDARD = (
+    "Repo docs follow ASD-STE100. Write one topic for each sentence. Use at most "
+    "20 words for each sentence. Use at most 6 sentences for each paragraph. "
+    "Use active voice and simple tenses. Keep the articles.\n\n"
+    "Do not use contractions, semicolons, or -ing verb forms. Use at most 3 nouns "
+    "in a noun cluster. Use one meaning for each word. Put technical names in "
+    "backticks. Check the text with `dummyindex context check --style`."
+)
+
 # Self-contained on purpose: `i-have-adhd` ships `disable-model-invocation: true`
 # and its SessionStart hook is inert without a per-profile opt-in, so behavior must
 # not depend on either plugin being installed. Never shorten this to "use the
@@ -32,30 +42,29 @@ ALWAYS_ON_OUTPUT_POLICY = (
     "`i-have-adhd` shape at minimum verbosity. The `caveman` chat voice is not "
     "the reply style here. These rules are self-contained, so follow them even "
     "when neither skill is loaded. The `i-have-adhd` skill sets "
-    "`disable-model-invocation: true` and cannot apply itself. "
+    "`disable-model-invocation: true` and cannot apply itself.\n\n"
     "Lead with the outcome or the next action on the first line. Number "
     "multi-step work with the fewest steps, at most 5 items per group. Keep "
     "prose compact: no preamble, recap, pleasantries, empty hedges, or "
     "tool-call narration. Suppress tangents and options you are not taking. "
     "Prefer a list or table over prose. Restate the current state each turn "
-    "rather than expecting the reader to hold it. Prefer specific quantities "
-    "(counts, paths, durations) over vague ones. Make finished work visible "
-    "and end with one concrete next action when work remains. Compress the "
-    "prose, never the substance: technical and safety detail, identifiers, "
-    "commands, and errors stay verbatim. "
-    "Give fuller prose when the user asks to explain or walk through "
-    "something. Confirm destructive actions in full sentences. Ask one "
-    "clarifying question only on real ambiguity.\n\n"
+    "rather than expecting the reader to hold it.\n\n"
+    "Prefer specific quantities (counts, paths, durations) over vague ones. "
+    "Make finished work visible and end with one concrete next action when work "
+    "remains. Compress the prose, never the substance: technical and safety "
+    "detail, identifiers, commands, and errors stay verbatim. Give fuller prose "
+    "when the user asks to explain or walk through something. Confirm "
+    "destructive actions in full sentences. Ask one clarifying question only on "
+    "real ambiguity.\n\n"
     "Language: subagent prompts and SendMessage bodies use concise Chinese "
     "with caveman rules. Code, commits, PRs, docs, and final reports stay "
-    "English. Payload stays verbatim. Docs written into the repo use English "
-    "caveman style, at most 20 words per sentence. This overrides caveman's "
-    "plain-prose rule for persisted text. "
+    "English. Payload stays verbatim.\n\n"
+    f"{STE_DOC_STANDARD}\n\n"
     "This policy holds for the whole session. It does not lapse after several "
     "turns or when the topic changes. When you are unsure whether it still "
     "applies, it does. It yields to an explicit user formatting request and to "
-    'safety requirements. It stops when the user says so ("normal mode", '
-    '"stop caveman", "stop adhd mode"); acknowledge in one line.'
+    'safety requirements. It stops when the user says so: "normal mode", '
+    '"stop caveman", or "stop adhd mode". Acknowledge in one line.'
 )
 
 # Project-scoped and self-contained: Claude profiles sharing this repo's settings
@@ -83,15 +92,16 @@ ALWAYS_ON_TURN_REMINDER = (
     "at minimum verbosity, not `caveman` chat voice. Lead with the outcome or "
     "next action. Number multi-step work, at most 5 items per group. Suppress "
     "tangents, preambles, recaps, and closing pleasantries. Restate the "
-    "current state and use concrete quantities. Keep technical and safety "
-    "detail verbatim. End with one next action only when work remains. Apply "
-    "this directly; `i-have-adhd` cannot be model-invoked. Subagent prompts and "
-    "SendMessage bodies use concise Chinese; code, commits, docs, and final "
-    "reports stay English. Repo docs use English caveman style. Before "
-    "responding or acting, inspect every currently available skill's trigger "
-    "rules and invoke each match. A user-named skill is mandatory. Route "
-    "dummyindex requests through the matching `dummyindex-*` workflow. Tool, "
-    "workflow, and subagent output is input to reshape, not a formatting "
+    "current state and use concrete quantities.\n\n"
+    "Keep technical and safety detail verbatim. End with one next action only "
+    "when work remains. Apply this directly. `i-have-adhd` cannot be "
+    "model-invoked. Subagent prompts and SendMessage bodies use concise "
+    "Chinese. Code, commits, docs, and final reports stay English.\n\n"
+    "Repo docs follow ASD-STE100. Before responding or acting, inspect every "
+    "currently available skill's trigger rules and invoke each match. A "
+    "user-named skill is mandatory. Route dummyindex requests through the "
+    "matching `dummyindex-*` workflow.\n\n"
+    "Tool, workflow, and subagent output is input to reshape, not a formatting "
     "exception. Explicit user formatting or skill opt-outs and safety "
     "requirements win."
 )

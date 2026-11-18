@@ -179,7 +179,7 @@ def write_naming_md(
             for r in by_lang[language]:
                 pct = int(round(r.confidence * 100))
                 exc = (
-                    f" — {len(r.exceptions)} exceptions; see [naming.json](naming.json)"
+                    f" — {len(r.exceptions)} exceptions. See [naming.json](naming.json)"
                     if r.exceptions
                     else ""
                 )

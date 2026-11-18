@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from dummyindex.context.domains.atomic_io import write_text_atomic
+from dummyindex.context.shared.atomic_io import write_text_atomic
 
 from .maps import FilesMap, SymbolsMap
 

@@ -28,13 +28,42 @@ from pathlib import Path
 from .anchor import anchor_orphaned, gc_commits_since, read_gc_anchor
 from .constants import DEFAULT_COMMIT_THRESHOLD
 from .enumerate import enumerate_candidates
+from .enums import CandidateKind
 from .models import Candidate, SweepReport
 from .recommend import recommend
 from .signals import classify
 
+_REF_PREFIX = {CandidateKind.PROPOSAL: "proposal", CandidateKind.AUDIT: "audit"}
+
+
+def _orphans_by_ref(candidates: tuple[Candidate, ...]) -> dict[str, tuple[str, ...]]:
+    """Equipment names keyed by each ``proposal:<slug>`` / ``audit:<slug>`` ref."""
+    grouped: dict[str, list[str]] = {}
+    for candidate in candidates:
+        if candidate.kind is CandidateKind.EQUIPMENT:
+            for ref in candidate.task_refs:
+                grouped.setdefault(ref, []).append(candidate.slug)
+    return {ref: tuple(names) for ref, names in grouped.items()}
+
+
+def _attach_orphans(
+    candidate: Candidate, by_ref: dict[str, tuple[str, ...]]
+) -> Candidate:
+    prefix = _REF_PREFIX.get(candidate.kind)
+    if prefix is None:
+        return candidate
+    return replace(candidate, orphans=by_ref.get(f"{prefix}:{candidate.slug}", ()))
+
 
 def _enrich(candidate: Candidate, context_dir: Path, root: Path) -> Candidate:
-    """Attach signal tags, then the deterministic recommendation and its reason."""
+    """Attach signal tags, then the deterministic recommendation and its reason.
+
+    Equipment candidates already carry their signals from enumeration, and
+    their receipt-free recommendation must not go through workspace classify.
+    """
+    if candidate.kind is CandidateKind.EQUIPMENT:
+        rec, reason = recommend(candidate, context_dir)
+        return replace(candidate, recommendation=rec.value, reason=reason)
     signalled = replace(candidate, signals=classify(candidate, context_dir, root))
     rec, reason = recommend(signalled, context_dir)
     return replace(signalled, recommendation=rec.value, reason=reason)
@@ -57,9 +86,11 @@ def scan(
     the anchor is orphaned); it never touches the per-session memo, so repeated
     ``scan`` calls are side-effect-free and idempotent.
     """
+    candidates = enumerate_candidates(context_dir)
+    by_ref = _orphans_by_ref(candidates)
     enriched = tuple(
-        _enrich(candidate, context_dir, root)
-        for candidate in enumerate_candidates(context_dir)
+        _enrich(_attach_orphans(candidate, by_ref), context_dir, root)
+        for candidate in candidates
     )
 
     anchor = read_gc_anchor(context_dir)

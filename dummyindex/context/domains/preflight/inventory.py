@@ -15,8 +15,9 @@ import subprocess
 from pathlib import Path
 
 from dummyindex.context.hooks import CURRENT_CLAUDE_EVENTS, SENTINEL
+from dummyindex.context.hooks_requirements import REQUIREMENTS_SENTINEL
 from dummyindex.context.output.bootstrap import BEGIN_MARKER
-from dummyindex.pipeline.io import is_git_repo
+from dummyindex.context.pipeline.io import is_git_repo
 
 from .models import PreflightReport, SettingsState
 from .ownership import ContextOwnership, context_ownership
@@ -117,6 +118,9 @@ def _inspect_settings(settings_path: Path) -> SettingsState:
                     command = h.get("command") if isinstance(h, dict) else None
                     if not isinstance(command, str):
                         command = ""
+                    if REQUIREMENTS_SENTINEL in command:
+                        # Ours, but not the managed SessionStart hook: neither user nor ours.
+                        continue
                     if SENTINEL in command:
                         # Only the event we actually install into (SessionStart)
                         # counts as "our hook present"; a leftover legacy

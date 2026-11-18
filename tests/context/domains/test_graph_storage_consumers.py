@@ -22,9 +22,9 @@ from dummyindex.context.domains.graph_query import (
     load_symbol_graph,
 )
 from dummyindex.context.domains.reality_check.verify import _load_call_edges
+from dummyindex.context.export.storage import read_graph_payload, write_graph_payload
 from dummyindex.context.output.viewer import render_viewer_html
 from dummyindex.context.output.viewer.extras import load_viewer_extras
-from dummyindex.export.storage import read_graph_payload, write_graph_payload
 from tests.context.domains.test_graph_query import write_graph
 
 pytestmark = pytest.mark.integration
@@ -106,7 +106,7 @@ def test_ambiguous_call_target_is_visible_and_does_not_imply_dead_code(tmp_path)
 
 
 def test_extraction_schema_requires_real_ambiguity_candidates_without_fake_citation():
-    from dummyindex.pipeline.build.validate import validate_extraction
+    from dummyindex.context.pipeline.build.validate import validate_extraction
 
     data = {
         "nodes": [

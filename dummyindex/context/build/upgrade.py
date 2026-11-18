@@ -18,8 +18,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TypeVar
 
-from dummyindex.context.domains.atomic_io import _replace_bytes, is_link
-from dummyindex.pipeline.io.cache import scope_cache_to_version
+from dummyindex.context.pipeline.io.cache import scope_cache_to_version
+from dummyindex.context.shared.atomic_io import is_link, replace_bytes
 
 _T = TypeVar("_T")
 
@@ -29,6 +29,9 @@ _T = TypeVar("_T")
 _MANAGED_GITIGNORE_PATTERNS: tuple[str, ...] = (
     "cache/",
     "_doc_backups/",
+    # Toolkit stash and host-config backups can hold tokens; never commit. Anchored:
+    # a bare `toolkit/` would also hide features/toolkit/ docs.
+    "/toolkit/",
     # Session scratch/log artefacts, never committed docs. `_enrich_plan.json` now
     # lives under cache/; the bare name also hides a legacy root-level copy.
     "_enrich_plan.json",
@@ -107,11 +110,13 @@ def ensure_context_gitignore(context_dir: Path) -> None:
     the reconcile path still receives new managed patterns. Merge semantics
     are documented on :func:`_ensure_managed_lines`.
     """
-    _ensure_managed_lines(
-        context_dir / ".gitignore",
-        _CONTEXT_GITIGNORE_HEADER,
-        _MANAGED_GITIGNORE_PATTERNS,
-    )
+    path = context_dir / ".gitignore"
+    _ensure_managed_lines(path, _CONTEXT_GITIGNORE_HEADER, _MANAGED_GITIGNORE_PATTERNS)
+    # Older versions wrote an unanchored `toolkit/`; the anchored rule now sits beside it.
+    lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
+    kept = [line for line in lines if line.strip() != "toolkit/"]
+    if len(kept) != len(lines):
+        path.write_text("".join(kept), encoding="utf-8")
 
 
 def ensure_context_gitattributes(context_dir: Path) -> None:
@@ -432,7 +437,7 @@ class _Retirer:
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 if not self._inside(dest.parent):
                     raise OSError(f"{self._rel(dest)} resolves outside .context/")
-                _replace_bytes(dest, data)
+                replace_bytes(dest, data)
                 return self._rel(dest)
             if is_link(dest):
                 raise OSError(f"{self._rel(dest)} is a link; refusing to follow it")

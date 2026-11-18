@@ -16,7 +16,7 @@ from dummyindex.context.build.tree import (
     iter_nodes,
     write_tree,
 )
-from dummyindex.pipeline.enums import ConfidenceLevel
+from dummyindex.context.pipeline.enums import ConfidenceLevel
 from tests.paths import SAMPLE_REPO
 
 _FIXTURE_ROOT = SAMPLE_REPO

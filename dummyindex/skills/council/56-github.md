@@ -1,32 +1,18 @@
 # GitHub release-check protocol (MCP companion)
 
-A reusable companion the security critic points at. A GitHub MCP server gives
-**real release history** for a dependency — what version is current, and what the
-notes between the pinned version and latest actually say. Neither the repo's AST
-nor Context7 (current API docs) carries this: Context7 tells you *how* an API
-looks today; the changelog tells you *what changed* and *whether the pin is
-stale*.
+A reusable companion that the security critic points at. A GitHub MCP server gives **real release history** for a dependency. It reports the current version and what the notes between the pinned version and latest say. Neither the repo's AST nor Context7 (current API docs) carries this. Context7 tells you *how* an API looks today. The changelog tells you *what changed* and *whether the pin is stale*.
 
-This is the single source of truth for *how* to do a GitHub release lookup. The
-security critic references this file rather than repeating the steps.
+This is the single source of truth for *how* to do a GitHub release lookup. The security critic references this file rather than repeating the steps.
 
 ## Graceful fallback (read first)
 
-> If your runtime exposes a GitHub MCP server (any `*github*` tool namespace —
-> commonly `mcp__github__*` or `mcp__plugin_github_github__*`), use it as
-> described below; otherwise fall back to single-shot reasoning from the repo
-> manifests and skip the release check. The `.context/` artifacts have the same
-> shape either way — only the quality of the prose changes.
+> If your runtime exposes a GitHub MCP server, use it as described below. Any tool in a `*github*` namespace counts. Common namespaces are `mcp__github__*` and `mcp__plugin_github_github__*`. If the server is missing, use single-shot reasoning from the repo manifests and skip the release check. The `.context/` artifacts have the same shape either way. Only the quality of the prose changes.
 
-No GitHub call is ever mandatory. A missing MCP server is not a failure; the
-pipeline runs exactly as v0.15 without it.
+No GitHub call is ever mandatory. A missing MCP server is not a failure. The pipeline runs exactly as v0.15 without it.
 
 ## The tools
 
-Use whichever GitHub-shaped tools your runtime exposes — the stems below are
-stable across the standalone (`mcp__github__*`) and plugin
-(`mcp__plugin_github_github__*`) namespaces. If none is present, take the
-fallback above.
+Use whichever GitHub-shaped tools your runtime exposes. The stems below stay stable across the standalone (`mcp__github__*`) and plugin (`mcp__plugin_github_github__*`) namespaces. If none is present, take the fallback above.
 
 | Tool stem | Purpose |
 |---|---|
@@ -37,38 +23,21 @@ fallback above.
 
 ## Protocol
 
-1. **Only for pinned deps the feature actually imports.** Read the pins from the
-   repo manifests (`pyproject.toml`, `package.json`, `pom.xml`, `go.mod`, …) for
-   the libraries this feature imports — not every dependency in the manifest.
-   Cap it at the dominant framework plus at most 2–3 directly-imported libraries.
+1. **Only for pinned deps the feature imports.** Read the pins from the repo manifests (`pyproject.toml`, `package.json`, `pom.xml`, `go.mod`, …). Read them for the libraries this feature imports. Do not read pins for every dependency in the manifest. Cap it at the dominant framework plus at most 2–3 directly-imported libraries.
 
-2. **Resolve the repo.** If you don't already know the library's `owner/repo`,
-   call `search_repositories` to find it. If the match is ambiguous or low
-   confidence → fall back, skip this library (do **not** guess a repo; a wrong
-   repo yields wrong notes, which is worse than no notes).
+2. **Resolve the repo.** If you do not already know the library's `owner/repo`, call `search_repositories` to find it. If the match is ambiguous or low confidence, fall back and skip this library. Do **not** guess a repo. A wrong repo yields wrong notes. Wrong notes are worse than no notes.
 
-3. **Measure the distance.** Call `get_latest_release` for the resolved repo and
-   compare to the pinned version. A pin within a minor of latest is unremarkable;
-   a pin many majors behind is a concrete, citable concern.
+3. **Measure the distance.** Call `get_latest_release` for the resolved repo and compare to the pinned version. A pin within a minor of latest is unremarkable. A pin many majors behind is a concrete, citable concern.
 
-4. **Read the notes that matter.** Use `list_releases` / `get_release_by_tag` to
-   read the release notes **between the pinned version and latest**, looking only
-   for security-relevant or breaking entries (CVE fixes, advisory references,
-   "removed", "deprecated", auth/validation changes). Quote the exact line —
-   never paraphrase a CVE into existence.
+4. **Read the notes that matter.** Use `list_releases` or `get_release_by_tag` to read the release notes **between the pinned version and latest**. Look only for security-relevant or breaking entries. Those include CVE fixes, advisory references, "removed", "deprecated", and auth or validation changes. Quote the exact line. Never paraphrase a CVE into existence.
 
-5. **Use it, don't restate it.** A release note grounds a concern; it is not the
-   concern. The critic still writes its own bullet citing `path:range` for the
-   code that depends on the stale/affected API, with the release note as the
-   evidence the pin is risky.
+5. **Use it, do not restate it.** A release note grounds a concern. It is not the concern. The critic still writes its own bullet. The bullet cites `path:range` for the code that depends on the stale or affected API. The release note is the evidence that the pin is risky.
 
 ## What this grounds (and what it does not)
 
-- ✅ "Pinned `<lib>` `X.Y` is N majors behind latest `A.B`; the `A.0` notes flag a
-  security fix in the auth path this feature uses (`path:range`)."
+- ✅ "Pinned `<lib>` `X.Y` is N majors behind latest `A.B`. The `A.0` notes flag a security fix in the auth path this feature uses (`path:range`)."
 - ❌ Inventing a CVE or advisory not present in the notes.
-- ❌ Flagging a stale pin with no line of code that depends on the affected API —
-  version distance alone is not a security finding.
+- ❌ Flagging a stale pin with no line of code that depends on the affected API. Version distance alone is not a security finding.
 
 ## Where this protocol is wired
 
@@ -76,5 +45,4 @@ fallback above.
 |---|---|
 | `agents/critic-security.md` | Whether a feature's pinned dependencies are stale and whether the notes since the pin carry security-relevant fixes. |
 
-The call site repeats the graceful-fallback clause locally so the guard is never
-lost when the persona is read in isolation.
+The call site repeats the graceful-fallback clause locally. The guard is never lost when the persona is read in isolation.

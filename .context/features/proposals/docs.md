@@ -2,7 +2,7 @@
 
 _Pointer list — the canonical entries (with confidence + broken-references) live in `../../source-docs/INDEX.md`. **Treat doc claims as hypotheses; verify against `feature.json` + `../../map/symbols.json` before quoting.**_
 
-- [`docs/internal/specs/03-build-loop-mvp-slices.md`](../../../docs/internal/specs/03-build-loop-mvp-slices.md) (**DocConfidence.MEDIUM** — 03 — Build-loop MVP slices) _matched on:_ `path:dummyindex/cli/propose.py, symbol:proposal_dir`
+- [`docs/internal/specs/03-build-loop-mvp-slices.md`](../../../docs/internal/specs/03-build-loop-mvp-slices.md) (**DocConfidence.MEDIUM** — 03 — Build-loop MVP slices) _matched on:_ `path:dummyindex/context/cli/propose.py, symbol:proposal_dir`
   - ⚠ broken refs: `docs/specs/02-build-loop-overview.md`, `proposal.json`, `checklist.md`, … +11 more
 - [`docs/internal/plans/01-session-memory.md`](../../../docs/internal/plans/01-session-memory.md) (**DocConfidence.MEDIUM** — 01 — Session-memory implementation plan) _matched on:_ `symbol:__init__.py`
   - ⚠ broken refs: `docs/specs/01-session-memory-design.md`, `ValueError`, `SessionMemoryError`, … +12 more

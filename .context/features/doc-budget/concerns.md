@@ -4,7 +4,7 @@
 
 - Seeding bypasses the ceiling. `--update-ratchet` records any size (`ratchet.py:138-139`). Run `check` first.
 - Deletion resets growth. Update drops entries for missing docs (`ratchet.py:121-147`). A recreated doc gets the ceiling again.
-- A missing ratchet file means no growth guard. `read_ratchet` returns `{}` silently (`ratchet.py:74-75`). Without a style ratchet, `check` exits 0 unguarded (`dummyindex/cli/check.py:225-233`).
+- A missing ratchet file means no growth guard. `read_ratchet` returns `{}` silently (`ratchet.py:74-75`). Without a style ratchet, `check` exits 0 unguarded (`dummyindex/context/cli/check.py:225-233`).
 - Word count ignores meaning. Tables and links count per token, so authors may write terse prose.
 - Style splits sentences only before uppercase letters (`style.py:21`). Filler matches ignore meaning.
 - Non-UTF-8 files score zero style violations (`style.py:123-130`).

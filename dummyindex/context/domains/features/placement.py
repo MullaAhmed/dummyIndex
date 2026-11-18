@@ -14,7 +14,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
-from dummyindex.pipeline.enums import ConfidenceLevel
+from dummyindex.context.pipeline.enums import ConfidenceLevel
 
 from .constants import PENDING_ENRICHMENT_MARKER, SCHEMA_VERSION
 from .errors import FeatureRenameError

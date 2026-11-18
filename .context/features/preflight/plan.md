@@ -14,7 +14,7 @@ Everything lives under `dummyindex/context/domains/preflight/`:
 - `render.py` — markdown projection of the report (`render.py:27-65`).
 - `__init__.py` — public surface re-export (`__init__.py:14-21`).
 
-I/O sits only at the CLI boundary. `dummyindex/cli/preflight.py` resolves args, calls `build_preflight_report`, and prints markdown or JSON (`preflight.py:17-37`). It is wired into the dispatch table as `ContextSubcommand.PREFLIGHT -> preflight.run` (`cli/__init__.py:40,113`).
+I/O sits only at the CLI boundary. `dummyindex/context/cli/preflight.py` resolves args, calls `build_preflight_report`, and prints markdown or JSON (`preflight.py:17-37`). It is wired into the dispatch table as `ContextSubcommand.PREFLIGHT -> preflight.run` (`cli/__init__.py:40,113`).
 
 ## Patterns named
 
@@ -35,7 +35,7 @@ I/O sits only at the CLI boundary. `dummyindex/cli/preflight.py` resolves args, 
 **Consumes** (imports markers, must stay in lock-step):
 - `dummyindex.context.hooks` — `SENTINEL`, `CURRENT_CLAUDE_EVENTS` (`inventory.py:17`).
 - `dummyindex.context.output.bootstrap` — `BEGIN_MARKER` (`inventory.py:18`).
-- `dummyindex.pipeline.io` — `is_git_repo`, which accepts a `.git` *file* for submodules/worktrees (`inventory.py:19,45`).
+- `dummyindex.context.pipeline.io` — `is_git_repo`, which accepts a `.git` *file* for submodules/worktrees (`inventory.py:19,45`).
 
 **Consumed by** — `PreflightReport` is this domain's exported contract; downstream callers read `preflight.project_agents` to drive adoption:
 - **equip/adopt** — `resolve_coverage(*, preflight, …)` (`adopt.py:81-144`) splits requested capabilities into generate-vs-adopt off `preflight.project_agents` via `_project_specs` (`adopt.py:108,162-178`); `adopt_existing` is the back-compat thin wrapper (`adopt.py:147-159`). Import at `adopt.py:31`.

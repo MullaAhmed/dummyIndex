@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dummyplane:schema:sessions-list",
+  "title": "dummyindex sessions list --json",
+  "description": "Output of `dummyindex sessions list [--root DIR] --json` (new in the engine, not yet shipped). Read-only, bounded enrichment over ~/.claude/projects/<encoded-cwd>/ (CLAUDE_CONFIG_DIR overrides ~/.claude). Subagent children are items with agent_id and parent_session_id set. Unparseable data never fails the command: the session gets state unknown plus a warning. Session states follow the rules in docs/engine-contract.md section 8.",
+  "type": "object",
+  "required": ["sessions"],
+  "properties": {
+    "sessions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["session_id", "state", "warnings"],
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Claude Code sessionId, taken from the record field (not from the file name) and cross-checked against the parent folder for subagents."
+          },
+          "agent_id": {
+            "type": ["string", "null"],
+            "description": "Subagent id (the agent-<agentId> file stem, without the agent- prefix). null for main sessions."
+          },
+          "agent_type": {
+            "type": ["string", "null"],
+            "description": "meta.agentType of a subagent; null for main sessions."
+          },
+          "parent_session_id": {
+            "type": ["string", "null"],
+            "description": "Parent session id for subagent children; null for main sessions."
+          },
+          "cwd": {
+            "type": ["string", "null"],
+            "description": "Authoritative project path from the cwd field. Never derived from the folder name."
+          },
+          "state": {
+            "enum": ["active", "finished", "unknown"]
+          },
+          "started_at": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "last_event_at": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["code", "message"],
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$",
+                  "description": "Open set. Examples: unparseable_line, unknown_state, missing_meta, missing_cwd."
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "if": {
+          "properties": { "state": { "const": "unknown" } },
+          "required": ["state"]
+        },
+        "then": {
+          "properties": {
+            "warnings": { "type": "array", "minItems": 1 }
+          }
+        }
+      }
+    }
+  }
+}

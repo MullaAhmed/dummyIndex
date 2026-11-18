@@ -12,7 +12,6 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.domains.atomic_io import write_text_atomic
 from dummyindex.context.domains.equip import (
     EquipmentItem,
     EquipmentManifest,
@@ -28,6 +27,7 @@ from dummyindex.context.domains.equip.enums import (
 from dummyindex.context.domains.equip.errors import PatchError
 from dummyindex.context.domains.equip.lifecycle.evolve import apply_patch
 from dummyindex.context.domains.equip.lifecycle.status import classify_item
+from dummyindex.context.shared.atomic_io import write_text_atomic
 
 _REL = ".claude/agents/python-implementer.md"
 _BODY = (

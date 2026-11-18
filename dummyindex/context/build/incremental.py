@@ -23,9 +23,9 @@ from dummyindex.context.build.reconcile import (
     compute_reconcile_report,
 )
 from dummyindex.context.build.runner import BuildResult, build_all
-from dummyindex.pipeline.io.cache import file_hash
-from dummyindex.pipeline.io.detect import detect
-from dummyindex.pipeline.io.paths import resolve_under_root
+from dummyindex.context.pipeline.io.cache import file_hash
+from dummyindex.context.pipeline.io.detect import detect
+from dummyindex.context.pipeline.io.paths import resolve_under_root
 
 
 @dataclass(frozen=True)

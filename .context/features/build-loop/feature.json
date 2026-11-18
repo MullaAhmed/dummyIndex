@@ -213,7 +213,7 @@
     "waves_via_instruction"
   ],
   "files": [
-    "dummyindex/cli/build_loop/waves.py",
+    "dummyindex/context/cli/build_loop/waves.py",
     "dummyindex/context/domains/buildloop/__init__.py",
     "dummyindex/context/domains/buildloop/checklist.py",
     "dummyindex/context/domains/buildloop/checklist_lint.py",
@@ -224,7 +224,7 @@
     "dummyindex/context/domains/buildloop/receipts.py",
     "dummyindex/context/domains/buildloop/routing.py",
     "dummyindex/context/domains/proposals/errors.py",
-    "tests/cli/test_waves_upgrade.py",
+    "tests/context/cli/test_waves_upgrade.py",
     "tests/context/domains/test_build_loop.py",
     "tests/context/domains/test_build_loop_routing.py",
     "tests/context/domains/test_build_stable_ids.py",

@@ -105,20 +105,21 @@ def generate_index_md(available: list[str]) -> str:
     lines.append("## Rebuild vs reconcile")
     lines.append("")
     lines.append(
-        "Quick deterministic refresh of the backbone (maps/symbols/graph), "
-        "non-destructive and safe on a curated index: `dummyindex context "
-        "rebuild --changed` (incremental — never re-clusters curated features). "
-        "The full re-cluster that DISCARDS curation is `dummyindex context "
-        "rebuild --full`; a bare `dummyindex context rebuild` REFUSES on a "
+        "Quick deterministic refresh of the backbone (maps, symbols, graph). "
+        "It is non-destructive and safe on a curated index: `dummyindex context "
+        "rebuild --changed`. This refresh is incremental. "
+        "It never re-clusters curated features. "
+        "The full re-cluster DISCARDS curation: `dummyindex context "
+        "rebuild --full`. A bare `dummyindex context rebuild` REFUSES on a "
         "curated index and tells you which flag to pass."
     )
     lines.append("")
     lines.append(
-        "Genuine update after new/changed code — fold it into the taxonomy and "
-        "re-anchor: `dummyindex context reconcile` shows the delta since the "
-        "last reconcile; then run the reconcile procedure (place new files, "
-        "re-enrich, `dummyindex context reconcile-stamp`). A bare rebuild leaves "
-        "new files unassigned."
+        "To update the index after new or changed code, fold the change into "
+        "the taxonomy and re-anchor. Run `dummyindex context reconcile` to see the delta since the "
+        "last reconcile. Then run the reconcile procedure: place new files, "
+        "re-enrich, and run `dummyindex context reconcile-stamp`. A bare rebuild "
+        "leaves new files unassigned."
     )
     lines.append("")
     return "\n".join(lines)

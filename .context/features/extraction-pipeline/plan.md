@@ -4,7 +4,7 @@
 
 ## Where it lives
 
-- `dummyindex/pipeline/extract/` — the tree-sitter front end. `__init__.py` is the public surface (`extract`, `collect_files`).
+- `dummyindex/context/pipeline/extract/` — the tree-sitter front end. `__init__.py` is the public surface (`extract`, `collect_files`).
 - `generic.py` holds `_extract_generic`, the parametric driver. `config.py` defines `LanguageConfig`.
 - `common.py` has `_make_id`, `_read_text`, `_find_body`. `imports.py` and `helpers.py` hold import handlers and extra-walk helpers.
 - `language_configs.py` instantiates one `LanguageConfig` per language.
@@ -12,13 +12,13 @@
 - A few are custom walks: Go, Rust, Julia, Elixir, Verilog, Zig, Dart, PowerShell, and Blade.
 - `python_rationale.py` is the Python docstring/rationale post-pass. `resolve.py` holds the two cross-file resolvers.
 - `python_dispatch.py` is the narrow Python dispatch-idiom post-pass: enum-keyed dict handlers and function-body imports.
-- `dummyindex/pipeline/io/` — `cache.py` (content-hash per-file cache) and `git.py` (pure-filesystem repo detection).
-- `dummyindex/analysis/cluster.py` — community detection. Committed path: NetworkX-Louvain. Leiden is off-path.
-- `dummyindex/export/graph.py` + `export/common.py` — node-link JSON serialisation.
+- `dummyindex/context/pipeline/io/` — `cache.py` (content-hash per-file cache) and `git.py` (pure-filesystem repo detection).
+- `dummyindex/context/analysis/cluster.py` — community detection. Committed path: NetworkX-Louvain. Leiden is off-path.
+- `dummyindex/context/export/graph.py` + `export/common.py` — node-link JSON serialisation.
 - `dummyindex/context/build/communities.py` — derived graph artifacts. It holds the personalized-PageRank `features/seed-rank.json` shortlist and the `features/graph-communities.json` roll-up.
 - This feature owns that module. `write_graph_artifacts` writes both after the symbol-graph export.
 - Its wiring hosts stay unowned: `context/build/graph.py` (`build_graph` calls `write_graph_artifacts`), `enriched_refresh.py`, and `runner.py`. See concerns, "Ownership & coverage".
-- Tests: `tests/pipeline/extract/test_python_rationale.py`, `tests/pipeline/extract/test_python_dispatch.py`, `tests/pipeline/extract/test_extract_hardening.py`, `tests/pipeline/io/test_git.py`, `tests/pipeline/io/test_cache.py`, `tests/pipeline/io/test_paths.py`, `tests/analysis/test_cluster_determinism.py`, `tests/export/test_graph_determinism.py`, `tests/pipeline/build/test_references.py`, `tests/pipeline/build/test_p2_read_counter.py`, `tests/context/build/test_communities.py`.
+- Tests: `tests/context/pipeline/extract/test_python_rationale.py`, `tests/context/pipeline/extract/test_python_dispatch.py`, `tests/context/pipeline/extract/test_extract_hardening.py`, `tests/context/pipeline/io/test_git.py`, `tests/context/pipeline/io/test_cache.py`, `tests/context/pipeline/io/test_paths.py`, `tests/context/analysis/test_cluster_determinism.py`, `tests/context/export/test_graph_determinism.py`, `tests/context/pipeline/build/test_references.py`, `tests/context/pipeline/build/test_p2_read_counter.py`, `tests/context/build/test_communities.py`.
 
 ## Architecture
 

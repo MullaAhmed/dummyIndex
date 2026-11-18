@@ -1,19 +1,19 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-08T02:53:01+00:00",
-  "repo_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base",
+  "generated_at": "2026-11-16T05:39:27+00:00",
+  "repo_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl",
   "default_discovery_used": true,
   "extra_doc_roots": [],
-  "doc_count": 84,
+  "doc_count": 82,
   "by_confidence": {
-    "high": 20,
-    "medium": 24,
-    "low": 37
+    "high": 21,
+    "medium": 23,
+    "low": 38
   },
   "docs": [
     {
       "path": "docs/EVOLUTION.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\EVOLUTION.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\docs\\EVOLUTION.md",
       "doc_type": "markdown",
       "title": "Optional runtime replay and learning",
       "headings": [
@@ -21,19 +21,19 @@
       ],
       "sha256": "6887df3fea31af01a4c5737ecd0df8c201267ee1b879b16e673646d8d114a67e",
       "size_bytes": 204,
-      "mtime": 1794085446.1131215,
-      "age_delta_seconds": 20341.45045900345,
+      "mtime": 1794806886.4926355,
+      "age_delta_seconds": 0.3569619655609131,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "docs/guide/01-purpose.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\01-purpose.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\docs\\guide\\01-purpose.md",
       "doc_type": "markdown",
       "title": "01 \u2014 Purpose",
       "headings": [
@@ -48,21 +48,21 @@
         "v0.15: grounded build loop + session memory",
         "The bet"
       ],
-      "sha256": "bce695d88cbbabc635facd47340913c77877ecd37f25e235adbaaa95d4e6a982",
-      "size_bytes": 5167,
-      "mtime": 1794085446.1141229,
-      "age_delta_seconds": 20341.449457645416,
+      "sha256": "59616cdeacf5da0d0c719252cdae1983878939b4392dfd24c5b3c061d6694f59",
+      "size_bytes": 5296,
+      "mtime": 1794806886.4926355,
+      "age_delta_seconds": 0.3569619655609131,
       "age_bucket": "recent",
-      "referenced_count": 5,
+      "referenced_count": 6,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "docs/guide/05-council.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\05-council.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\docs\\guide\\05-council.md",
       "doc_type": "markdown",
       "title": "05 \u2014 Multi-agent council",
       "headings": [
@@ -78,10 +78,10 @@
         "Regrouping (architect's pre-stage)",
         "What the audit trail captures"
       ],
-      "sha256": "f6e2fcc17068ec7c129faa617bf1fb9febc12f78c1b1e983881d2c0e5072d5a7",
-      "size_bytes": 9493,
-      "mtime": 1794085446.1151228,
-      "age_delta_seconds": 20341.448457717896,
+      "sha256": "dd05857dc67600b7c58238d2308aff089e7c0204acb8e3bce829ed440302d457",
+      "size_bytes": 9574,
+      "mtime": 1794806886.4946356,
+      "age_delta_seconds": 0.3549618721008301,
       "age_bucket": "recent",
       "referenced_count": 19,
       "broken_refs": [
@@ -90,11 +90,11 @@
       "broken_ratio": 0.0526,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "docs/guide/10-non-goals.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\10-non-goals.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\docs\\guide\\10-non-goals.md",
       "doc_type": "markdown",
       "title": "10 \u2014 Non-goals",
       "headings": [
@@ -114,21 +114,21 @@
         "Not a replacement for documentation a human writes",
         "Not a static snapshot"
       ],
-      "sha256": "5e8a3d887422f50f9064ddf449cc5e1ff7320e881d29af062127147e9ec8189a",
-      "size_bytes": 4669,
-      "mtime": 1794085446.117122,
-      "age_delta_seconds": 20341.44645857811,
+      "sha256": "04d3f1b1d39d603e0c641b4ec673043c6c469fcf4d2de5dfc8bbd3bb7d5a35e0",
+      "size_bytes": 4690,
+      "mtime": 1794806886.4966354,
+      "age_delta_seconds": 0.35296201705932617,
       "age_bucket": "recent",
       "referenced_count": 2,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "docs/guide/12-retrieval.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\12-retrieval.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\docs\\guide\\12-retrieval.md",
       "doc_type": "markdown",
       "title": "12 \u2014 Retrieval model",
       "headings": [
@@ -143,10 +143,10 @@
         "How the skill enforces this",
         "Query CLI \u2705 shipped (v0.12)"
       ],
-      "sha256": "9c1c9c136878b70b1e670cb53369a0db91f120883ab5799a069e07af707948e0",
-      "size_bytes": 5476,
-      "mtime": 1794085446.117122,
-      "age_delta_seconds": 20341.44645857811,
+      "sha256": "f0121e0e49b7f23268e94f5f03040f35f6222b84d35dad2eaba1e88392ee5565",
+      "size_bytes": 5815,
+      "mtime": 1794806886.497638,
+      "age_delta_seconds": 0.3519594669342041,
       "age_bucket": "recent",
       "referenced_count": 21,
       "broken_refs": [
@@ -156,11 +156,11 @@
       "broken_ratio": 0.0952,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/audit/agents/architecture.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\audit\\agents\\architecture.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\audit\\agents\\architecture.md",
       "doc_type": "markdown",
       "title": "Architecture auditor \u2014 dummyindex audit panel",
       "headings": [
@@ -172,21 +172,21 @@
         "Forbidden",
         "Logging"
       ],
-      "sha256": "cd810941ca053ac165d7a952043592cdbe790267e1682bd40df20737e277d255",
-      "size_bytes": 2688,
-      "mtime": 1794085446.2422771,
-      "age_delta_seconds": 20341.321303367615,
+      "sha256": "502f61af7d1ad6a7e77cb707d9f23ff66cbbfbb7799a2d7c3c99fa0e212c5125",
+      "size_bytes": 2733,
+      "mtime": 1794806886.676199,
+      "age_delta_seconds": 0.17339849472045898,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/audit/agents/correctness.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\audit\\agents\\correctness.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\audit\\agents\\correctness.md",
       "doc_type": "markdown",
       "title": "Correctness auditor \u2014 dummyindex audit panel",
       "headings": [
@@ -198,21 +198,21 @@
         "Forbidden",
         "Logging"
       ],
-      "sha256": "e56fd5d465340dea4fe0abef3bdb5651a69c6b5639e44cc1e17d180568e76a7e",
-      "size_bytes": 2538,
-      "mtime": 1794085446.2422771,
-      "age_delta_seconds": 20341.321303367615,
+      "sha256": "b9ba6f1b61e7210062c820cea44e4e38b5a439299981c6972ff65198d2087472",
+      "size_bytes": 2591,
+      "mtime": 1794806886.676199,
+      "age_delta_seconds": 0.17339849472045898,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/audit/agents/data-integrity.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\audit\\agents\\data-integrity.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\audit\\agents\\data-integrity.md",
       "doc_type": "markdown",
       "title": "Data-integrity auditor \u2014 dummyindex audit panel",
       "headings": [
@@ -224,21 +224,21 @@
         "Forbidden",
         "Logging"
       ],
-      "sha256": "d84c4ccfa7eb76531027f3fa6104ded62074fc2b51b7538973ace52130531a2a",
-      "size_bytes": 2550,
-      "mtime": 1794085446.2432797,
-      "age_delta_seconds": 20341.32030081749,
+      "sha256": "435e7d344aedfcfb9256c23f013d07422604d9e477eb8b7f8793d31e279eaf60",
+      "size_bytes": 2609,
+      "mtime": 1794806886.6772003,
+      "age_delta_seconds": 0.17239713668823242,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/audit/agents/maintainability.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\audit\\agents\\maintainability.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\audit\\agents\\maintainability.md",
       "doc_type": "markdown",
       "title": "Maintainability auditor \u2014 dummyindex audit panel",
       "headings": [
@@ -250,21 +250,21 @@
         "Forbidden",
         "Logging"
       ],
-      "sha256": "2b95d8b0e46e86d393cec6dfd4f242e50ab4c8b9b6465c38985bc2e7a3680f05",
-      "size_bytes": 2554,
-      "mtime": 1794085446.2432797,
-      "age_delta_seconds": 20341.32030081749,
+      "sha256": "45ab12277366f246bfd77d9493a53af78c141aa0291f55435df50f78dc772949",
+      "size_bytes": 2601,
+      "mtime": 1794806886.6772003,
+      "age_delta_seconds": 0.17239713668823242,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/audit/agents/over-engineering.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\audit\\agents\\over-engineering.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\audit\\agents\\over-engineering.md",
       "doc_type": "markdown",
       "title": "Over-engineering auditor \u2014 dummyindex audit panel",
       "headings": [
@@ -275,21 +275,21 @@
         "Forbidden",
         "Logging"
       ],
-      "sha256": "b10a2ca6e44741fbe1755b5d7edcc704c16bc75ecaf3b72d76c44e937a182f58",
-      "size_bytes": 4349,
-      "mtime": 1794085446.2432797,
-      "age_delta_seconds": 20341.32030081749,
+      "sha256": "6d393b08459b16d4bb43c0a8ddb8ed73f94906ff5f92d36e574988371d9e4fcc",
+      "size_bytes": 4448,
+      "mtime": 1794806886.6772003,
+      "age_delta_seconds": 0.17239713668823242,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/audit/agents/performance.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\audit\\agents\\performance.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\audit\\agents\\performance.md",
       "doc_type": "markdown",
       "title": "Performance auditor \u2014 dummyindex audit panel",
       "headings": [
@@ -301,21 +301,21 @@
         "Forbidden",
         "Logging"
       ],
-      "sha256": "0d64bad1fc9f88d0f01edd2ba31783d67136d81529cd8d2d86285941121cdc2a",
-      "size_bytes": 2542,
-      "mtime": 1794085446.2432797,
-      "age_delta_seconds": 20341.32030081749,
+      "sha256": "4c74321bc05cbcfaad64bf7007b5b06cedbb1b46b6d6494ec97c7046dc44fe37",
+      "size_bytes": 2609,
+      "mtime": 1794806886.6787038,
+      "age_delta_seconds": 0.17089366912841797,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/audit/agents/security.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\audit\\agents\\security.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\audit\\agents\\security.md",
       "doc_type": "markdown",
       "title": "Security auditor \u2014 dummyindex audit panel",
       "headings": [
@@ -327,21 +327,21 @@
         "Forbidden",
         "Logging"
       ],
-      "sha256": "413ae178b2d02936e2ab7176fdb6662d5926ad2a39ada22b03f57df0821e8b28",
-      "size_bytes": 2591,
-      "mtime": 1794085446.2442763,
-      "age_delta_seconds": 20341.31930422783,
+      "sha256": "4068c630a60f633d4d87100a97f79911a0449628b64edc90da7d6ccf3f3c6ece",
+      "size_bytes": 2665,
+      "mtime": 1794806886.6787038,
+      "age_delta_seconds": 0.17089366912841797,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/council/19-resume.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\19-resume.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\council\\19-resume.md",
       "doc_type": "markdown",
       "title": "Resumption \u2014 pick up where we left off",
       "headings": [
@@ -357,21 +357,21 @@
         "Audit visibility",
         "Resumption under parallel dispatch"
       ],
-      "sha256": "9de869751f7b623c168158653c8772ab6207c1c3c0be5ff422277453934000ce",
-      "size_bytes": 3084,
-      "mtime": 1794085446.247276,
-      "age_delta_seconds": 20341.316304445267,
+      "sha256": "1124ebdbc3eab4a5c4d0977d6bec3e63d7dd22f0494a6a85ef618db6155e88d1",
+      "size_bytes": 3108,
+      "mtime": 1794806886.6838486,
+      "age_delta_seconds": 0.16574883460998535,
       "age_bucket": "recent",
       "referenced_count": 1,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/council/22-parallel-dispatch.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\22-parallel-dispatch.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\council\\22-parallel-dispatch.md",
       "doc_type": "markdown",
       "title": "Parallel dispatch \u2014 the council batch loop",
       "headings": [
@@ -390,21 +390,21 @@
         "Failure isolation",
         "Resumption"
       ],
-      "sha256": "783bb225f9a0833b12777c82b485e79094a0698f26d29807f2148c83d4758ff9",
-      "size_bytes": 2596,
-      "mtime": 1794085446.2482767,
-      "age_delta_seconds": 20341.31530380249,
+      "sha256": "c0a45c237d975c6ef3073fecb3e2f2ae31958aa3e469999a7e397131c87a2660",
+      "size_bytes": 2584,
+      "mtime": 1794806886.6848521,
+      "age_delta_seconds": 0.16474533081054688,
       "age_bucket": "recent",
       "referenced_count": 1,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/equip/sourcing.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\equip\\sourcing.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\equip\\sourcing.md",
       "doc_type": "markdown",
       "title": "Sourcing specialists from catalogs",
       "headings": [
@@ -418,37 +418,57 @@
       ],
       "sha256": "97b7b4288edab223c8c026817b13d0bd5a34a38f2565a49c4f9ad05f30090ebb",
       "size_bytes": 1819,
-      "mtime": 1794098333.2828486,
-      "age_delta_seconds": 7454.280731916428,
+      "mtime": 1794806886.6903598,
+      "age_delta_seconds": 0.15923762321472168,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
+    },
+    {
+      "path": "tests/data/repo-style-budget.txt",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\tests\\data\\repo-style-budget.txt",
+      "doc_type": "text",
+      "title": "ruleset 1",
+      "headings": [
+        "ruleset 1"
+      ],
+      "sha256": "b138a165143c9859fa067464c008cd82fe17486feb3013bb5027eddda7520124",
+      "size_bytes": 2739,
+      "mtime": 1794806886.8142283,
+      "age_delta_seconds": 0.035369157791137695,
+      "age_bucket": "recent",
+      "referenced_count": 0,
+      "broken_refs": [],
+      "broken_ratio": 0.0,
+      "confidence": "high",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "tests/data/skill-budget.txt",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\tests\\data\\skill-budget.txt",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\tests\\data\\skill-budget.txt",
       "doc_type": "text",
-      "title": "dummyindex/skills/audit/SKILL.md\t914",
+      "title": "dummyindex/skills/audit/SKILL.md\t1057",
       "headings": [],
-      "sha256": "662e312eccb0a83088c31860e5766277d14e7ee622cafb9766dc2d470eb20168",
-      "size_bytes": 339,
-      "mtime": 1794104859.9746287,
-      "age_delta_seconds": 927.5889518260956,
+      "sha256": "48576ab7bb5529d7a8285298846770519a1175207d9b4a4541bfc943f79fd311",
+      "size_bytes": 349,
+      "mtime": 1794806886.8142283,
+      "age_delta_seconds": 0.035369157791137695,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "tests/fixtures/evolve/audit-report.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\tests\\fixtures\\evolve\\audit-report.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\tests\\fixtures\\evolve\\audit-report.md",
       "doc_type": "markdown",
       "title": "Audit report \u2014 fixture snippet",
       "headings": [
@@ -458,19 +478,19 @@
       ],
       "sha256": "07023af9d8a343ee694f56892c6ea38c5e9bdc4236f33935e7222f3f6a561dfd",
       "size_bytes": 628,
-      "mtime": 1794085446.329894,
-      "age_delta_seconds": 20341.233686447144,
+      "mtime": 1794806886.827459,
+      "age_delta_seconds": 0.022138357162475586,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "tests/fixtures/evolve/session-now.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\tests\\fixtures\\evolve\\session-now.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\tests\\fixtures\\evolve\\session-now.md",
       "doc_type": "markdown",
       "title": "Now",
       "headings": [
@@ -479,19 +499,19 @@
       ],
       "sha256": "0f6145cb166ee39be51cd9bd97db27072fc15740441d726795db1ee85244d51b",
       "size_bytes": 265,
-      "mtime": 1794085446.329894,
-      "age_delta_seconds": 20341.233686447144,
+      "mtime": 1794806886.8284585,
+      "age_delta_seconds": 0.021138906478881836,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "tests/fixtures/evolve/session-recent.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\tests\\fixtures\\evolve\\session-recent.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\tests\\fixtures\\evolve\\session-recent.md",
       "doc_type": "markdown",
       "title": "Recent",
       "headings": [
@@ -500,19 +520,19 @@
       ],
       "sha256": "93c719564f5abc9ebdbb5c8e7fe0dbab01c77015f0c8819260cc736fb957f085",
       "size_bytes": 237,
-      "mtime": 1794085446.329894,
-      "age_delta_seconds": 20341.233686447144,
+      "mtime": 1794806886.8284585,
+      "age_delta_seconds": 0.021138906478881836,
       "age_bucket": "recent",
       "referenced_count": 0,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "tests/fixtures/legacy_skill_md/SKILL.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\tests\\fixtures\\legacy_skill_md\\SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\tests\\fixtures\\legacy_skill_md\\SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex \u2014 index this repo",
       "headings": [
@@ -521,19 +541,19 @@
       ],
       "sha256": "3e3ee7e19390f58459451d844fd8250cc7b1560fc45c40e27ab5427990d83bcd",
       "size_bytes": 628,
-      "mtime": 1794085446.3328936,
-      "age_delta_seconds": 20341.230686903,
+      "mtime": 1794806886.832112,
+      "age_delta_seconds": 0.017485380172729492,
       "age_bucket": "recent",
       "referenced_count": 1,
       "broken_refs": [],
       "broken_ratio": 0.0,
       "confidence": "high",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "CONTRIBUTING.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\CONTRIBUTING.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\CONTRIBUTING.md",
       "doc_type": "markdown",
       "title": "Contributing to dummyindex",
       "headings": [
@@ -543,10 +563,10 @@
         "Commit messages",
         "Where does a new module go?"
       ],
-      "sha256": "4e01734b9e6a70e21456923a34ea3e43c220e623cb3e1bcc9f23e54dbae5f502",
-      "size_bytes": 2690,
-      "mtime": 1794085446.1111224,
-      "age_delta_seconds": 20341.452458143234,
+      "sha256": "76ea5a475ca92962e7c287dfcaa4f9ecde22e9b156fbca745568a1917597acae",
+      "size_bytes": 2738,
+      "mtime": 1794806886.4900465,
+      "age_delta_seconds": 0.35955095291137695,
       "age_bucket": "recent",
       "referenced_count": 2,
       "broken_refs": [
@@ -556,11 +576,11 @@
       "broken_ratio": 1.0,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "docs/README.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\README.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\docs\\README.md",
       "doc_type": "markdown",
       "title": "Documentation",
       "headings": [
@@ -571,8 +591,8 @@
       ],
       "sha256": "315995715930d104663e890f21a2801113eb347ff3d890239dd23cd2ca522f2c",
       "size_bytes": 2890,
-      "mtime": 1794085446.1131215,
-      "age_delta_seconds": 20341.45045900345,
+      "mtime": 1794806886.4926355,
+      "age_delta_seconds": 0.3569619655609131,
       "age_bucket": "recent",
       "referenced_count": 1,
       "broken_refs": [
@@ -581,11 +601,11 @@
       "broken_ratio": 1.0,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "docs/guide/02-mental-model.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\02-mental-model.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\docs\\guide\\02-mental-model.md",
       "doc_type": "markdown",
       "title": "02 \u2014 Mental model",
       "headings": [
@@ -597,10 +617,10 @@
         "What's a flow vs. what's a function",
         "Confidence"
       ],
-      "sha256": "511bbf4dcacdbe0dfd0569a2ad56d7a40fff108e55d74d4dc71a9802bb98a460",
-      "size_bytes": 2884,
-      "mtime": 1794085446.1141229,
-      "age_delta_seconds": 20341.449457645416,
+      "sha256": "c9ea52a64fbee99b78544dc45aae5894400f399ee94c40b9eec3a5bb9f04ec32",
+      "size_bytes": 3086,
+      "mtime": 1794806886.493636,
+      "age_delta_seconds": 0.35596156120300293,
       "age_bucket": "recent",
       "referenced_count": 1,
       "broken_refs": [
@@ -609,11 +629,11 @@
       "broken_ratio": 1.0,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "docs/guide/03-architecture.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\03-architecture.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\docs\\guide\\03-architecture.md",
       "doc_type": "markdown",
       "title": "03 \u2014 Architecture",
       "headings": [
@@ -627,10 +647,10 @@
         "What this architecture buys",
         "What it does NOT do"
       ],
-      "sha256": "2064d241f43fd654ac8fc4bf8435c3e51ac0674a4b1bd64ffa2255eb4317e30f",
-      "size_bytes": 12792,
-      "mtime": 1794085446.1141229,
-      "age_delta_seconds": 20341.449457645416,
+      "sha256": "d7c6e46da7089036a1faed2cc25d7e11a1316946020219c2542c7d432337f340",
+      "size_bytes": 13078,
+      "mtime": 1794806886.493636,
+      "age_delta_seconds": 0.35596156120300293,
       "age_bucket": "recent",
       "referenced_count": 26,
       "broken_refs": [
@@ -648,11 +668,11 @@
       "broken_ratio": 0.3846,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "docs/guide/04-data-model.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\04-data-model.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\docs\\guide\\04-data-model.md",
       "doc_type": "markdown",
       "title": "04 \u2014 `.context/` data model",
       "headings": [
@@ -663,10 +683,10 @@
         "Generated vs. hand-edited",
         "Cache"
       ],
-      "sha256": "d3c6e4bb6acdc60c4af06afd9c797d59e001dffc57378a01e5de0243be2de317",
-      "size_bytes": 14026,
-      "mtime": 1794085446.1151228,
-      "age_delta_seconds": 20341.448457717896,
+      "sha256": "74ac114ce0106f373bd0171c764e1fac1a6eb2e8dc77497792bc60ea16a86ec7",
+      "size_bytes": 14325,
+      "mtime": 1794806886.493636,
+      "age_delta_seconds": 0.35596156120300293,
       "age_bucket": "recent",
       "referenced_count": 51,
       "broken_refs": [
@@ -683,11 +703,11 @@
       "broken_ratio": 0.1765,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "docs/reference/01-conventions.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\reference\\01-conventions.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\docs\\reference\\01-conventions.md",
       "doc_type": "markdown",
       "title": "01 \u2014 Conventions",
       "headings": [
@@ -701,7 +721,7 @@
         "6. Constants must be enums",
         "7. Every data class is frozen",
         "8. CLI subcommand shape",
-        "cli/init.py",
+        "context/cli/init.py",
         "9. Module-class shape",
         "10. Errors: explicit exception hierarchy",
         "11. JSON read/write helpers",
@@ -713,14 +733,19 @@
         "17. Things to avoid",
         "18. BOS sections that do not apply here"
       ],
-      "sha256": "7c99719fc424fb2ccfc2c0574d403948c1b5e54b3382fbce87b365d16cc989bc",
-      "size_bytes": 40645,
-      "mtime": 1794105787.562071,
-      "age_delta_seconds": 0.0015094280242919922,
+      "sha256": "48a927d27cf3861834ddd102cccc5e08c0baeb3ddfdd4994e21b0e341bd1e2a1",
+      "size_bytes": 46367,
+      "mtime": 1794806886.4996552,
+      "age_delta_seconds": 0.3499422073364258,
       "age_bucket": "recent",
-      "referenced_count": 94,
+      "referenced_count": 109,
       "broken_refs": [
         "_common.py",
+        "dummyindex.evolve.cli.evolve",
+        "dummyindex.evolve.evolve_learning",
+        "dummyindex.evolve.probation",
+        "dummyindex.context.cli.common",
+        "after_closeout",
         "sanitize_label",
         "export.to_html",
         "to_html",
@@ -757,14 +782,14 @@
         "ObsidianFoo",
         "Neo4jBar"
       ],
-      "broken_ratio": 0.383,
+      "broken_ratio": 0.3761,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/agents/architect.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\agents\\architect.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\agents\\architect.md",
       "doc_type": "markdown",
       "title": "Software Architect \u2014 dummyindex council persona",
       "headings": [
@@ -782,10 +807,10 @@
         "Output contract",
         "Logging"
       ],
-      "sha256": "07f4674b58709168a3d0857d1e6165d35cee1f53ae2e2d39f7f2ff7b7d0f74fe",
-      "size_bytes": 5774,
-      "mtime": 1794085446.240276,
-      "age_delta_seconds": 20341.32330441475,
+      "sha256": "900e763f22e498ed38e74d2848783f6b70048c0c7d175354c5048f1adfc2bec4",
+      "size_bytes": 5811,
+      "mtime": 1794806886.6731815,
+      "age_delta_seconds": 0.17641592025756836,
       "age_bucket": "recent",
       "referenced_count": 14,
       "broken_refs": [
@@ -795,11 +820,11 @@
       "broken_ratio": 0.1429,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/agents/critic-database.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\agents\\critic-database.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\agents\\critic-database.md",
       "doc_type": "markdown",
       "title": "Database critic \u2014 dummyindex concerns-only persona",
       "headings": [
@@ -813,10 +838,10 @@
         "Output contract",
         "Logging"
       ],
-      "sha256": "41308b66aabc562e547bf08f2f1db6f7ab0c47ce305d543c2ac43b3531ee5d71",
-      "size_bytes": 3821,
-      "mtime": 1794085446.240276,
-      "age_delta_seconds": 20341.32330441475,
+      "sha256": "f64e45c0f8b48a2c266219c66ddc6653cb9b9898938cc4b0ebdf7021e827d6fa",
+      "size_bytes": 3834,
+      "mtime": 1794806886.6741862,
+      "age_delta_seconds": 0.17541122436523438,
       "age_bucket": "recent",
       "referenced_count": 7,
       "broken_refs": [
@@ -825,11 +850,11 @@
       "broken_ratio": 0.1429,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/agents/critic-product.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\agents\\critic-product.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\agents\\critic-product.md",
       "doc_type": "markdown",
       "title": "No PM-specific subagent is assumed on either host. The persona instructions",
       "headings": [
@@ -846,10 +871,10 @@
         "Output contract",
         "Logging"
       ],
-      "sha256": "4be8b6398502c04ac586c56281f4a4c7a88c469a62b04c8c6315a32c0bd7321d",
-      "size_bytes": 3055,
-      "mtime": 1794085446.240276,
-      "age_delta_seconds": 20341.32330441475,
+      "sha256": "281445e9b960362cd112ed03e4e44859bbb5cae7132a139916f0212b0045bf19",
+      "size_bytes": 3062,
+      "mtime": 1794806886.6741862,
+      "age_delta_seconds": 0.17541122436523438,
       "age_bucket": "recent",
       "referenced_count": 6,
       "broken_refs": [
@@ -858,11 +883,11 @@
       "broken_ratio": 0.1667,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/agents/dev.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\agents\\dev.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\agents\\dev.md",
       "doc_type": "markdown",
       "title": "subagent_type resolved per-feature via `dummyindex context dev-pick`;",
       "headings": [
@@ -896,10 +921,10 @@
         "Output contract",
         "Logging"
       ],
-      "sha256": "f20dab6389509b1eaabbbdd4fa7fdf9e9497ca47fddb95e7c2bc56db85c4a1c9",
-      "size_bytes": 6432,
-      "mtime": 1794085446.2412753,
-      "age_delta_seconds": 20341.322305202484,
+      "sha256": "67a600b76ec706ec2d20c54abcae7b56653633f907e124499dbc55c5bf38dd4a",
+      "size_bytes": 6435,
+      "mtime": 1794806886.6746902,
+      "age_delta_seconds": 0.17490720748901367,
       "age_bucket": "recent",
       "referenced_count": 9,
       "broken_refs": [
@@ -908,11 +933,11 @@
       "broken_ratio": 0.1111,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/audit/agents/tests.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\audit\\agents\\tests.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\audit\\agents\\tests.md",
       "doc_type": "markdown",
       "title": "Test-coverage auditor \u2014 dummyindex audit panel",
       "headings": [
@@ -924,10 +949,10 @@
         "Forbidden",
         "Logging"
       ],
-      "sha256": "6230757f726dfcddc5b0bffb59d5c48abb81e58c570a1db460b6f7884769ec45",
-      "size_bytes": 2507,
-      "mtime": 1794085446.2442763,
-      "age_delta_seconds": 20341.31930422783,
+      "sha256": "fcf601f035dc2ad09a342f01a5c242eb4ff116bbc1dc535f86dfa049732ba252",
+      "size_bytes": 2586,
+      "mtime": 1794806886.6792755,
+      "age_delta_seconds": 0.17032194137573242,
       "age_bucket": "recent",
       "referenced_count": 1,
       "broken_refs": [
@@ -936,20 +961,20 @@
       "broken_ratio": 1.0,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/audit/closeout.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\audit\\closeout.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\audit\\closeout.md",
       "doc_type": "markdown",
       "title": "Audit closeout recipe",
       "headings": [
         "Audit closeout recipe"
       ],
-      "sha256": "44bfc18af0341bee62bacd89cd43136e7fc9006f1a1d05e7b54f8f89a015b759",
-      "size_bytes": 4373,
-      "mtime": 1794105787.5635805,
-      "age_delta_seconds": 0.0,
+      "sha256": "2eda3c5bfe17f8d4f63d4f5bd7dd11a8d25591d8000377512f48d51778634404",
+      "size_bytes": 4383,
+      "mtime": 1794806886.6792755,
+      "age_delta_seconds": 0.17032194137573242,
       "age_bucket": "recent",
       "referenced_count": 2,
       "broken_refs": [
@@ -959,11 +984,11 @@
       "broken_ratio": 1.0,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/council/10-structural-review.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\10-structural-review.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\council\\10-structural-review.md",
       "doc_type": "markdown",
       "title": "Structural review (pre-stage)",
       "headings": [
@@ -983,10 +1008,10 @@
         "Log",
         "Output"
       ],
-      "sha256": "78b882eee5223edeed130cb902084b64720e3a5789be08cffc0a9aba1238ece5",
-      "size_bytes": 5204,
-      "mtime": 1794085446.2462764,
-      "age_delta_seconds": 20341.31730413437,
+      "sha256": "120e69a39d61d3cd3fc7f36f578e59af1a9482a5fe8098a1559ed2fc54fda454",
+      "size_bytes": 5275,
+      "mtime": 1794806886.682337,
+      "age_delta_seconds": 0.16726040840148926,
       "age_bucket": "recent",
       "referenced_count": 9,
       "broken_refs": [
@@ -995,11 +1020,11 @@
       "broken_ratio": 0.1111,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/council/18-filter-trivial.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\18-filter-trivial.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\council\\18-filter-trivial.md",
       "doc_type": "markdown",
       "title": "Trivial-feature filter \u2192 consolidation decision",
       "headings": [
@@ -1017,10 +1042,10 @@
         "Output (per outcome)",
         "Verifying a consolidation pass"
       ],
-      "sha256": "92b40a8612e2d957509db8298b34405f3a4d0de35136986066e0b0873e9b9548",
-      "size_bytes": 10008,
-      "mtime": 1794085446.247276,
-      "age_delta_seconds": 20341.316304445267,
+      "sha256": "ced27a9c0fd323885e6a4202f2dd7e55f0f065b6a53b006d0d19cb7ca56fe1ec",
+      "size_bytes": 10119,
+      "mtime": 1794806886.683344,
+      "age_delta_seconds": 0.16625356674194336,
       "age_bucket": "recent",
       "referenced_count": 28,
       "broken_refs": [
@@ -1036,45 +1061,11 @@
       "broken_ratio": 0.2857,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
-    },
-    {
-      "path": "dummyindex/skills/council/20-specify.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\20-specify.md",
-      "doc_type": "markdown",
-      "title": "Stage 1 \u2014 `/specify` (dev drafts spec.md + plan.md)",
-      "headings": [
-        "Stage 1 \u2014 `/specify` (dev drafts spec.md + plan.md)",
-        "Inputs (per feature)",
-        "Step 1 \u2014 Resolve the stack specialist",
-        "Step 2 \u2014 Dispatch one dev",
-        "Doc-evidence directive (include verbatim)",
-        "Step 3 \u2014 Snapshot the draft",
-        "Logging",
-        "Skip logic",
-        "Failure handling",
-        "Output"
-      ],
-      "sha256": "86fc3945340f7dc53056ea473ab4e600ddfbec1a5024494c4300580fffa13236",
-      "size_bytes": 3500,
-      "mtime": 1794085446.2482767,
-      "age_delta_seconds": 20341.31530380249,
-      "age_bucket": "recent",
-      "referenced_count": 11,
-      "broken_refs": [
-        "agents/dev.md",
-        "council/55-context7.md",
-        "18-filter-trivial.md",
-        "30-plan.md"
-      ],
-      "broken_ratio": 0.3636,
-      "confidence": "medium",
-      "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/council/30-plan.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\30-plan.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\council\\30-plan.md",
       "doc_type": "markdown",
       "title": "Stage 2 \u2014 `/plan` (architect reorganises plan.md)",
       "headings": [
@@ -1089,25 +1080,26 @@
         "Failure handling",
         "Output"
       ],
-      "sha256": "af8c6ca2bf258e21f75cc3f0f296f5eff5106433760739b13440eefe504c80b9",
-      "size_bytes": 3213,
-      "mtime": 1794085446.2482767,
-      "age_delta_seconds": 20341.31530380249,
+      "sha256": "2e780802d546efd465a92197d1eb31ec8cb8df31f911531761316eadedbdc951",
+      "size_bytes": 3410,
+      "mtime": 1794806886.6848521,
+      "age_delta_seconds": 0.16474533081054688,
       "age_bucket": "recent",
-      "referenced_count": 11,
+      "referenced_count": 12,
       "broken_refs": [
         "architecture/overview.md",
+        "00-overview.md",
         "agents/architect.md",
         "40-critique.md"
       ],
-      "broken_ratio": 0.2727,
+      "broken_ratio": 0.3333,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/council/50-flow-narrative.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\50-flow-narrative.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\council\\50-flow-narrative.md",
       "doc_type": "markdown",
       "title": "Flow refinement \u2014 keep, discard, narrate",
       "headings": [
@@ -1122,23 +1114,24 @@
         "Skip logic",
         "Output"
       ],
-      "sha256": "801da2aaecd9ec2e6ab6d7f1de89de5d21a6f9fb2bbdc5c3340fcbbec6d9436f",
-      "size_bytes": 3101,
-      "mtime": 1794085446.2492754,
-      "age_delta_seconds": 20341.314305067062,
+      "sha256": "ecb7e50e23cef3cd4b423566b35dff7776ac8b375ba9f1faba818cdd9a4861cf",
+      "size_bytes": 3266,
+      "mtime": 1794806886.6858563,
+      "age_delta_seconds": 0.1637411117553711,
       "age_bucket": "recent",
-      "referenced_count": 8,
+      "referenced_count": 9,
       "broken_refs": [
-        "agents/dev.md"
+        "agents/dev.md",
+        "00-overview.md"
       ],
-      "broken_ratio": 0.125,
+      "broken_ratio": 0.2222,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/council/60-doc-reorg.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\60-doc-reorg.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\council\\60-doc-reorg.md",
       "doc_type": "markdown",
       "title": "Doc reorg \u2014 reorganise the repo's real docs in place (DESTRUCTIVE)",
       "headings": [
@@ -1148,10 +1141,10 @@
         "Apply (DESTRUCTIVE \u2014 do the edits in THIS session, not a subagent)",
         "After"
       ],
-      "sha256": "6ff8dad4f87c21338ef929693f8a14ef581b95b87e003c907282e43c915836c7",
-      "size_bytes": 3020,
-      "mtime": 1794085446.2502766,
-      "age_delta_seconds": 20341.31330394745,
+      "sha256": "76c4bd1106501b85844644bb25be8c54799227d414144d4f916f6edcb2005307",
+      "size_bytes": 3031,
+      "mtime": 1794806886.6878562,
+      "age_delta_seconds": 0.1617412567138672,
       "age_bucket": "recent",
       "referenced_count": 6,
       "broken_refs": [
@@ -1160,20 +1153,20 @@
       "broken_ratio": 0.1667,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/evolve/native-protocol.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\evolve\\native-protocol.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\evolve\\native-protocol.md",
       "doc_type": "markdown",
       "title": "Native adaptive improvement",
       "headings": [
         "Native adaptive improvement"
       ],
-      "sha256": "e49c910c40b75307dec6b6e90849380a74a048a6335eea38fe5989c7521493fa",
-      "size_bytes": 6321,
-      "mtime": 1794085446.2583184,
-      "age_delta_seconds": 20341.305262088776,
+      "sha256": "146a36a7f455a6e392d9d586a0cdc093a6a4ebfeaa061b71c5d67a46b6cf24ec",
+      "size_bytes": 6349,
+      "mtime": 1794806886.7009706,
+      "age_delta_seconds": 0.14862680435180664,
       "age_bucket": "recent",
       "referenced_count": 2,
       "broken_refs": [
@@ -1183,11 +1176,11 @@
       "broken_ratio": 1.0,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/evolve/probation-protocol.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\evolve\\probation-protocol.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\evolve\\probation-protocol.md",
       "doc_type": "markdown",
       "title": "Probation protocol",
       "headings": [
@@ -1198,10 +1191,10 @@
         "Report wording",
         "Safety"
       ],
-      "sha256": "a4eb86831f69d6c143c8b4c5eba19fde5f2c9e4bed1ae1fde9fdb3046ffff583",
-      "size_bytes": 2154,
-      "mtime": 1794095450.7001321,
-      "age_delta_seconds": 10336.863448381424,
+      "sha256": "47d7f269fc460d9b4888303771d60fe39c09f275878c476fa3c3793d1273973b",
+      "size_bytes": 2164,
+      "mtime": 1794806886.7009706,
+      "age_delta_seconds": 0.14862680435180664,
       "age_bucket": "recent",
       "referenced_count": 4,
       "broken_refs": [
@@ -1212,11 +1205,11 @@
       "broken_ratio": 0.75,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/gc/SKILL.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\gc\\SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\gc\\SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-gc / $dummyindex-gc \u2014 context-hygiene GC council sweep",
       "headings": [
@@ -1227,10 +1220,10 @@
         "Discipline (non-negotiable)",
         "CLI reference (deterministic state only)"
       ],
-      "sha256": "94f243a8125f0ac720ae13e270ecaa59f75fac7fd6183b2bac1267326c4f2809",
-      "size_bytes": 15604,
-      "mtime": 1794091469.0386982,
-      "age_delta_seconds": 14318.52488231659,
+      "sha256": "c4c9cab17f8700030ed4de11e1c23436f0799e9a27af8c1cc997f989ccc4f0d8",
+      "size_bytes": 16304,
+      "mtime": 1794806886.7024772,
+      "age_delta_seconds": 0.14712023735046387,
       "age_bucket": "recent",
       "referenced_count": 20,
       "broken_refs": [
@@ -1242,11 +1235,11 @@
       "broken_ratio": 0.2,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/retrieval/00-overview.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\retrieval\\00-overview.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\retrieval\\00-overview.md",
       "doc_type": "markdown",
       "title": "Retrieval \u2014 PageIndex-style tree search",
       "headings": [
@@ -1259,10 +1252,10 @@
         "Cost model",
         "When this is built into the agent"
       ],
-      "sha256": "be919c7b5b80de0dde9b970df40c616002a3fcdf9c0da6dd0ccd33d95996dcae",
-      "size_bytes": 3650,
-      "mtime": 1794085446.2613182,
-      "age_delta_seconds": 20341.302262306213,
+      "sha256": "2bb5025e7d082e47f87cded28728341ea653a3701c21af0b13d47def2925008f",
+      "size_bytes": 3693,
+      "mtime": 1794806886.703477,
+      "age_delta_seconds": 0.14612054824829102,
       "age_bucket": "recent",
       "referenced_count": 13,
       "broken_refs": [
@@ -1273,11 +1266,11 @@
       "broken_ratio": 0.2308,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/retrieval/10-feature-lookup.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\retrieval\\10-feature-lookup.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\retrieval\\10-feature-lookup.md",
       "doc_type": "markdown",
       "title": "Feature lookup",
       "headings": [
@@ -1293,10 +1286,10 @@
         "Anti-patterns",
         "Next"
       ],
-      "sha256": "fc91864e26793104e81af49fb4c88aaae515b46e58995acc7d8cf5fce5c91887",
-      "size_bytes": 4362,
-      "mtime": 1794085446.2613182,
-      "age_delta_seconds": 20341.302262306213,
+      "sha256": "c3e8c5f7a249fac7f261b00f71120daf7c095d5accbbd1474c94e5104b60bf5a",
+      "size_bytes": 4343,
+      "mtime": 1794806886.704477,
+      "age_delta_seconds": 0.14512038230895996,
       "age_bucket": "recent",
       "referenced_count": 9,
       "broken_refs": [
@@ -1307,11 +1300,11 @@
       "broken_ratio": 0.3333,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/retrieval/20-symbol-lookup.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\retrieval\\20-symbol-lookup.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\retrieval\\20-symbol-lookup.md",
       "doc_type": "markdown",
       "title": "Symbol lookup",
       "headings": [
@@ -1326,10 +1319,10 @@
         "When to use this vs. feature lookup",
         "Anti-patterns"
       ],
-      "sha256": "d6c15ac4bdd75cdecc1757711b6f18ea5c1c8b2aeca3389915ef7cdd86cdf71b",
-      "size_bytes": 3354,
-      "mtime": 1794085446.2613182,
-      "age_delta_seconds": 20341.302262306213,
+      "sha256": "2aa271fabcea855b41fba83ddd60e869171b461b15a81996ac36592d012b6542",
+      "size_bytes": 3380,
+      "mtime": 1794806886.704477,
+      "age_delta_seconds": 0.14512038230895996,
       "age_bucket": "recent",
       "referenced_count": 7,
       "broken_refs": [
@@ -1340,15 +1333,16 @@
       "broken_ratio": 0.4286,
       "confidence": "medium",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "CHANGELOG.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\CHANGELOG.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\CHANGELOG.md",
       "doc_type": "markdown",
       "title": "Changelog",
       "headings": [
         "Changelog",
+        "0.38.0 (2026-11-09)",
         "0.37.0 (2026-11-06)",
         "Unreleased",
         "0.36.0 (2026-09-02)",
@@ -1397,13 +1391,15 @@
         "0.12.0 \u2014 source-docs + retrieval + viewer + reality-check",
         "0.5.0 \u2014 Claude Code only"
       ],
-      "sha256": "3c6c8a6b3910b3f99d91116a5de891428724d9a307af76ee17362ea2cca9adfd",
-      "size_bytes": 99245,
-      "mtime": 1794085446.1111224,
-      "age_delta_seconds": 20341.452458143234,
+      "sha256": "92eb0fd59aaa90b898707a3a95ec1e4dea20447046a760e57b549a020b3357d5",
+      "size_bytes": 104844,
+      "mtime": 1794806886.4890466,
+      "age_delta_seconds": 0.3605508804321289,
       "age_bucket": "recent",
-      "referenced_count": 301,
+      "referenced_count": 303,
       "broken_refs": [
+        "X.Y.ZbN",
+        "0.38.0b1",
         "benchmarks/retrieval/RESULTS.md",
         "dummyindex_version",
         "features/seed-rank.json",
@@ -1492,7 +1488,6 @@
         "claude_post_tool_use",
         "source_community_id",
         "skill_only",
-        "load_manifest",
         "save_manifest",
         "detect_incremental",
         "validate_graph_path",
@@ -1546,14 +1541,14 @@
         "V0_SCOPE.md",
         "pipeline.structure"
       ],
-      "broken_ratio": 0.4698,
+      "broken_ratio": 0.4686,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "README.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\README.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\README.md",
       "doc_type": "markdown",
       "title": "dummyindex",
       "headings": [
@@ -1574,10 +1569,10 @@
         "Docs",
         "License"
       ],
-      "sha256": "ae902192e127693c4c56835f43453d06669b0d8d3cc095c7b05c6836debec25b",
-      "size_bytes": 11385,
-      "mtime": 1794085446.1121216,
-      "age_delta_seconds": 20341.45145893097,
+      "sha256": "f0df9f4d01a69042a02958989ae77dba9411132ccc7e6d3bdd74d99629bec08e",
+      "size_bytes": 11732,
+      "mtime": 1794806886.4910457,
+      "age_delta_seconds": 0.3585517406463623,
       "age_bucket": "recent",
       "referenced_count": 6,
       "broken_refs": [
@@ -1589,11 +1584,11 @@
       "broken_ratio": 0.6667,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "SECURITY.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\SECURITY.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\SECURITY.md",
       "doc_type": "markdown",
       "title": "Security Policy",
       "headings": [
@@ -1605,8 +1600,8 @@
       ],
       "sha256": "3d0bcc68c4bde27fc078b84eb5658b20400d66040c55f043b734d2ef4a5a4a7d",
       "size_bytes": 4127,
-      "mtime": 1794085446.1121216,
-      "age_delta_seconds": 20341.45145893097,
+      "mtime": 1794806886.4916313,
+      "age_delta_seconds": 0.35796618461608887,
       "age_bucket": "recent",
       "referenced_count": 8,
       "broken_refs": [
@@ -1619,11 +1614,11 @@
       "broken_ratio": 0.625,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "docs/COMMANDS.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\COMMANDS.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\docs\\COMMANDS.md",
       "doc_type": "markdown",
       "title": "Commands",
       "headings": [
@@ -1631,12 +1626,12 @@
         "Agent commands",
         "CLI commands (the agent's backbone)"
       ],
-      "sha256": "e7d9b14f94a2bbb86a93e5d01a97b83a5492c7657cbf1f99e1675dda98f2c511",
-      "size_bytes": 33812,
-      "mtime": 1794101734.259594,
-      "age_delta_seconds": 4053.3039865493774,
+      "sha256": "8c477f8840baf759fcae0e1ef645f8b72d86a64d92e35ea4469e727d8203a878",
+      "size_bytes": 37061,
+      "mtime": 1794806886.4916313,
+      "age_delta_seconds": 0.35796618461608887,
       "age_bucket": "recent",
-      "referenced_count": 41,
+      "referenced_count": 46,
       "broken_refs": [
         ".caveman.json",
         ".caveman/config.json",
@@ -1661,20 +1656,22 @@
         "checklist.md",
         "equipment.json",
         "settings.json",
+        "docs/schemas/features-list.json",
         "graph-communities.json",
         "meta.indexed_commit",
         "skills/council/65-reconcile.md",
+        ".context/config.toml",
         ".context/gc/state.json",
         "doc_guard_allow"
       ],
-      "broken_ratio": 0.6829,
+      "broken_ratio": 0.6522,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "docs/guide/06-personas.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\06-personas.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\docs\\guide\\06-personas.md",
       "doc_type": "markdown",
       "title": "06 \u2014 Personas",
       "headings": [
@@ -1685,10 +1682,10 @@
         "Retired in v0.14",
         "What every persona shares"
       ],
-      "sha256": "88acf7d397d9c4eb13847116585a15bbe191b380f522181a12dbd0ec5b0f6472",
-      "size_bytes": 6685,
-      "mtime": 1794085446.1151228,
-      "age_delta_seconds": 20341.448457717896,
+      "sha256": "71f4840248079370a958348ccec73169532fb8d5a7b5051c75ddb31555d514f7",
+      "size_bytes": 6705,
+      "mtime": 1794806886.4946356,
+      "age_delta_seconds": 0.3549618721008301,
       "age_bucket": "recent",
       "referenced_count": 18,
       "broken_refs": [
@@ -1704,11 +1701,11 @@
       "broken_ratio": 0.4444,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "docs/guide/07-cli.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\07-cli.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\docs\\guide\\07-cli.md",
       "doc_type": "markdown",
       "title": "07 \u2014 CLI surface",
       "headings": [
@@ -1719,8 +1716,12 @@
         "Onboarding & preflight",
         "Enrichment (called by the council)",
         "Features",
+        "Sessions and toolkit (GUI JSON facade)",
         "Reconcile \u2014 commit-anchored update (v0.15.3)",
         "Context maintain loop (`maintain plan|begin|next|done|stamp|status`)",
+        "Requirements (`requirements check|sync|gate|bypass`)",
+        "Upgrade (`upgrade`)",
+        "Restyle loop (`restyle plan|begin|next|done|stamp|status`)",
         "Council (called by skill procedures)",
         "Refresh",
         "Retrieval CLI",
@@ -1736,12 +1737,12 @@
         "Status \u2014 read-only overview",
         "What is NOT a CLI command"
       ],
-      "sha256": "fce1546ccd95cf548f2978d127f51cc76a1a4cda057437d65beccfc49e94c538",
-      "size_bytes": 71807,
-      "mtime": 1794101734.2605944,
-      "age_delta_seconds": 4053.3029861450195,
+      "sha256": "6a444411ae9ac03b805d2cd54524d189244c7ac313b149b51d989ec05d2753b7",
+      "size_bytes": 84418,
+      "mtime": 1794806886.4956355,
+      "age_delta_seconds": 0.3539619445800781,
       "age_bucket": "recent",
-      "referenced_count": 117,
+      "referenced_count": 124,
       "broken_refs": [
         ".claude/settings.json",
         ".caveman.json",
@@ -1769,11 +1770,15 @@
         "claude_stop",
         "claude_pre_compact",
         "claude_pre_tool_use",
+        "docs/schemas/features-list.json",
+        "docs/engine-contract.md",
         "entry_points",
         "removed_files",
         "skills/council/65-reconcile.md",
         "RUN.md",
         "state.json",
+        ".context/config.toml",
+        "config.toml",
         "persona_id",
         "project.slug",
         "project.date",
@@ -1815,14 +1820,14 @@
         "statusline.sh",
         ".context/cache/drift-acks.json"
       ],
-      "broken_ratio": 0.6068,
+      "broken_ratio": 0.6048,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "docs/guide/08-skill.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\08-skill.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\docs\\guide\\08-skill.md",
       "doc_type": "markdown",
       "title": "08 \u2014 Skill orchestration",
       "headings": [
@@ -1839,10 +1844,10 @@
         "What lives where, restated",
         "Skill markdown style"
       ],
-      "sha256": "2263828bcab7c5dda6d7d1806062d375281efa773113b0b6429f0487bc7d28b1",
-      "size_bytes": 14536,
-      "mtime": 1794085446.1161225,
-      "age_delta_seconds": 20341.447458028793,
+      "sha256": "611a5e9a858673d64e3c7cff4a90048228ae3986102225045da4b79783a07c72",
+      "size_bytes": 14618,
+      "mtime": 1794806886.4956355,
+      "age_delta_seconds": 0.3539619445800781,
       "age_bucket": "recent",
       "referenced_count": 14,
       "broken_refs": [
@@ -1856,11 +1861,11 @@
       "broken_ratio": 0.4286,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "docs/guide/09-lifecycle.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\09-lifecycle.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\docs\\guide\\09-lifecycle.md",
       "doc_type": "markdown",
       "title": "09 \u2014 Lifecycle",
       "headings": [
@@ -1872,6 +1877,7 @@
         "First-time install \u2014 Claude Code hook path",
         "Drift detection at session start (augmented in v0.15.3)",
         "Manual deterministic rebuild \u2014 the quick refresh, not the update",
+        "Update \u2014 `/dummyindex-update` (version layers and prose)",
         "Reconcile \u2014 the genuine update (v0.15.3)",
         "Re-running the council",
         "Steady-state day in the life",
@@ -1881,10 +1887,10 @@
         "Failure modes + recovery",
         "Costs over a year"
       ],
-      "sha256": "6ad7266c78d2dd7458b6fbc17ce916716e6fcb4aa2b06ea0b11a97991858e442",
-      "size_bytes": 21498,
-      "mtime": 1794085446.1161225,
-      "age_delta_seconds": 20341.447458028793,
+      "sha256": "15375b2b8b8f3fa14cdc2115c2cfc6b9fdf7b215b4fe64a5f83e0ca34905312a",
+      "size_bytes": 22605,
+      "mtime": 1794806886.4966354,
+      "age_delta_seconds": 0.35296201705932617,
       "age_bucket": "recent",
       "referenced_count": 29,
       "broken_refs": [
@@ -1905,11 +1911,11 @@
       "broken_ratio": 0.4483,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "docs/guide/11-roadmap.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\11-roadmap.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\docs\\guide\\11-roadmap.md",
       "doc_type": "markdown",
       "title": "11 \u2014 Roadmap",
       "headings": [
@@ -1934,10 +1940,10 @@
         "Won't do",
         "Open questions"
       ],
-      "sha256": "f58fcced423897eead3ae0cf7ba7525ccc568ed791d95a04fb700e3942c3dc4b",
-      "size_bytes": 20559,
-      "mtime": 1794085446.117122,
-      "age_delta_seconds": 20341.44645857811,
+      "sha256": "76a58ef5fe58cbe806a0647faac15ca1dfb8c4309f11c080e11cdda6a967eb69",
+      "size_bytes": 20973,
+      "mtime": 1794806886.4966354,
+      "age_delta_seconds": 0.35296201705932617,
       "age_bucket": "recent",
       "referenced_count": 55,
       "broken_refs": [
@@ -1977,11 +1983,11 @@
       "broken_ratio": 0.5818,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "docs/guide/README.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\README.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\docs\\guide\\README.md",
       "doc_type": "markdown",
       "title": "dummyindex \u2014 Conceptual Guide",
       "headings": [
@@ -1990,10 +1996,10 @@
         "One-page summary",
         "Inspirations"
       ],
-      "sha256": "cf5aa7b069d92a4ed5262daf2e4d1cdc82f592de6ce622f75b020b949f87562c",
-      "size_bytes": 5195,
-      "mtime": 1794085446.1181655,
-      "age_delta_seconds": 20341.44541501999,
+      "sha256": "a294fb10b2ed46f803398620151ee995dbfca990d70636e64b1e0a2709b9651e",
+      "size_bytes": 5306,
+      "mtime": 1794806886.497638,
+      "age_delta_seconds": 0.3519594669342041,
       "age_bucket": "recent",
       "referenced_count": 7,
       "broken_refs": [
@@ -2005,21 +2011,21 @@
       "broken_ratio": 0.5714,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "docs/guide/closeout.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\guide\\closeout.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\docs\\guide\\closeout.md",
       "doc_type": "markdown",
       "title": "Close completed work without losing its lessons",
       "headings": [
         "Close completed work without losing its lessons",
         "Lesson records and learning status"
       ],
-      "sha256": "514beae400f4525ecb754d6ce9789057c72b87da7b5ba451b90a2b2270957b77",
-      "size_bytes": 6919,
-      "mtime": 1794085446.1181655,
-      "age_delta_seconds": 20341.44541501999,
+      "sha256": "fdca04cd11b9315e1c35d6f11eddc95363ade8e412c36f313e69a955e0dddc73",
+      "size_bytes": 7001,
+      "mtime": 1794806886.497638,
+      "age_delta_seconds": 0.3519594669342041,
       "age_bucket": "recent",
       "referenced_count": 11,
       "broken_refs": [
@@ -2038,11 +2044,11 @@
       "broken_ratio": 1.0,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "docs/sources/installable-sources.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\docs\\sources\\installable-sources.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\docs\\sources\\installable-sources.md",
       "doc_type": "markdown",
       "title": "Installable sources catalog",
       "headings": [
@@ -2056,8 +2062,8 @@
       ],
       "sha256": "ae27acac7d0f3b35d560d5bf684499f9f6ce10b1dc5cfa76a27cb163627d0c31",
       "size_bytes": 11853,
-      "mtime": 1794085446.1197424,
-      "age_delta_seconds": 20341.443838119507,
+      "mtime": 1794806886.4996552,
+      "age_delta_seconds": 0.3499422073364258,
       "age_bucket": "recent",
       "referenced_count": 7,
       "broken_refs": [
@@ -2070,11 +2076,11 @@
       "broken_ratio": 0.7143,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/agents/critic-security.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\agents\\critic-security.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\agents\\critic-security.md",
       "doc_type": "markdown",
       "title": "Security critic \u2014 dummyindex concerns-only persona",
       "headings": [
@@ -2089,10 +2095,10 @@
         "Output contract",
         "Logging"
       ],
-      "sha256": "ce6a24196ec2f8cc3e0c52f95cf02c7ba25030707ab58d88ef87033bad2a4028",
-      "size_bytes": 4841,
-      "mtime": 1794085446.2412753,
-      "age_delta_seconds": 20341.322305202484,
+      "sha256": "d80beffd8b706ea5db022a37ef11a12b6e223fbb048af9e3511ff29b677d203e",
+      "size_bytes": 4817,
+      "mtime": 1794806886.6746902,
+      "age_delta_seconds": 0.17490720748901367,
       "age_bucket": "recent",
       "referenced_count": 10,
       "broken_refs": [
@@ -2105,11 +2111,11 @@
       "broken_ratio": 0.5,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/audit/SKILL.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\audit\\SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\audit\\SKILL.md",
       "doc_type": "markdown",
       "title": "Dummyindex audit",
       "headings": [
@@ -2121,27 +2127,28 @@
         "5. Close out one reusable lesson",
         "CLI reference"
       ],
-      "sha256": "276ffacb5ffcd7852f392f77c1a46404941d3e97065a831d8f09f6f1f2bc715f",
-      "size_bytes": 6703,
-      "mtime": 1794085446.2422771,
-      "age_delta_seconds": 20341.321303367615,
+      "sha256": "ac95e6c2290fa6e6464747fb22de44f1a143342d9a05a3385906fc97b6241424",
+      "size_bytes": 7433,
+      "mtime": 1794806886.6756942,
+      "age_delta_seconds": 0.173903226852417,
       "age_bucket": "recent",
-      "referenced_count": 6,
+      "referenced_count": 7,
       "broken_refs": [
         "max_rounds",
+        "../council/00-overview.md",
         "learning_reflection",
         "rule_id",
         "expected_sha256",
         "closeout.md"
       ],
-      "broken_ratio": 0.8333,
+      "broken_ratio": 0.8571,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/build/SKILL.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\build\\SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\build\\SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-build / $dummyindex-build \u2014 grounded execution of a proposal",
       "headings": [
@@ -2151,12 +2158,12 @@
         "Discipline (non-negotiable)",
         "CLI reference (deterministic state only)"
       ],
-      "sha256": "641d820861f9d1d679a4c50b833f57c764949329eb6ab37e6278fc88700e102e",
-      "size_bytes": 21872,
-      "mtime": 1794092868.482265,
-      "age_delta_seconds": 12919.081315517426,
+      "sha256": "d7ddb4459ac46a6b34a48ca5b7817d9453a7e7722fbeb630eda68e9f4d6fad33",
+      "size_bytes": 22040,
+      "mtime": 1794806886.6792755,
+      "age_delta_seconds": 0.17032194137573242,
       "age_bucket": "recent",
-      "referenced_count": 14,
+      "referenced_count": 15,
       "broken_refs": [
         "checklist.md",
         "proposal.json",
@@ -2168,16 +2175,17 @@
         "task_id",
         "upgrade_note",
         "docs/guide/closeout.md",
+        "../council/00-overview.md",
         "pending_verification"
       ],
-      "broken_ratio": 0.7857,
+      "broken_ratio": 0.8,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/council/00-overview.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\00-overview.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\council\\00-overview.md",
       "doc_type": "markdown",
       "title": "Council overview",
       "headings": [
@@ -2188,14 +2196,15 @@
         "Sequencing",
         "Persona \u2192 subagent_type mapping",
         "Logging discipline",
-        "What this gives the agent reading `.context/` later"
+        "What this gives the agent reading `.context/` later",
+        "Writing standard"
       ],
-      "sha256": "a2f5a0fbabedea9b998a7c038564f2b75f97b7d47c7a19c4d3b3827f7b112feb",
-      "size_bytes": 6078,
-      "mtime": 1794085446.2462764,
-      "age_delta_seconds": 20341.31730413437,
+      "sha256": "5a2fce6044b595e3eddeab4045e42dcf4be63899d1541185dbb66f863b0c11f5",
+      "size_bytes": 6710,
+      "mtime": 1794806886.6807938,
+      "age_delta_seconds": 0.16880369186401367,
       "age_bucket": "recent",
-      "referenced_count": 16,
+      "referenced_count": 17,
       "broken_refs": [
         "20-specify.md",
         "30-plan.md",
@@ -2208,14 +2217,14 @@
         "agents/critic-security.md",
         "agents/critic-product.md"
       ],
-      "broken_ratio": 0.625,
+      "broken_ratio": 0.5882,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/council/05-onboarding.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\05-onboarding.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\council\\05-onboarding.md",
       "doc_type": "markdown",
       "title": "Onboarding (first run only)",
       "headings": [
@@ -2226,10 +2235,10 @@
         "After onboarding",
         "Non-interactive / CI"
       ],
-      "sha256": "11106dbc09b78c81642aeeb669cd4b6e3f5fa5386509c248e8d746e6c79bcdd0",
-      "size_bytes": 6758,
-      "mtime": 1794085446.2462764,
-      "age_delta_seconds": 20341.31730413437,
+      "sha256": "30bceccec3f9e8d724d3c05f3c65a6b7bafff61f28d89c1b1addaf48c32d687a",
+      "size_bytes": 6822,
+      "mtime": 1794806886.682337,
+      "age_delta_seconds": 0.16726040840148926,
       "age_bucket": "recent",
       "referenced_count": 6,
       "broken_refs": [
@@ -2242,11 +2251,11 @@
       "broken_ratio": 0.8333,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/council/15-conventions.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\15-conventions.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\council\\15-conventions.md",
       "doc_type": "markdown",
       "title": "Phase 1.5 \u2014 Conventions (agent-derived)",
       "headings": [
@@ -2258,18 +2267,18 @@
         "Dispatch pattern",
         "What to cover",
         "Inputs available",
-        "Reconcile, don't re-derive",
+        "Reconcile, do not re-derive",
         "Output discipline",
         "When done",
         "Failure handling",
         "After this phase"
       ],
-      "sha256": "4102291bd706220bfabc1ad656cfc4e0a672109d69063973441bf1b56b75c021",
-      "size_bytes": 7276,
-      "mtime": 1794085446.247276,
-      "age_delta_seconds": 20341.316304445267,
+      "sha256": "4b54b839a6c7fe8d4b77da0a7d59bcba4bc1f9a905460a56cf9b150a3c4d3d32",
+      "size_bytes": 7576,
+      "mtime": 1794806886.682337,
+      "age_delta_seconds": 0.16726040840148926,
       "age_bucket": "recent",
-      "referenced_count": 30,
+      "referenced_count": 31,
       "broken_refs": [
         "conventions/folder-organization.md",
         "conventions/coding-practices.md",
@@ -2290,16 +2299,52 @@
         "folder-organization.md",
         "data-access.md",
         "agents/critic-database.md",
-        "skill.md"
+        "skill.md",
+        "00-overview.md"
       ],
-      "broken_ratio": 0.6667,
+      "broken_ratio": 0.6774,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
+    },
+    {
+      "path": "dummyindex/skills/council/20-specify.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\council\\20-specify.md",
+      "doc_type": "markdown",
+      "title": "Stage 1 \u2014 `/specify` (dev drafts spec.md + plan.md)",
+      "headings": [
+        "Stage 1 \u2014 `/specify` (dev drafts spec.md + plan.md)",
+        "Inputs (per feature)",
+        "Step 1 \u2014 Resolve the stack specialist",
+        "Step 2 \u2014 Dispatch one dev",
+        "Doc-evidence directive (include verbatim)",
+        "Step 3 \u2014 Snapshot the draft",
+        "Logging",
+        "Skip logic",
+        "Failure handling",
+        "Output"
+      ],
+      "sha256": "3536cb0416e0816372171e95e496b03952d9097e3312eafae4054f9964f56d5b",
+      "size_bytes": 3669,
+      "mtime": 1794806886.6838486,
+      "age_delta_seconds": 0.16574883460998535,
+      "age_bucket": "recent",
+      "referenced_count": 12,
+      "broken_refs": [
+        "agents/dev.md",
+        "council/55-context7.md",
+        "00-overview.md",
+        "18-filter-trivial.md",
+        "30-plan.md"
+      ],
+      "broken_ratio": 0.4167,
+      "confidence": "low",
+      "is_external": false,
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/council/40-critique.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\40-critique.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\council\\40-critique.md",
       "doc_type": "markdown",
       "title": "Stage 3 \u2014 `/critique` (critics file concerns, mode-gated)",
       "headings": [
@@ -2315,10 +2360,10 @@
         "Failure handling",
         "Output"
       ],
-      "sha256": "2a82a2fef594551be123fd4ac8707adcad8ab743f49a8ac779231047532309ee",
-      "size_bytes": 3792,
-      "mtime": 1794085446.2482767,
-      "age_delta_seconds": 20341.31530380249,
+      "sha256": "ec360e2000efede2e6eea1582d599b5c044af8a14904209f3e43f43eb2129c9f",
+      "size_bytes": 3794,
+      "mtime": 1794806886.6858563,
+      "age_delta_seconds": 0.1637411117553711,
       "age_bucket": "recent",
       "referenced_count": 12,
       "broken_refs": [
@@ -2331,11 +2376,11 @@
       "broken_ratio": 0.4167,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/council/45-reality-check.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\45-reality-check.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\council\\45-reality-check.md",
       "doc_type": "markdown",
       "title": "Phase 3.5 \u2014 Reality check",
       "headings": [
@@ -2348,10 +2393,10 @@
         "Output",
         "Gating"
       ],
-      "sha256": "ac3e64dfea9e830725674449c347ed4f0d5f225361a9638e59ebaf2cf920137f",
-      "size_bytes": 5106,
-      "mtime": 1794085446.2492754,
-      "age_delta_seconds": 20341.314305067062,
+      "sha256": "2e064c2f33e79b1e20d9bc282da8155baca21bc5e5f3064a9010a86cf55336b2",
+      "size_bytes": 5171,
+      "mtime": 1794806886.6858563,
+      "age_delta_seconds": 0.1637411117553711,
       "age_bucket": "recent",
       "referenced_count": 14,
       "broken_refs": [
@@ -2366,11 +2411,11 @@
       "broken_ratio": 0.5,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/council/52-tree-enrich.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\52-tree-enrich.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\council\\52-tree-enrich.md",
       "doc_type": "markdown",
       "title": "Phase 4.5 \u2014 Tree enrichment (node abstracts)",
       "headings": [
@@ -2380,10 +2425,10 @@
         "Procedure",
         "What NOT to do"
       ],
-      "sha256": "582ab2eb3128b51a0ffa73a9c1d04ad5b23b77224b1a3eed3f6f769d2e7885a1",
-      "size_bytes": 4790,
-      "mtime": 1794085446.2492754,
-      "age_delta_seconds": 20341.314305067062,
+      "sha256": "ed30e5010126fd76cd6467484cf55a5e2add0b0307cd9eb166984b726cee4546",
+      "size_bytes": 4741,
+      "mtime": 1794806886.686856,
+      "age_delta_seconds": 0.16274142265319824,
       "age_bucket": "recent",
       "referenced_count": 12,
       "broken_refs": [
@@ -2399,11 +2444,11 @@
       "broken_ratio": 0.6667,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/council/55-context7.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\55-context7.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\council\\55-context7.md",
       "doc_type": "markdown",
       "title": "Context7 lookup protocol (MCP companion)",
       "headings": [
@@ -2414,10 +2459,10 @@
         "Which libraries to look up",
         "Where this protocol is wired"
       ],
-      "sha256": "b1bea6d69b11dff4663a56fc72de54b1713004e1e25db71eb3a4dd5f3c78b959",
-      "size_bytes": 4579,
-      "mtime": 1794085446.2492754,
-      "age_delta_seconds": 20341.314305067062,
+      "sha256": "e5ecd1d70db890f9c3b9413ace531325b8080a09c4078be3cfd7c91494f20d49",
+      "size_bytes": 4550,
+      "mtime": 1794806886.686856,
+      "age_delta_seconds": 0.16274142265319824,
       "age_bucket": "recent",
       "referenced_count": 16,
       "broken_refs": [
@@ -2439,11 +2484,11 @@
       "broken_ratio": 0.875,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/council/56-github.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\56-github.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\council\\56-github.md",
       "doc_type": "markdown",
       "title": "GitHub release-check protocol (MCP companion)",
       "headings": [
@@ -2454,10 +2499,10 @@
         "What this grounds (and what it does not)",
         "Where this protocol is wired"
       ],
-      "sha256": "b8845e9058c80b9cccef389284623c7f79e6887f6e4255b5e5d3bf9b716187b9",
-      "size_bytes": 4102,
-      "mtime": 1794085446.2502766,
-      "age_delta_seconds": 20341.31330394745,
+      "sha256": "6ca30cfc67a513002300b0a33a92a474a5e1968bf7d7ba6438193faa2d744a26",
+      "size_bytes": 4084,
+      "mtime": 1794806886.686856,
+      "age_delta_seconds": 0.16274142265319824,
       "age_bucket": "recent",
       "referenced_count": 12,
       "broken_refs": [
@@ -2477,11 +2522,11 @@
       "broken_ratio": 1.0,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/council/58-codebase-scan.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\58-codebase-scan.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\council\\58-codebase-scan.md",
       "doc_type": "markdown",
       "title": "Codebase scan \u2014 author `features/graph.json`",
       "headings": [
@@ -2496,10 +2541,10 @@
         "Skip logic",
         "Output"
       ],
-      "sha256": "78acddafcd3162cd1668781e74e997c6b5c7b7be8a553e7bfd1bd0b85794a0f8",
-      "size_bytes": 13277,
-      "mtime": 1794085446.2502766,
-      "age_delta_seconds": 20341.31330394745,
+      "sha256": "069a98e01148221d1b2b1e94b9b457a1a7b719f095167958b803e87ab3bb52a3",
+      "size_bytes": 13097,
+      "mtime": 1794806886.6878562,
+      "age_delta_seconds": 0.1617412567138672,
       "age_bucket": "recent",
       "referenced_count": 26,
       "broken_refs": [
@@ -2523,11 +2568,11 @@
       "broken_ratio": 0.6154,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/council/65-reconcile.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\council\\65-reconcile.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\council\\65-reconcile.md",
       "doc_type": "markdown",
       "title": "Reconcile \u2014 fold a commit delta into the curated index",
       "headings": [
@@ -2538,12 +2583,12 @@
         "Why it's restart-safe",
         "Non-goals"
       ],
-      "sha256": "321a88cd42e519c5b8aae4268f073dee9b5e67b1c01ac99554b41a72ce5d64f6",
-      "size_bytes": 10022,
-      "mtime": 1794101734.2685988,
-      "age_delta_seconds": 4053.2949817180634,
+      "sha256": "305c9b743d3b94c62495860efa2df4f08ad210ab7a1e2c1b80ef7ee2dbed5163",
+      "size_bytes": 10256,
+      "mtime": 1794806886.6888561,
+      "age_delta_seconds": 0.16074132919311523,
       "age_bucket": "recent",
-      "referenced_count": 11,
+      "referenced_count": 12,
       "broken_refs": [
         "meta.indexed_commit",
         "indexed_commit",
@@ -2552,16 +2597,17 @@
         "drifted_features",
         "removed_files",
         "18-filter-trivial.md",
+        "00-overview.md",
         "dirty_source"
       ],
-      "broken_ratio": 0.7273,
+      "broken_ratio": 0.75,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/equip/SKILL.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\equip\\SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\equip\\SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-equip / $dummyindex-equip \u2014 equip the project with a tuned, evolving toolkit",
       "headings": [
@@ -2570,6 +2616,7 @@
         "Generated vs adopted",
         "Safety framing (state this to the user)",
         "The lifecycle (verbs)",
+        "Project config, requirements and grounding",
         "Plugin manager (discover + install; Claude Code only)",
         "<plugin> \u2014 usage in this repo",
         "Purpose here",
@@ -2579,12 +2626,12 @@
         "Discipline (spec-led)",
         "Checklist (verify before claiming done)"
       ],
-      "sha256": "4175ed1db4fe30af0a6f012d6690d7a3638eb2016429c80a3fadae22df37a6ee",
-      "size_bytes": 25900,
-      "mtime": 1794098333.2818491,
-      "age_delta_seconds": 7454.281731367111,
+      "sha256": "e82d7f261afd084bf01f9ebc711604ee18fe75d67f89f9c413b2c78b4a57fed4",
+      "size_bytes": 26367,
+      "mtime": 1794806886.6888561,
+      "age_delta_seconds": 0.16074132919311523,
       "age_bucket": "recent",
-      "referenced_count": 15,
+      "referenced_count": 16,
       "broken_refs": [
         ".context/equipment.json",
         "SubagentStart",
@@ -2596,17 +2643,18 @@
         "EXPERIENCE.md",
         "library.json",
         "equipment.json",
+        ".context/config.toml",
         ".claude/settings.json",
         "SKILL.md"
       ],
-      "broken_ratio": 0.8,
+      "broken_ratio": 0.8125,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/evolve/SKILL.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\evolve\\SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\evolve\\SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-evolve / $dummyindex-evolve \u2014 evidence \u2192 diagnosis \u2192 gated edit \u2192 decision history",
       "headings": [
@@ -2619,10 +2667,10 @@
         "Automatic closeout learning",
         "CLI reference"
       ],
-      "sha256": "cf380beb992b1867a92e7824c21a1a5a73316e5b02f10473cbb2e79f7ce04a3d",
-      "size_bytes": 9857,
-      "mtime": 1794095450.7001321,
-      "age_delta_seconds": 10336.863448381424,
+      "sha256": "ec69a570eefe2642afba87b43835dfb62fbc1424f4e7dd591d438751ea39178a",
+      "size_bytes": 9851,
+      "mtime": 1794806886.6999707,
+      "age_delta_seconds": 0.1496267318725586,
       "age_bucket": "recent",
       "referenced_count": 13,
       "broken_refs": [
@@ -2641,20 +2689,20 @@
       "broken_ratio": 0.8462,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/evolve/replay-protocol.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\evolve\\replay-protocol.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\evolve\\replay-protocol.md",
       "doc_type": "markdown",
       "title": "Optional runtime replay and learning",
       "headings": [
         "Optional runtime replay and learning"
       ],
-      "sha256": "132812281b2dc126cce116978ee7a93fff14fc50b6e7aa43ae1b3321c033ca22",
-      "size_bytes": 4714,
-      "mtime": 1794085446.2583184,
-      "age_delta_seconds": 20341.305262088776,
+      "sha256": "976dfc167f6d95c0295f077c36613dd10af0ffbf50a310fc4dd1c63e0a25ce75",
+      "size_bytes": 4774,
+      "mtime": 1794806886.7014756,
+      "age_delta_seconds": 0.14812183380126953,
       "age_bucket": "recent",
       "referenced_count": 5,
       "broken_refs": [
@@ -2667,11 +2715,11 @@
       "broken_ratio": 1.0,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/fleet/SKILL.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\fleet\\SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\fleet\\SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-fleet / $dummyindex-fleet \u2014 fleet-run babysitter",
       "headings": [
@@ -2685,10 +2733,10 @@
         "7. Merge phase (opt-in)",
         "Non-negotiables"
       ],
-      "sha256": "3fbc953c8f02948e5e1e794823b1bbb8a115f0e93c41ac27104ace4e9b472713",
-      "size_bytes": 7218,
-      "mtime": 1794085446.2593174,
-      "age_delta_seconds": 20341.30426311493,
+      "sha256": "1bcc0250649d03520630887f5e6a7c539496b751400938d4f7b0e61c2d01fd3e",
+      "size_bytes": 7283,
+      "mtime": 1794806886.7014756,
+      "age_delta_seconds": 0.14812183380126953,
       "age_bucket": "recent",
       "referenced_count": 4,
       "broken_refs": [
@@ -2700,11 +2748,11 @@
       "broken_ratio": 1.0,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/memory/SKILL.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\memory\\SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\memory\\SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-remember / $dummyindex-remember \u2014 save the session into `.context/session-memory/`",
       "headings": [
@@ -2713,26 +2761,27 @@
         "YYYY-MM-DD HH:MM | <branch>",
         "Rules"
       ],
-      "sha256": "51e4f6c91bea66bf307d119a59d219453dc0237e3bb00b8ed788524efaa49e24",
-      "size_bytes": 2174,
-      "mtime": 1794085446.2603185,
-      "age_delta_seconds": 20341.303261995316,
+      "sha256": "bd89c94a8d9780f2b46b904b585898db2451925082d19958dc4765acc4e71a61",
+      "size_bytes": 2370,
+      "mtime": 1794806886.7024772,
+      "age_delta_seconds": 0.14712023735046387,
       "age_bucket": "recent",
-      "referenced_count": 4,
+      "referenced_count": 5,
       "broken_refs": [
         "now.md",
         "core-memories.md",
         "recent.md",
-        "archive.md"
+        "archive.md",
+        "../council/00-overview.md"
       ],
       "broken_ratio": 1.0,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/plan/SKILL.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\plan\\SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\plan\\SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-plan / $dummyindex-plan \u2014 Grounded planning",
       "headings": [
@@ -2746,17 +2795,18 @@
         "Checklist + spec-led discipline (embed this in how you work)",
         "Done"
       ],
-      "sha256": "9171aab8d0fdb45b0aecb2fa893098375719da704570469b51b8f38f4410929a",
-      "size_bytes": 14909,
-      "mtime": 1794092868.4837997,
-      "age_delta_seconds": 12919.079780817032,
+      "sha256": "f74f85080c27a292940e143dcec25dec4afd981cdc33f6b5b6accb052592dacf",
+      "size_bytes": 15086,
+      "mtime": 1794806886.703477,
+      "age_delta_seconds": 0.14612054824829102,
       "age_bucket": "recent",
-      "referenced_count": 16,
+      "referenced_count": 17,
       "broken_refs": [
         "checklist.md",
         "proposal.json",
         "related_features",
         "reused_symbols",
+        "../council/00-overview.md",
         ".context/equipment.json",
         "SubagentStart",
         "Wave",
@@ -2764,14 +2814,14 @@
         "DECISIONS.md",
         ".context/config.json"
       ],
-      "broken_ratio": 0.625,
+      "broken_ratio": 0.6471,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/retrieval/30-flow-trace.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\retrieval\\30-flow-trace.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\retrieval\\30-flow-trace.md",
       "doc_type": "markdown",
       "title": "Flow trace",
       "headings": [
@@ -2789,10 +2839,10 @@
         "When the flow doesn't exist",
         "Anti-patterns"
       ],
-      "sha256": "a909015eec717850f0b14e2e9a49698b865b941d02a8b72e3d618765878b85e2",
-      "size_bytes": 3908,
-      "mtime": 1794085446.2623181,
-      "age_delta_seconds": 20341.301262378693,
+      "sha256": "79f3512335f0357eb8181499a15741a9f69edebeab043817cc28d33ce917b1ad",
+      "size_bytes": 3917,
+      "mtime": 1794806886.704477,
+      "age_delta_seconds": 0.14512038230895996,
       "age_bucket": "recent",
       "referenced_count": 14,
       "broken_refs": [
@@ -2807,11 +2857,11 @@
       "broken_ratio": 0.5,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/skill.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\skill.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\skill.md",
       "doc_type": "markdown",
       "title": "/dummyindex / $dummyindex \u2014 The context engine orchestrator",
       "headings": [
@@ -2843,10 +2893,10 @@
         "Placement rule",
         "Final word"
       ],
-      "sha256": "89351cc4878e4eee2f3349cc00755c700f0d41d121a59c0791fd56c3f4736995",
-      "size_bytes": 37866,
-      "mtime": 1794101734.2695994,
-      "age_delta_seconds": 4053.293981075287,
+      "sha256": "8618c45102509b92d482a04b3302667ad58df35cf17dcc8bc89ac478b398839a",
+      "size_bytes": 38289,
+      "mtime": 1794806886.705477,
+      "age_delta_seconds": 0.144120454788208,
       "age_bucket": "recent",
       "referenced_count": 75,
       "broken_refs": [
@@ -2899,11 +2949,11 @@
       "broken_ratio": 0.6,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "dummyindex/skills/update/SKILL.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\dummyindex\\skills\\update\\SKILL.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\dummyindex\\skills\\update\\SKILL.md",
       "doc_type": "markdown",
       "title": "/dummyindex-update / $dummyindex-update [&lt;version|tag&gt;] \u2014 Update (or pin) dummyindex",
       "headings": [
@@ -2913,10 +2963,10 @@
         "Prefer gh; fall back to the public API; final fallback is the main branch.",
         "else: pip --user (the common default)"
       ],
-      "sha256": "3446f4d9143016c97288a65a5261db50ab69022822859956602fad2974be3649",
-      "size_bytes": 11173,
-      "mtime": 1794085446.2633183,
-      "age_delta_seconds": 20341.300262212753,
+      "sha256": "3b0de250b68e40f1331ea17b6100eac189837e711daf17238d9bb2851339583e",
+      "size_bytes": 14190,
+      "mtime": 1794806886.7073028,
+      "age_delta_seconds": 0.14229464530944824,
       "age_bucket": "recent",
       "referenced_count": 11,
       "broken_refs": [
@@ -2933,11 +2983,11 @@
       "broken_ratio": 0.8182,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "tests/eval/BASELINE.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\tests\\eval\\BASELINE.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\tests\\eval\\BASELINE.md",
       "doc_type": "markdown",
       "title": "Retrieval eval baseline",
       "headings": [
@@ -2949,8 +2999,8 @@
       ],
       "sha256": "0887fc040c55da13619f958a53261b3f4244b9446ca77dc419d1e855766b5bc0",
       "size_bytes": 4264,
-      "mtime": 1794085446.325893,
-      "age_delta_seconds": 20341.237687587738,
+      "mtime": 1794806886.815229,
+      "age_delta_seconds": 0.03436851501464844,
       "age_bucket": "recent",
       "referenced_count": 18,
       "broken_refs": [
@@ -2966,11 +3016,11 @@
       "broken_ratio": 0.4444,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "tests/eval/BEHAVIOR_BASELINE.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\tests\\eval\\BEHAVIOR_BASELINE.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\tests\\eval\\BEHAVIOR_BASELINE.md",
       "doc_type": "markdown",
       "title": "Behavior-gate two-arm baseline",
       "headings": [
@@ -2981,8 +3031,8 @@
       ],
       "sha256": "d795f0c303ccd45fbaa06d84b535504c5e717458521fa4337ee2809f1bf794da",
       "size_bytes": 4847,
-      "mtime": 1794085446.325893,
-      "age_delta_seconds": 20341.237687587738,
+      "mtime": 1794806886.815229,
+      "age_delta_seconds": 0.03436851501464844,
       "age_bucket": "recent",
       "referenced_count": 13,
       "broken_refs": [
@@ -3001,11 +3051,11 @@
       "broken_ratio": 0.8462,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     },
     {
       "path": "tests/fixtures/legacy_skill_md/remember_0_36.md",
-      "abs_path": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base\\tests\\fixtures\\legacy_skill_md\\remember_0_36.md",
+      "abs_path": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl\\tests\\fixtures\\legacy_skill_md\\remember_0_36.md",
       "doc_type": "markdown",
       "title": "/dummyindex-remember / $dummyindex-remember \u2014 save the session into `.context/session-memory/`",
       "headings": [
@@ -3016,8 +3066,8 @@
       ],
       "sha256": "55e763cc3f77626caf824cfba525c3b06bfeb506d72a65f47dab8d5430d5d222",
       "size_bytes": 2169,
-      "mtime": 1794085446.3328936,
-      "age_delta_seconds": 20341.230686903,
+      "mtime": 1794806886.832112,
+      "age_delta_seconds": 0.017485380172729492,
       "age_bucket": "recent",
       "referenced_count": 5,
       "broken_refs": [
@@ -3030,7 +3080,7 @@
       "broken_ratio": 1.0,
       "confidence": "low",
       "is_external": false,
-      "source_root": "D:\\Projects\\dummyindex\\.claude\\worktrees\\fleet-base"
+      "source_root": "D:\\Projects\\dummyindex.worktrees\\consolidate-context-batgirl"
     }
   ]
 }

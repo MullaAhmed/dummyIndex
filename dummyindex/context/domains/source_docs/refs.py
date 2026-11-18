@@ -217,15 +217,15 @@ def extract_doc_text(path: Path) -> str:
     ext = path.suffix.lower()
     try:
         if ext == ".pdf":
-            from dummyindex.pipeline.io.detect import extract_pdf_text
+            from dummyindex.context.pipeline.io.detect import extract_pdf_text
 
             return extract_pdf_text(path)
         if ext == ".docx":
-            from dummyindex.pipeline.io.detect import docx_to_markdown
+            from dummyindex.context.pipeline.io.detect import docx_to_markdown
 
             return docx_to_markdown(path)
         if ext == ".xlsx":
-            from dummyindex.pipeline.io.detect import xlsx_to_markdown
+            from dummyindex.context.pipeline.io.detect import xlsx_to_markdown
 
             return xlsx_to_markdown(path)
         return path.read_text(encoding="utf-8", errors="ignore")

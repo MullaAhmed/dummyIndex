@@ -89,7 +89,7 @@ an operator verb.
   `domains/drift_acks.read_acks` (`drift.py:42`);
   `build/reconcile.is_non_source_path`, `reconcile_scope.partition_session_drift`
   / `unrelated_summary`, and `pipeline/io.submodule_paths`
-  (`reconcile_gate.py:28-40`);
+  (`reconcile_gate.py:29-40`);
   `domains/atomic_io.write_text_atomic` (every writer, incl. `drift_acks._write`
   at `drift_acks.py:107-109`). External, read-only: the host transcript store
   under `$CLAUDE_CONFIG_DIR`/`~/.claude`, and `git` via subprocess

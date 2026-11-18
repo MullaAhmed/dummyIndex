@@ -1,6 +1,6 @@
 """Shared log-scan helper for domain resumption logs.
 
-Top-level in ``domains`` (like :mod:`context.domains.atomic_io`) so any domain log
+Top-level in ``domains`` so any domain log
 module can import it without cross-domain dependencies. Pure: it takes read
 entries and a predicate, never a domain object.
 """

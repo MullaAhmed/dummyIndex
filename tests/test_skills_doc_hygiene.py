@@ -15,13 +15,13 @@ from pathlib import Path
 import pytest
 
 from dummyindex.context.domains import docbudget
+from dummyindex.context.installer.common import _SIBLING_SKILLS
 from dummyindex.context.output.bootstrap import generate_managed_block
 from dummyindex.context.output.instructions import (
     PLAYBOOK_IDS,
     generate_how_to_use_md,
     generate_playbook_md,
 )
-from dummyindex.installer.common import _SIBLING_SKILLS
 from tests.paths import REPO_ROOT
 
 _SKILLS_DIR = REPO_ROOT / "dummyindex" / "skills"
@@ -211,8 +211,8 @@ def test_build_skill_via_substitution_is_a_failure() -> None:
 @pytest.mark.unit
 def test_build_skill_verify_demands_tool_provenance() -> None:
     text = _build_skill()
-    # The verify step must require evidence the tagged tool actually ran.
-    assert "the tool actually ran" in text
+    # The verify step must require evidence the tagged tool ran.
+    assert "the tool ran and produced the result" in text
 
 
 @pytest.mark.unit
@@ -410,7 +410,7 @@ def test_build_delegates_selected_capability_and_policy_on_every_host() -> None:
     text = " ".join(_build_skill().split())
     assert "read `role_path`" in text
     assert "include the full capability mandate" in text
-    assert "policies actually selected in this session" in text
+    assert "only the policies that this session selected" in text
     assert "Never stop solely because Claude equipment is missing" in text
     assert "sanctioned seam on every host" in text
 
@@ -500,18 +500,84 @@ def test_update_skill_documents_version_pinning() -> None:
 
 
 @pytest.mark.unit
-def test_update_skill_documents_generated_tool_refresh() -> None:
-    """The update skill documents that `install` also refreshes equip-generated
-    tools: `equip refresh`, the never-clobber guarantee and the equipped-only guard."""
+def test_update_skill_documents_automatic_upgrade() -> None:
+    """The upgrade is automatic: install, context init and the SessionStart hook run
+    `context upgrade --if-stale`. The manual `equip refresh` fallback is gone."""
     text = (_SKILLS_DIR / "update" / "SKILL.md").read_text(encoding="utf-8")
-    assert "equip refresh" in text
-    assert "generated" in text
-    assert "USER_MODIFIED" in text or "hand-edited" in text
+    assert "dummyindex context upgrade --if-stale" in text
+    assert "SessionStart" in text
+    assert "no manual fallback" in text
+    assert "USER_MODIFIED" in text
     assert "equipment.json" in text
-    # It is a VERIFIED layer with an explicit fallback when install's best-effort
-    # refresh is skipped — not a silent hope.
-    assert "dummyindex context equip refresh" in text
-    assert "skipped" in text
+    assert "equip refresh" not in text
+    assert "run the same upgrade in-process" in text
+
+
+@pytest.mark.unit
+def test_gc_skill_keeps_dead_docs_and_equipment_text_separate() -> None:
+    """Dead-docs flags and the no-op note stay under the dead-docs row, not equipment."""
+    text = (_SKILLS_DIR / "gc" / "SKILL.md").read_text(encoding="utf-8")
+    docs_row = text.split("- **Dead docs → CLI delete")[1].split("- **Equipment")[0]
+    equip_row = text.split("- **Equipment → CLI delete")[1].split("- **Trivially-dead")[0]
+    assert "One failure does not stop the others." in docs_row
+    assert "--force-partial" in docs_row
+    assert "idempotent no-op" in docs_row
+    assert "--force-partial" not in equip_row
+    assert "--allow-untracked" not in equip_row
+    assert "`--force` only after that item's confirm." in equip_row
+    assert "Library entries stay." in equip_row
+
+
+@pytest.mark.unit
+def test_update_skill_restyle_runs_after_verify_step() -> None:
+    """`context restyle` sits in a numbered step after `### 4. Verify the result`."""
+    text = (_SKILLS_DIR / "update" / "SKILL.md").read_text(encoding="utf-8")
+    step_re = re.compile(r"^### (\d+)\. (.+)$", re.MULTILINE)
+    heads = [(int(m.group(1)), m.group(2), m.start()) for m in step_re.finditer(text)]
+    verify = [n for n, title, _ in heads if title == "Verify the result"]
+    assert verify, "update SKILL.md lost its 'Verify the result' step"
+    restyle_steps = []
+    for idx, (num, _title, start) in enumerate(heads):
+        end = heads[idx + 1][2] if idx + 1 < len(heads) else len(text)
+        if "context restyle" in text[start:end]:
+            restyle_steps.append(num)
+    assert restyle_steps, "no update step names `context restyle`"
+    assert all(num > verify[0] for num in restyle_steps), (
+        f"`context restyle` in step(s) {restyle_steps}, not after verify step {verify[0]}"
+    )
+
+
+@pytest.mark.unit
+def test_update_skill_restyle_gate_and_report_lines() -> None:
+    text = (_SKILLS_DIR / "update" / "SKILL.md").read_text(encoding="utf-8")
+    assert "already restyled" in text
+    assert "context prose  restyled N doc(s) (ASD-STE100 ruleset N)" in text
+    assert (
+        "context prose  restyle pending — resume: dummyindex context restyle status"
+        in text
+    )
+
+
+@pytest.mark.unit
+def test_update_skill_layers_at_target_still_run_restyle_check() -> None:
+    """Idempotent exit must still run the step 5 gate before it ends."""
+    text = " ".join(
+        (_SKILLS_DIR / "update" / "SKILL.md").read_text(encoding="utf-8").split()
+    )
+    assert "run the step 5 check" in text
+    assert "Stop only when step 5 skips" in text
+    assert "`already restyled`" in text
+    assert "`nothing to restyle`" in text
+
+
+@pytest.mark.unit
+def test_update_skill_taxonomy_rule_lists_names_ids_and_file_sets() -> None:
+    """Taxonomy is feature names, ids and file sets. Conventions are rewritten by restyle."""
+    text = " ".join(
+        (_SKILLS_DIR / "update" / "SKILL.md").read_text(encoding="utf-8").split()
+    )
+    assert "change the taxonomy (feature names, feature IDs, file sets)" in text
+    assert "abstracts, conventions, audits" not in text
 
 
 # --- trivial-filter doc: where the count fields live

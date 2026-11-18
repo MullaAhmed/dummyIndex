@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from dummyindex.codex_guidance import (
+from dummyindex.context.codex_guidance import (
     is_project_instruction_path,
     project_instruction_paths,
 )

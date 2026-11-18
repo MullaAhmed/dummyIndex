@@ -16,7 +16,7 @@ Source: `dummyindex/context/domains/proposals/closeout.py:59`, `dummyindex/conte
 `context build --proposal S --closeout FILE` and `context gc closeout --kind audit`
 apply the same knowledge boundary. Neither deletes a workspace. Only a `failed`
 learning state exits 1; `blocked` and `pending` exit 0.
-Source: `dummyindex/context/domains/proposals/closeout.py:37`, `dummyindex/cli/gc.py:124`, `dummyindex/cli/build_loop/dispatch.py:228`.
+Source: `dummyindex/context/domains/proposals/closeout.py:37`, `dummyindex/context/cli/gc.py:124`, `dummyindex/context/cli/build_loop/dispatch.py:228`.
 
 A compact receipt under `.context/gc/closeouts/` keeps source revision and
 reviewed inventory. It also keeps unit hashes, task receipts, owned paths,

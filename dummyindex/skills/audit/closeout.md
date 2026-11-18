@@ -4,7 +4,7 @@ Finalize the report and classify every workpaper: one `learning_reflection`
 lesson (or `null`) and a specific nonempty `discarded` reason per file.
 Stdlib only.
 
-Save the code outside the workspace; run from project root:
+Save the code outside the workspace. Run it from the project root:
 
 ```text
 python prepare-audit-closeout.py .context/audits/<slug> audit-input.json closeout-manifest.json
@@ -107,6 +107,6 @@ Input (`expected_sha256`: start hash, lowercased):
 }
 ```
 
-With no novel lesson, use `null`. `body` is ignored for a lesson (the rule becomes `When {cue}: {lesson}`); cite `sources`/`evidence`. Missing/unknown dispositions, symlinks,
-escaping paths, or existing output fail. After CLI rejection, re-review; never
-auto-refresh hashes or reasons.
+With no novel lesson, use `null`. `body` is ignored for a lesson. The rule becomes `When {cue}: {lesson}`.
+
+Cite `sources`/`evidence`. Missing or unknown dispositions, symlinks, escaping paths, or existing output fail. After CLI rejection, re-review. Never auto-refresh hashes or reasons.

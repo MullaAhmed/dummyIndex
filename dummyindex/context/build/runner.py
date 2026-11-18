@@ -70,9 +70,9 @@ from dummyindex.context.output.instructions import (
     write_how_to_use_md,
     write_playbook_md,
 )
-from dummyindex.pipeline.build import build_structure
-from dummyindex.pipeline.extract import extract
-from dummyindex.pipeline.io.detect import detect
+from dummyindex.context.pipeline.build import build_structure
+from dummyindex.context.pipeline.extract import extract
+from dummyindex.context.pipeline.io.detect import detect
 
 
 @dataclass(frozen=True)
@@ -208,7 +208,7 @@ def build_all(
         written.append("features/symbol-graph.json")
         written.extend(graph_result.artifacts)
         # Re-read so feature scaffolding can use the same JSON the agent sees.
-        from dummyindex.export.storage import read_graph_payload
+        from dummyindex.context.export.storage import read_graph_payload
 
         graph_data_for_features = read_graph_payload(graph_result.json_path)
     except Exception as exc:

@@ -1,4 +1,4 @@
-"""Tests for `dummyindex/installer/repair.py` and its `install()` wiring.
+"""Tests for `dummyindex/context/installer/repair.py` and its `install()` wiring.
 
 Covers the four-root scanner (`InstalledCopy`), ownership-evidence gating
 (stamp / legacy heading / dir-name-only), staleness + `--force-downgrade`,
@@ -14,11 +14,10 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.context.output.bootstrap import UnbalancedMarkersError
-from dummyindex.installer import install
-from dummyindex.installer.common import PACKAGE_VERSION, LinkMode
-from dummyindex.installer.link import relative_link_value
-from dummyindex.installer.repair import (
+from dummyindex.context.installer import install
+from dummyindex.context.installer.common import PACKAGE_VERSION, LinkMode
+from dummyindex.context.installer.link import relative_link_value
+from dummyindex.context.installer.repair import (
     InstalledCopy,
     RepairCandidate,
     RepairPlan,
@@ -28,7 +27,8 @@ from dummyindex.installer.repair import (
     plan_repairs,
     scan_installed_copies,
 )
-from dummyindex.installer.uninstall import _remove_skill_family
+from dummyindex.context.installer.uninstall import _remove_skill_family
+from dummyindex.context.output.bootstrap import UnbalancedMarkersError
 from tests.paths import FIXTURES_DIR
 
 _LEGACY_SKILL_MD = (FIXTURES_DIR / "legacy_skill_md" / "SKILL.md").read_text(
@@ -58,7 +58,7 @@ def _write_stamp(skill_dir: Path, version: str) -> None:
     (skill_dir / "SKILL.md").write_bytes(
         b"---\nname: dummyindex\ndescription: test\n---\nbody\n"
     )
-    from dummyindex.installer.ownership import sync_family
+    from dummyindex.context.installer.ownership import sync_family
 
     body = (skill_dir / "SKILL.md").read_text(encoding="utf-8")
     sync_family(
@@ -694,7 +694,7 @@ def test_execute_repairs_isolates_one_failing_copy_and_continues(
     `plan_repairs` classifies a proven Claude copy beside a proven `.agents`
     family as a migration candidate, so it never puts both in `to_rewrite`;
     isolation is a property of the plan given, so this builds one directly."""
-    import dummyindex.installer.repair as repair_module
+    import dummyindex.context.installer.repair as repair_module
 
     project_root, user_home = _roots(tmp_path)
     _write_stamp(_claude_dir(project_root), "0.10.0")
@@ -952,7 +952,7 @@ def test_dedupe_isolates_one_failing_family_and_continues(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    import dummyindex.installer.repair as repair_module
+    import dummyindex.context.installer.repair as repair_module
 
     project_root, user_home = _roots(tmp_path)
     _write_stamp(_claude_dir(project_root), "0.10.0")
@@ -1097,7 +1097,7 @@ def test_dedupe_does_not_sweep_dangling_links_when_removing_a_claude_duplicate(
 ) -> None:
     """The sweep only ever follows a CODEX-family removal — a pure Claude
     dedupe never invokes it."""
-    import dummyindex.installer.repair as repair_module
+    import dummyindex.context.installer.repair as repair_module
 
     project_root, user_home = _roots(tmp_path)
     _write_stamp(_claude_dir(project_root), PACKAGE_VERSION)
@@ -1627,7 +1627,7 @@ def test_install_wiring_isolates_one_failing_repair_and_does_not_abort_install(
     Claude a migration candidate, not a failing rewrite. Codex is written fresh,
     never through repair. ``LinkMode.COPY`` keeps the post-repair
     `create_family_links` pass from turning Claude's copy into a link."""
-    import dummyindex.installer.repair as repair_module
+    import dummyindex.context.installer.repair as repair_module
 
     project_root = tmp_path / "project"
     install(

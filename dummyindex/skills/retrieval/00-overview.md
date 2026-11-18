@@ -1,6 +1,6 @@
 # Retrieval — PageIndex-style tree search
 
-When an agent in a future session has a task or question about the codebase, **how does it find the right context**?
+Consider an agent in a future session with a task or question about the codebase. **How does it find the right context?**
 
 Inspired by [PageIndex](https://github.com/VectifyAI/PageIndex). The pattern: hierarchical TOC + LLM reasoning over the tree. No vectors, no chunks, no grep-first.
 
@@ -15,14 +15,16 @@ Inspired by [PageIndex](https://github.com/VectifyAI/PageIndex). The pattern: hi
 
 When the agent has a non-trivial task:
 
-0. **(Optional) Get a ranked shortlist.** Run `dummyindex context query "<task>"`. It scores every feature against the query by token overlap (name/summary/files/symbols) and prints the top-K with cited excerpts — **deterministic, no LLM**. Treat the ranking as a *shortlist to reason over*, not a final answer; it accelerates steps 1–2 but never replaces them. `--top-k N` widens; `--json` for machine output; `--budget N` caps excerpt size.
+0. **(Optional) Get a ranked shortlist.** Run `dummyindex context query "<task>"`. It scores every feature against the query by token overlap (name/summary/files/symbols). It prints the top-K with cited excerpts — **deterministic, no LLM**. Treat the ranking as a *shortlist to reason over*, not a final answer.
+
+   It accelerates steps 1–2 but never replaces them. `--top-k N` widens the list. `--json` gives machine output. `--budget N` caps excerpt size.
 1. **Read the TOC.** Start at `.context/features/INDEX.json`.
 2. **Reason over the TOC.** Pick 1–3 features the task touches. Use the `query` shortlist as a hint, then reason from `name` + `summary` + counts — no grep, no scan.
 3. **Read the chosen feature(s).** For each: `feature.json` (machine context) and `spec.md` (the WHAT — intent, behavior, contracts).
 4. **Drill into the relevant doc.** Based on the task type, read the right doc:
    - "How does X work?" / "How is it built?" → `plan.md`
    - "What data does X read/write?" → `plan.md` (Data model section)
-   - "Can X be exploited?" / "What's risky?" → `concerns.md`
+   - "Can X be exploited?" / "What is risky?" → `concerns.md`
    - "What does X do for the user?" → `spec.md`
 5. **Follow flow narratives.** For sequence questions ("what happens when X is triggered?"), read `flows/<flow-id>.md`.
 6. **Resolve symbols via maps.** Use `map/symbols.json` to translate symbol names to `path:range`.
@@ -39,8 +41,8 @@ When the agent has a non-trivial task:
 
 - ✅ Start every non-trivial task with `features/INDEX.json`.
 - ✅ Cite `path:range` when describing or modifying code.
-- ✅ Trust `confidence: INFERRED` for prose; verify against source for facts.
-- ✅ Trigger a rebuild when the docs disagree with what the source actually shows.
+- ✅ Trust `confidence: INFERRED` for prose. Verify against source for facts.
+- ✅ Trigger a rebuild when the docs disagree with what the source shows.
 
 ## Sub-procedures
 
@@ -62,8 +64,8 @@ The tree wins on both cost AND quality.
 ## When this is built into the agent
 
 Every supported host session reaches `.context/HOW_TO_USE.md` through managed
-project guidance: `.claude/CLAUDE.md` on Claude Code or the active project
+project guidance. That guidance is `.claude/CLAUDE.md` on Claude Code or the active project
 instruction file on Codex. `HOW_TO_USE.md` IS the user-facing version of this
-procedure. The skill writes it during ingest; `dummyindex context bootstrap
---platform claude|codex|both` refreshes the selected host pointer without
+procedure. The skill writes it during ingest. `dummyindex context bootstrap
+--platform claude|codex|both` refreshes the selected host pointer. It does so without
 rebuilding the index.

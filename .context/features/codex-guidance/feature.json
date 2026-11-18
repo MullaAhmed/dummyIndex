@@ -68,6 +68,7 @@
     "test_agents_md_test_remove_project_agents_md_finds_fallback_after_config_changes",
     "test_agents_md_test_remove_project_blocks_cleans_active_and_stale_files_only",
     "test_agents_md_test_remove_reversed_markers_fails_without_modifying_user_file",
+    "test_agents_md_test_rendered_guidance_names_ste_not_caveman_docs",
     "test_agents_md_test_symlinked_trust_alias_does_not_transfer_trust_to_resolved_project",
     "test_agents_md_test_system_config_byte_budget_is_used_below_user_config",
     "test_agents_md_test_system_config_fallback_is_used_below_user_config",
@@ -85,7 +86,7 @@
     "test_agents_md_write_fallback_config"
   ],
   "files": [
-    "dummyindex/codex_guidance.py",
+    "dummyindex/context/codex_guidance.py",
     "dummyindex/context/output/agents_md.py",
     "tests/context/output/test_agents_md.py"
   ],

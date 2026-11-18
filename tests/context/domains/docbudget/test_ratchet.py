@@ -111,3 +111,21 @@ def test_scan_skills_ignores_lowercase_skill_md(tmp_path: Path) -> None:
     _write(tmp_path, "dummyindex/skills/a/SKILL.md", 4)
     _write(tmp_path, "dummyindex/skills/skill.md", 9)
     assert scan(tmp_path, BudgetGroup.SKILLS) == {"dummyindex/skills/a/SKILL.md": 4}
+
+
+def test_reseed_raises_entry_update_ratchet_does_not(tmp_path: Path) -> None:
+    from dummyindex.context.domains.docbudget import reseed
+
+    _write(tmp_path, DOC, 12)
+    assert reseed({DOC: 5}, tmp_path, [DOC], BudgetGroup.CONTEXT) == {DOC: 12}
+    assert update_ratchet(tmp_path, {DOC: 5}).ratchet == {DOC: 5}
+
+
+def test_read_ratchet_ignores_hash_header(tmp_path: Path) -> None:
+    from dummyindex.context.domains.docbudget import read_ratchet_ruleset
+
+    f = tmp_path / "r.txt"
+    f.write_text(f"# ruleset 0\n{DOC}\t7\n", encoding="utf-8")
+    assert read_ratchet(f) == {DOC: 7}
+    assert read_ratchet_ruleset(f) == 0
+    assert read_ratchet_ruleset(tmp_path / "missing.txt") == 0

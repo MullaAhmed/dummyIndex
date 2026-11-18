@@ -1,6 +1,6 @@
 # 10 — Non-goals
 
-What dummyindex deliberately does **not** do. Stating these prevents scope creep.
+What dummyindex deliberately does **not** do. These statements prevent scope creep.
 
 ## Not a code generator (but a tooling generator)
 
@@ -13,7 +13,7 @@ line is deliberate:
   does not author source files.
 - **Dispatched agents** — Claude generated/specialist agents or Codex native
   built-ins/custom agents — author source files one checklist item at a time.
-- Agents that consume `.context/` may write code; dummyindex doesn't. That boundary holds.
+- Agents that consume `.context/` may write code. dummyindex does not write code. That boundary holds.
 
 ## Not an LSP server
 
@@ -41,8 +41,8 @@ line is deliberate:
 
 - Not designed to run in CI.
 - Not designed to gate PRs.
-- It's an agent-time artifact, not a build-time artifact.
-- (CI may run `rebuild --changed` to keep `.context/` fresh, but that's optional.)
+- It is an agent-time artifact, not a build-time artifact.
+- (CI may run `rebuild --changed` to keep `.context/` fresh, but that is optional.)
 
 ## Not multi-repo (today)
 
@@ -57,20 +57,20 @@ line is deliberate:
   JSON or a manifest with bounded shards.
 - `dummyindex context graph` provides deterministic, bounded traversal verbs.
 - There is no graph-query server or general graph query language. Export to a
-  separate graph database when those capabilities are needed.
+  separate graph database when you need those capabilities.
 
 ## Not the source of truth for code semantics
 
 - The code is the source of truth for **what runs**.
-- `.context/` is the source of truth for **what the code means**, **how it's organized**, and **why**.
-- When `.context/` disagrees with the code, the code wins for facts; `.context/`
-  is reconciled. Deterministic maps may be rebuilt, while curated feature prose
-  follows the reconcile workflow so a refresh does not discard it.
+- `.context/` is the source of truth for **what the code means**, **how it is organized**, and **why**.
+- When `.context/` disagrees with the code, the code wins for facts. `.context/`
+  is reconciled. Deterministic maps may be rebuilt. Curated feature prose
+  follows the reconcile workflow, so a refresh does not discard it.
 
 ## Not a security audit
 
 - The security analyst persona (and the on-demand `/dummyindex-audit` or
-  `$dummyindex-audit` panel — see [08 — Skill](./08-skill.md)) surface threat
+  `$dummyindex-audit` panel — see [08 — Skill](./08-skill.md)) report threat
   surface and risks.
 - It does NOT certify the code as secure.
 - It does NOT replace a real security review by a human.
@@ -87,23 +87,23 @@ line is deliberate:
 - No Claude-model-specific instructions in agent personas.
 - Personas work with any reasonably-capable LLM.
 - Claude may persist a selected Claude label. Codex explicitly uses `current`,
-  meaning the running session model. The personas themselves stay model-agnostic.
+  which means the model of the active session. The personas themselves stay model-agnostic.
 
 ## Not free at scale
 
 - Deep-mode council on a 100-feature monorepo will cost real money — one-time.
 - Cost controls are tiered modes + caching + skip-trivial + the free SessionStart drift check.
-- The drift check (`plan-update`) is free (no LLM); the session reconciles docs as part of normal work; only a full council run is separately metered.
+- The drift check (`plan-update`) is free (no LLM). The session reconciles docs as part of normal work. Only a full council run is separately metered.
 
 ## Not a replacement for documentation a human writes
 
 - READMEs aimed at end users live elsewhere (the project's top-level README).
 - API documentation aimed at consumers stays where it is.
-- `.context/` is for **agents and contributors** working on the code itself.
+- `.context/` is for **agents and contributors** who work on the code itself.
 
 ## Not a static snapshot
 
-- It's a **living document** kept current through reconciliation. Claude adds
-  managed hook signals; Codex relies on its active project instruction file and
+- It is a **living document** kept current through reconciliation. Claude adds
+  managed hook signals. Codex relies on its active project instruction file and
   explicit skills.
 - A stale `.context/` is a bug, not a state we tolerate.

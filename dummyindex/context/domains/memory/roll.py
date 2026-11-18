@@ -12,7 +12,8 @@ from collections.abc import Callable
 from datetime import date
 from pathlib import Path
 
-from ..atomic_io import write_text_atomic
+from dummyindex.context.shared.atomic_io import write_text_atomic
+
 from .enums import TIER_HEADINGS, MemoryTier
 from .models import RollReport, Section
 from .parse import read_text_or_empty, render, section_date, split_sections

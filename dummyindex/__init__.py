@@ -14,14 +14,14 @@ def __getattr__(name: str):
     # tree-sitter / networkx loading.
     _map = {
         # Core deterministic pipeline (powers `dummyindex ingest`).
-        "detect": ("dummyindex.pipeline.io", "detect"),
-        "extract": ("dummyindex.pipeline.extract", "extract"),
-        "collect_files": ("dummyindex.pipeline.extract", "collect_files"),
-        "build_from_json": ("dummyindex.pipeline.build", "build_from_json"),
-        "build_structure": ("dummyindex.pipeline.build", "build_structure"),
+        "detect": ("dummyindex.context.pipeline.io", "detect"),
+        "extract": ("dummyindex.context.pipeline.extract", "extract"),
+        "collect_files": ("dummyindex.context.pipeline.extract", "collect_files"),
+        "build_from_json": ("dummyindex.context.pipeline.build", "build_from_json"),
+        "build_structure": ("dummyindex.context.pipeline.build", "build_structure"),
         # Clustering + export reused by `dummyindex.context.build.graph`.
-        "cluster": ("dummyindex.analysis.cluster", "cluster"),
-        "to_json": ("dummyindex.export", "to_json"),
+        "cluster": ("dummyindex.context.analysis.cluster", "cluster"),
+        "to_json": ("dummyindex.context.export", "to_json"),
     }
     if name in _map:
         import importlib

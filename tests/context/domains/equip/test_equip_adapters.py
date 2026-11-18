@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+import json
 from pathlib import Path
 
 import pytest
@@ -13,6 +14,7 @@ from dummyindex.context.domains.equip import (
     EquipmentSource,
 )
 from dummyindex.context.domains.equip.generate.adapters import (
+    adapter_description,
     native_adapter_content,
     native_adapter_path,
     remove_native_adapter,
@@ -122,3 +124,144 @@ def test_adapter_refuses_parent_symlink_and_unsafe_names(tmp_path: Path) -> None
     malicious = dataclasses.replace(_item(), name="../../escape")
     assert native_adapter_path(malicious) is None
     assert write_native_adapter(tmp_path, malicious) is None
+
+
+def _frontmatter_description(text: str) -> object:
+    head = text.split("---\n", 2)[1]
+    line = next(ln for ln in head.splitlines() if ln.startswith("description: "))
+    value = json.loads(line[len("description: ") :])
+    try:
+        import yaml
+    except ImportError:  # PyYAML is not a dev dependency; the JSON check still runs.
+        return value
+    assert yaml.safe_load(head)["description"] == value
+    return value
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("body", "expected"),
+    [
+        (
+            "---\nname: x\ndescription: a: b # c 'q' -x --- y\n---\nbody",
+            "a: b # c 'q' -x --- y",
+        ),
+        ('---\ndescription: "quoted"\n---\nbody', "quoted"),
+        ("---\ndescription: - leading dash\n---\nbody", "- leading dash"),
+        ("---\ndescription: " + "a" * 400 + "\n---\nbody", "a" * 300),
+        ("---\ndescription: café 日本\n---\nbody", "café 日本"),
+        ("---\ndescription: \n---\nbody", None),
+        ("no frontmatter at all", None),
+        ("---\r\ndescription: crlf body\r\n---\r\nbody", "crlf body"),
+    ],
+)
+def test_adapter_description_sanitised_and_valid_yaml(body: str, expected) -> None:
+    description = adapter_description(body)
+    assert description == expected
+    rendered = native_adapter_content(_item(), description=description)
+    if expected is None:
+        assert rendered == native_adapter_content(_item())
+        return
+    assert len(expected) <= 300
+    assert _frontmatter_description(rendered) == expected
+
+
+@pytest.mark.unit
+def test_multiline_and_control_characters_collapse_to_one_line() -> None:
+    from dummyindex.context.domains.equip.generate.adapters import _clean_description
+
+    raw = "first line\n  second:\tline \u2028 with \x00 control\u2029end"
+    cleaned = _clean_description(raw)
+    assert cleaned == "first line second: line with control end"
+    assert (
+        _frontmatter_description(native_adapter_content(_item(), description=raw))
+        == cleaned
+    )
+
+
+@pytest.mark.unit
+def test_pre_fix_generic_adapter_is_replaced_when_description_arrives(
+    tmp_path: Path,
+) -> None:
+    item = _item()
+    target = tmp_path / native_adapter_path(item)
+    target.parent.mkdir(parents=True)
+    target.write_text(native_adapter_content(item), encoding="utf-8")
+    assert write_native_adapter(tmp_path, item, description="Reviews code.") is None
+    assert target.read_text(encoding="utf-8") == native_adapter_content(
+        item, description="Reviews code."
+    )
+
+
+@pytest.mark.unit
+def test_description_change_updates_pristine_adapter(tmp_path: Path) -> None:
+    item = _item()
+    target = tmp_path / native_adapter_path(item)
+    assert write_native_adapter(tmp_path, item, description="X") is None
+    assert write_native_adapter(tmp_path, item, description="Y") is None
+    assert target.read_text(encoding="utf-8") == native_adapter_content(
+        item, description="Y"
+    )
+
+
+@pytest.mark.unit
+def test_crlf_adapter_counts_as_pristine(tmp_path: Path) -> None:
+    item = _item()
+    target = tmp_path / native_adapter_path(item)
+    target.parent.mkdir(parents=True)
+    crlf = native_adapter_content(item, description="X").replace("\n", "\r\n")
+    target.write_bytes(crlf.encode("utf-8"))
+    assert write_native_adapter(tmp_path, item, description="Y") is None
+    assert target.read_text(encoding="utf-8") == native_adapter_content(
+        item, description="Y"
+    )
+
+
+@pytest.mark.unit
+def test_hand_edited_adapter_with_description_is_user_owned(tmp_path: Path) -> None:
+    item = _item()
+    target = tmp_path / native_adapter_path(item)
+    target.parent.mkdir(parents=True)
+    edited = native_adapter_content(item, description="Mine") + "extra line\n"
+    target.write_text(edited, encoding="utf-8")
+    assert "(user-owned)" in write_native_adapter(tmp_path, item, description="Y")
+    assert not remove_native_adapter(tmp_path, item)
+    assert target.read_text(encoding="utf-8") == edited
+
+
+@pytest.mark.unit
+def test_new_format_adapter_with_description_is_removed(tmp_path: Path) -> None:
+    item = _item()
+    target = tmp_path / native_adapter_path(item)
+    write_native_adapter(tmp_path, item, description="Reviews: code # carefully")
+    assert remove_native_adapter(tmp_path, item)
+    assert not target.exists()
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("body", "expected"),
+    [
+        (
+            "---\nname: x\ndescription: >-\n  first line\n  second: line\n---\nbody",
+            "first line second: line",
+        ),
+        (
+            "---\ndescription: |\n  line one\n\n  line two\n---\nbody",
+            "line one line two",
+        ),
+        (
+            "---\ndescription: >-\n  folded text\nversion: 2\n---\nbody",
+            "folded text",
+        ),
+        ("---\ndescription: >-\nversion: 2\n---\nbody", None),
+        ("---\r\ndescription: >-\r\n  crlf block\r\n---\r\nbody", "crlf block"),
+    ],
+)
+def test_block_scalar_description_is_read_in_full(body: str, expected) -> None:
+    assert adapter_description(body) == expected
+    if expected is not None:
+        rendered = native_adapter_content(
+            _item(), description=adapter_description(body)
+        )
+        assert _frontmatter_description(rendered) == expected

@@ -4,11 +4,11 @@ confidence: INFERRED
 
 ## Where it lives
 
-`dummyindex/usage/` is a stdlib-only domain package. One CLI seam sits above it. `transcripts.py` is the only I/O module. It locates, streams, parses, and dedups. `aggregate.py` holds pure roll-ups. `render.py` holds pure string formatting. `report.py` orchestrates. `models.py` holds frozen carriers. `enums.py` and `errors.py` hold enums and errors.
+`dummyindex/context/usage/` is a stdlib-only domain package. One CLI seam sits above it. `transcripts.py` is the only I/O module. It locates, streams, parses, and dedups. `aggregate.py` holds pure roll-ups. `render.py` holds pure string formatting. `report.py` orchestrates. `models.py` holds frozen carriers. `enums.py` and `errors.py` hold enums and errors.
 
-The sole caller is the CLI boundary `dummyindex/__main__.py:50-98`. `_run_usage`, the `usage` command, owns env reads, `print`, and exit codes. Tests live in `tests/usage/`, with a `conftest.py` fixture.
+The sole caller is the CLI boundary `dummyindex/__main__.py:50-98`. `_run_usage`, the `usage` command, owns env reads, `print`, and exit codes. Tests live in `tests/context/usage/`, with a `conftest.py` fixture.
 
-**Inbound surface is exactly one caller.** `dummyindex/cli/memory.py:45-56` (`resolve_transcript`) does not consume this package. It imports `find_main_transcript`/`resolve_session_id` from `dummyindex.context.domains.memory`, a sibling transcript locator in the memory domain. They share a concept but no code. `usage/` has no inbound dependency from the memory domain.
+**Inbound surface is exactly one caller.** `dummyindex/context/cli/memory.py:45-56` (`resolve_transcript`) does not consume this package. It imports `find_main_transcript`/`resolve_session_id` from `dummyindex.context.domains.memory`, a sibling transcript locator in the memory domain. They share a concept but no code. `usage/` has no inbound dependency from the memory domain.
 
 ## Architecture
 
@@ -43,14 +43,14 @@ Downstream, session totals are deduplicated cumulative counts. `by_session` (`ag
 ## Key decisions
 
 - **Strict layering, one I/O module.** Chosen because it makes the pipeline directly testable. `aggregate` and `render` are pure. `_run_usage` owns `print`/`sys.exit`/env. This mirrors the project's CLI-boundary rule, "I/O at the CLI boundary; logic in the domain package" (`.context/conventions/coding-practices.md:55`, `.context/conventions/folder-organization.md:30`). It lets `build_report` run over a synthetic dir with no env or stdout (`report.py` `build_report`, `__main__.py:50-98`).
-- **Session id is authoritative and never substitutes a sibling.** Borrowing another chat's numbers is a silent correctness bug. A known session with no flushed transcript renders empty. It never falls back to the newest *other* session for the same project. The guard sits at the source (`transcripts.py:find_main_transcript:54-80`). The `if session_id:` branch returns `None` on no match. Regression tests cover it: `tests/usage/test_report.py` `test_chat_unknown_session_renders_empty_never_a_sibling` and `tests/usage/test_transcripts.py` `test_find_main_transcript_set_id_missing_never_substitutes_sibling`.
+- **Session id is authoritative and never substitutes a sibling.** Borrowing another chat's numbers is a silent correctness bug. A known session with no flushed transcript renders empty. It never falls back to the newest *other* session for the same project. The guard sits at the source (`transcripts.py:find_main_transcript:54-80`). The `if session_id:` branch returns `None` on no match. Regression tests cover it: `tests/context/usage/test_report.py` `test_chat_unknown_session_renders_empty_never_a_sibling` and `tests/context/usage/test_transcripts.py` `test_find_main_transcript_set_id_missing_never_substitutes_sibling`.
 - **Infer the context limit.** The transcript never records the model's window. `infer_context_limit` (`aggregate.py`) picks the smallest `CONTEXT_TIERS` value (200K / 1M) that holds the session's peak window.
 - **Frozen dataclasses throughout.** The repo's data-only carrier convention requires them (`.context/conventions/coding-practices.md:8-11`; `models.py` `TurnUsage`..`ChatReport`). `ReportKind(str, Enum)` lets a kind round-trip through CLI args with no conversion. It is Python-3.10-safe, with no `StrEnum` (`enums.py:ReportKind`).
 - **Best-effort reads over hard failure.** The corpus is large and churning. A single bad line should not sink a read-mostly summary (`transcripts.py:_read_file`, skips on read/parse error).
 
 ## Dependencies & boundaries
 
-- **Imports nothing from `pipeline`, `analysis`, or `context`.** It sits at the bottom of the layering table (`dummyindex/usage/__init__.py:8-9`).
+- **Imports nothing from `pipeline`, `analysis`, or `context`.** It sits at the bottom of the layering table (`dummyindex/context/usage/__init__.py:8-9`).
 - **One inbound caller:** `__main__._run_usage` (`__main__.py:50-98`). The memory domain (`cli/memory.py:45-56`) is not a consumer. It has its own `find_main_transcript`/`resolve_session_id` under `dummyindex.context.domains.memory`. Any future unification of the two transcript locators is a cross-domain change. It is not internal to `usage/`.
 - **Env reads** (`CLAUDE_CONFIG_DIR`, `CLAUDE_CODE_SESSION_ID`) live in `transcripts.default_projects_root` and `resolve_session_id`. They are called from the CLI seam, not scattered through aggregate or render.
 

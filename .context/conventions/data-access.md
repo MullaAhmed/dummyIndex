@@ -1,18 +1,18 @@
 # Data access
 
-**No relational DB or ORM. Persistence is JSON and markdown artifacts on the filesystem.** dummyindex's "data layer" reads source via tree-sitter in `dummyindex/pipeline/`. It writes *derived* artifacts under `.context/`: deterministic maps and trees as JSON, curated docs as markdown, per-file extraction cache. No tables, no migrations, no query language. Patterns below are the filesystem-store equivalents.
+**No relational DB or ORM. Persistence is JSON and markdown artifacts on the filesystem.** dummyindex's "data layer" reads source via tree-sitter in `dummyindex/context/pipeline/`. It writes *derived* artifacts under `.context/`: deterministic maps and trees as JSON, curated docs as markdown, per-file extraction cache. No tables, no migrations, no query language. Patterns below are the filesystem-store equivalents.
 
 ## Atomic writes (the one mandatory rule)
 
 Every persisted artifact is written **tmp-file + `replace`**. Never open and truncate in place.
 
-Canonical helper: `write_text_atomic`, backed by `_replace_bytes` (`dummyindex/context/domains/atomic_io.py:11-33`). It runs `mkdir(parents=True)`. It writes to a **unique** `NamedTemporaryFile` sibling (`.{name}.*.tmp`). Unique because hooks from two Claude profiles can update the same repo-local cache concurrently. Then `tmp_path.replace(path)`, atomic on POSIX. The tmp file is unlinked on failure.
+Canonical helper: `write_text_atomic`, backed by `replace_bytes` (`dummyindex/context/shared/atomic_io.py:10-32`). It runs `mkdir(parents=True)`. It writes to a **unique** `NamedTemporaryFile` sibling (`.{name}.*.tmp`). Unique because hooks from two Claude profiles can update the same repo-local cache concurrently. Then `tmp_path.replace(path)`, atomic on POSIX. The tmp file is unlinked on failure.
 
 Every other writer copies the same shape. Examples: `write_meta` (`build/meta.py:91-97`), `write_manifest` (`build/manifest.py:121-123`), `write_tree`, the maps writer, the convention-section placer (`build/conventions.py:228-230`).
 
 Cache writer adds a Windows `PermissionError` fallback: copy, then delete (`pipeline/io/cache.py:98-105`). Why: a concurrent reader must never see a half-written file. Example reader: the statusline badge (`cli/plan_update.py:45-50`).
 
-`write_text_atomic` is **byte-faithful by contract**. It never normalizes the string. Equip's lifecycle hash-baseline fingerprints the in-memory text. Any silent rewrite makes a generated file look user-edited (`atomic_io.py:14-19`). Callers wanting pre-commit-clean EOF run `normalize_eof_newline` *after* the write (`atomic_io.py:27-46`).
+`write_text_atomic` is **byte-faithful by contract**. It never normalizes the string. Equip's lifecycle hash-baseline fingerprints the in-memory text. Any silent rewrite makes a generated file look user-edited (`atomic_io.py:13-18`). Callers wanting pre-commit-clean EOF run `normalize_eof_newline` *after* the write (`atomic_io.py:26-45`).
 
 ## Schema versioning & stable serialization
 

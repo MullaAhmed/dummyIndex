@@ -24,7 +24,7 @@ from dummyindex.context.build.reconcile import (
     compute_reconcile_report,
 )
 from dummyindex.context.domains.drift_acks import read_acks
-from dummyindex.pipeline.io.detect import detect
+from dummyindex.context.pipeline.io.detect import detect
 
 # Feature docs compared against source mtime. The newest one counts (the agent
 # may update security.md but not architecture.md), including legacy names.

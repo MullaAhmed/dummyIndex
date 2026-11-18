@@ -2,7 +2,7 @@
 
 - `install` copies the skill family into ``.claude/skills`` and/or ``.agents/skills``
   (``codex`` is a deprecated alias for ``agents``). In a git repo (``--dir`` or CWD)
-  it also runs project init unless ``--skill-only``. See ``dummyindex/installer/``.
+  it also runs project init unless ``--skill-only``. See ``dummyindex/context/installer/``.
 - `ingest <path>` (= `context init`) runs project init on its own.
 - `context <subcommand>` is the rest; `usage` and `status` are top-level helpers.
 """
@@ -12,10 +12,10 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from dummyindex.installer import (
+from dummyindex.context.installer import (
     PACKAGE_VERSION as __version__,
 )
-from dummyindex.installer import (
+from dummyindex.context.installer import (
     install,
     parse_install_args,
     parse_uninstall_args,
@@ -33,17 +33,19 @@ TOP_LEVEL_COMMANDS: tuple[str, ...] = (
     "context",
     "usage",
     "status",
+    "sessions",
+    "toolkit",
 )
 
 
 def _run_usage(args: list[str]) -> int:
     """`dummyindex usage [chat|daily|session|monthly|blocks]` — token report.
 
-    Thin CLI boundary: logic lives in `dummyindex.usage`; print + exit codes here.
+    Thin CLI boundary: logic lives in `dummyindex.context.usage`; print + exit codes here.
     """
     import datetime as _dt
 
-    from dummyindex.usage import (
+    from dummyindex.context.usage import (
         ReportKind,
         UsageError,
         build_report,
@@ -257,6 +259,10 @@ def _print_help() -> None:
         "                            daily/session/monthly/blocks: aggregate every project."
     )
     print()
+    from dummyindex.context.cli.help import TOP_LEVEL_USAGE
+
+    print(TOP_LEVEL_USAGE, end="")
+    print()
     print("  --version, -V             print version")
     print("  --help, -h                show this message")
     print()
@@ -315,21 +321,33 @@ def main() -> None:
         sys.exit(_run_usage(sys.argv[2:]))
 
     if cmd == "context":
-        from dummyindex.cli import dispatch as _context_dispatch
+        from dummyindex.context.cli import dispatch as _context_dispatch
 
         sys.exit(_context_dispatch(sys.argv[2:]))
 
     if cmd == "ingest":
-        from dummyindex.cli import dispatch as _context_dispatch
+        from dummyindex.context.cli import dispatch as _context_dispatch
 
         sys.exit(_context_dispatch(["init", *sys.argv[2:]]))
 
     if cmd == "status":
         # Top-level alias for `context status` (the ingest→init pattern). A
         # read-only overview at the spelling models reach for first.
-        from dummyindex.cli import dispatch as _context_dispatch
+        from dummyindex.context.cli import dispatch as _context_dispatch
 
         sys.exit(_context_dispatch(["status", *sys.argv[2:]]))
+
+    if cmd == "sessions":
+        # argv excludes the `sessions` token; the module parses `list ...`.
+        from dummyindex.context.cli import sessions as _sessions
+
+        sys.exit(_sessions.run(sys.argv[2:]))
+
+    if cmd == "toolkit":
+        # argv excludes the `toolkit` token; the module parses the verb.
+        from dummyindex.context.cli import toolkit as _toolkit
+
+        sys.exit(_toolkit.run(sys.argv[2:]))
 
     print(f"error: unknown command {cmd!r}", file=sys.stderr)
     if cmd.startswith("-"):

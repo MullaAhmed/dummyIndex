@@ -12,7 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from dummyindex.pipeline.enums import ConfidenceLevel
+from dummyindex.context.pipeline.enums import ConfidenceLevel
 
 from ..constants import SCAN_SCHEMA_VERSION
 

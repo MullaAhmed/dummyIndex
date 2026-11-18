@@ -34,7 +34,7 @@
 - The draft called the cross-domain dep "the one" — it is **not** the only boundary edge.
   Three exist:
   - `verify.py:15` → `dummyindex.context.domains.dev_pick.read_feature_files` (cross-domain).
-  - `confidence.py:13` → `dummyindex.pipeline.enums.ConfidenceLevel` (cross-LAYER, into
+  - `confidence.py:13` → `dummyindex.context.pipeline.enums.ConfidenceLevel` (cross-LAYER, into
     `pipeline` — the draft missed this entirely).
   - `confidence.py:16` → `.render._atomic_write` (intra-package reuse).
 - No cycles: `models` is a leaf; nothing imports `__init__` internally.

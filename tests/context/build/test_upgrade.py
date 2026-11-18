@@ -25,8 +25,8 @@ from dummyindex.context.build.upgrade import (
     migrate_context_layout,
     retire_paths,
 )
-from dummyindex.context.domains import atomic_io
-from dummyindex.context.domains.atomic_io import is_link
+from dummyindex.context.shared import atomic_io
+from dummyindex.context.shared.atomic_io import is_link
 from tests.paths import FIXTURES_DIR
 
 pytestmark = pytest.mark.unit
@@ -465,6 +465,25 @@ def test_unlink_failure_on_one_entry_is_contained(tmp_path: Path, monkeypatch) -
     assert "equipment-evals/x.result.json" in result.removed
     assert "cache: 1 stale extraction entries" in result.removed
     assert (ctx / "equipment-evals" / "python-tester.suite.json").is_file()
+
+
+def test_managed_toolkit_rule_is_anchored_to_context_root(tmp_path: Path) -> None:
+    ensure_context_gitignore(tmp_path)
+
+    lines = (tmp_path / ".gitignore").read_text(encoding="utf-8").splitlines()
+    assert "/toolkit/" in lines
+    assert "toolkit/" not in lines
+
+
+def test_unanchored_toolkit_rule_is_replaced_by_anchored_one(tmp_path: Path) -> None:
+    (tmp_path / ".gitignore").write_text("cache/\ntoolkit/\n", encoding="utf-8")
+
+    ensure_context_gitignore(tmp_path)
+
+    lines = (tmp_path / ".gitignore").read_text(encoding="utf-8").splitlines()
+    assert lines.count("/toolkit/") == 1
+    assert "toolkit/" not in lines
+    assert "cache/" in lines
 
 
 def test_runner_reexports_the_moved_helpers() -> None:

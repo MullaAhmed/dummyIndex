@@ -54,6 +54,7 @@
     "test_maintain_test_next_returns_earliest_incomplete_unit",
     "test_maintain_test_plan_max_features_truncates_and_flags_it",
     "test_maintain_test_plan_prints_ordered_features_with_estimates",
+    "test_maintain_test_restyle_run_rejected_by_maintain",
     "test_maintain_test_resume_via_default_newest_run",
     "test_maintain_test_stamp_wraps_reconcile_stamp_and_ticks_units",
     "test_maintain_test_unknown_verb_is_a_usage_error",
@@ -64,11 +65,11 @@
     "test_reconcile_scope_test_unknown_subagent_edits_cannot_claim_every_stale_root"
   ],
   "files": [
-    "dummyindex/cli/drift_ack.py",
-    "dummyindex/cli/maintain.py",
+    "dummyindex/context/cli/drift_ack.py",
+    "dummyindex/context/cli/maintain.py",
     "dummyindex/context/domains/drift_acks.py",
     "dummyindex/context/reconcile_scope.py",
-    "tests/cli/test_maintain.py",
+    "tests/context/cli/test_maintain.py",
     "tests/context/domains/test_drift_acks.py",
     "tests/context/test_reconcile_scope.py"
   ],

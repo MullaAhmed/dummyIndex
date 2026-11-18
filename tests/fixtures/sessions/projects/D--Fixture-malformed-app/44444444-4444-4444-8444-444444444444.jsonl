@@ -1,0 +1,7 @@
+{"type":"user","uuid":"e0000000-0000-4000-8000-000000000001","parentUuid":null,"isSidechain":false,"sessionId":"44444444-4444-4444-8444-444444444444","timestamp":"2026-03-01T12:00:00.000Z","cwd":"D:\\Fixture\\malformed.app","version":"0.0.0-fixture","futureField":{"nested":[1,2]},"message":{"role":"user","content":"[synthetic prompt]"}}
+{"type":"assistant","uuid":"e0000000-0000-4000-8000-000000000002","parentUuid":"e0000000-0000-4000-8000-000000000001","timestamp":
+[1,2,3]
+
+{"type":"future-record-kind","sessionId":"44444444-4444-4444-8444-444444444444","timestamp":"not-a-date","payload":{"anything":true}}
+{"type":"assistant","uuid":"e0000000-0000-4000-8000-000000000003","sessionId":"44444444-4444-4444-8444-444444444444","timestamp":"2026-03-01T12:00:04.000Z","message":"[string instead of object]"}
+{"type":"system","subtype":"unknown_subtype","sessionId":"44444444-4444-4444-8444-444444444444","timestamp":"2026-03-01T12:00:05.000Z"}

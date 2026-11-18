@@ -17,7 +17,7 @@ Line numbers below are from the current tree. The plan.md cites were written bef
 
    `rebuild_changed(dummyindex_version=None)` does the same via `"0.0.0"` (`incremental.py:153`). That contradicts the spec's "`None` neither stamps nor rescopes", which holds only on the refresh branch. **Fix:** write meta last, reuse `_advance_version_stamp`'s rule, and pass `None` through instead of a sentinel.
 
-3. `dummyindex/context/build/meta.py:4-6,17`: schema 2's fields are identical to v1, and 0.37.0 already wrote sharded graphs at schema 1 (`4f3cf0d:dummyindex/export/storage.py` defines `symbol-graph.parts`). So the docstring's "marks the sharded format" is false, and the bump only locks 0.37.0 out of the committed `meta.json`. A 0.37.0 CLI on a schema-2 repo:
+3. `dummyindex/context/build/meta.py:4-6,17`: schema 2's fields are identical to v1, and 0.37.0 already wrote sharded graphs at schema 1 (`4f3cf0d:dummyindex/context/export/storage.py` defines `symbol-graph.parts`). So the docstring's "marks the sharded format" is false, and the bump only locks 0.37.0 out of the committed `meta.json`. A 0.37.0 CLI on a schema-2 repo:
    - refresh swallows the `ValueError` and rewrites every other artifact;
    - `build_all` writes schema 1 back, so the value flip-flops in git;
    - `reconcile-stamp` prints "no readable meta.json to stamp. Run `dummyindex ingest` first.", which is advice that re-clusters and discards curation.
@@ -32,7 +32,7 @@ Line numbers below are from the current tree. The plan.md cites were written bef
 
 5. `dummyindex/context/build/navigation_refresh.py:26-33,81-84`: `refresh_tree` raises on an unparseable `map/files.json`. That file is committed, rewritten by every refresh, and has no merge driver (`upgrade.py:50-59` sets only `linguist-generated`). So an ordinary two-branch merge conflict blocks every curated refresh and `install` (`project_init.py:92-94`). There is no non-destructive way back, because `build_all` is refused on curated indexes. **Fix:** when files.json is unreadable, treat every path as changed (or use the manifest). Keep the hard refusal for `tree.json`, which holds curation (prior concern, still true).
 
-6. `dummyindex/cli/enrich.py:37`: `enrich-plan` runs `migrate_context_layout` without `validate_context_destination` and throws away the returned `LayoutMigration`.
+6. `dummyindex/context/cli/enrich.py:37`: `enrich-plan` runs `migrate_context_layout` without `validate_context_destination` and throws away the returned `LayoutMigration`.
    - On a linked `.context/`, the retirer deletes and backs up files inside the link target (`_Retirer._inside` checks against the resolved target, `upgrade.py:326-348`). This violates the spec's "linked managed destinations fail before any write".
    - Removed suites disappear from `git status` with no explanation.
    - `stamp_reconciled` has the same gap: it writes `indexed_commit` (`reconcile.py:293`) before its first validation via `scan_root` (`:301`).
@@ -46,7 +46,7 @@ Line numbers below are from the current tree. The plan.md cites were written bef
 
    **Fix:** route meta and the manifest through `write_text_atomic`, and fsync the backup before `os.unlink`, as `storage._atomic_write` does (`storage.py:219-220`).
 
-8. `dummyindex/export/storage.py:276-329`, `runner.py:211-213`: graph reads are still unbounded in total (prior concern, still true). Each shard is capped at 1,000,000 bytes but the number of shards is not, and `read_graph_payload` loads the whole generation into RAM (12 shards / 12 MB here); `build_all` repeats that read right after publishing. The 600 s grace protects writers, not readers: a reader holding a superseded manifest fails closed once a publish prunes its old shards. **Fix:** have readers re-read the manifest once on `graph shard missing` before failing.
+8. `dummyindex/context/export/storage.py:276-329`, `runner.py:211-213`: graph reads are still unbounded in total (prior concern, still true). Each shard is capped at 1,000,000 bytes but the number of shards is not, and `read_graph_payload` loads the whole generation into RAM (12 shards / 12 MB here); `build_all` repeats that read right after publishing. The 600 s grace protects writers, not readers: a reader holding a superseded manifest fails closed once a publish prunes its old shards. **Fix:** have readers re-read the manifest once on `graph shard missing` before failing.
 
 ### Resolved since last review
 

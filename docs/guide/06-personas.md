@@ -1,10 +1,10 @@
 # 06 — Personas
 
-Three role classes, not six. Each is a host-native subagent prompt template:
-Claude uses the named type below, while Codex inlines the same mandate into
+Three role classes, not six. Each is a host-native subagent prompt template.
+Claude uses the named type below. Codex inlines the same mandate into
 `explorer`, `worker`, or `default`.
 
-The lineage is still [agency-agents](https://github.com/msitarzewski/agency-agents) (MIT) for personality framing; output contracts are rewritten around the spec-kit-shaped artifact set (`spec.md` / `plan.md` / `concerns.md`).
+The lineage is still [agency-agents](https://github.com/msitarzewski/agency-agents) (MIT) for personality framing. The output contracts are rewritten around the spec-kit-shaped artifact set (`spec.md` / `plan.md` / `concerns.md`).
 
 ## 1. Dev (stack-specialist author)
 
@@ -23,7 +23,7 @@ The lineage is still [agency-agents](https://github.com/msitarzewski/agency-agen
 | ML deps (torch/transformers/…), or `inference/` `training/` paths | `dev-ai` | AI Engineer |
 | Else | `dev-generic-senior` | Senior Developer |
 
-Personas share one markdown body with `{{framework}}` and `{{framework_docs}}` slots. The orchestrator fills the first from detection (the resolved framework name) and the second with verbatim Context7 excerpts for the libraries the feature imports (the lookup protocol lives in the skill's `council/55-context7.md`).
+Personas share one markdown body with `{{framework}}` and `{{framework_docs}}` slots. The orchestrator fills the first slot from detection (the resolved framework name). It fills the second slot with verbatim Context7 excerpts for the libraries the feature imports. The lookup protocol lives in the skill's `council/55-context7.md`.
 
 ### Output
 
@@ -42,10 +42,10 @@ Personas share one markdown body with `{{framework}}` and `{{framework_docs}}` s
 - **Where it lives** — files + directories, with `path` citations.
 - **Architecture in three sentences** — components, how they call each other, the dominant pattern.
 - **Data model** — tables, queries, transactions if any. Or "none" with one sentence why.
-- **Key decisions** — what was chosen, what was rejected, what's load-bearing.
-- **Open questions** — anything the dev couldn't determine from the code.
+- **Key decisions** — what was chosen, what was rejected, what is load-bearing.
+- **Open questions** — anything the dev could not determine from the code.
 
-The dev **also handles flow filtering and narration** (no separate flow stage). Trivial flows get removed via `flow-remove`; kept flows get a one-paragraph narrative in `flows/<id>.md`.
+The dev **also filters and narrates flows** (no separate flow stage). The dev removes trivial flows via `flow-remove`. Kept flows get a one-paragraph narrative in `flows/<id>.md`.
 
 ## 2. Architect (reorganiser)
 
@@ -64,7 +64,7 @@ Applied atomically via `features-rename`. Same as v0.13.
 
 Reads the dev's draft `plan.md` and revises it. Mandate:
 
-- Sharpen bounded context — strip detail that isn't load-bearing for the boundary.
+- Sharpen bounded context — strip detail that is not load-bearing for the boundary.
 - Name patterns explicitly — repository, dispatcher, saga, port/adapter, etc.
 - Make dependencies visible — what this depends on, what depends on it.
 - Promote unstated decisions — convert assumptions in the code into explicit "decided X because Y".
@@ -77,7 +77,7 @@ Reads the dev's draft `plan.md` and revises it. Mandate:
 
 ## 3. Critics (concerns-only)
 
-Three specialist personas. Each owns one section of `concerns.md`. **None of them author primary docs** — that's the dev's job.
+Three specialist personas. Each owns one section of `concerns.md`. **None of them author primary docs** — that is the dev's job.
 
 ### 3a. Database engineer
 
@@ -90,17 +90,17 @@ Three specialist personas. Each owns one section of `concerns.md`. **None of the
 
 - **Section**: `## Security` in `concerns.md`.
 - **Reads**: finalised `plan.md` + auth/input/secret code paths.
-- **Files**: trust boundary leaks, authn/authz gaps, validation that's actually gesture, secrets in code, top-3 ranked threats.
+- **Files**: trust boundary leaks, authn/authz gaps, validation that is a mere gesture, secrets in code, top-3 ranked threats.
 - **Format**: bullet list. Each bullet: `path:range` + threat + load-bearing-mitigation (or "none").
 
 ### 3c. Product manager
 
 - **Section**: `## Product surface` in `concerns.md`.
 - **Reads**: finalised `plan.md` + entry-point files (HTTP routes, CLI commands, public APIs).
-- **Files**: edge cases the code doesn't handle, capabilities the code hints at but doesn't deliver, hidden costs (latency, rate limits, retries) the caller pays implicitly.
+- **Files**: edge cases the code does not handle. Capabilities the code hints at but does not deliver. Hidden costs (latency, rate limits, retries) the caller pays implicitly.
 - **Format**: bullet list. Each bullet: scenario + observed behavior + gap (if any).
 
-Critics see only the finalised `plan.md`, not each other's drafts — unless mode = `deep`, in which case a cross-review pass lets them flag each other's findings before the merge into `concerns.md`.
+Critics see only the finalised `plan.md`, not each other's drafts. Mode `deep` is the exception. In that mode, a cross-review pass lets them flag each other's findings before the merge into `concerns.md`.
 
 ## Retired in v0.14
 
@@ -119,6 +119,6 @@ Each persona's markdown ends with the same **output contract**:
 - Required structure (above).
 - Forbidden behaviors:
   - No paraphrase where a `path:range` citation would do.
-  - No inventing entities not present in the source.
+  - No invention of entities not present in the source.
   - No filler ("In this section we will…").
   - Confidence flips to `INFERRED` on every touched node.

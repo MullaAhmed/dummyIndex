@@ -4,7 +4,7 @@ confidence: INFERRED
 
 ## Where it lives
 
-Domain `dummyindex/context/domains/doc_reorg/`: `enums.py` (the four verbs), `discovery.py` (which docs are in scope), `safety.py` (guard/backup/restore machinery), `models.py` (`DocBackup`, `RestoreResult`), `errors.py` (typed exception tree), and `__init__.py` (public re-exports). The CLI seam is `dummyindex/cli/doc_reorg.py`, dispatched as `context doc-reorg`. Tests: `tests/context/domains/test_doc_reorg.py`. Discovery reuses `source_docs.discovery.discover_default_doc_paths` (`discovery.py:12-14,29`).
+Domain `dummyindex/context/domains/doc_reorg/`: `enums.py` (the four verbs), `discovery.py` (which docs are in scope), `safety.py` (guard/backup/restore machinery), `models.py` (`DocBackup`, `RestoreResult`), `errors.py` (typed exception tree), and `__init__.py` (public re-exports). The CLI seam is `dummyindex/context/cli/doc_reorg.py`, dispatched as `context doc-reorg`. Tests: `tests/context/domains/test_doc_reorg.py`. Discovery reuses `source_docs.discovery.discover_default_doc_paths` (`discovery.py:12-14,29`).
 
 ## Architecture in three sentences
 

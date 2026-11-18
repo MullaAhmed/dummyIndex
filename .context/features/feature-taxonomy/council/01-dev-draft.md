@@ -4,7 +4,7 @@ confidence: INFERRED
 
 ## Where it lives
 
-`dummyindex/context/domains/features/` — `builder.py` (graph → scaffolding), `ops.py` (rename/merge/remove_flow/write_section), `placement.py` (scaffold/assign/unassign/remove/clear-pending), `indexes.py` (INDEX.md + graph rebuilders, symbols loader), `render.py` (markdown stubs + `_graph_view`), `docs.py` (per-feature `docs.md`), `models.py` (frozen dataclasses), `constants.py`, `errors.py`, `helpers.py` (atomic writers, slug validation, path/range coercion), `__init__.py` (public re-export surface). CLI bindings in `dummyindex/cli/features.py`; the bundled viewer string in `dummyindex/context/output/viewer.py`. Tests: `tests/context/domains/features/test_features.py`, `tests/context/domains/features/test_placement.py`.
+`dummyindex/context/domains/features/` — `builder.py` (graph → scaffolding), `ops.py` (rename/merge/remove_flow/write_section), `placement.py` (scaffold/assign/unassign/remove/clear-pending), `indexes.py` (INDEX.md + graph rebuilders, symbols loader), `render.py` (markdown stubs + `_graph_view`), `docs.py` (per-feature `docs.md`), `models.py` (frozen dataclasses), `constants.py`, `errors.py`, `helpers.py` (atomic writers, slug validation, path/range coercion), `__init__.py` (public re-export surface). CLI bindings in `dummyindex/context/cli/features.py`; the bundled viewer string in `dummyindex/context/output/viewer.py`. Tests: `tests/context/domains/features/test_features.py`, `tests/context/domains/features/test_placement.py`.
 
 ## Architecture in three sentences
 

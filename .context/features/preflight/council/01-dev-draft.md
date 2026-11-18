@@ -4,7 +4,7 @@ confidence: INFERRED
 
 ## Where it lives
 
-The domain is `dummyindex/context/domains/preflight/`: `__init__.py` (public surface, `__init__.py:14-21`), `inventory.py` (the read-only census + git probe), `models.py` (two frozen dataclasses), `ownership.py` (the `.context/` ownership enum + probe), `render.py` (markdown rendering). The CLI entry point is `dummyindex/cli/preflight.py`, wired into the dispatch table as `ContextSubcommand.PREFLIGHT -> preflight.run` (`cli/__init__.py:40,113`). The equip-adopt consumer is `dummyindex/context/domains/equip/generate/adopt.py`, which imports `PreflightReport` and reads `preflight.project_agents` to resolve specialist coverage (`adopt.py:30-31,108`); further equip callers are `cli/equip/dispatch.py` and `cli/equip/common.py`.
+The domain is `dummyindex/context/domains/preflight/`: `__init__.py` (public surface, `__init__.py:14-21`), `inventory.py` (the read-only census + git probe), `models.py` (two frozen dataclasses), `ownership.py` (the `.context/` ownership enum + probe), `render.py` (markdown rendering). The CLI entry point is `dummyindex/context/cli/preflight.py`, wired into the dispatch table as `ContextSubcommand.PREFLIGHT -> preflight.run` (`cli/__init__.py:40,113`). The equip-adopt consumer is `dummyindex/context/domains/equip/generate/adopt.py`, which imports `PreflightReport` and reads `preflight.project_agents` to resolve specialist coverage (`adopt.py:30-31,108`); further equip callers are `cli/equip/dispatch.py` and `cli/equip/common.py`.
 
 ## Architecture in three sentences
 

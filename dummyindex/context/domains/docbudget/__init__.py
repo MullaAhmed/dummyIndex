@@ -1,7 +1,7 @@
 """docbudget: word-budget ratchet for authored `.context/` docs and packaged skills.
 
 Public surface: ``measure``, ``scan``, ``read_ratchet``, ``format_ratchet``,
-``check``, ``update_ratchet``, ``write_ratchet``, ``BudgetGroup``, ``BudgetViolation``,
+``check``, ``update_ratchet``, ``reseed``, ``write_ratchet``, ``BudgetGroup``, ``BudgetViolation``,
 ``UpdateResult``, ``StyleViolation``, ``lint_text``, ``count_violations``.
 """
 
@@ -14,6 +14,9 @@ from .ratchet import (
     format_ratchet,
     measure,
     read_ratchet,
+    read_ratchet_ruleset,
+    reseed,
+    reseed_stale_style,
     scan,
     update_ratchet,
     write_ratchet,
@@ -31,6 +34,9 @@ __all__ = [
     "format_ratchet",
     "measure",
     "read_ratchet",
+    "read_ratchet_ruleset",
+    "reseed",
+    "reseed_stale_style",
     "scan",
     "update_ratchet",
     "write_ratchet",

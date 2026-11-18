@@ -59,6 +59,21 @@ class Dimension(str, Enum):
     DOMAIN = "domain"
 
 
+class RequestedBy(str, Enum):
+    """Why an :class:`EquipmentItem` exists: explicit add, a proposal, or a pre-v4 backfill."""
+
+    ADD_SPECIALIST = "add_specialist"
+    PROPOSAL = "proposal"
+    LEGACY = "legacy"
+
+
+class EquipmentScope(str, Enum):
+    """Whether an :class:`EquipmentItem` outlives the proposal that asked for it."""
+
+    PROJECT = "project"
+    TASK = "task"
+
+
 class Capability(str, Enum):
     """The capability vocabulary persisted to ``equipment.json`` (spec §8).
 

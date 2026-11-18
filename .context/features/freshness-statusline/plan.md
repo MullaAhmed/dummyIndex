@@ -16,11 +16,11 @@ The unifying contract: **every path degrades to silence, never to a crash.** A m
 ## Where it lives
 
 - `dummyindex/context/drift.py:91-109` — `compute_badge`, the pure badge renderer. Owned by `community-8`/drift; this feature only consumes it.
-- `dummyindex/cli/plan_update.py:31-50,71-74` — `BADGE_CACHE_NAME` (`:31`), `badge_cache_path` (`:34-36`), `_write_badge` (`:39-50`), and the best-effort `try/except` at the `plan-update` boundary (`:71-74`).
-- `dummyindex/cli/statusline.py:24-66` — imports (`badge_cache_path` from `plan_update`, `:28`), `SCRIPT_DIR` (`:34`), `run` (`:37-66`); the cold-path reader behind `ContextSubcommand.STATUSLINE`.
+- `dummyindex/context/cli/plan_update.py:31-50,71-74` — `BADGE_CACHE_NAME` (`:31`), `badge_cache_path` (`:34-36`), `_write_badge` (`:39-50`), and the best-effort `try/except` at the `plan-update` boundary (`:71-74`).
+- `dummyindex/context/cli/statusline.py:26-68` — imports (`badge_cache_path` from `plan_update`, `:28`), `SCRIPT_DIR` (`:34`), `run` (`:37-66`); the cold-path reader behind `ContextSubcommand.STATUSLINE`.
 - `dummyindex/skills/statusline/statusline.sh:16` / `statusline.ps1` — the hot-path shell wrappers shipped via `pyproject` package-data; they `cat` the cache directly.
 - `dummyindex/context/hooks.py:201-241,400-411` — `_STATUSLINE_NUDGE` (`:201-205`), `_status_line_configured` (`:208-222`), `statusline_nudge` (`:225-241`), and its surfacing on `HookResult.nudges` (`:400-411`).
-- Tests: `tests/cli/test_statusline.py`, `tests/cli/test_plan_update_badge.py`, `tests/cli/test_debt_statusline_dispatch.py`, and the statusline-nudge block in `tests/context/test_hooks.py`.
+- Tests: `tests/context/cli/test_statusline.py`, `tests/context/cli/test_plan_update_badge.py`, `tests/context/cli/test_debt_statusline_dispatch.py`, and the statusline-nudge block in `tests/context/test_hooks.py`.
 
 ## Patterns
 

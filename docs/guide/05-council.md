@@ -6,16 +6,16 @@ The deep-dive layer. Inspired by [spec-kit](https://github.com/github/spec-kit) 
 
 ## The pipeline stages
 
-Stages are numbered as written to `_council-log.json` and named after the spec-kit-style verbs they echo — they are **stage roles**, not slash commands (the only slash commands are the eight in [08-skill.md](08-skill.md)). The stage enum is `SPECIFY=1 · PLAN=2 · CRITIQUE=3 · FLOW=4 · TREE=5`; which stages actually run depends on the mode (see [Modes](#modes)).
+The council writes each stage number to `_council-log.json`. Each stage name echoes a spec-kit-style verb. The stages are **stage roles**, not slash commands. The only slash commands are the eight in [08-skill.md](08-skill.md). The stage enum is `SPECIFY=1 · PLAN=2 · CRITIQUE=3 · FLOW=4 · TREE=5`. The mode decides which stages run (see [Modes](#modes)).
 
 ### Stage 1 — `specify` (stack-specialist dev drafts)
 
-- One author. The dev persona is **dispatched as the stack specialist** for the feature's primary domain — backend-fastapi for FastAPI features, frontend-react for React features, data-engineer for SQL/migrations, etc. (See `06-personas.md` for the picker.)
+- One author. The council **dispatches the dev persona as the stack specialist** for the primary domain of the feature. Examples: backend-fastapi for FastAPI features, frontend-react for React features, and data-engineer for SQL/migrations. (See `06-personas.md` for the picker.)
 - Input: `feature.json`, sample source files, flow traces, `features/<id>/docs.md` if present, the **doc-evidence directive** verbatim.
 - Output: `spec.md` (intent, user-visible behavior, contracts) + `plan.md` (architecture, file map, key decisions, data model).
 - Audit trail: `council/01-dev-draft.md` snapshot of the unrevised `plan.md`.
 
-The dev writes both because spec and plan are inseparable at draft time — one author's coherent voice across "what" and "how" beats two disconnected drafts.
+The dev writes both because spec and plan are inseparable at draft time. The coherent voice of one author across "what" and "how" beats two disconnected drafts.
 
 ### Stage 2 — `plan` (architect reorganises)
 
@@ -38,11 +38,11 @@ The dev writes both because spec and plan are inseparable at draft time — one 
 ### Stage 4 — `flow` (dev narrates flows)
 
 - Runs in **every** mode — it is the one stage `light` keeps besides the dev draft.
-- The stack-specialist dev (a `framework`-tagged unit, like `specify`) narrates the feature's execution flows into `features/<id>/flows/<flow-id>.json` (see [04-data-model.md](04-data-model.md)) and filters trivial/false-positive flows via `flow-remove`.
+- The stack-specialist dev (a `framework`-tagged unit, like `specify`) narrates the feature's execution flows into `features/<id>/flows/<flow-id>.json` (see [04-data-model.md](04-data-model.md)). It also filters trivial/false-positive flows via `flow-remove`.
 
 ### Stage 5 — `tree` (tree-enrich pass, on by default)
 
-- Runs by default in **every** mode, appended after `flow`; opt out for a run with `--no-tree-enrich`. `--tree-enrich` is still accepted as a no-op for older callers.
+- Runs by default in **every** mode, appended after `flow`. Opt out for a run with `--no-tree-enrich`. `--tree-enrich` is still accepted as a no-op for older callers.
 - A dev unit writes node abstracts into `tree.json` for PageIndex-style navigation (see [12-retrieval.md](12-retrieval.md)).
 
 ## Doc-evidence directive (verbatim in every prompt)
@@ -53,7 +53,7 @@ Catalogued prose docs carry `confidence` (high/medium/low) and `broken_refs`. Qu
 
 User-selectable per run:
 
-Selected per run via `--depth light|standard|deep` (`--mode` is a back-compat alias). `flow` runs in every mode; `plan` + `critique` are added by `standard`/`deep`; `tree` is orthogonal and on by default in every mode (opt out with `--no-tree-enrich`).
+Select the mode per run via `--depth light|standard|deep` (`--mode` is a back-compat alias). `flow` runs in every mode. `standard` and `deep` add `plan` + `critique`. `tree` is orthogonal and on by default in every mode (opt out with `--no-tree-enrich`).
 
 | Mode | `specify` (dev) | `plan` (architect) | `critique` (critics) | `flow` (dev) | Cost (14-feature repo) |
 |---|---|---|---|---|---|
@@ -71,46 +71,46 @@ Each critic writes its domain section into the shared `concerns.md` (`## Data in
 
 ## Why this beats the v0.13 parallel-essay model
 
-- **No redundancy**. One artifact per stage, one job each. Today's 6 essays overlap heavily; the architect's "module boundaries" reappears in the senior dev's "code organisation" and the chairman's `README` synthesis.
+- **No redundancy**. One artifact per stage, one job each. Today's 6 essays overlap heavily. The architect's "module boundaries" reappear in the senior dev's "code organisation" and in the chairman's `README` synthesis.
 - **Coherent voice**. One author per layer. The dev's spec/plan reads like one engineer wrote it, not five committees stitched together by a chairman.
-- **Concrete critic task**. Critics react to a finalised plan — "find what's wrong" — instead of producing parallel essays the chairman has to reconcile.
+- **Concrete critic task**. Critics react to a finalised plan — "find what is wrong" — instead of producing parallel essays the chairman has to reconcile.
 - **Lower cost by construction**. A handful of sequential dispatches per feature in standard mode beats today's 3 parallel + chairman synth + cross-review on deep.
-- **Stack-aware authorship**. A FastAPI specialist writing about a FastAPI feature won't miss framework idioms a generic senior-dev would.
+- **Stack-aware authorship**. A FastAPI specialist writing about a FastAPI feature will not miss framework idioms a generic senior-dev would.
 
 ## Skip-trivial filter
 
-Some features don't deserve a council pass.
+Some features do not deserve a council pass.
 
 - A feature is **trivial** if _any_ of:
-  - `member_count < 3` AND `entry_point_count == 0` (tiny utility cluster);
-  - `file_count == 1` AND `entry_point_count == 0` (single file, no entry points);
-  - `name` matches `*-marker`, `typing-*`, `*-aliases`, `*-config`, `*-helpers-*`, or `*-utils-*`;
+  - `member_count < 3` AND `entry_point_count == 0` (tiny utility cluster).
+  - `file_count == 1` AND `entry_point_count == 0` (single file, no entry points).
+  - `name` matches `*-marker`, `typing-*`, `*-aliases`, `*-config`, `*-helpers-*`, or `*-utils-*`.
   - all members are type aliases or constants (no callable definitions).
-- Trivial features skip specify → plan → critique; instead an architect consolidation pass decides where they belong. Count fields live in `features/INDEX.json` (not `feature.json`).
+- Trivial features skip specify → plan → critique. Instead, an architect consolidation pass decides where they belong. Count fields live in `features/INDEX.json` (not `feature.json`).
 
 ## Dispatch plumbing (`council-batch` / `council-log`)
 
 The skill never picks stages by hand — two deterministic CLI verbs drive the loop (documented in [07-cli.md](07-cli.md)):
 
-- **`council-batch --next`** computes the next parallel frontier: the *earliest incomplete stage* across all non-trivial features and the concrete dispatch units for it (`feature_id`, `stage`, `role`, `subagent_type`, `framework`), capped at `--cap` (default 8). `--depth`/`--mode` selects the mode; stage 5 is appended by default and dropped only by `--no-tree-enrich`; `--json` emits the machine payload `{complete, stage, mode, cap, forced, units[]}`.
+- **`council-batch --next`** computes the next parallel frontier. The frontier is the *earliest incomplete stage* across all non-trivial features. It lists the concrete dispatch units for that stage (`feature_id`, `stage`, `role`, `subagent_type`, `framework`), capped at `--cap` (default 8). `--depth`/`--mode` selects the mode. The command appends stage 5 by default and drops it only with `--no-tree-enrich`. `--json` emits the machine payload `{complete, stage, mode, cap, forced, units[]}`.
 - The skill fans those units out through the active host's parallel subagents,
-  barriers, then re-runs `--next` — the council twin of `build --next-wave`.
-  Claude uses the emitted specialist type; Codex maps the inlined mandate to a
-  native built-in.
-- **`council-log --feature ID --stage N --agent NAME --status started|complete|failed|skipped`** records each invocation's outcome to `features/<id>/council/_council-log.json`; the frontier reads it back to know what's done. The `council-log backfill` subverb synthesizes `complete` entries for a pre-v0.20 index whose enrichment artifacts exist but whose logs are empty (run it once before dispatching, or the frontier reschedules — and overwrites — already-curated docs).
+  waits at a barrier, then re-runs `--next`. This loop is the council twin of
+  `build --next-wave`. Claude uses the emitted specialist type. Codex maps the
+  inlined mandate to a native built-in.
+- **`council-log --feature ID --stage N --agent NAME --status started|complete|failed|skipped`** records each invocation's outcome to `features/<id>/council/_council-log.json`. The frontier reads it back to know what is done. The `council-log backfill` subverb synthesizes `complete` entries for a pre-v0.20 index. That index has enrichment artifacts, but its logs are empty. Run it once before dispatch, or the frontier reschedules — and overwrites — already-curated docs.
 
 ## Resumption
 
 - Each stage writeback updates `council/_council-log.json`.
 - A re-run skips stages already complete for the feature.
-- Force a scoped re-council with `council-batch --next --feature ID --force` — `--force` requires at least one `--feature` (it drops a stage-0 reset marker so the scoped feature re-surfaces at `specify`).
+- Force a scoped re-council with `council-batch --next --feature ID --force`. `--force` requires at least one `--feature`. It drops a stage-0 reset marker so the scoped feature re-surfaces at `specify`.
 - Source hash unchanged + log complete → fast no-op.
 
 ## Cache
 
 - Each feature's source files are content-hashed.
 - All hashes match the last council → skip entirely (`spec.md` / `plan.md` / `concerns.md` / `flows/` survive).
-- Any file changed → stages re-run in order; architect and critics rerun even if their inputs only mutated through the dev's redraft.
+- Any file changed → stages re-run in order. Architect and critics rerun even if their inputs only mutated through the dev's redraft.
 
 ## Regrouping (architect's pre-stage)
 
@@ -132,4 +132,4 @@ council/
 └── 10-critiques.md          # raw per-critic findings before merge into concerns.md
 ```
 
-Same auditability as v0.13's `01-architect.md`..`05-product-manager.md` set — just sharper, because each file has a single job.
+Same auditability as v0.13's `01-architect.md`..`05-product-manager.md` set, but sharper, because each file has a single job.

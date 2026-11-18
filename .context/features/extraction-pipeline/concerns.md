@@ -32,11 +32,11 @@
 - Today the graph always comes from `build_from_json` over sorted node-link data, so order is deterministic.
 - An alternate graph construction, or a NetworkX change to node-ordering semantics, would silently churn committed bytes. Neither change touches this module.
 - The 8-decimal rounding (`_SCORE_DECIMALS`) absorbs float noise, not ordering changes. A seam to watch, same spirit as the enum/str note below. Not a live bug.
-- `dummyindex/pipeline/extract/python_dispatch.py:458-462` — **the dispatch post-pass silently skips a file whose cached result is keyed to another path shape.**
+- `dummyindex/context/pipeline/extract/python_dispatch.py:458-462` — **the dispatch post-pass silently skips a file whose cached result is keyed to another path shape.**
 - The check is `file_nid not in file_node_ids`. A cache entry written under another cwd or absolute-vs-relative path triggers it.
 - The design is precision-first ("no guessing"). Dispatch edges can be absent on a cached re-run but present on a cold run, if path shapes differ.
 - The per-edge determinism test (`test_dispatch_edges_deterministic_across_cached_rebuilds`) covers only the same-path-shape case.
-- `dummyindex/pipeline/build/structure.py:354` / `dummyindex/export/common.py:7` — `_filter_cross_edges` defaults a missing `confidence` to the `ConfidenceLevel.EXTRACTED` enum.
+- `dummyindex/context/pipeline/build/structure.py:354` / `dummyindex/context/export/common.py:7` — `_filter_cross_edges` defaults a missing `confidence` to the `ConfidenceLevel.EXTRACTED` enum.
 - Cache-roundtripped edges carry the bare string `"EXTRACTED"`. Both serialize identically. `_CONFIDENCE_SCORE_DEFAULTS.get` works under `(str,Enum)` equality.
 - So this is NOT a live bug. It is a type-drift seam to watch, if the enum ever stops subclassing `str`.
 
@@ -170,7 +170,7 @@
 - _Residual: in-repo self-poisoning via SHA256 collision remains theoretically possible. The dir confinement is the load-bearing containment. The schema guard bounds shape, not content._
 - **[RESOLVED — `b157a1c`, branch `fix/outstanding-audit-fixes`] Security-only, accepted by DB on review: `follow_symlinks=True` leaf containment.** A `resolve_under_root` realpath-under-root check now filters escaping leaves at `collect_files` emission.
 - _Residual: walk-time only. A post-enumeration TOCTOU swap is documented as out of scope. `is_safe_read_target` is the primitive for a future read-time guard._
-- **Withdrawn / not-a-bug (recorded so it is not re-raised): the `confidence_score` enum-vs-string lookup (`dummyindex/export/common.py:7`, `dummyindex/pipeline/build/structure.py:354`).**
+- **Withdrawn / not-a-bug (recorded so it is not re-raised): the `confidence_score` enum-vs-string lookup (`dummyindex/context/export/common.py:7`, `dummyindex/context/pipeline/build/structure.py:354`).**
 - The DB critic flagged it as a type-drift seam and confirmed it is **not** a live bug. `ConfidenceLevel` subclasses `str` (`pipeline/enums.py`).
 - So the round-tripped string still hits the enum-keyed dict. This matches the audit finding that withdrew it. Revisit only if the enum stops subclassing `str`.
 - **ReDoS in the new single-pass `references.py` matcher: actively defended, verified.** Security empirically confirmed (500×200-char prefix-colliding needles, ~0.1s) that `re.escape` + zero-width-lookahead-without-quantifier gives no catastrophic-backtracking structure.

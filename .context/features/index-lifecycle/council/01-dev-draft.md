@@ -12,10 +12,10 @@
     report.
   - `scope.py`, `meta.py`, `navigation_refresh.py`, `coverage.py`,
     `reconcile.py` and `git_delta.py`.
-- `dummyindex/export/storage.py` stores the graph shards;
-  `dummyindex/pipeline/io/cache.py:225-279` scopes the cache to a version.
-- The report is printed by `dummyindex/cli/rebuild.py:139-146` and
-  `dummyindex/installer/install/project_init.py:95-100`.
+- `dummyindex/context/export/storage.py` stores the graph shards;
+  `dummyindex/context/pipeline/io/cache.py:225-279` scopes the cache to a version.
+- The report is printed by `dummyindex/context/cli/rebuild.py:139-146` and
+  `dummyindex/context/installer/install/project_init.py:95-100`.
 - Tests are in `tests/context/build/`. `tests/fixtures/retired_equipment_evals/`
   holds the nine v0.36 suites.
 
@@ -78,6 +78,6 @@ writes the anchor.
   stamp (`dummyindex/context/build/incremental.py:160-161`), so an old layout
   survives until `install` runs or the source changes. Is that intended?
 - If the version lookup fails, `rebuild` falls back to `"unknown"`
-  (`dummyindex/cli/rebuild.py:62-67`). That wipes the cache while the stamp
+  (`dummyindex/context/cli/rebuild.py:62-67`). That wipes the cache while the stamp
   stays put.
 - `rebuild --changed` has no `--force-downgrade`.

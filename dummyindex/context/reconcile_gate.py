@@ -18,15 +18,15 @@ from dummyindex.context.build.reconcile import (
     compute_reconcile_report,
     is_non_source_path,
 )
-from dummyindex.context.domains.atomic_io import write_text_atomic
 from dummyindex.context.domains.memory.nudge import is_significant
 from dummyindex.context.domains.memory.transcript import read_session_signal
 from dummyindex.context.drift import DriftReport, compute_drift
+from dummyindex.context.pipeline.io import submodule_paths
 from dummyindex.context.reconcile_scope import (
     partition_session_drift,
     unrelated_summary,
 )
-from dummyindex.pipeline.io import submodule_paths
+from dummyindex.context.shared.atomic_io import write_text_atomic
 
 
 def auto_council_enabled(root: Path) -> bool:

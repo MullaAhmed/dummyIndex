@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli import dispatch
+from dummyindex.context.cli import dispatch
 from dummyindex.context.domains.features import (
     PENDING_ENRICHMENT_MARKER,
     FeatureRenameError,
@@ -23,7 +23,7 @@ from dummyindex.context.domains.features import (
     scaffold_feature,
     unassign_files,
 )
-from dummyindex.pipeline.enums import ConfidenceLevel
+from dummyindex.context.pipeline.enums import ConfidenceLevel
 from tests.paths import SAMPLE_REPO
 
 _FIXTURE = SAMPLE_REPO

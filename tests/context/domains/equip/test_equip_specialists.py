@@ -13,18 +13,24 @@ from pathlib import Path
 
 import pytest
 
-from dummyindex.cli.equip import project_slug
-from dummyindex.cli.equip import run as run_equip
+from dummyindex.context.cli.equip import project_slug
+from dummyindex.context.cli.equip import run as run_equip
 from dummyindex.context.domains.dev_pick import SubagentType
 from dummyindex.context.domains.equip import (
     Capability,
     EquipmentKind,
     render_generated_set,
 )
+from dummyindex.context.domains.equip.enums import EquipmentScope, RequestedBy
 from dummyindex.context.domains.equip.generate.adopt import resolve_coverage
 from dummyindex.context.domains.equip.generate.catalog import build_catalog
+from dummyindex.context.domains.equip.generate.fresh import (
+    specialist_caps_from_manifest,
+)
 from dummyindex.context.domains.equip.generate.proposal import capabilities_from_text
 from dummyindex.context.domains.equip.generate.specialists import (
+    ALWAYS_ON_CAPABILITIES,
+    EVIDENCE_GATED_CAPABILITIES,
     SPECIALIST_TEMPLATES,
     specialist_spec,
     templated_capabilities,
@@ -32,6 +38,8 @@ from dummyindex.context.domains.equip.generate.specialists import (
 from dummyindex.context.domains.equip.models import (
     GENERATED_SENTINEL,
     EquipmentItem,
+    EquipmentManifest,
+    EquipmentSource,
     StackProfile,
 )
 from dummyindex.context.domains.preflight.models import PreflightReport, SettingsState
@@ -55,9 +63,11 @@ def _report(*, project_agents: tuple[str, ...] = ()) -> PreflightReport:
     )
 
 
-# Always-on specialists = the undimensioned templates; frontend / api /
-# migration / ci are signal-gated (this test profile carries no signal).
-_ALWAYS_ON = sum(1 for t in SPECIALIST_TEMPLATES.values() if t.dimension is None)
+# Baseline specialists (security / performance / docs) on every non-generic stack;
+# db / search only on evidence, an explicit ask, or a proposal. Frontend / api /
+# migration / ci are signal-gated. This test profile carries no db/search signal.
+_ALWAYS_ON = ALWAYS_ON_CAPABILITIES
+_EVIDENCE_GATED = EVIDENCE_GATED_CAPABILITIES
 
 
 _API_PAIR = 2  # FastAPI evidences api: procedure + domain
@@ -201,7 +211,7 @@ def test_catalog_generates_security_specialist_for_proposal() -> None:
     assert "backend-security-specialist" in names
     # Specialists are always generated, so naming SECURITY in a proposal adds
     # nothing: the set stays the core four plus one file per template.
-    assert len(decision.generate) == 4 + _ALWAYS_ON + _API_PAIR
+    assert len(decision.generate) == 4 + len(_ALWAYS_ON) + _API_PAIR
     assert decision.adopt == ()
 
 
@@ -216,7 +226,7 @@ def test_catalog_forced_specialist_appends_one_agent() -> None:
     )
     names = {g.name for g in decision.generate}
     assert "backend-db-specialist" in names
-    assert len(decision.generate) == 4 + _ALWAYS_ON + _API_PAIR
+    assert len(decision.generate) == 4 + len(_ALWAYS_ON) + _API_PAIR + 1
     # A forced capability is generated once, and it leads the specialist order
     # so its hash-baselined identity is stable across re-applies.
     db = [g for g in decision.generate if g.name == "backend-db-specialist"]
@@ -267,9 +277,9 @@ def test_catalog_bare_pass_is_core_four_plus_every_specialist() -> None:
         proj="backend",
     )
     names = {g.name for g in decision.generate}
-    assert len(decision.generate) == 4 + _ALWAYS_ON + _API_PAIR
+    assert len(decision.generate) == 4 + len(_ALWAYS_ON) + _API_PAIR
     for template in SPECIALIST_TEMPLATES.values():
-        expected = template.dimension is None or template.capability == "api"
+        expected = template.capability in _ALWAYS_ON or template.capability == "api"
         assert (f"backend-{template.name_suffix}" in names) is expected
     assert decision.adopt == ()
 
@@ -541,7 +551,8 @@ def test_existing_four_core_repo_unaffected_by_specialist_feature(
     after = set(_status(root, capsys))
     assert before == after
     suffixes = ("-specialist", "-procedure", "-domain")
-    assert sum(n.endswith(suffixes) for n in after) == _ALWAYS_ON
+    # baseline + the db the fixture's pyproject evidences (asyncpg / supabase)
+    assert sum(n.endswith(suffixes) for n in after) == len(_ALWAYS_ON) + 1
 
 
 # --- grounded_in audit trail: only paths that exist are recorded
@@ -642,12 +653,20 @@ def test_second_apply_is_idempotent(tmp_path: Path) -> None:
     equip_dir = root / ".context" / "equipment"
     before = (
         manifest.read_text("utf-8"),
-        {f.name: f.read_bytes() for f in equip_dir.iterdir()},
+        {
+            p.relative_to(equip_dir).as_posix(): p.read_bytes()
+            for p in equip_dir.rglob("*")
+            if p.is_file()
+        },
     )
     assert run_equip(["apply", str(root)]) == 0
     after = (
         manifest.read_text("utf-8"),
-        {f.name: f.read_bytes() for f in equip_dir.iterdir()},
+        {
+            p.relative_to(equip_dir).as_posix(): p.read_bytes()
+            for p in equip_dir.rglob("*")
+            if p.is_file()
+        },
     )
     assert before == after
 
@@ -671,3 +690,205 @@ def test_proposal_signals_detect_new_capabilities() -> None:
     caps = capabilities_from_text("api endpoint, migrate backfill, github workflow")
     for cap in (Capability.API, Capability.MIGRATION, Capability.CI):
         assert cap in caps
+
+
+# --- evidence gate, by named set: no evidence -> no db / search
+
+
+@pytest.mark.unit
+def test_no_evidence_generates_baseline_and_no_evidence_gated_specialist() -> None:
+    decision = build_catalog(
+        profile=_profile(),
+        conventions=(),
+        preflight=_report(),
+        proj="backend",
+    )
+    names = {g.name for g in decision.generate}
+    for capability in _ALWAYS_ON:
+        assert f"backend-{SPECIALIST_TEMPLATES[capability].name_suffix}" in names
+    for capability in _EVIDENCE_GATED:
+        assert f"backend-{SPECIALIST_TEMPLATES[capability].name_suffix}" not in names
+
+
+# --- contract 17: specialist_caps_from_manifest carry-forward
+
+
+def _applied(
+    name: str,
+    *,
+    capability: str,
+    scope: EquipmentScope = EquipmentScope.PROJECT,
+    requested_by: RequestedBy | None = RequestedBy.PROPOSAL,
+    task_refs: tuple[str, ...] = (),
+) -> EquipmentItem:
+    return EquipmentItem(
+        kind=EquipmentKind.AGENT,
+        name=name,
+        path=f".context/equipment/{name}.md",
+        source=EquipmentSource.GENERATED,
+        capabilities=(capability,),
+        subagent_type=name,
+        version="1.0.0",
+        origin_hash="sha256:" + "0" * 64,
+        scope=scope,
+        requested_by=requested_by,
+        task_refs=task_refs,
+    )
+
+
+def _manifest(*items: EquipmentItem) -> EquipmentManifest:
+    return EquipmentManifest(schema_version=4, items=items)
+
+
+def _write_proposal(context_dir: Path, slug: str, status: str) -> None:
+    folder = context_dir / "proposals" / slug
+    folder.mkdir(parents=True)
+    (folder / "proposal.json").write_text(
+        json.dumps({"status": status}), encoding="utf-8"
+    )
+
+
+@pytest.mark.unit
+def test_project_scoped_item_carries_forward() -> None:
+    manifest = _manifest(_applied("p-db", capability=Capability.DATABASE))
+    assert specialist_caps_from_manifest(manifest) == (Capability.DATABASE,)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "requested_by", [RequestedBy.ADD_SPECIALIST, RequestedBy.LEGACY]
+)
+def test_add_specialist_and_legacy_task_items_carry_forward(
+    requested_by: RequestedBy,
+) -> None:
+    manifest = _manifest(
+        _applied(
+            "p-sec",
+            capability=Capability.SECURITY,
+            scope=EquipmentScope.TASK,
+            requested_by=requested_by,
+        )
+    )
+    assert specialist_caps_from_manifest(manifest) == (Capability.SECURITY,)
+
+
+@pytest.mark.unit
+def test_task_item_with_only_finished_refs_is_dropped(tmp_path: Path) -> None:
+    _write_proposal(tmp_path, "done-one", "done")
+    _write_proposal(tmp_path, "gone-one", "superseded")
+    audit = tmp_path / "audits" / "closed"
+    audit.mkdir(parents=True)
+    (audit / "report.md").write_text("# report\n", encoding="utf-8")
+    manifest = _manifest(
+        _applied(
+            "p-perf",
+            capability=Capability.PERFORMANCE,
+            scope=EquipmentScope.TASK,
+            task_refs=(
+                "proposal:done-one",
+                "proposal:gone-one",
+                "audit:closed",
+                "proposal:no-workspace",
+            ),
+        )
+    )
+    assert specialist_caps_from_manifest(manifest, context_dir=tmp_path) == ()
+
+
+@pytest.mark.unit
+def test_task_item_with_one_live_ref_carries_forward(tmp_path: Path) -> None:
+    _write_proposal(tmp_path, "done-one", "done")
+    _write_proposal(tmp_path, "live-one", "in_progress")
+    manifest = _manifest(
+        _applied(
+            "p-docs",
+            capability=Capability.DOCS,
+            scope=EquipmentScope.TASK,
+            task_refs=("proposal:done-one", "proposal:live-one"),
+        )
+    )
+    assert specialist_caps_from_manifest(manifest, context_dir=tmp_path) == (
+        Capability.DOCS,
+    )
+
+
+@pytest.mark.unit
+def test_open_audit_ref_is_live(tmp_path: Path) -> None:
+    (tmp_path / "audits" / "open").mkdir(parents=True)
+    manifest = _manifest(
+        _applied(
+            "p-sec",
+            capability=Capability.SECURITY,
+            scope=EquipmentScope.TASK,
+            task_refs=("audit:open",),
+        )
+    )
+    assert specialist_caps_from_manifest(manifest, context_dir=tmp_path) == (
+        Capability.SECURITY,
+    )
+
+
+@pytest.mark.unit
+def test_task_item_carries_conservatively_without_context_dir() -> None:
+    manifest = _manifest(
+        _applied(
+            "p-perf",
+            capability=Capability.PERFORMANCE,
+            scope=EquipmentScope.TASK,
+            task_refs=("proposal:anything",),
+        )
+    )
+    assert specialist_caps_from_manifest(manifest) == (Capability.PERFORMANCE,)
+
+
+# --- one liveness definition: status done + open checklist stays live everywhere
+
+
+def test_done_status_with_open_checklist_is_live_for_carry_forward_and_gc(
+    tmp_path: Path,
+) -> None:
+    from dummyindex.context.domains.equip.constants import SCHEMA_VERSION
+    from dummyindex.context.domains.equip.enums import EquipmentKind, EquipmentSource
+    from dummyindex.context.domains.equip.lifecycle.hashing import content_hash
+    from dummyindex.context.domains.equip.lifecycle.manifest import write_manifest
+    from dummyindex.context.domains.equip.models import (
+        EquipmentItem,
+        EquipmentManifest,
+    )
+    from dummyindex.context.domains.gc.equipment import (
+        enumerate_equipment_candidates,
+    )
+
+    context_dir = tmp_path / ".context"
+    workspace = context_dir / "proposals" / "p1"
+    workspace.mkdir(parents=True)
+    (workspace / "proposal.json").write_text(
+        json.dumps({"slug": "p1", "title": "p1", "status": "done"}), encoding="utf-8"
+    )
+    (workspace / "checklist.md").write_text("- [ ] T9 still open\n", encoding="utf-8")
+    body = "# impl\n"
+    rel = ".claude/agents/impl-p1.md"
+    (tmp_path / rel).parent.mkdir(parents=True)
+    (tmp_path / rel).write_text(body, encoding="utf-8")
+    item = EquipmentItem(
+        kind=EquipmentKind.AGENT,
+        name="impl-p1",
+        path=rel,
+        source=EquipmentSource.GENERATED,
+        capabilities=("database",),
+        subagent_type="impl-p1",
+        version="1.0.0",
+        origin_hash=content_hash(body),
+        scope=EquipmentScope.TASK,
+        requested_by=RequestedBy.PROPOSAL,
+        task_refs=("proposal:p1",),
+    )
+    manifest = EquipmentManifest(schema_version=SCHEMA_VERSION, items=(item,))
+    write_manifest(context_dir, manifest)
+
+    # Open checklist box keeps the ref live: the capability is carried forward.
+    assert specialist_caps_from_manifest(manifest, context_dir=context_dir) == (
+        "database",
+    )
+    # ...and GC must not offer the same item for deletion.
+    assert enumerate_equipment_candidates(context_dir) == ()
